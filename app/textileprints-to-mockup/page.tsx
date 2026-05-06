@@ -454,7 +454,6 @@ export default function Home() {
             input_image_url: publicUrl,
             model_type: modelType,
             product_type: product,
-            product,
             shoot_style: shootStyle,
             accessories: accessories.join(", "),
             output_size: outputSize,
@@ -534,11 +533,13 @@ export default function Home() {
     setLoading(true);
     setResult("");
 
+    const newGenId = crypto.randomUUID();
+    setGenerationId(newGenId);
+
     const payload = {
-      generation_id: generationId,
+      generation_id: newGenId,
       design_url: image,
       model_type: modelType,
-      product,
       product_type: product,
       shoot_style: shootStyle,
       accessories: accessories.join(", "),
@@ -551,12 +552,17 @@ export default function Home() {
     };
 
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      
       const { error: updateError } = await supabase
         .from("generations")
-        .update({
+        .insert({
+          id: newGenId,
+          user_id: sessionData.session?.user?.id || null,
+          design_url: image,
+          input_image_url: image,
           model_type: modelType,
           product_type: product,
-          product,
           shoot_style: shootStyle,
           accessories: accessories.join(", "),
           output_size: outputSize,
@@ -564,12 +570,11 @@ export default function Home() {
           article_number: designNumber === "NA" ? null : designNumber,
           custom_instruction: customInstruction || null,
           status: "pending",
-        })
-        .eq("id", generationId);
+        });
 
       if (updateError) {
-        console.error("Generation update error:", updateError);
-        throw new Error(`Generation update failed: ${updateError.message}`);
+        console.error("Generation insert error:", updateError);
+        throw new Error(`Generation insert failed: ${updateError.message}`);
       }
 
       const response = await fetch(WEBHOOK_URL, {
