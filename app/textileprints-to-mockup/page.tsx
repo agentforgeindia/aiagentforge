@@ -7,7 +7,7 @@ import { useTheme } from "@/app/components/ThemeProvider";
 
 const WEBHOOK_URL =
   process.env.NEXT_PUBLIC_N8N_PRODUCTION_WEBHOOK ||
-  "http://187.127.156.160:5678/webhook/generate-mockup";
+  "/api/generate-mockup";
 
 type IconName =
   | "pattern"
@@ -209,6 +209,7 @@ function OptionCard({
 
 export default function Home() {
   const [image, setImage] = useState<string | null>(null);
+  const [generationId, setGenerationId] = useState<string>("");
   const [uploadedFileName, setUploadedFileName] = useState("");
   const { darkMode } = useTheme();
   const [uploading, setUploading] = useState(false);
@@ -419,6 +420,7 @@ export default function Home() {
 
     setUploading(true);
     setResult("");
+    setGenerationId("");
 
     try {
       const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
@@ -438,10 +440,43 @@ export default function Home() {
       }
 
       const { data } = supabase.storage.from("designs").getPublicUrl(filePath);
-      setImage(data.publicUrl);
+      const publicUrl = data.publicUrl;
+      const detectedDesignNumber = extractDesignNumberFromName(file.name);
+      const finalDesignNumber = detectedDesignNumber || "NA";
+      const { data: sessionData } = await supabase.auth.getSession();
+
+      const { data: generation, error: generationError } = await supabase
+        .from("generations")
+        .insert([
+          {
+            user_id: sessionData.session?.user?.id || null,
+            design_url: publicUrl,
+            input_image_url: publicUrl,
+            model_type: modelType,
+            product_type: product,
+            product,
+            shoot_style: shootStyle,
+            accessories: accessories.join(", "),
+            output_size: outputSize,
+            quality,
+            article_number: finalDesignNumber === "NA" ? null : finalDesignNumber,
+            custom_instruction: customInstruction || null,
+            status: "pending",
+          },
+        ])
+        .select("id")
+        .single();
+
+      if (generationError) {
+        console.error("Generation insert error:", generationError);
+        alert(`Generation record failed: ${generationError.message}`);
+        return;
+      }
+
+      setImage(publicUrl);
+      setGenerationId(generation.id);
       setUploadedFileName(file.name);
 
-      const detectedDesignNumber = extractDesignNumberFromName(file.name);
       if (detectedDesignNumber) {
         setDesignNumber(detectedDesignNumber);
         setShowTextBox(true);
@@ -456,9 +491,43 @@ export default function Home() {
     }
   };
 
+  const pollGenerationResult = async (id: string) => {
+    for (let attempt = 0; attempt < 36; attempt += 1) {
+      const { data, error } = await supabase
+        .from("generations")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) {
+        console.error("Polling error:", error);
+      }
+
+      const row = data as any;
+      const finalImage = row?.output_image_url || row?.output_url || row?.image_url;
+
+      if (row?.status === "completed" && finalImage) {
+        return finalImage as string;
+      }
+
+      if (row?.status === "failed") {
+        throw new Error("Generation failed in n8n.");
+      }
+
+      await new Promise((resolve) => window.setTimeout(resolve, 5000));
+    }
+
+    throw new Error("Generation is taking too long. Please check My Creations or try again.");
+  };
+
   const handleGenerate = async () => {
     if (!image) {
       alert("Please upload textile design first.");
+      return;
+    }
+
+    if (!generationId) {
+      alert("Upload is not saved in Supabase yet. Please upload the textile design again.");
       return;
     }
 
@@ -466,19 +535,43 @@ export default function Home() {
     setResult("");
 
     const payload = {
+      generation_id: generationId,
       design_url: image,
       model_type: modelType,
       product,
+      product_type: product,
       shoot_style: shootStyle,
       accessories: accessories.join(", "),
       output_size: outputSize,
       quality,
       design_number: designNumber === "NA" ? "" : designNumber,
       text_on_image: designNumber === "NA" ? "" : designNumber,
+      article_number: designNumber === "NA" ? "" : designNumber,
       custom_instruction: customInstruction,
     };
 
     try {
+      const { error: updateError } = await supabase
+        .from("generations")
+        .update({
+          model_type: modelType,
+          product_type: product,
+          product,
+          shoot_style: shootStyle,
+          accessories: accessories.join(", "),
+          output_size: outputSize,
+          quality,
+          article_number: designNumber === "NA" ? null : designNumber,
+          custom_instruction: customInstruction || null,
+          status: "pending",
+        })
+        .eq("id", generationId);
+
+      if (updateError) {
+        console.error("Generation update error:", updateError);
+        throw new Error(`Generation update failed: ${updateError.message}`);
+      }
+
       const response = await fetch(WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -491,16 +584,9 @@ export default function Home() {
         throw new Error(`n8n error ${response.status}: ${text}`);
       }
 
-      if (!text) {
-        throw new Error("Empty response from n8n.");
-      }
-
-      const data = JSON.parse(text);
-      const finalImage = data?.image_url || data?.image || data?.url;
-
-      if (!finalImage) {
-        throw new Error("Image URL not found in n8n response.");
-      }
+      const data = text ? JSON.parse(text) : {};
+      const immediateImage = data?.image_url || data?.output_image_url || data?.image || data?.url;
+      const finalImage = immediateImage || (await pollGenerationResult(generationId));
 
       setResult(finalImage);
       setShowResult(true);
