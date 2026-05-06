@@ -442,38 +442,8 @@ export default function Home() {
       const { data } = supabase.storage.from("designs").getPublicUrl(filePath);
       const publicUrl = data.publicUrl;
       const detectedDesignNumber = extractDesignNumberFromName(file.name);
-      const finalDesignNumber = detectedDesignNumber || "NA";
-      const { data: sessionData } = await supabase.auth.getSession();
-
-      const { data: generation, error: generationError } = await supabase
-        .from("generations")
-        .insert([
-          {
-            user_id: sessionData.session?.user?.id || null,
-            design_url: publicUrl,
-            input_image_url: publicUrl,
-            model_type: modelType,
-            product_type: product,
-            shoot_style: shootStyle,
-            accessories: accessories.join(", "),
-            output_size: outputSize,
-            quality,
-            article_number: finalDesignNumber === "NA" ? null : finalDesignNumber,
-            custom_instruction: customInstruction || null,
-            status: "pending",
-          },
-        ])
-        .select("id")
-        .single();
-
-      if (generationError) {
-        console.error("Generation insert error:", generationError);
-        alert(`Generation record failed: ${generationError.message}`);
-        return;
-      }
-
+      
       setImage(publicUrl);
-      setGenerationId(generation.id);
       setUploadedFileName(file.name);
 
       if (detectedDesignNumber) {
@@ -491,7 +461,7 @@ export default function Home() {
   };
 
   const pollGenerationResult = async (id: string) => {
-    for (let attempt = 0; attempt < 120; attempt += 1) {
+    for (let attempt = 0; attempt < 36; attempt += 1) {
       const { data, error } = await supabase
         .from("generations")
         .select("*")
@@ -525,16 +495,11 @@ export default function Home() {
       return;
     }
 
-    if (!generationId) {
-      alert("Upload is not saved in Supabase yet. Please upload the textile design again.");
-      return;
-    }
-
     setLoading(true);
     setResult("");
-
-    const newGenId = crypto.randomUUID();
+    const newGenId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
     setGenerationId(newGenId);
+    console.log("Starting generation with ID:", newGenId);
 
     const payload = {
       generation_id: newGenId,
@@ -554,9 +519,9 @@ export default function Home() {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       
-      const { error: updateError } = await supabase
+      const { error: dbError } = await supabase
         .from("generations")
-        .insert({
+        .insert([{
           id: newGenId,
           user_id: sessionData.session?.user?.id || null,
           design_url: image,
@@ -570,11 +535,11 @@ export default function Home() {
           article_number: designNumber === "NA" ? null : designNumber,
           custom_instruction: customInstruction || null,
           status: "pending",
-        });
+        }]);
 
-      if (updateError) {
-        console.error("Generation insert error:", updateError);
-        throw new Error(`Generation insert failed: ${updateError.message}`);
+      if (dbError) {
+        console.error("Supabase insert error:", dbError);
+        throw new Error(`Database record failed: ${dbError.message}`);
       }
 
       const response = await fetch(WEBHOOK_URL, {
