@@ -556,7 +556,7 @@ export default function Home() {
 
       const data = text ? JSON.parse(text) : {};
       const immediateImage = data?.image_url || data?.output_image_url || data?.image || data?.url;
-      const finalImage = immediateImage || (await pollGenerationResult(generationId));
+      const finalImage = immediateImage || (await pollGenerationResult(newGenId));
 
       setResult(finalImage);
       setShowResult(true);
