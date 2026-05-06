@@ -492,7 +492,7 @@ export default function Home() {
   };
 
   const pollGenerationResult = async (id: string) => {
-    for (let attempt = 0; attempt < 36; attempt += 1) {
+    for (let attempt = 0; attempt < 120; attempt += 1) {
       const { data, error } = await supabase
         .from("generations")
         .select("*")
