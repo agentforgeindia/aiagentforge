@@ -461,7 +461,7 @@ export default function Home() {
   };
 
   const pollGenerationResult = async (id: string) => {
-    for (let attempt = 0; attempt < 36; attempt += 1) {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
       const { data, error } = await supabase
         .from("generations")
         .select("*")
@@ -562,6 +562,10 @@ export default function Home() {
       setShowResult(true);
     } catch (error: any) {
       console.error("Webhook error:", error);
+      if (error.message.includes("taking too long")) {
+        window.location.href = "/my-creations";
+        return;
+      }
       alert(error.message || "Something went wrong.");
     } finally {
       setLoading(false);
