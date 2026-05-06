@@ -17,6 +17,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     let active = true;
+
     
 
     async function loadProfile() {
