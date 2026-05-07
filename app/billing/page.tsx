@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
 
 const plans = [
@@ -35,10 +37,34 @@ const plans = [
 
 export default function BillingPage() {
   const { darkMode } = useTheme();
-
-  // TODO: AuthProvider will replace with real values
-  const credits = 0;
+  const [credits, setCredits] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
   const currentPlan = "Free Trial";
+
+  useEffect(() => {
+    async function loadCredits() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("credits")
+            .eq("id", session.user.id)
+            .single();
+          
+          if (profile) {
+            setCredits(profile.credits ?? 0);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading credits:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadCredits();
+  }, []);
 
   const bg = darkMode ? "bg-[#070b14] text-white" : "bg-[#fff8e8] text-[#111827]";
   const card = darkMode ? "border-white/10 bg-white/[0.07] shadow-black/40" : "border-black/10 bg-white/80 shadow-black/10";

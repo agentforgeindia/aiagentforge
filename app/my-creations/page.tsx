@@ -60,7 +60,7 @@ export default function MyCreationsPage() {
       <div className={`fixed inset-0 ${darkMode ? "opacity-[0.06]" : "opacity-[0.14]"}`} style={{ backgroundImage: "linear-gradient(45deg, currentColor 1px, transparent 1px), linear-gradient(-45deg, currentColor 1px, transparent 1px)", backgroundSize: "34px 34px" }} />
 
       <div className="relative z-10">
-        <section className="mx-auto max-w-7xl px-5 py-14 md:py-20">
+        <section className="mx-auto max-w-7xl px-5 py-24 md:py-32">
           <div className="mb-10 text-center">
             <div className="mx-auto mb-5 inline-flex rounded-full border border-cyan-400/30 bg-cyan-400/10 px-5 py-2 text-sm font-semibold text-cyan-600">Your Work</div>
             <h2 className="text-4xl font-black md:text-5xl">My Creations</h2>
@@ -94,8 +94,8 @@ export default function MyCreationsPage() {
                 const displayImage = item.output_image_url || item.output_url || item.image_url || item.design_url;
                 return (
                   <div key={item.id} className={`group relative overflow-hidden rounded-[2rem] border transition hover:shadow-2xl ${cardBg}`}>
-                    <div className="aspect-square overflow-hidden bg-black/5">
-                      <img src={displayImage} alt={item.product_type || "Creation"} className="h-full w-full object-cover transition duration-500 group-hover:scale-110" />
+                    <div className="aspect-[3/4] overflow-hidden bg-black/5">
+                      <img src={displayImage} alt={item.product_type || "Creation"} className="h-full w-full object-cover object-top transition duration-500 group-hover:scale-110" />
                       {item.status === "pending" && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
                           <div className="flex flex-col items-center">
