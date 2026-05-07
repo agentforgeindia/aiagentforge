@@ -773,41 +773,26 @@ export default function Home() {
 
                 <div className="mt-4 grid gap-4">
                   <div
-                    className={`rounded-2xl border p-4 ${darkMode ? "border-white/10 bg-white/[0.04]" : "border-black/10 bg-white/80"}`}
+                    className={`rounded-2xl border p-5 ${darkMode ? "border-white/10 bg-white/[0.04]" : "border-black/10 bg-white/80 shadow-sm"}`}
                   >
-                    <button
-                      type="button"
-                      onClick={() => setShowTextBox(!showTextBox)}
-                      className="flex w-full items-center justify-between gap-3 text-left font-black"
-                    >
-                      <span>🔢 Text on Image / Design Number</span>
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs ${darkMode ? "bg-white/10" : "bg-cyan-50 text-cyan-800"}`}
-                      >
-                        {showTextBox ? "Hide" : "Open"}
-                      </span>
-                    </button>
-
-                    <div className={`mt-3 rounded-2xl border px-4 py-3 text-sm font-black ${darkMode ? "border-white/10 bg-black/25 text-white/70" : "border-black/10 bg-cyan-50 text-cyan-900"}`}>
-                      Design / Article code: {designNumber.trim() || "Not added"}
+                    <div className="flex items-center justify-between gap-3 mb-4">
+                      <span className="font-black text-lg">🔢 Article Number / Design Code</span>
                     </div>
 
-                    {showTextBox && (
-                      <div className="mt-4 grid gap-3">
-                        <input
-                          value={designNumber}
-                          onChange={(e) => {
-                            const value = e.target.value.toUpperCase();
-                            setDesignNumber(value);
-                          }}
-                          placeholder="Design / Article / Pattern number e.g. D-1045"
-                          className={`w-full rounded-2xl border p-4 text-sm font-semibold outline-none ${inputClass}`}
-                        />
-                        <p className={`text-xs leading-5 ${muted}`}>
-                          If no number is detected from the file name, add it manually here. Keep empty if you do not want a code on the output.
-                        </p>
-                      </div>
-                    )}
+                    <div className="grid gap-3">
+                      <input
+                        value={designNumber}
+                        onChange={(e) => {
+                          const value = e.target.value.toUpperCase();
+                          setDesignNumber(value);
+                        }}
+                        placeholder="e.g. ART-2026, D-1045, PAT-88"
+                        className={`w-full rounded-2xl border p-4 text-base font-bold outline-none transition focus:border-cyan-500 ${inputClass}`}
+                      />
+                      <p className={`text-xs leading-5 font-medium ${muted}`}>
+                        This number will be visible on the generated mockup for easy tracking. You can edit it manually if not detected correctly.
+                      </p>
+                    </div>
                   </div>
 
                   <div
@@ -1064,70 +1049,103 @@ export default function Home() {
       )}
 
       {showResult && result && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] bg-white p-5 text-black shadow-2xl">
-            <div className="mb-4 flex items-center justify-between gap-4">
-              <div>
-                <h3 className="text-2xl font-black">Mockup Ready</h3>
-                <p className="text-sm text-black/50">
-                  Download or share your output.
-                </p>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+          <div className={`relative max-h-[95vh] w-full max-w-4xl overflow-y-auto rounded-[2.5rem] p-6 shadow-2xl transition-all ${darkMode ? "bg-[#0b1220] border border-white/10 text-white" : "bg-white border border-black/5 text-black"}`}>
+            
+            {/* Close Button Top Right */}
+            <button
+              type="button"
+              onClick={() => setShowResult(false)}
+              className={`absolute right-6 top-6 z-[110] flex h-12 w-12 items-center justify-center rounded-full transition hover:scale-110 active:scale-95 ${darkMode ? "bg-white/10 text-white hover:bg-white/20" : "bg-black/5 text-black hover:bg-black/10"}`}
+            >
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="mb-6">
+              <h3 className="text-3xl font-black bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Mockup Ready!</h3>
+              <p className={`text-sm mt-1 font-medium ${muted}`}>
+                Your premium textile mockup has been generated.
+              </p>
+            </div>
+
+            <div className="grid gap-8 lg:grid-cols-[1fr_0.8fr]">
+              <div className="relative group">
+                <img
+                  src={result}
+                  alt="Generated mockup"
+                  className="w-full rounded-3xl border border-black/5 shadow-2xl transition duration-500 group-hover:shadow-cyan-500/20"
+                />
+                {designNumber.trim() && (
+                  <div className="absolute left-6 bottom-6 rounded-2xl bg-black/60 px-5 py-2.5 text-sm font-black text-white backdrop-blur-md border border-white/10">
+                    Art: {designNumber.trim()}
+                  </div>
+                )}
               </div>
-              <button
-                type="button"
-                onClick={() => setShowResult(false)}
-                className="rounded-full bg-black/10 px-4 py-2 font-black"
-              >
-                ✕
-              </button>
-            </div>
 
-            <div className="relative">
-              <img
-                src={result}
-                alt="Generated mockup"
-                className="w-full rounded-2xl border border-black/10"
-              />
-              {designNumber.trim() && (
-                <div className="absolute right-4 top-4 rounded-full bg-black/70 px-4 py-2 text-sm font-black text-white backdrop-blur">
-                  {designNumber.trim()}
+              <div className="flex flex-col justify-center gap-4">
+                <div className={`rounded-3xl border p-6 ${darkMode ? "bg-white/[0.03] border-white/5" : "bg-black/[0.02] border-black/5"}`}>
+                  <h4 className="text-lg font-black mb-4">Export Options</h4>
+                  <div className="grid gap-3">
+                    <button
+                      type="button"
+                      onClick={handleDownloadResult}
+                      className="flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 px-6 py-5 text-center font-black text-black shadow-lg shadow-cyan-500/20 transition hover:scale-[1.02] active:scale-95"
+                    >
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M7.5 7.5L12 12m0 0l4.5-4.5M12 12V3" />
+                      </svg>
+                      DOWNLOAD MOCKUP
+                    </button>
+                    
+                    <a
+                      href={whatsappLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-center gap-3 rounded-2xl bg-[#25D366] px-6 py-5 text-center font-black text-white shadow-lg shadow-green-500/20 transition hover:scale-[1.02] active:scale-95"
+                    >
+                      <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                      </svg>
+                      SHARE ON WHATSAPP
+                    </a>
+
+                    <div className="grid grid-cols-2 gap-3 mt-1">
+                      <button
+                        type="button"
+                        onClick={handleNativeShare}
+                        className={`flex items-center justify-center gap-2 rounded-2xl px-4 py-4 font-black transition ${darkMode ? "bg-white/10 hover:bg-white/20" : "bg-black/5 hover:bg-black/10"}`}
+                      >
+                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+                        </svg>
+                        SHARE
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(result);
+                          alert("Image link copied.");
+                        }}
+                        className={`flex items-center justify-center gap-2 rounded-2xl px-4 py-4 font-black transition ${darkMode ? "bg-white/10 hover:bg-white/20" : "bg-black/5 hover:bg-black/10"}`}
+                      >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.25c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 011.927-.184" />
+                        </svg>
+                        COPY LINK
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-4">
-              <button
-                type="button"
-                onClick={handleDownloadResult}
-                className="rounded-2xl bg-black px-4 py-4 text-center font-black text-white"
-              >
-                Download
-              </button>
-              <button
-                type="button"
-                onClick={handleNativeShare}
-                className="rounded-2xl bg-cyan-500 px-4 py-4 font-black text-black"
-              >
-                Share
-              </button>
-              <a
-                href={whatsappLink}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-2xl bg-green-500 px-4 py-4 text-center font-black text-white"
-              >
-                WhatsApp
-              </a>
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(result);
-                  alert("Image link copied.");
-                }}
-                className="rounded-2xl bg-black/10 px-4 py-4 font-black"
-              >
-                Copy Link
-              </button>
+                <div className={`rounded-3xl border p-6 flex-1 flex flex-col justify-center ${darkMode ? "bg-cyan-500/5 border-cyan-500/10" : "bg-cyan-50 border-cyan-100"}`}>
+                   <p className="text-xs font-black uppercase tracking-widest text-cyan-600 mb-2">Pro Tip</p>
+                   <p className={`text-sm leading-6 ${darkMode ? "text-cyan-100/70" : "text-cyan-900/80"}`}>
+                     Using the WhatsApp share option allows you to quickly send previews to clients for approval without leaving the platform.
+                   </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
