@@ -90,7 +90,7 @@ export default function Footer() {
             }`}
           >
             <p>&copy; 2026 AgentForge. All rights reserved.</p>
-            <p>AI visual generation platform for product businesses.</p>
+            <p>Designed & Developed by Shubham Bramhane</p>
           </div>
         </div>
       </footer>
