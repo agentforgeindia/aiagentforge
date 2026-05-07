@@ -270,27 +270,25 @@ export default function Home() {
     let mounted = true;
 
     const loadUser = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        const authUser = data.session?.user;
+      const { data } = await supabase.auth.getSession();
+      const authUser = data.session?.user;
 
-        if (!mounted) return;
+      if (!mounted) return;
 
-        if (authUser) {
-          setUser({
-            name:
-              authUser.user_metadata?.full_name ||
-              authUser.user_metadata?.name ||
-              authUser.email?.split("@")[0] ||
-              "User",
-            email: authUser.email || "",
-            image: authUser.user_metadata?.avatar_url || "",
-          });
-        } else {
-          setUser({ name: "User", email: "", image: "" });
-        }
-      } catch (err) {
-        console.error("Error loading user:", err);
+      if (authUser) {
+       const [isLoggedIn, setIsLoggedIn] = useState(false);
+        setUser({
+          name:
+            authUser.user_metadata?.full_name ||
+            authUser.user_metadata?.name ||
+            authUser.email?.split("@")[0] ||
+            "User",
+          email: authUser.email || "",
+          image: authUser.user_metadata?.avatar_url || "",
+        });
+      } else {
+        
+        setUser({ name: "User", email: "", image: "" });
       }
     };
 
@@ -434,8 +432,8 @@ export default function Home() {
         });
 
       if (error) {
-        console.error("Supabase upload error details:", error);
-        alert(`Image upload failed: ${error.message}. Please check if the 'designs' bucket exists and has public 'insert' policy.`);
+        console.error("Supabase upload error:", error);
+        alert("Image upload failed. Please check Supabase bucket and policy.");
         return;
       }
 
@@ -575,6 +573,7 @@ export default function Home() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setShowProfile(false);
+   const [showMobileMenu, setShowMobileMenu] = useState(false);
   };
 
   const handleNativeShare = async () => {
