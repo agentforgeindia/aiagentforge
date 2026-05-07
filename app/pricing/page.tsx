@@ -127,13 +127,9 @@ export default function PricingPage() {
                     <h3 className="mt-2 text-3xl font-black tracking-tight">{plan.name}</h3>
                   </div>
 
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white p-2">
-  <img
-    src="/logo.png"
-    alt="AgentForge"
-    className="h-full w-full object-contain"
-  />
-</div>
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 text-base font-black text-white shadow-lg shadow-cyan-500/20">
+                    AF
+                  </div>
 
                 </div>
 
