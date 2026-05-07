@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
 
@@ -234,6 +234,7 @@ export default function Home() {
   const [showPromptBox, setShowPromptBox] = useState(false);
   const [showTextBox, setShowTextBox] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
+  const cancelRef = useRef(false);
 
   const [userCredits, setUserCredits] = useState<number | null>(null);
 
@@ -476,6 +477,8 @@ export default function Home() {
 
   const pollGenerationResult = async (id: string) => {
     for (let attempt = 0; attempt < 36; attempt += 1) {
+      if (cancelRef.current) return null;
+
       const { data, error } = await supabase
         .from("generations")
         .select("*")
@@ -511,6 +514,7 @@ export default function Home() {
 
     setLoading(true);
     setResult("");
+    cancelRef.current = false;
     const newGenId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
     setGenerationId(newGenId);
     console.log("Starting generation with ID:", newGenId);
@@ -604,7 +608,12 @@ export default function Home() {
       const immediateImage = data?.image_url || data?.output_image_url || data?.image || data?.url;
       const finalImage = immediateImage || (await pollGenerationResult(newGenId));
 
-      setResult(finalImage);
+      if (!finalImage && cancelRef.current) {
+        setLoading(false);
+        return;
+      }
+
+      setResult(finalImage || "");
       setShowResult(true);
 
       // Clear the input tray for next generation
@@ -1072,8 +1081,23 @@ export default function Home() {
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
           <div
-            className={`w-full max-w-lg rounded-[2rem] border p-6 text-center shadow-2xl ${darkMode ? "border-white/10 bg-[#0b1220] text-white" : "border-black/10 bg-white text-black"}`}
+            className={`relative w-full max-w-lg rounded-[2rem] border p-6 text-center shadow-2xl ${darkMode ? "border-white/10 bg-[#0b1220] text-white" : "border-black/10 bg-white text-black"}`}
           >
+            {/* Cross Cancel Button */}
+            <button
+              type="button"
+              onClick={() => {
+                cancelRef.current = true;
+                setLoading(false);
+              }}
+              className={`absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full transition hover:scale-110 active:scale-95 ${darkMode ? "bg-white/10 text-white hover:bg-white/20" : "bg-black/5 text-black hover:bg-black/10"}`}
+              aria-label="Cancel Generation"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
             <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-300 to-blue-500 text-4xl shadow-xl shadow-cyan-400/30">
               🧵
             </div>
@@ -1101,6 +1125,17 @@ export default function Home() {
             <div className="mt-5 h-2 overflow-hidden rounded-full bg-black/10">
               <div className="h-full w-2/3 animate-pulse rounded-full bg-gradient-to-r from-cyan-400 to-blue-500" />
             </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                cancelRef.current = true;
+                setLoading(false);
+              }}
+              className={`mt-8 w-full rounded-2xl py-4 text-sm font-black transition active:scale-95 ${darkMode ? "bg-white/10 text-white hover:bg-white/20" : "bg-black/5 text-black hover:bg-black/10"}`}
+            >
+              Cancel Generation
+            </button>
           </div>
         </div>
       )}

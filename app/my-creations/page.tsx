@@ -20,6 +20,7 @@ export default function MyCreationsPage() {
   const { darkMode } = useTheme();
   const [creations, setCreations] = useState<Creation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadCreations() {
@@ -94,7 +95,10 @@ export default function MyCreationsPage() {
                 const displayImage = item.output_image_url || item.output_url || item.image_url || item.design_url;
                 return (
                   <div key={item.id} className={`group relative overflow-hidden rounded-[2rem] border transition hover:shadow-2xl ${cardBg}`}>
-                    <div className="aspect-[3/4] overflow-hidden bg-black/5">
+                    <div 
+                      className="aspect-[3/4] overflow-hidden bg-black/5 cursor-pointer"
+                      onClick={() => item.status === "completed" && setSelectedImage(displayImage)}
+                    >
                       <img src={displayImage} alt={item.product_type || "Creation"} className="h-full w-full object-cover object-top transition duration-500 group-hover:scale-110" />
                       {item.status === "pending" && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
@@ -116,6 +120,18 @@ export default function MyCreationsPage() {
                         {new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                       </p>
                       <div className="mt-4 flex items-center justify-end gap-2">
+                        {item.status === "completed" && (
+                          <button
+                            onClick={() => setSelectedImage(displayImage)}
+                            title="Preview Image"
+                            className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 transition hover:bg-blue-500 hover:text-white"
+                          >
+                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          </button>
+                        )}
                         <button
                           onClick={async () => {
                             try {
@@ -160,6 +176,23 @@ export default function MyCreationsPage() {
           )}
         </section>
       </div>
+
+      {/* Preview Modal */}
+      {selectedImage && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 backdrop-blur-md" onClick={() => setSelectedImage(null)}>
+          <div className="relative max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-3xl" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md transition hover:scale-110 active:scale-95"
+            >
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <img src={selectedImage} alt="Preview" className="w-full aspect-[3/4] object-cover object-top rounded-3xl" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
