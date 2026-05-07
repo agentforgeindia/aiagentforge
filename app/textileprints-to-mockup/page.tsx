@@ -235,7 +235,7 @@ export default function Home() {
   const [showTextBox, setShowTextBox] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
 
-  const credits = 5;
+  const [userCredits, setUserCredits] = useState<number | null>(null);
 
   const textileFacts = [
     {
@@ -285,20 +285,30 @@ export default function Home() {
           email: authUser.email || "",
           image: authUser.user_metadata?.avatar_url || "",
         });
-      } else {
+
+        // Fetch real credits
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("credits")
+          .eq("id", authUser.id)
+          .single();
         
+        if (mounted && profile) {
+          setUserCredits(profile.credits ?? 0);
+        }
+      } else {
         setUser({ name: "User", email: "", image: "" });
+        setUserCredits(null);
       }
     };
 
     loadUser();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         const authUser = session?.user;
 
         if (authUser) {
-          
           setUser({
             name:
               authUser.user_metadata?.full_name ||
@@ -308,9 +318,19 @@ export default function Home() {
             email: authUser.email || "",
             image: authUser.user_metadata?.avatar_url || "",
           });
-        } else {
+
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("credits")
+            .eq("id", authUser.id)
+            .single();
           
+          if (mounted && profile) {
+            setUserCredits(profile.credits ?? 0);
+          }
+        } else {
           setUser({ name: "User", email: "", image: "" });
+          setUserCredits(null);
         }
       },
     );
@@ -512,12 +532,31 @@ export default function Home() {
 
     try {
       const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user?.id;
+
+      if (!userId) {
+        alert("Please login to generate mockups.");
+        return;
+      }
+
+      // Check credits
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("credits")
+        .eq("id", userId)
+        .single();
+
+      if (profileError || !profile || (profile.credits || 0) <= 0) {
+        alert("You don't have enough credits. Please recharge to continue.");
+        setLoading(false);
+        return;
+      }
       
       const { error: dbError } = await supabase
         .from("generations")
         .insert([{
           id: newGenId,
-          user_id: sessionData.session?.user?.id || null,
+          user_id: userId,
           design_url: image,
           input_image_url: image,
           model_type: modelType,
@@ -534,6 +573,19 @@ export default function Home() {
       if (dbError) {
         console.error("Supabase insert error:", dbError);
         throw new Error(`Database record failed: ${dbError.message}`);
+      }
+
+      // Deduct 1 credit
+      const { error: deductError } = await supabase
+        .from("profiles")
+        .update({ credits: (profile.credits || 0) - 1 })
+        .eq("id", userId);
+
+      if (deductError) {
+        console.error("Credit deduction error:", deductError);
+        // We continue anyway as the generation is already recorded
+      } else {
+        setUserCredits((profile.credits || 0) - 1);
       }
 
       const response = await fetch(WEBHOOK_URL, {
