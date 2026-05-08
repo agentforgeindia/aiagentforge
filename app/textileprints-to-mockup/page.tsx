@@ -234,6 +234,7 @@ export default function Home() {
   const [showPromptBox, setShowPromptBox] = useState(false);
   const [showTextBox, setShowTextBox] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
+  const [cancelVisible, setCancelVisible] = useState(true);
   const cancelRef = useRef(false);
 
   const [userCredits, setUserCredits] = useState<number | null>(null);
@@ -352,7 +353,16 @@ export default function Home() {
       setFactIndex((current) => (current + 1) % textileFacts.length);
     }, 4500);
 
-    return () => window.clearInterval(interval);
+    // Cancel visibility timer
+    setCancelVisible(true);
+    const timer = window.setTimeout(() => {
+      setCancelVisible(false);
+    }, 5000);
+
+    return () => {
+      window.clearInterval(interval);
+      window.clearTimeout(timer);
+    };
   }, [loading, textileFacts.length]);
 
   useEffect(() => {
@@ -550,8 +560,8 @@ export default function Home() {
         .eq("id", userId)
         .single();
 
-      if (profileError || !profile || (profile.credits || 0) <= 0) {
-        alert("You don't have enough credits. Please recharge to continue.");
+      if (profileError || !profile || (profile.credits || 0) < 15) {
+        alert("You don't have enough credits (15 required). Please recharge to continue.");
         setLoading(false);
         return;
       }
@@ -579,17 +589,17 @@ export default function Home() {
         throw new Error(`Database record failed: ${dbError.message}`);
       }
 
-      // Deduct 1 credit
+      // Deduct 15 credits
       const { error: deductError } = await supabase
         .from("profiles")
-        .update({ credits: (profile.credits || 0) - 1 })
+        .update({ credits: (profile.credits || 0) - 15 })
         .eq("id", userId);
 
       if (deductError) {
         console.error("Credit deduction error:", deductError);
         // We continue anyway as the generation is already recorded
       } else {
-        setUserCredits((profile.credits || 0) - 1);
+        setUserCredits((profile.credits || 0) - 15);
       }
 
       const response = await fetch(WEBHOOK_URL, {
@@ -1083,20 +1093,22 @@ export default function Home() {
           <div
             className={`relative w-full max-w-lg rounded-[2rem] border p-6 text-center shadow-2xl ${darkMode ? "border-white/10 bg-[#0b1220] text-white" : "border-black/10 bg-white text-black"}`}
           >
-            {/* Cross Cancel Button */}
-            <button
-              type="button"
-              onClick={() => {
-                cancelRef.current = true;
-                setLoading(false);
-              }}
-              className={`absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full transition hover:scale-110 active:scale-95 ${darkMode ? "bg-white/10 text-white hover:bg-white/20" : "bg-black/5 text-black hover:bg-black/10"}`}
-              aria-label="Cancel Generation"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            {/* Cross Cancel Button - Visible only for first 5 seconds */}
+            {cancelVisible && (
+              <button
+                type="button"
+                onClick={() => {
+                  cancelRef.current = true;
+                  setLoading(false);
+                }}
+                className={`absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full transition hover:scale-110 active:scale-95 ${darkMode ? "bg-white/10 text-white hover:bg-white/20" : "bg-black/5 text-black hover:bg-black/10"}`}
+                aria-label="Cancel Generation"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
 
             <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-300 to-blue-500 text-4xl shadow-xl shadow-cyan-400/30">
               🧵
@@ -1126,16 +1138,18 @@ export default function Home() {
               <div className="h-full w-2/3 animate-pulse rounded-full bg-gradient-to-r from-cyan-400 to-blue-500" />
             </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                cancelRef.current = true;
-                setLoading(false);
-              }}
-              className={`mt-8 w-full rounded-2xl py-4 text-sm font-black transition active:scale-95 ${darkMode ? "bg-white/10 text-white hover:bg-white/20" : "bg-black/5 text-black hover:bg-black/10"}`}
-            >
-              Cancel Generation
-            </button>
+            {cancelVisible && (
+              <button
+                type="button"
+                onClick={() => {
+                  cancelRef.current = true;
+                  setLoading(false);
+                }}
+                className={`mt-8 w-full rounded-2xl py-4 text-sm font-black transition active:scale-95 ${darkMode ? "bg-white/10 text-white hover:bg-white/20" : "bg-black/5 text-black hover:bg-black/10"}`}
+              >
+                Cancel Generation
+              </button>
+            )}
           </div>
         </div>
       )}
