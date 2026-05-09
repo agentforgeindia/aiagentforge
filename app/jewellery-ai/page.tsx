@@ -28,7 +28,7 @@ type JewelleryIconName =
   | "ring" | "earrings" | "necklace" | "bracelet" | "set"
   | "studio" | "whitebg" | "bridal" | "lifestyle" | "social"
   | "nomodel" | "female" | "hand" | "neck" | "editorial"
-  | "closeup" | "macro" | "half" | "full" | "square"
+  | "closeup" | "macro" | "half" | "full" | "square" | "mobile" | "premium" | "ultra"
   | "noprops" | "box" | "marble" | "pearls" | "mirror" | "pattern";
 
 function JewelleryIcon({ icon }: { icon: JewelleryIconName }) {
@@ -76,6 +76,26 @@ function JewelleryIcon({ icon }: { icon: JewelleryIconName }) {
         <circle cx="48" cy="51" r="15" fill="#e0f2fe" />
         <circle cx="48" cy="51" r="9" fill="#38bdf8" />
         {icon === "bridal" && <path d="M72 21l4 8 9 2-7 6 2 9-8-5-8 5 2-9-7-6 9-2 4-8Z" fill="#f59e0b" />}
+      </svg>
+    );
+  }
+
+  if (icon === "mobile" || icon === "square") {
+    return (
+      <svg viewBox="0 0 96 96" className={`h-11 w-11 ${common}`} aria-hidden="true">
+        {icon === "mobile" ? <rect x="30" y="8" width="36" height="80" rx="9" fill="#0e7490" /> : <rect x="18" y="18" width="60" height="60" rx="14" fill="#0e7490" />}
+        {icon === "mobile" ? <rect x="34" y="18" width="28" height="58" rx="5" fill="#cffafe" /> : <rect x="28" y="28" width="40" height="40" rx="8" fill="#cffafe" />}
+        <circle cx="48" cy="80" r="3" fill="#fff" />
+      </svg>
+    );
+  }
+
+  if (icon === "premium" || icon === "ultra") {
+    return (
+      <svg viewBox="0 0 96 96" className={`h-11 w-11 ${common}`} aria-hidden="true">
+        <path d="M48 10l10 24 26 2-20 17 7 25-23-14-23 14 7-25-20-17 26-2 10-24Z" fill="url(#gStar)" />
+        <path d="M48 23l6 15 16 1-12 10 4 16-14-9-14 9 4-16-12-10 16-1 6-15Z" fill="#fff" opacity=".45" />
+        <defs><linearGradient id="gStar" x1="16" y1="13" x2="75" y2="77"><stop stopColor="#22d3ee"/><stop offset=".55" stopColor="#3b82f6"/><stop offset="1" stopColor="#a855f7"/></linearGradient></defs>
       </svg>
     );
   }
@@ -167,7 +187,20 @@ export default function JewelleryAIPage() {
   const [outputNotes, setOutputNotes] = useState("");
   const [modelNotes, setModelNotes] = useState("");
 
-  const requiredCredits = useMemo(() => (generationMode === "single" ? 17 : Math.max(uploads.length, 1) * 17), [generationMode, uploads.length]);
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [result, setResult] = useState("");
+  const [showResult, setShowResult] = useState(false);
+  const [generationId, setGenerationId] = useState("");
+  const cancelRef = useRef(false);
+
+  const requiredCredits = useMemo(() => {
+    let base = 15;
+    if (quality === "Ultra HD") base = 20;
+    else if (outputSize === "1080x1920") base = 17;
+    
+    return generationMode === "single" ? base : Math.max(uploads.length, 1) * base;
+  }, [generationMode, uploads.length, quality, outputSize]);
 
   const handleFiles = (files: FileList | null) => {
     if (!files?.length) return;
@@ -185,6 +218,129 @@ export default function JewelleryAIPage() {
 
   const removeUpload = (id: string) => {
     setUploads((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleUpload = async (file: File) => {
+    setUploading(true);
+    setResult("");
+    setShowResult(false);
+    try {
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
+      const filePath = `jewellery-designs/${Date.now()}-${safeFileName}`;
+
+      const { error } = await supabase.storage
+        .from("designs")
+        .upload(filePath, file);
+
+      if (error) throw error;
+
+      const { data } = supabase.storage.from("designs").getPublicUrl(filePath);
+      return data.publicUrl;
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert("Image upload failed.");
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const pollGenerationResult = async (id: string) => {
+    for (let attempt = 0; attempt < 36; attempt += 1) {
+      if (cancelRef.current) return null;
+      const { data, error } = await supabase.from("generations").select("*").eq("id", id).single();
+      if (error) console.error("Polling error:", error);
+      const row = data as any;
+      const finalImage = row?.output_image_url || row?.output_url || row?.image_url;
+      if (row?.status === "completed" && finalImage) return finalImage as string;
+      if (row?.status === "failed") throw new Error("Generation failed.");
+      await new Promise((resolve) => window.setTimeout(resolve, 5000));
+    }
+    throw new Error("Generation timeout.");
+  };
+
+  const handleGenerate = async () => {
+    if (uploads.length === 0) {
+      alert("Please upload jewellery image first.");
+      return;
+    }
+
+    const userId = authUser?.id;
+    if (!userId) {
+      alert("Please login to generate.");
+      return;
+    }
+
+    setLoading(true);
+    cancelRef.current = false;
+    setShowResult(true);
+
+    try {
+      // Check credits
+      const { data: profile } = await supabase.from("profiles").select("credits").eq("id", userId).single();
+      if (!profile || (profile.credits || 0) < requiredCredits) {
+        alert(`Need ${requiredCredits} credits. Please recharge.`);
+        setLoading(false);
+        return;
+      }
+
+      // Upload if not already uploaded (simplified for single here)
+      const upload = uploads[0];
+      let imageUrl = upload.preview;
+      if (upload.file) {
+        const url = await handleUpload(upload.file);
+        if (!url) { setLoading(false); return; }
+        imageUrl = url;
+      }
+
+      const newGenId = `gen-${Math.random().toString(36).slice(2, 11)}`;
+      
+      // Insert generation record
+      await supabase.from("generations").insert([{
+        id: newGenId,
+        user_id: userId,
+        input_image_url: imageUrl,
+        jewellery_type: jewelleryType,
+        output_type: outputType,
+        model_type: modelType,
+        prop_style: propStyle,
+        output_size: outputSize,
+        quality,
+        status: "pending"
+      }]);
+
+      // Deduct credits
+      await supabase.from("profiles").update({ credits: (profile.credits || 0) - requiredCredits }).eq("id", userId);
+      refreshProfile();
+
+      // Trigger n8n
+      await fetch(process.env.NEXT_PUBLIC_N8N_PRODUCTION_WEBHOOK || "", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          generation_id: newGenId,
+          image_url: imageUrl,
+          jewellery_type: jewelleryType,
+          output_type: outputType,
+          model_type: modelType,
+          prop_style: propStyle,
+          output_size: outputSize,
+          quality,
+          jewellery_details: jewelleryDetails,
+          output_notes: outputNotes,
+          model_notes: modelNotes
+        })
+      });
+
+      const finalUrl = await pollGenerationResult(newGenId);
+      if (finalUrl) setResult(finalUrl);
+
+    } catch (err) {
+      console.error(err);
+      alert("Generation failed.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -455,39 +611,33 @@ export default function JewelleryAIPage() {
                     5. Output & Quality
                   </h4>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-3">
-                      <p className="text-[10px] font-black uppercase text-slate-400">Size</p>
-                      <div className="flex gap-2">
-                        {["1080x1080", "1080x1920"].map((item) => (
-                          <button
+                    <div className="space-y-4">
+                      <p className="text-[10px] font-black uppercase text-slate-400">Select Size</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {["Square (1:1)", "Mobile (9:16)"].map((item) => (
+                          <OptionCard
                             key={item}
-                            onClick={() => setOutputSize(item)}
-                            className={`flex-1 rounded-xl border py-3 text-xs font-black transition ${
-                              outputSize === item
-                                ? "border-cyan-400 bg-cyan-400/10 text-cyan-600"
-                                : darkMode ? "border-white/10 bg-white/5 text-white/50" : "border-black/10 bg-slate-50 text-black/50"
-                            }`}
-                          >
-                            {item === "1080x1080" ? "Square (1:1)" : "Mobile (9:16)"}
-                          </button>
+                            title={item}
+                            active={outputSize === (item.includes("1:1") ? "1080x1080" : "1080x1920")}
+                            icon={item.includes("1:1") ? "square" : "mobile"}
+                            onClick={() => setOutputSize(item.includes("1:1") ? "1080x1080" : "1080x1920")}
+                            darkMode={darkMode}
+                          />
                         ))}
                       </div>
                     </div>
-                    <div className="space-y-3">
-                      <p className="text-[10px] font-black uppercase text-slate-400">Quality</p>
-                      <div className="flex gap-2">
+                    <div className="space-y-4">
+                      <p className="text-[10px] font-black uppercase text-slate-400">Select Quality</p>
+                      <div className="grid grid-cols-2 gap-3">
                         {["Premium", "Ultra HD"].map((item) => (
-                          <button
+                          <OptionCard
                             key={item}
+                            title={item}
+                            active={quality === item}
+                            icon={item.toLowerCase().replace(" ", "") as any}
                             onClick={() => setQuality(item)}
-                            className={`flex-1 rounded-xl border py-3 text-xs font-black transition ${
-                              quality === item
-                                ? "border-cyan-400 bg-cyan-400/10 text-cyan-600"
-                                : darkMode ? "border-white/10 bg-white/5 text-white/50" : "border-black/10 bg-slate-50 text-black/50"
-                            }`}
-                          >
-                            {item}
-                          </button>
+                            darkMode={darkMode}
+                          />
                         ))}
                       </div>
                     </div>
@@ -496,12 +646,21 @@ export default function JewelleryAIPage() {
 
                 <div className="pt-4">
                   <button
-                    className="w-full rounded-[2rem] bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 py-6 text-base font-black text-white shadow-2xl shadow-cyan-500/25 transition hover:scale-[1.02] active:scale-[0.98]"
+                    disabled={loading || uploading}
+                    onClick={handleGenerate}
+                    className={`flex w-full items-center justify-center gap-3 rounded-[2rem] bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 py-6 text-base font-black text-white shadow-2xl shadow-cyan-500/25 transition hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50`}
                   >
-                    <div className="flex items-center justify-center gap-3">
-                      <Sparkles className="h-5 w-5" />
-                      <span>Start Royal Generation ({requiredCredits} Credits)</span>
-                    </div>
+                    {loading ? (
+                      <>
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        <span>Generating Royal Shot...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-5 w-5" />
+                        <span>Start Royal Generation ({requiredCredits} Credits)</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

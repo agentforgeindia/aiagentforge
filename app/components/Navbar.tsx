@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTheme } from "./ThemeProvider";
 import { useAuth } from "./AuthProvider";
 import { supabase } from "@/lib/supabase";
+import { BadgeCheck } from "lucide-react";
 
 const agents = [
   { title: "TextilePrints to Mockup AI", desc: "Textile design → fashion mockup", link: "/textileprints-to-mockup" },
@@ -98,9 +99,16 @@ export default function Navbar() {
           <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl shadow-lg transition-transform duration-200 group-hover:scale-105">
             <img src="/logo-new.jpg" alt="AF" className="h-full w-full object-cover" />
           </div>
-          <div>
-            <h1 className="text-xl font-black leading-none">AgentForge</h1>
-            <p className={`mt-1 text-xs ${muted}`}>AI Agents Studio</p>
+          <div className="flex flex-col justify-center">
+            <h1 className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 bg-clip-text pb-0.5 text-xl font-black leading-tight text-transparent">
+              AgentForge
+            </h1>
+            <div className="flex items-center gap-1.5">
+              <p className={`text-[9px] font-black uppercase tracking-[0.15em] leading-none ${muted}`}>
+                Upload | Generate | Done
+              </p>
+              <BadgeCheck className="h-3 w-3 fill-cyan-500 text-white" />
+            </div>
           </div>
         </Link>
 

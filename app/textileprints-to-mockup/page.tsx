@@ -337,6 +337,19 @@ export default function Home() {
     darkMode,
   ]);
 
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href);
+  };
+
+  const getRequiredCredits = () => {
+    if (quality === "Ultra HD") return 20;
+    if (outputSize === "1080x1920") return 17;
+    return 15;
+  };
+
+  const requiredCredits = getRequiredCredits();
+
   const toggleAccessory = (item: string) => {
     if (item === "None") {
       setAccessories(["None"]);
@@ -487,8 +500,10 @@ export default function Home() {
         .eq("id", userId)
         .single();
 
-      if (profileError || !profile || (profile.credits || 0) < 15) {
-        alert("You don't have enough credits (15 required). Please recharge to continue.");
+      const requiredCredits = getRequiredCredits();
+
+      if (profileError || !profile || (profile.credits || 0) < requiredCredits) {
+        alert(`You don't have enough credits (${requiredCredits} required). Please recharge to continue.`);
         setLoading(false);
         return;
       }
@@ -516,10 +531,10 @@ export default function Home() {
         throw new Error(`Database record failed: ${dbError.message}`);
       }
 
-      // Deduct 15 credits
+      // Deduct credits
       const { error: deductError } = await supabase
         .from("profiles")
-        .update({ credits: (profile.credits || 0) - 15 })
+        .update({ credits: (profile.credits || 0) - requiredCredits })
         .eq("id", userId);
 
       if (!deductError) {
@@ -919,47 +934,35 @@ export default function Home() {
                     5. Output & Quality
                   </h4>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-3">
-                      <p className="text-xs font-black uppercase text-slate-400">
-                        Size
+                    <div className="space-y-4">
+                      <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                        Select Size
                       </p>
-                      <div className="flex gap-2">
-                        {["1080x1080", "1080x1920"].map((item) => (
-                          <button
+                      <div className="grid grid-cols-2 gap-3">
+                        {["Square (1:1)", "Mobile (9:16)"].map((item) => (
+                          <OptionCard
                             key={item}
-                            onClick={() => setOutputSize(item)}
-                            className={`flex-1 rounded-xl border py-3 text-xs font-black transition ${
-                              outputSize === item
-                                ? "border-cyan-400 bg-cyan-400/10 text-cyan-600"
-                                : darkMode
-                                  ? "border-white/10 bg-white/5 text-white/50"
-                                  : "border-black/10 bg-slate-50 text-black/50"
-                            }`}
-                          >
-                            {item === "1080x1080" ? "Square (1:1)" : "Mobile (9:16)"}
-                          </button>
+                            title={item}
+                            active={outputSize === (item.includes("1:1") ? "1080x1080" : "1080x1920")}
+                            onClick={() => setOutputSize(item.includes("1:1") ? "1080x1080" : "1080x1920")}
+                            darkMode={darkMode}
+                          />
                         ))}
                       </div>
                     </div>
-                    <div className="space-y-3">
-                      <p className="text-xs font-black uppercase text-slate-400">
-                        Quality
+                    <div className="space-y-4">
+                      <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                        Select Quality
                       </p>
-                      <div className="flex gap-2">
+                      <div className="grid grid-cols-2 gap-3">
                         {["Premium", "Ultra HD"].map((item) => (
-                          <button
+                          <OptionCard
                             key={item}
+                            title={item}
+                            active={quality === item}
                             onClick={() => setQuality(item)}
-                            className={`flex-1 rounded-xl border py-3 text-xs font-black transition ${
-                              quality === item
-                                ? "border-cyan-400 bg-cyan-400/10 text-cyan-600"
-                                : darkMode
-                                  ? "border-white/10 bg-white/5 text-white/50"
-                                  : "border-black/10 bg-slate-50 text-black/50"
-                            }`}
-                          >
-                            {item}
-                          </button>
+                            darkMode={darkMode}
+                          />
                         ))}
                       </div>
                     </div>
@@ -980,7 +983,7 @@ export default function Home() {
                     ) : (
                       <>
                         <Sparkles className="h-5 w-5" />
-                        <span>Start Royal Generation (15 Credits)</span>
+                        <span>Start Royal Generation ({requiredCredits} Credits)</span>
                       </>
                     )}
                   </button>
