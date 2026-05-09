@@ -337,11 +337,6 @@ export default function Home() {
     darkMode,
   ]);
 
-  const isActive = (href: string) => {
-    if (href === "/") return pathname === "/";
-    return pathname.startsWith(href);
-  };
-
   const getRequiredCredits = () => {
     if (quality === "Ultra HD") return 20;
     if (outputSize === "1080x1920") return 17;
