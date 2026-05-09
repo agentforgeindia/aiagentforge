@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "./ThemeProvider";
+import { useAuth } from "./AuthProvider";
 import { supabase } from "@/lib/supabase";
 
 const agents = [
@@ -33,6 +34,7 @@ function getInitials(name?: string | null, email?: string | null): string {
 
 export default function Navbar() {
   const { darkMode, toggleTheme } = useTheme();
+  const { user: authUser, credits, profile } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const [showAgents, setShowAgents] = useState(false);
@@ -41,73 +43,14 @@ export default function Navbar() {
   const agentRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
-  // TODO: AuthProvider will replace these with real values
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [credits, setCredits] = useState(0);
-  const [user, setUser] = useState<{ name?: string | null; email?: string | null; avatarUrl?: string | null }>({
-    name: null,
-    email: null,
-    avatarUrl: null,
-  });
+  const isLoggedIn = !!authUser;
+  const user = {
+    name: profile?.full_name || authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "User",
+    email: authUser?.email,
+    avatarUrl: authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture,
+  };
 
   useEffect(() => {
-    let active = true;
-
-    async function loadSession() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!active) return;
-      
-      if (session?.user) {
-        setIsLoggedIn(true);
-        const authUser = session.user;
-        
-        // Initial user data from auth
-        setUser({
-          name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split("@")[0] || "User",
-          email: authUser.email,
-          avatarUrl: authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture,
-        });
-
-        // Fetch extra profile data (credits, etc.)
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("full_name, credits")
-          .eq("id", authUser.id)
-          .single();
-
-        if (active && profile) {
-          setCredits(profile.credits || 0);
-          if (profile.full_name) {
-            setUser(prev => ({ ...prev, name: profile.full_name }));
-          }
-        }
-      } else {
-        setIsLoggedIn(false);
-        setCredits(0);
-        setUser({ name: null, email: null, avatarUrl: null });
-      }
-    }
-
-    loadSession();
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!active) return;
-      if (session) {
-        setIsLoggedIn(true);
-        setUser({
-          name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split("@")[0] || "User",
-          email: session.user.email,
-          avatarUrl: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture,
-        });
-        // We could fetch profile here too, but loadSession or a separate refresh function is better
-        loadSession();
-      } else {
-        setIsLoggedIn(false);
-        setCredits(0);
-        setUser({ name: null, email: null, avatarUrl: null });
-      }
-    });
-
     function handleClick(e: MouseEvent) {
       if (agentRef.current && !agentRef.current.contains(e.target as Node)) setShowAgents(false);
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) setShowProfile(false);
@@ -115,9 +58,7 @@ export default function Navbar() {
     document.addEventListener("mousedown", handleClick);
     
     return () => {
-      active = false;
       document.removeEventListener("mousedown", handleClick);
-      listener.subscription.unsubscribe();
     };
   }, []);
 
