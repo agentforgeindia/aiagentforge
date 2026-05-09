@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/app/components/AuthProvider";
+import { supabase } from "@/lib/supabase";
 
 type GenerationMode = "single" | "bulk";
 
