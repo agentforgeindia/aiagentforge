@@ -27,8 +27,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const setDarkMode = (value: boolean) => {
     setDarkModeState(value);
-    localStorage.setItem("agentforge-theme", value ? "dark" : "light");
-    document.documentElement.classList.toggle("dark", value);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("agentforge-theme", value ? "dark" : "light");
+      if (value) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    }
   };
 
   const toggleTheme = () => setDarkMode(!darkMode);
