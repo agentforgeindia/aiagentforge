@@ -154,8 +154,8 @@ export default function Navbar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4">
         {/* Logo */}
         <Link href="/" className="group flex shrink-0 items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 text-sm font-black text-white shadow-lg shadow-cyan-500/20 transition-transform duration-200 group-hover:scale-105">
-            AF
+          <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl shadow-lg transition-transform duration-200 group-hover:scale-105">
+            <img src="/logo-new.jpg" alt="AF" className="h-full w-full object-cover" />
           </div>
           <div>
             <h1 className="text-xl font-black leading-none">AgentForge</h1>

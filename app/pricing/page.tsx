@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
 
 type Plan = {
@@ -73,6 +75,28 @@ type Plan = {
 
 export default function PricingPage() {
   const { darkMode } = useTheme();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadSession() {
+      const { data } = await supabase.auth.getSession();
+      if (!active) return;
+      setIsLoggedIn(Boolean(data.session?.user));
+    }
+
+    loadSession();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(Boolean(session?.user));
+    });
+
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   const bg = darkMode ? "bg-[#070b14] text-white" : "bg-[#fff8e8] text-[#111827]";
   const card = darkMode
@@ -107,13 +131,15 @@ export default function PricingPage() {
             Choose your monthly image volume and start creating premium business visuals.
           </p>
 
-          <div className="mx-auto mt-8 max-w-3xl rounded-[2rem] border border-cyan-400/30 bg-gradient-to-r from-cyan-400/15 to-blue-500/15 p-5 backdrop-blur-xl">
-            <h3 className="text-2xl font-black">Start After Login</h3>
-            <p className={`mt-2 ${muted}`}>Login ke baad trial credits activate honge. Pricing simple monthly image volume par based hai.</p>
-            <Link href="/login" className="mt-5 inline-flex rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-7 py-3 font-black text-white shadow-xl shadow-cyan-500/25">
-              Login to Start
-            </Link>
-          </div>
+          {!isLoggedIn && (
+            <div className="mx-auto mt-8 max-w-3xl rounded-[2rem] border border-cyan-400/30 bg-gradient-to-r from-cyan-400/15 to-blue-500/15 p-5 backdrop-blur-xl">
+              <h3 className="text-2xl font-black">Start After Login</h3>
+              <p className={`mt-2 ${muted}`}>Login ke baad trial credits activate honge. Pricing simple monthly image volume par based hai.</p>
+              <Link href="/login" className="mt-5 inline-flex rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-7 py-3 font-black text-white shadow-xl shadow-cyan-500/25">
+                Login to Start
+              </Link>
+            </div>
+          )}
         </section>
 
         <section className="mx-auto max-w-7xl px-5 pb-16">
@@ -132,11 +158,11 @@ export default function PricingPage() {
                     <p className="text-sm font-semibold text-cyan-600">{plan.audience}</p>
                     <h3 className="mt-2 text-3xl font-black tracking-tight">{plan.name}</h3>
                   </div>
-<div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-cyan-200 bg-white">
+<div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-cyan-100 bg-white shadow-inner">
   <img
-    src="/af-logo.png"
+    src="/logo-new.jpg"
     alt="AgentForge Logo"
-    className="h-30 w-30 object-contain"
+    className="h-full w-full object-cover"
   />
 </div>
 
@@ -198,9 +224,11 @@ export default function PricingPage() {
             </p>
 
             <div className="mt-8 flex flex-wrap justify-center gap-4">
-              <Link href="/login" className="rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-8 py-4 font-black text-white shadow-xl shadow-cyan-500/25">
-                Login to Start
-              </Link>
+              {!isLoggedIn && (
+                <Link href="/login" className="rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-8 py-4 font-black text-white shadow-xl shadow-cyan-500/25">
+                  Login to Start
+                </Link>
+              )}
 
               <Link href="/" className={`rounded-full px-8 py-4 font-black ${darkMode ? "bg-white/10 text-white" : "bg-white text-black"}`}>
                 Back to Home
