@@ -18,6 +18,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "AgentForge",
   description: "AI Visual Generation Platform",
+  icons: {
+    icon: "/logo-new.jpg",
+  },
 };
 
 export default function RootLayout({
