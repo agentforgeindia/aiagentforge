@@ -14,53 +14,59 @@ type Plan = {
 };
 
 
-const plans: Plan[] = [
-  {
+  const plans = [
+      {
     name: "Starter",
-    audience: "For Small Sellers",
     price: "₹1,999",
-    credits: "100 images/month",
-    bestFor: "Small shops, creators, and local retailers",
+    desc: "For small shops and creators starting with AI product visuals.",
+    audience: "Small shops & creators",
+    credits: "2,400 Credits",
+    images: "Up to 120 standard generations",
+    badge: "Best to Start",
+    popular: false,
     features: [
-      "AI mockups from your product or design images",
-      "Ready-to-use images for Instagram and WhatsApp",
-      "Premium photoshoot-style visuals",
-      "Code or article number on output image",
-      "1080×1080 high-quality export",
-      "Save up to 90% on photoshoot cost",
+      "All AI agents access",
+      "15 credits per standard image",
+      "1080×1080 square export",
+      "Watermark-free outputs",
+      "Standard generation queue",
+      "Basic support",
     ],
   },
-  {
-    name: "Growth",
-    audience: "For Agents & Growing Brands",
-    price: "₹17,999",
-    credits: "1000 images/month",
-    bestFor: "Agents, resellers, wholesalers, and online sellers",
+   {
+      name: "Pro Creator",
+    price: "₹9,999",
+    desc: "For sellers, agencies and growing brands creating content regularly.",
+    audience: "Sellers, agencies & growing brands",
+    credits: "16,000 Credits",
+    images: "Up to 800 standard generations",
+    badge: "Most Popular",
     popular: true,
     features: [
-      "1000 AI-generated premium visuals",
-      "Multiple styles and pose variations",
-      "Catalogue-ready professional images",
-      "No watermark output",
-      "Code or article number on every image",
-      "Faster processing",
-      "Premium presentation for client sharing",
+      "Everything in Starter",
+      "Faster generation queue",
+      "Premium styles included",
+      "Mobile story outputs",
+      "Regenerate variations",
+      "Priority support",
     ],
   },
   {
-    name: "Scale",
-    audience: "For Teams & Businesses",
-    price: "₹49,999",
-    credits: "3000 images/month",
-    bestFor: "Factories, brands, agencies, and large production teams",
+      name: "Empire",
+    price: "₹39,999",
+    desc: "For factories, wholesalers and teams needing bulk AI production.",
+    audience: "Factories, wholesalers & teams",
+    credits: "60,000 Credits",
+    images: "Up to 3,000 standard generations",
+    badge: "Bulk Studio",
+    popular: false,
     features: [
-      "Bulk AI image generation",
-      "Priority processing for high-volume work",
-      "Consistent branding and visual style",
-      "Code or article number on every output",
-      "Market-ready catalogue visuals",
-      "Dedicated support",
-      "Best cost per image for bulk users",
+      "Everything in Pro Creator",
+      "Bulk upload mode",
+      "Bulk generate at discounted credits",
+      "Team workflow ready",
+      "Fastest processing queue",
+      "Dedicated business support",
     ],
   },
 ];
@@ -126,10 +132,13 @@ export default function PricingPage() {
                     <p className="text-sm font-semibold text-cyan-600">{plan.audience}</p>
                     <h3 className="mt-2 text-3xl font-black tracking-tight">{plan.name}</h3>
                   </div>
-
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 text-base font-black text-white shadow-lg shadow-cyan-500/20">
-                    AF
-                  </div>
+<div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-cyan-200 bg-white">
+  <img
+    src="/af-logo.png"
+    alt="AgentForge Logo"
+    className="h-30 w-30 object-contain"
+  />
+</div>
 
                 </div>
 
@@ -162,10 +171,6 @@ export default function PricingPage() {
                   </div>
                 </div>
 
-                <div className="mt-6 rounded-2xl border border-cyan-400/20 bg-cyan-400/10 p-4">
-                  <p className="text-sm font-black">Best for:</p>
-                  <p className={`mt-1 text-sm leading-6 ${muted}`}>{plan.bestFor}</p>
-                </div>
 
                 <button
                   type="button"
@@ -186,7 +191,7 @@ export default function PricingPage() {
         <section className="mx-auto max-w-7xl px-5 pb-16">
           <div className={`rounded-[2rem] border p-8 text-center backdrop-blur-xl ${card}`}>
             <h3 className="mx-auto max-w-4xl text-3xl font-black leading-tight md:text-4xl">
-              One traditional shoot can cost ₹5,000–₹15,000.
+              One traditional shoot can cost ₹15,000–₹5,0000.
             </h3>
             <p className={`mx-auto mt-4 max-w-3xl text-lg leading-8 ${muted}`}>
               With AgentForge, you can create hundreds of premium AI visuals for textile, jewellery, and products at a fraction of the cost.
