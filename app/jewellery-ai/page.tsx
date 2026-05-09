@@ -156,7 +156,8 @@ export default function JewelleryAIPage() {
   const [jewelleryType, setJewelleryType] = useState("Ring");
   const [outputType, setOutputType] = useState("Luxury Studio");
   const [modelType, setModelType] = useState("No Model");
-  const [outputSize, setOutputSize] = useState("Square");
+  const [outputSize, setOutputSize] = useState("1080x1080");
+  const [quality, setQuality] = useState("Premium");
   const [propStyle, setPropStyle] = useState("No Props");
 
   const [showIdentityBox, setShowIdentityBox] = useState(false);
@@ -446,6 +447,50 @@ export default function JewelleryAIPage() {
                         darkMode={darkMode}
                       />
                     ))}
+                  </div>
+                </section>
+
+                <section>
+                  <h4 className="mb-4 font-black uppercase tracking-widest text-cyan-600 text-[10px]">
+                    5. Output & Quality
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <p className="text-[10px] font-black uppercase text-slate-400">Size</p>
+                      <div className="flex gap-2">
+                        {["1080x1080", "1080x1920"].map((item) => (
+                          <button
+                            key={item}
+                            onClick={() => setOutputSize(item)}
+                            className={`flex-1 rounded-xl border py-3 text-xs font-black transition ${
+                              outputSize === item
+                                ? "border-cyan-400 bg-cyan-400/10 text-cyan-600"
+                                : darkMode ? "border-white/10 bg-white/5 text-white/50" : "border-black/10 bg-slate-50 text-black/50"
+                            }`}
+                          >
+                            {item === "1080x1080" ? "Square (1:1)" : "Mobile (9:16)"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <p className="text-[10px] font-black uppercase text-slate-400">Quality</p>
+                      <div className="flex gap-2">
+                        {["Premium", "Ultra HD"].map((item) => (
+                          <button
+                            key={item}
+                            onClick={() => setQuality(item)}
+                            className={`flex-1 rounded-xl border py-3 text-xs font-black transition ${
+                              quality === item
+                                ? "border-cyan-400 bg-cyan-400/10 text-cyan-600"
+                                : darkMode ? "border-white/10 bg-white/5 text-white/50" : "border-black/10 bg-slate-50 text-black/50"
+                            }`}
+                          >
+                            {item}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </section>
 
