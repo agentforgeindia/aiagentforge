@@ -1,128 +1,344 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
 
-/* ===== DEMO IMAGES ===== */
+type Tab = "All" | "Textile" | "Jewellery" | "Productography";
+type Category = "Textile" | "Jewellery" | "Productography";
 
-// 👕 Shirt models
-const shirtModels = [
-  "https://images.unsplash.com/photo-1618354691373-d851c5c3a990",
-  "https://images.unsplash.com/photo-1603252109303-2751441dd157",
-  "https://images.unsplash.com/photo-1598033129183-c4f50c736f10",
-  "https://images.unsplash.com/photo-1584865288642-42078afe6942",
-  "https://images.unsplash.com/photo-1621072156002-e2fccdc0b176",
-];
+type GalleryItem = {
+  url: string;
+  category: Category;
+  title: string;
+  desc: string;
+};
 
-// 📦 Product shots
-const productShots = [
-  "https://images.unsplash.com/photo-1585386959984-a4155224a1ad",
-  "https://images.unsplash.com/photo-1600180758890-6b94519a8ba6",
-  "https://images.unsplash.com/photo-1542291026-7eec264c27ff",
-  "https://images.unsplash.com/photo-1592878904946-b3cd09c8b33b",
-  "https://images.unsplash.com/photo-1580910051074-3eb694886505",
-];
 
-// 💎 Jewellery
-const jewelleryShots = [
-  "https://images.unsplash.com/photo-1611652022419-a9419f74343d",
-  "https://images.unsplash.com/photo-1608042314453-ae338d80c427",
-  "https://images.unsplash.com/photo-1617038220319-276d3cfab638",
-  "https://images.unsplash.com/photo-1601121141461-9d6647bca1ed",
-  "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f",
-];
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+  const today = new Date().toDateString();
 
-const sampleImages = [...shirtModels, ...productShots, ...jewelleryShots];
+  let seed = 0;
+  for (let i = 0; i < today.length; i++) {
+    seed += today.charCodeAt(i);
+  }
+
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    seed = (seed * 9301 + 49297) % 233280;
+    const j = Math.floor((seed / 233280) * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled;
+};
+
+
+const dailyShuffle = <T,>(items: T[]): T[] => {
+  const shuffled = [...items];
+  const today = new Date().toISOString().slice(0, 10);
+
+  let seed = 0;
+  for (let i = 0; i < today.length; i++) {
+    seed = (seed * 31 + today.charCodeAt(i)) >>> 0;
+  }
+
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    const j = seed % (i + 1);
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled;
+};
+
+const makeItems = (category: Category, folder: string, titlePrefix: string): GalleryItem[] =>
+  Array.from({ length: 28 }, (_, i) => ({
+    url: `/gallery/${folder}/design-${i + 1}.png`,
+    category,
+    title: `${titlePrefix} ${i + 1}`,
+    desc:
+      category === "Textile"
+        ? "Pattern to premium model mockup"
+        : category === "Jewellery"
+          ? "Jewellery to premium model shoot"
+          : "Product to ad-ready visual",
+  }));
+
+// IMAGE FOLDER STRUCTURE
+// public/gallery/textile/design-1.png to design-28.png
+// public/gallery/jewellery/design-1.png to design-28.png
+// public/gallery/productography/design-1.png to design-28.png
+
+const textileItems = makeItems("Textile", "textile", "Textile Design");
+const jewelleryItems = makeItems("Jewellery", "jewellery", "Jewellery Design");
+const productItems = makeItems("Productography", "productography", "Product Design");
+
+const tabs: Tab[] = ["All", "Textile", "Jewellery", "Productography"];
+
+function CtaCard({ isLoggedIn }: { isLoggedIn: boolean }) {
+  return (
+    <div className="flex aspect-[4/5] flex-col items-center justify-center rounded-[1.35rem] border border-cyan-400/35 bg-[#07111f] p-6 text-center text-white shadow-xl shadow-cyan-500/20">
+      <p className="mb-4 rounded-full bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">
+        AgentForge
+      </p>
+
+      <h3 className="text-2xl font-black leading-tight">
+        Want visuals like this?
+      </h3>
+
+      <p className="mt-3 max-w-xs text-sm leading-6 text-white/75">
+        Upload your product, choose an agent, and generate premium visuals in minutes.
+      </p>
+
+      <Link
+        href={isLoggedIn ? "/pricing" : "/signup"}
+        className="mt-6 rounded-full bg-white px-6 py-3 text-sm font-black text-black transition hover:scale-105"
+      >
+        {isLoggedIn ? "Upgrade Plan" : "Sign Up Now"}
+      </Link>
+    </div>
+  );
+}
+
+function ImageCard({
+  item,
+  onOpen,
+}: {
+  item: GalleryItem;
+  onOpen: (item: GalleryItem) => void;
+}) {
+  return (
+    <button
+      onClick={() => onOpen(item)}
+      className="group relative block aspect-[4/5] overflow-hidden rounded-[1.35rem] bg-white shadow-lg shadow-black/10 transition duration-300 hover:-translate-y-1 hover:shadow-2xl dark:bg-white/10"
+    >
+      <img
+        src={item.url}
+        alt={item.title}
+        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+      />
+
+      <div className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-[11px] font-black text-black shadow backdrop-blur">
+        {item.category}
+      </div>
+
+      <div className="absolute inset-x-0 bottom-0 translate-y-2 bg-gradient-to-t from-black/85 via-black/35 to-transparent p-4 text-left opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+        <h3 className="text-base font-black text-white">{item.title}</h3>
+        <p className="mt-1 text-xs text-white/75">{item.desc}</p>
+      </div>
+    </button>
+  );
+}
 
 export default function GalleryPage() {
   const { darkMode } = useTheme();
-  const [images, setImages] = useState<string[]>([]);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<GalleryItem | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>("Textile");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const fetchImages = async () => {
-      const { data } = await supabase
-        .from("generations")
-        .select("output_url")
-        .eq("status", "completed")
-        .not("output_url", "is", null)
-        .order("created_at", { ascending: false });
+    let active = true;
 
-      if (data && data.length > 0) {
-        setImages(data.map((item) => item.output_url));
-      } else {
-        setImages(sampleImages);
-      }
+    async function loadSession() {
+      const { data } = await supabase.auth.getSession();
+      if (!active) return;
+      setIsLoggedIn(Boolean(data.session?.user));
+    }
+
+    loadSession();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(Boolean(session?.user));
+    });
+
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
     };
-
-    fetchImages();
   }, []);
+
+  const items = useMemo(() => {
+    // ALL tab = fixed mix preview (no shuffle)
+    if (activeTab === "All") {
+      return [
+        ...textileItems.slice(0, 9),
+        ...jewelleryItems.slice(0, 9),
+        ...productItems.slice(0, 9),
+      ];
+    }
+
+    // Individual tabs = daily shuffle
+    if (activeTab === "Jewellery") {
+      return dailyShuffle(jewelleryItems);
+    }
+
+    if (activeTab === "Productography") {
+      return dailyShuffle(productItems);
+    }
+
+    return dailyShuffle(textileItems);
+  }, [activeTab]);
+
 
   return (
     <main
-      className={`min-h-screen px-6 py-10 ${
-        darkMode ? "bg-[#070b14] text-white" : "bg-[#fff8e8] text-black"
+      className={`relative min-h-screen overflow-hidden ${
+        darkMode ? "bg-[#070b14] text-white" : "bg-[#fff8e8] text-[#111827]"
       }`}
     >
-      <h1 className="text-3xl font-black mb-10 text-center">
-        Best Creations Wall
-      </h1>
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee35,transparent_34%),radial-gradient(circle_at_top_right,#8b5cf635,transparent_32%),linear-gradient(to_bottom,transparent,rgba(0,0,0,0.04))]" />
+      <div
+        className={`pointer-events-none fixed inset-0 ${darkMode ? "opacity-[0.06]" : "opacity-[0.13]"}`}
+        style={{
+          backgroundImage:
+            "linear-gradient(45deg, currentColor 1px, transparent 1px), linear-gradient(-45deg, currentColor 1px, transparent 1px)",
+          backgroundSize: "34px 34px",
+        }}
+      />
 
-      {/* GRID */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-        {images.map((img, i) => (
-  <div key={i}>
-    {/* IMAGE */}
-    <div
-      onClick={() => setSelected(img)}
-      className="cursor-pointer overflow-hidden rounded-2xl shadow hover:scale-[1.03] transition aspect-square"
-    >
-      <div className="relative w-full h-full">
-        <img
-          src={img}
-          alt="AI Output"
-          className="w-full h-full object-cover"
-        />
+      <section className="relative z-10 mx-auto max-w-[1500px] px-4 py-8 md:px-8 md:py-12">
+        <div className="mb-8 overflow-hidden rounded-[2.4rem] border border-black/10 bg-white/85 shadow-2xl shadow-black/10 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06]">
+          <div className="grid gap-0 lg:grid-cols-[1fr_1fr]">
+            <div className="p-8 md:p-12">
+              <p className="mb-5 inline-flex rounded-full bg-cyan-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-cyan-600">
+                AgentForge Showcase
+              </p>
 
-        <div className="absolute top-2 right-2 text-[10px] px-2 py-1 rounded bg-black/60 text-white">
-          AgentForge
+              <h1 className="max-w-3xl text-4xl font-black leading-tight tracking-tight md:text-6xl">
+                Explore AI agent creations.
+                <span className="block bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent">
+                  Ultra HD quality visuals.
+                </span>
+              </h1>
+
+              <p className={`mt-5 max-w-2xl text-base leading-8 md:text-lg ${darkMode ? "text-white/65" : "text-black/60"}`}>
+                Check premium demo outputs created for textile, jewellery and product brands.
+                No client designs are exposed — only safe showcase visuals for marketing inspiration.
+              </p>
+
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  href={isLoggedIn ? "/pricing" : "/signup"}
+                  className="rounded-full bg-black px-7 py-3 text-sm font-black text-white transition hover:scale-105 dark:bg-white dark:text-black"
+                >
+                  {isLoggedIn ? "Upgrade Plan" : "Start Creating"}
+                </Link>
+
+                <Link
+                  href="/pricing"
+                  className="rounded-full border border-black/10 bg-white px-7 py-3 text-sm font-black text-black transition hover:scale-105 dark:border-white/10 dark:bg-white/10 dark:text-white"
+                >
+                  View Pricing
+                </Link>
+              </div>
+            </div>
+
+            <div className="relative min-h-[360px] overflow-hidden p-4">
+              <div className="grid h-full min-h-[340px] grid-cols-2 gap-3">
+                <div className="relative row-span-2 overflow-hidden rounded-[1.6rem] bg-black/5">
+                  <img
+                    src="/gallery/textile/design-1.png"
+                    alt="Textile AI creation"
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="absolute left-6 top-6 rounded-full bg-white/90 px-3 py-1 text-[11px] font-black text-black">
+                    textile/design-1.png
+                  </div>
+                </div>
+
+                <div className="relative overflow-hidden rounded-[1.6rem] bg-black/5">
+                  <img
+                    src="/gallery/jewellery/design-1.png"
+                    alt="Jewellery AI creation"
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-black text-black">
+                    jewellery/design-1.png
+                  </div>
+                </div>
+
+                <div className="relative overflow-hidden rounded-[1.6rem] bg-black/5">
+                  <img
+                    src="/gallery/productography/design-1.png"
+                    alt="Productography AI creation"
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-black text-black">
+                    productography/design-1.png
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute inset-x-8 bottom-8 rounded-3xl bg-white/92 p-5 text-black shadow-2xl backdrop-blur">
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-600">
+                  Public Demo Images
+                </p>
+                <p className="mt-1 text-xl font-black">
+                  Safe gallery for marketing showcase
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
 
-    {/* CTA */}
-    {(i + 1) % 10 === 0 && (
-      <div className="col-span-full flex justify-center py-10">
-        <div className="rounded-3xl px-8 py-6 text-center shadow-lg bg-white border border-black/10">
-          <h2 className="text-xl font-black mb-2">
-            Want results like this?
-          </h2>
-
-          <a
-            href="/login"
-            className="inline-block mt-3 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-600 px-6 py-3 text-sm font-black text-white"
-          >
-            Login & Start Creation
-          </a>
+        <div className="mb-8 flex justify-center">
+          <div className="flex w-full gap-2 overflow-x-auto rounded-full border border-black/10 bg-white/75 p-2 shadow-lg shadow-black/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/10 md:w-auto">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-black transition ${
+                  activeTab === tab
+                    ? "bg-black text-white dark:bg-white dark:text-black"
+                    : "text-black/60 hover:bg-black/5 dark:text-white/65 dark:hover:bg-white/10"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
-    )}
-  </div>
-))}
-      </div>
 
-      {/* POPUP */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
+          {items.slice(0, 8).map((item, index) => (
+            <ImageCard key={`${item.url}-${index}`} item={item} onOpen={setSelected} />
+          ))}
+
+          <CtaCard isLoggedIn={isLoggedIn} />
+
+          {items.slice(8, 28).map((item, index) => (
+            <ImageCard key={`${item.url}-${index + 8}`} item={item} onOpen={setSelected} />
+          ))}
+
+          <CtaCard isLoggedIn={isLoggedIn} />
+        </div>
+      </section>
+
       {selected && (
         <div
           onClick={() => setSelected(null)}
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md"
         >
-          <img
-            src={selected}
-            className="max-w-[90%] max-h-[90%] rounded-xl shadow-2xl"
-          />
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative flex max-h-[92vh] max-w-[92vw] items-center justify-center overflow-visible rounded-[1.5rem] bg-transparent"
+          >
+            <button
+              onClick={() => setSelected(null)}
+              aria-label="Close preview"
+              className="absolute -right-4 -top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/80 text-2xl font-black leading-none text-white shadow-xl backdrop-blur transition hover:scale-105 hover:bg-black"
+            >
+              ×
+            </button>
+
+            <img
+              src={selected.url}
+              alt={selected.title}
+              className="block max-h-[92vh] max-w-[92vw] rounded-[1.5rem] object-contain shadow-2xl"
+            />
+          </div>
         </div>
       )}
     </main>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "./components/ThemeProvider";
+import { Shirt, Gem, SprayCan } from "lucide-react";
 
 type Agent = {
   title: string;
@@ -11,6 +12,8 @@ type Agent = {
   link: string;
   tag: string;
   imageClass: string;
+  imageSrc: string;
+  icon: "textile" | "jewellery" | "product";
 };
 
 export default function Home() {
@@ -26,6 +29,8 @@ export default function Home() {
         tag: "Textile AI",
         imageClass:
           "bg-[radial-gradient(circle_at_25%_20%,#22d3ee_0_12%,transparent_13%),repeating-linear-gradient(45deg,#0ea5e9_0_14px,#facc15_14px_28px,#a78bfa_28px_42px,#fb7185_42px_56px)]",
+        imageSrc: "/textile-banner.png?v=2",
+        icon: "textile",
       },
       {
         title: "Jewellery AI",
@@ -34,6 +39,8 @@ export default function Home() {
         tag: "Jewellery AI",
         imageClass:
           "bg-[radial-gradient(circle_at_50%_38%,#fff7ad_0_8%,transparent_9%),radial-gradient(circle_at_50%_50%,#f59e0b_0_18%,transparent_19%),linear-gradient(135deg,#fde68a,#f59e0b,#78350f)]",
+        imageSrc: "/jewellery-banner.png",
+        icon: "jewellery",
       },
       {
         title: "Productography AI",
@@ -42,10 +49,19 @@ export default function Home() {
         tag: "Productography AI",
         imageClass:
           "bg-[radial-gradient(circle_at_35%_35%,#ffffffaa_0_10%,transparent_11%),linear-gradient(135deg,#67e8f9,#2563eb,#7c3aed)]",
+        imageSrc: "/productography-banner.png",
+        icon: "product",
       },
     ],
     [],
   );
+
+
+  const AgentIcon = ({ type }: { type: Agent["icon"] }) => {
+    if (type === "textile") return <Shirt className="h-5 w-5 text-cyan-500" />;
+    if (type === "jewellery") return <Gem className="h-5 w-5 text-amber-500" />;
+    return <SprayCan className="h-5 w-5 text-violet-500" />;
+  };
 
   useEffect(() => {
     let active = true;
@@ -131,22 +147,6 @@ export default function Home() {
               See Visuals
             </Link>
           </div>
-
-          <div className="mx-auto mt-14 grid max-w-5xl gap-5 md:grid-cols-3">
-            {agents.map((agent) => (
-              <Link
-                key={agent.title}
-                href={agent.link}
-                className={`rounded-[2rem] border p-5 backdrop-blur-xl transition hover:-translate-y-1 ${card}`}
-              >
-                <div
-                  className={`mx-auto mb-4 h-40 w-full rounded-[1.5rem] ${agent.imageClass}`}
-                />
-                <h3 className="text-xl font-black">{agent.tag}</h3>
-                <p className={`mt-1 text-sm ${muted}`}>{agent.title}</p>
-              </Link>
-            ))}
-          </div>
         </section>
 
         <section className="mx-auto max-w-7xl px-5 py-12">
@@ -165,12 +165,21 @@ export default function Home() {
                 href={item.link}
                 className={`group overflow-hidden rounded-[2rem] border shadow-xl backdrop-blur-xl transition hover:-translate-y-1 ${card}`}
               >
-                <div className={`h-48 w-full ${item.imageClass}`} />
+                <div className="h-48 w-full overflow-hidden">
+                  <img
+                    src={item.imageSrc}
+                    alt={item.title}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
+                </div>
                 <div className="p-6">
                   <p className="mb-3 inline-flex rounded-full bg-cyan-400/10 px-3 py-1 text-xs font-black text-cyan-600">
                     {item.tag}
                   </p>
-                  <h4 className="text-2xl font-black">{item.title}</h4>
+                  <h4 className="flex items-center gap-2 text-2xl font-black">
+                    <AgentIcon type={item.icon} />
+                    {item.title}
+                  </h4>
                   <p className={`mt-3 leading-7 ${muted}`}>{item.desc}</p>
                   <div className="mt-6 inline-flex rounded-full bg-black px-5 py-3 text-sm font-black text-white">
                     Open Agent
