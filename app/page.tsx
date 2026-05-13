@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "./components/ThemeProvider";
 import { Shirt, Gem, SprayCan } from "lucide-react";
+import LaunchOfferPopup from "@/app/components/LaunchOfferPopup";
 
 type Agent = {
   title: string;
@@ -93,6 +94,8 @@ export default function Home() {
   const muted = darkMode ? "text-white/65" : "text-black/60";
 
   return (
+    <>
+    <LaunchOfferPopup />
     <main className={`relative min-h-screen overflow-hidden ${bg}`}>
       <video
         autoPlay
@@ -120,18 +123,18 @@ export default function Home() {
             Live credits and profile are shown in the top bar after login
           </div>
 
-          <h2 className="mx-auto max-w-5xl text-5xl font-black leading-tight tracking-tight md:text-7xl">
-            Create Premium Product Visuals
+          <h1 className="mx-auto max-w-5xl text-5xl font-black leading-tight tracking-tight md:text-7xl">
+            AI Textile Mockup & Product Photography Platform
             <span className="block bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent">
-              with AI Agents
+              for Textile, Jewellery & Product Brands
             </span>
-          </h2>
+          </h1>
 
           <p className={`mx-auto mt-6 max-w-3xl text-lg leading-8 ${muted}`}>
-            AgentForge helps textile, jewellery, and product brands convert
-            simple images into premium mockups, catalogue shots, and ad-ready
-            creatives.
-          </p>
+  Generate premium textile mockups, AI jewellery photoshoots,
+  catalogue-ready product photography, and ad creatives using AI —
+  without expensive models, studios, or traditional photoshoots.
+</p>
 
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link
@@ -148,6 +151,27 @@ export default function Home() {
             </Link>
           </div>
         </section>
+
+          <section className="mx-auto max-w-6xl px-5 pb-10 text-center">
+  <div
+    className={`rounded-[2rem] border p-8 backdrop-blur-xl ${
+      darkMode
+        ? "border-white/10 bg-white/5"
+        : "border-black/10 bg-white/70"
+    }`}
+  >
+    <h2 className="text-3xl font-black md:text-4xl">
+      AI Mockup Generator for Modern Businesses
+    </h2>
+
+    <p className={`mx-auto mt-4 max-w-4xl leading-8 ${muted}`}>
+      AgentForge is an AI visual generation platform designed for textile
+      manufacturers, jewellery brands, wholesalers, fashion businesses,
+      and ecommerce sellers. Create AI fashion mockups, catalogue
+      visuals, jewellery photoshoots, and product photography instantly.
+    </p>
+  </div>
+</section>
 
         <section className="mx-auto max-w-7xl px-5 py-12">
           <div className="mb-8 text-center">
@@ -168,7 +192,7 @@ export default function Home() {
                 <div className="h-48 w-full overflow-hidden">
                   <img
                     src={item.imageSrc}
-                    alt={item.title}
+                    alt={`${item.title} generated using AgentForge AI`}
                     className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                   />
                 </div>
@@ -328,7 +352,48 @@ export default function Home() {
         </section>
 
       </div>
+  
+              <section className="mx-auto max-w-6xl px-5 py-16">
+  <div className="text-center">
+    <h2 className="text-4xl font-black">
+      Frequently Asked Questions
+    </h2>
+  </div>
 
+  <div className="mt-10 grid gap-6 md:grid-cols-2">
+    {[
+      {
+        q: "What is AgentForge AI?",
+        a: "AgentForge is an AI platform for generating textile mockups, jewellery photoshoots, and product photography.",
+      },
+      {
+        q: "Can I create textile catalogue images?",
+        a: "Yes. Upload your textile design and generate premium catalogue-ready mockups instantly.",
+      },
+      {
+        q: "Does AgentForge support jewellery photography?",
+        a: "Yes. You can create AI jewellery model shoots and luxury product visuals.",
+      },
+      {
+        q: "Do I need a professional photoshoot?",
+        a: "No. AgentForge replaces traditional product photoshoots using AI.",
+      },
+    ].map((item) => (
+      <div
+        key={item.q}
+        className={`rounded-3xl border p-6 ${
+          darkMode
+            ? "border-white/10 bg-white/5"
+            : "border-black/10 bg-white/70"
+        }`}
+      >
+        <h3 className="text-xl font-black">{item.q}</h3>
+        <p className={`mt-3 leading-7 ${muted}`}>{item.a}</p>
+      </div>
+    ))}
+  </div>
+</section>
     </main>
+    </>
   );
 }

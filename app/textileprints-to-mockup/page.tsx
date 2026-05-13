@@ -13,6 +13,24 @@ const WEBHOOK_URL =
   process.env.NEXT_PUBLIC_N8N_PRODUCTION_WEBHOOK ||
   "/api/generate-mockup";
 
+const isEmpireProfile = (profile: any) => {
+  const planText = String(
+    profile?.plan ||
+      profile?.package ||
+      profile?.current_plan ||
+      profile?.subscription_plan ||
+      profile?.plan_name ||
+      "",
+  ).toLowerCase();
+
+  return Boolean(
+    profile?.is_empire ||
+      profile?.empire_pack ||
+      profile?.has_empire ||
+      planText.includes("empire"),
+  );
+};
+
 type IconName =
   | "pattern"
   | "indianMale"
@@ -213,6 +231,9 @@ export default function Home() {
     email: authUser?.email,
   };
 
+  const [profile, setProfile] = useState<any>(null);
+  const isEmpireUser = isEmpireProfile(profile);
+
   const [items, setItems] = useState<GenItem[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -297,6 +318,39 @@ export default function Home() {
       window.clearTimeout(timer);
     };
   }, [loading, textileFacts.length]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadProfile = async () => {
+      if (!authUser?.id) {
+        setProfile(null);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", authUser.id)
+        .single();
+
+      if (!mounted) return;
+
+      if (error) {
+        console.error("Profile load error:", error);
+        setProfile(null);
+        return;
+      }
+
+      setProfile(data);
+    };
+
+    loadProfile();
+
+    return () => {
+      mounted = false;
+    };
+  }, [authUser?.id]);
 
   useEffect(() => {
     const saved = localStorage.getItem("motif_mockup_settings");
@@ -438,6 +492,12 @@ export default function Home() {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
+
+    if (files.length > 1 && !isEmpireUser) {
+      alert("Bulk generation is available only with the Empire Pack. Please upload one design at a time or upgrade to Empire Pack for bulk creation.");
+      if (e.target) e.target.value = "";
+      return;
+    }
 
     const invalid = files.find((f) => !f.type.startsWith("image/"));
     if (invalid) {
@@ -634,11 +694,17 @@ export default function Home() {
     try {
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("credits, is_unlimited")
+        .select("*")
         .eq("id", userId)
         .single();
 
       const needed = requiredCredits * queue.length;
+
+      if (queue.length > 1 && !isEmpireProfile(profile)) {
+        alert("Bulk generation is available only with the Empire Pack. Please upgrade to Empire Pack to generate multiple textile mockups together.");
+        setLoading(false);
+        return;
+      }
 
 // Unlimited users bypass
 if (
@@ -808,17 +874,16 @@ if (shouldDeductCredits(profile)) {
               Textile design to premium model mockup
             </div>
 
-            <h2 className="max-w-3xl text-5xl font-black leading-tight tracking-tight lg:text-7xl">
-              Upload Pattern.
-              <span className="block bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
-                Get Mockup.
-              </span>
-              Sell Faster.
-            </h2>
+            <h1 className="max-w-3xl text-5xl font-black leading-tight tracking-tight lg:text-7xl">
+            AI Textile Mockup Generator
+            <span className="block bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
+             Upload Design. Get Mockup.
+            </span>
+             Sell Faster.
+            </h1>
 
             <p className={`mt-6 max-w-xl text-lg leading-8 ${muted}`}>
-              Upload your textile design and generate a realistic fashion model
-              mockup for catalogues, ads, and client previews.
+              Generate catalogue-ready textile mockups, AI fashion model photos, kurti mockups, saree mockups, shirt mockups, and client preview images without stitching samples or expensive photoshoots.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-4">
@@ -838,11 +903,16 @@ if (shouldDeductCredits(profile)) {
           </div>
 
           <div
-            className={`rounded-[2rem] border p-5 shadow-2xl backdrop-blur-xl ${card}`}
+            className={`sticky top-24 self-start rounded-[2rem] border p-5 shadow-2xl backdrop-blur-xl ${card}`}
           >
             <div className="grid gap-4 sm:grid-cols-2">
+
               <div
-                className={`flex min-h-80 items-center justify-center rounded-[1.5rem] border p-6 ${darkMode ? "border-white/10 bg-black/25" : "border-black/10 bg-[#fffaf0]"}`}
+                className={`flex min-h-80 items-center justify-center rounded-[1.5rem] border p-6 ${
+                  darkMode
+                    ? "border-white/10 bg-black/25"
+                    : "border-black/10 bg-[#fffaf0]"
+                }`}
               >
                 <div className="text-center">
                   {previewImage ? (
@@ -852,11 +922,19 @@ if (shouldDeductCredits(profile)) {
                       className="mx-auto mb-4 h-36 w-36 rounded-3xl object-cover shadow-lg"
                     />
                   ) : (
-                    <div className="mx-auto mb-4 h-28 w-28 rounded-3xl bg-[repeating-linear-gradient(45deg,#22d3ee_0px,#22d3ee_8px,#facc15_8px,#facc15_16px,#a78bfa_16px,#a78bfa_24px)]" />
+                    <img
+                      src="/banner-design.png"
+                      alt="Textile design pattern upload preview for AI mockup generation"
+                      className="mx-auto mb-4 h-36 w-36 rounded-3xl object-cover shadow-lg"
+                    />
                   )}
+
                   <p className="font-semibold">Textile Pattern</p>
+
                   <p className={`mt-1 text-sm ${muted}`}>
-                    {previewImage ? "Uploaded design preview" : "Upload textile design / pattern"}
+                    {previewImage
+                      ? "Uploaded design preview"
+                      : "Upload textile design / pattern"}
                   </p>
                 </div>
               </div>
@@ -870,11 +948,19 @@ if (shouldDeductCredits(profile)) {
                       className="mx-auto mb-4 h-48 w-36 rounded-3xl object-cover shadow-lg shadow-cyan-400/30"
                     />
                   ) : (
-                    <div className="mx-auto mb-4 h-44 w-28 rounded-full bg-gradient-to-b from-cyan-200 via-blue-400 to-purple-500 shadow-lg shadow-cyan-400/30" />
+                    <img
+                      src="/banner-design-output.png"
+                      alt="AI generated textile fashion model mockup preview"
+                      className="mx-auto mb-4 h-48 w-36 rounded-3xl object-cover shadow-lg shadow-cyan-400/30"
+                    />
                   )}
+
                   <p className="font-semibold">Model Mockup</p>
+
                   <p className={`mt-1 text-sm ${muted}`}>
-                    {previewResult ? "Latest AI fashion output" : "AI fashion output"}
+                    {previewResult
+                      ? "Latest AI fashion output"
+                      : "AI fashion output"}
                   </p>
                 </div>
               </div>
@@ -889,8 +975,17 @@ if (shouldDeductCredits(profile)) {
             <div className="mb-6">
               <h3 className="text-3xl font-black">Create Your Mockup</h3>
               <p className={`mt-2 ${muted}`}>
-                Upload one or many textile designs, pick generation options, and create premium model mockups in bulk.
+                Upload one textile design on normal packs. Bulk creation is unlocked for Empire Pack users only.
               </p>
+              <div
+                className={`mt-4 inline-flex rounded-full px-4 py-2 text-xs font-black ${
+                  isEmpireUser
+                    ? "border border-emerald-400/30 bg-emerald-400/10 text-emerald-600"
+                    : "border border-amber-400/30 bg-amber-400/10 text-amber-600"
+                }`}
+              >
+                {isEmpireUser ? "Empire Pack Active — Bulk Unlocked" : "Bulk Locked — Upgrade to Empire Pack"}
+              </div>
             </div>
 
             <div className="grid gap-7 lg:grid-cols-[0.8fr_1.2fr]">
@@ -902,9 +997,13 @@ if (shouldDeductCredits(profile)) {
                     <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-300 to-blue-400 text-white shadow-lg shadow-cyan-400/25">
                       <VisualIcon icon="pattern" />
                     </div>
-                    <p className="text-lg font-semibold">Upload Textile Design(s)</p>
+                    <p className="text-lg font-semibold">
+                      {isEmpireUser ? "Upload Textile Design(s)" : "Upload Textile Design"}
+                    </p>
                     <p className={`mt-2 text-sm ${muted}`}>
-                      Select one or multiple files — PNG, JPG, JPEG, WEBP
+                      {isEmpireUser
+                        ? "Select one or multiple files — PNG, JPG, JPEG, WEBP"
+                        : "Normal packs support one design at a time — upgrade to Empire Pack for bulk creation"}
                     </p>
                     <p className="mt-2 text-xs font-bold text-cyan-600">
                       Design code on the image is auto-detected via OCR
@@ -913,7 +1012,7 @@ if (shouldDeductCredits(profile)) {
                   <input
                     type="file"
                     accept="image/*"
-                    multiple
+                    multiple={isEmpireUser}
                     onChange={handleUpload}
                     className="hidden"
                   />
@@ -954,7 +1053,7 @@ if (shouldDeductCredits(profile)) {
                         >
                           <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl bg-black/10">
                             {it.url ? (
-                              <img src={it.url} alt={it.fileName} className="h-full w-full object-cover" />
+                              <img src={it.url} alt={`AI textile mockup result for ${it.fileName}`} className="h-full w-full object-cover" />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center text-xs text-black/40">...</div>
                             )}
@@ -1322,9 +1421,11 @@ if (shouldDeductCredits(profile)) {
                       <>
                         <Sparkles className="h-5 w-5" />
                         <span>
-                          {readyItems.length > 1
-                            ? `Generate ${readyItems.length} Mockups (${totalCreditsNeeded} Credits)`
-                            : `Start Royal Generation (${requiredCredits} Credits)`}
+                          {readyItems.length > 1 && !isEmpireUser
+                            ? "Upgrade to Empire Pack for Bulk"
+                            : readyItems.length > 1
+                              ? `Generate ${readyItems.length} Mockups (${totalCreditsNeeded} Credits)`
+                              : `Start Royal Generation (${requiredCredits} Credits)`}
                         </span>
                       </>
                     )}
@@ -1345,7 +1446,7 @@ if (shouldDeductCredits(profile)) {
                   {previewResult ? (
                     <img
                       src={previewResult}
-                      alt="Final AI Model Mockup Result"
+                      alt="Final AI textile mockup generated using AgentForge"
                       className="max-h-[600px] rounded-3xl shadow-2xl transition hover:scale-[1.02]"
                     />
                   ) : (
@@ -1413,7 +1514,7 @@ if (shouldDeductCredits(profile)) {
                             >
                               <img
                                 src={it.resultUrl}
-                                alt={it.fileName}
+                                alt={`Uploaded textile design ${it.fileName} for AI mockup generation`}
                                 className="aspect-square w-full object-cover"
                               />
                             </button>

@@ -41,7 +41,7 @@ export default function AuthCallback() {
                     session.user.user_metadata?.name ||
                     session.user.email?.split("@")[0] ||
                     "Creator",
-                  credits: 100,
+                  credits: 200,
                 },
                 { onConflict: "id" },
               );

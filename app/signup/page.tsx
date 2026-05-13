@@ -1,50 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
 
-function normalizePhone(value: string) {
-  const digits = value.replace(/\D/g, "");
-  if (digits.length === 10) return `+91${digits}`;
-  if (digits.startsWith("91") && digits.length === 12) return `+${digits}`;
-  if (value.trim().startsWith("+")) return value.trim();
-  return digits ? `+${digits}` : value.trim();
-}
-
 function isEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
-}
-
-function isMobile(value: string) {
-  const digits = value.replace(/\D/g, "");
-  return digits.length >= 10 && !value.includes("@");
 }
 
 export default function SignupPage() {
   const router = useRouter();
   const { darkMode } = useTheme();
 
-  const [identifier, setIdentifier] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const trimmedIdentifier = identifier.trim();
-
-  const emailMode = useMemo(() => isEmail(trimmedIdentifier), [trimmedIdentifier]);
-  const mobileMode = useMemo(() => isMobile(trimmedIdentifier), [trimmedIdentifier]);
+  const trimmedEmail = email.trim();
 
   const canSubmit =
     !loading &&
     name.trim().length >= 2 &&
-    ((emailMode && password.length >= 6) ||
-      (mobileMode && (!otpSent || otp.trim().length >= 4)));
+    isEmail(trimmedEmail) &&
+    password.length >= 6;
 
   async function ensureUserProfile(userId: string, userEmail?: string | null) {
     const fullName = name.trim() || userEmail?.split("@")[0] || "Creator";
@@ -52,9 +34,9 @@ export default function SignupPage() {
     const { error } = await supabase.from("profiles").upsert(
       {
         id: userId,
-        email: userEmail ?? (emailMode ? trimmedIdentifier : null),
+        email: userEmail ?? trimmedEmail,
         full_name: fullName,
-        credits: 100,
+        credits: 200,
       },
       { onConflict: "id" },
     );
@@ -72,7 +54,7 @@ export default function SignupPage() {
     event.preventDefault();
 
     if (!canSubmit) {
-      setMessage("Please enter your name, a valid email/mobile number, and password if using email.");
+      setMessage("Please enter your name, valid email, and minimum 6 character password.");
       return;
     }
 
@@ -80,73 +62,30 @@ export default function SignupPage() {
     setMessage("");
 
     try {
-      if (emailMode) {
-        const { data, error } = await supabase.auth.signUp({
-          email: trimmedIdentifier,
-          password,
-          options: {
-            data: {
-              full_name: name.trim(),
-            },
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
+      const { data, error } = await supabase.auth.signUp({
+        email: trimmedEmail,
+        password,
+        options: {
+          data: {
+            full_name: name.trim(),
           },
-        });
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
 
-        if (error) throw error;
+      if (error) throw error;
 
-        if (data.user) {
-          const profileReady = await ensureUserProfile(data.user.id, data.user.email);
-          if (!profileReady) return;
-
-          router.replace("/");
-          router.refresh();
-          return;
-        }
-
-        setMessage("Account created. Please verify your email, then login.");
-        router.push("/login");
-        return;
-      }
-
-      if (mobileMode) {
-        const phone = normalizePhone(trimmedIdentifier);
-
-        if (!otpSent) {
-          const { error } = await supabase.auth.signInWithOtp({
-            phone,
-            options: {
-              data: {
-                full_name: name.trim(),
-              },
-            },
-          });
-
-          if (error) throw error;
-
-          setOtpSent(true);
-          setMessage("OTP sent. Please enter the code to create your account.");
-          return;
-        }
-
-        const { data, error } = await supabase.auth.verifyOtp({
-          phone,
-          token: otp.trim(),
-          type: "sms",
-        });
-
-        if (error) throw error;
-
-        if (data.user) {
-          const profileReady = await ensureUserProfile(data.user.id, data.user.email);
-          if (!profileReady) return;
-        }
+      if (data.user) {
+        const profileReady = await ensureUserProfile(data.user.id, data.user.email);
+        if (!profileReady) return;
 
         router.replace("/");
         router.refresh();
         return;
       }
 
-      setMessage("Please enter a valid email address or mobile number.");
+      setMessage("Account created. Please verify your email, then login.");
+      router.push("/login");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Signup failed. Please try again.");
     } finally {
@@ -154,14 +93,14 @@ export default function SignupPage() {
     }
   }
 
-  async function signupWithProvider(provider: "google" | "facebook" | "apple") {
+  async function signupWithGoogle() {
     if (loading) return;
 
     setLoading(true);
     setMessage("");
 
     const { error } = await supabase.auth.signInWithOAuth({
-      provider,
+      provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
@@ -199,7 +138,7 @@ export default function SignupPage() {
       <section className="relative z-10 mx-auto grid min-h-[calc(100vh-180px)] max-w-6xl items-center gap-10 px-5 py-16 lg:grid-cols-[1fr_0.95fr]">
         <div>
           <div className="mb-5 inline-flex rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-sm font-black text-cyan-500">
-            Start with 100 credits after signup
+            Start with 200 credits after signup
           </div>
 
           <h1 className="max-w-3xl text-5xl font-black leading-tight tracking-tight md:text-7xl">
@@ -215,7 +154,7 @@ export default function SignupPage() {
           <div className="mb-6">
             <h2 className="text-2xl font-black">Sign Up</h2>
             <p className={`mt-2 text-sm ${muted}`}>
-              Use email/password or mobile OTP. Google login is supported when enabled in Supabase.
+              Use email/password or continue with Google.
             </p>
           </div>
 
@@ -229,37 +168,22 @@ export default function SignupPage() {
             />
 
             <input
-              value={identifier}
-              onChange={(event) => {
-                setIdentifier(event.target.value);
-                setOtpSent(false);
-                setOtp("");
-              }}
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
               className={inputClass}
-              placeholder="Email or mobile number"
+              placeholder="Email address"
               autoComplete="email"
+              type="email"
             />
 
-            {emailMode && (
-              <input
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                className={inputClass}
-                placeholder="Password (minimum 6 characters)"
-                type="password"
-                autoComplete="new-password"
-              />
-            )}
-
-            {mobileMode && otpSent && (
-              <input
-                value={otp}
-                onChange={(event) => setOtp(event.target.value)}
-                className={inputClass}
-                placeholder="Enter OTP"
-                inputMode="numeric"
-              />
-            )}
+            <input
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className={inputClass}
+              placeholder="Password (minimum 6 characters)"
+              type="password"
+              autoComplete="new-password"
+            />
 
             {message && (
               <div
@@ -278,7 +202,7 @@ export default function SignupPage() {
               disabled={!canSubmit}
               className="rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 px-6 py-4 text-sm font-black text-white shadow-lg shadow-cyan-500/25 transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? "Please wait..." : mobileMode && !otpSent ? "Send OTP" : "Create Account"}
+              {loading ? "Please wait..." : "Create Account"}
             </button>
           </div>
 
@@ -288,41 +212,19 @@ export default function SignupPage() {
             <div className={`h-px flex-1 ${darkMode ? "bg-white/10" : "bg-black/10"}`} />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
-            <button
-              type="button"
-              onClick={() => signupWithProvider("google")}
-              disabled={loading}
-              className={`flex w-full items-center justify-center gap-3 rounded-2xl border px-5 py-4 text-sm font-black shadow-sm transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60 ${
-                darkMode ? "border-white/10 bg-white/10 text-white" : "border-black/10 bg-white text-black"
-              }`}
-            >
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black/5 text-base font-black">G</span>
-              Google
-            </button>
-
-            <button
-              type="button"
-              disabled
-              title="Coming soon"
-              className={`flex w-full cursor-not-allowed items-center justify-center gap-3 rounded-2xl border px-5 py-4 text-sm font-black opacity-50 ${
-                darkMode ? "border-white/10 bg-white/10 text-white" : "border-black/10 bg-white text-black"
-              }`}
-            >
-              <span className="text-lg"></span> Apple
-            </button>
-
-            <button
-              type="button"
-              disabled
-              title="Coming soon"
-              className={`flex w-full cursor-not-allowed items-center justify-center gap-3 rounded-2xl border px-5 py-4 text-sm font-black opacity-50 ${
-                darkMode ? "border-white/10 bg-white/10 text-white" : "border-black/10 bg-white text-black"
-              }`}
-            >
-              <span className="text-lg">f</span> Facebook
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={signupWithGoogle}
+            disabled={loading}
+            className={`flex w-full items-center justify-center gap-3 rounded-2xl border px-5 py-4 text-sm font-black shadow-sm transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60 ${
+              darkMode ? "border-white/10 bg-white/10 text-white" : "border-black/10 bg-white text-black"
+            }`}
+          >
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black/5 text-base font-black">
+              G
+            </span>
+            Continue with Google
+          </button>
 
           <p className={`mt-5 text-center text-xs leading-5 ${muted}`}>
             By creating an account, you agree to our{" "}

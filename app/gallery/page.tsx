@@ -116,7 +116,7 @@ function ImageCard({
     >
       <img
         src={item.url}
-        alt={item.title}
+        alt={`${item.title} created using AgentForge AI`}
         className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
       />
 
@@ -207,15 +207,16 @@ export default function GalleryPage() {
               </p>
 
               <h1 className="max-w-3xl text-4xl font-black leading-tight tracking-tight md:text-6xl">
-                Explore AI agent creations.
+                AI Mockup & Product Photography Gallery
                 <span className="block bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent">
-                  Ultra HD quality visuals.
+                  Textile, Jewellery & Product Visuals
                 </span>
               </h1>
 
               <p className={`mt-5 max-w-2xl text-base leading-8 md:text-lg ${darkMode ? "text-white/65" : "text-black/60"}`}>
-                Check premium demo outputs created for textile, jewellery and product brands.
-                No client designs are exposed — only safe showcase visuals for marketing inspiration.
+                Explore AI generated textile mockups, jewellery photoshoots,
+                fashion visuals, and catalogue-ready product photography examples
+                created using AgentForge AI.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
@@ -240,7 +241,7 @@ export default function GalleryPage() {
                 <div className="relative row-span-2 overflow-hidden rounded-[1.6rem] bg-black/5">
                   <img
                     src="/gallery/textile/design-1.png"
-                    alt="Textile AI creation"
+                    alt="AI textile mockup example created with AgentForge AI"
                     className="h-full w-full object-cover"
                   />
                   <div className="absolute left-6 top-6 rounded-full bg-white/90 px-3 py-1 text-[11px] font-black text-black">
@@ -251,7 +252,7 @@ export default function GalleryPage() {
                 <div className="relative overflow-hidden rounded-[1.6rem] bg-black/5">
                   <img
                     src="/gallery/jewellery/design-1.png"
-                    alt="Jewellery AI creation"
+                    alt="AI jewellery photoshoot example created with AgentForge AI"
                     className="h-full w-full object-cover"
                   />
                   <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-black text-black">
@@ -262,7 +263,7 @@ export default function GalleryPage() {
                 <div className="relative overflow-hidden rounded-[1.6rem] bg-black/5">
                   <img
                     src="/gallery/productography/design-1.png"
-                    alt="Productography AI creation"
+                    alt="AI product photography example created with AgentForge AI"
                     className="h-full w-full object-cover"
                   />
                   <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-black text-black">
@@ -314,6 +315,33 @@ export default function GalleryPage() {
 
           <CtaCard isLoggedIn={isLoggedIn} />
         </div>
+
+
+        <section className="mx-auto mt-12 max-w-6xl pb-4">
+          <div
+            className={`rounded-[2rem] border p-8 backdrop-blur-xl ${
+              darkMode
+                ? "border-white/10 bg-white/5"
+                : "border-black/10 bg-white/70"
+            }`}
+          >
+            <h2 className="text-3xl font-black md:text-4xl">
+              AI Gallery for Modern Businesses
+            </h2>
+
+            <p
+              className={`mt-5 leading-8 ${
+                darkMode ? "text-white/65" : "text-black/60"
+              }`}
+            >
+              AgentForge helps textile manufacturers, jewellery brands,
+              wholesalers, fashion sellers, and ecommerce businesses generate
+              catalogue-ready visuals using AI. Explore textile mockups, AI
+              jewellery photography, product photoshoots, fashion model visuals,
+              and advertising creatives generated with AgentForge AI.
+            </p>
+          </div>
+        </section>
       </section>
 
       {selected && (
@@ -335,7 +363,7 @@ export default function GalleryPage() {
 
             <img
               src={selected.url}
-              alt={selected.title}
+              alt={`${selected.title} created using AgentForge AI`}
               className="block max-h-[92vh] max-w-[92vw] rounded-[1.5rem] object-contain shadow-2xl"
             />
           </div>

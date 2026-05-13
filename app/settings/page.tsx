@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "@/app/components/ThemeProvider";
+import { supabase } from "@/lib/supabase";
 
 export default function SettingsPage() {
   const { darkMode, toggleTheme } = useTheme();
@@ -65,20 +66,75 @@ export default function SettingsPage() {
                 <label className={`text-xs font-bold uppercase tracking-widest ${muted}`}>Email Address</label>
                 <div className={`mt-2 rounded-2xl border px-4 py-3.5 text-sm font-semibold ${softCard}`}>{user.email}</div>
               </div>
-              <button type="button" disabled className={`rounded-2xl border px-6 py-3 text-sm font-black transition ${softCard} cursor-not-allowed opacity-50`}>
+              <button type="button" className={`rounded-2xl border px-6 py-3 text-sm font-black transition ${softCard} cursor-not-allowed opacity-50`}>
                 Edit Profile — Coming Soon
               </button>
             </div>
           </div>
 
           {/* Danger zone */}
-          <div className={`rounded-[2rem] border border-red-400/20 p-6 shadow-xl backdrop-blur-xl md:p-8 ${darkMode ? "bg-red-500/[0.04]" : "bg-red-50/50"}`}>
-            <h3 className="mb-4 text-xl font-black text-red-500">Danger Zone</h3>
-            <p className={`text-sm ${muted}`}>Permanently delete your account and all associated data. This action cannot be undone.</p>
-            <button type="button" disabled className="mt-5 rounded-2xl border border-red-400/30 bg-red-500/10 px-6 py-3 text-sm font-black text-red-500 opacity-50 cursor-not-allowed">
-              Delete Account — Coming Soon
-            </button>
-          </div>
+<div
+  className={`rounded-[2rem] border border-red-400/20 p-6 shadow-xl backdrop-blur-xl md:p-8 ${
+    darkMode ? "bg-red-500/[0.04]" : "bg-red-50/50"
+  }`}
+>
+  <h3 className="mb-4 text-xl font-black text-red-500">
+    Danger Zone
+  </h3>
+
+  <p className={`text-sm ${muted}`}>
+    Permanently delete your account and all associated data.
+    This action cannot be undone.
+  </p>
+
+  <button
+    type="button"
+    onClick={async () => {
+      const confirmDelete = window.confirm(
+        "Are you sure you want to delete your account? This action cannot be undone."
+      );
+
+      if (!confirmDelete) return;
+
+      try {
+        const { data } = await supabase.auth.getSession();
+
+        const token = data.session?.access_token;
+
+        if (!token) {
+          alert("Please login again and try.");
+          return;
+        }
+
+        const res = await fetch("/api/delete-account", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) {
+          alert(result.error || "Account delete failed.");
+          return;
+        }
+
+        await supabase.auth.signOut();
+
+        alert("Your account has been deleted.");
+
+        window.location.href = "/";
+      } catch (err) {
+        console.error(err);
+        alert("Something went wrong.");
+      }
+    }}
+    className="mt-5 rounded-2xl border border-red-400/30 bg-red-500/10 px-6 py-3 text-sm font-black text-red-500 transition hover:scale-[1.02] hover:bg-red-500/20"
+  >
+    Delete Account
+  </button>
+</div>
         </section>
       </div>
     </div>

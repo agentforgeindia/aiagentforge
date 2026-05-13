@@ -19,9 +19,13 @@ export default function Footer() {
           <div className="grid gap-8 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
             <div>
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 text-sm font-black text-white">
-                  AF
-                </div>
+                <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-lg">
+  <img
+    src="/af-logo.png"
+    alt="AgentForge Logo"
+    className="h-full w-full object-cover"
+  />
+</div>
                 <div>
                   <h3 className="text-lg font-black">AgentForge</h3>
                   <p className={`text-xs ${muted}`}>AI tools for visual business</p>
@@ -56,9 +60,12 @@ export default function Footer() {
                 <Link href="/gallery" className="block transition-colors hover:text-cyan-500">
                   Gallery
                 </Link>
-                <Link href="/support" className="block transition-colors hover:text-cyan-500">
-                  Support
-                </Link>
+                <Link
+  href="/support"
+  className="hidden block transition-colors hover:text-cyan-500"
+>
+  Support
+</Link>
                 <Link href="/profile" className="block transition-colors hover:text-cyan-500">
                   Profile
                 </Link>
@@ -90,18 +97,12 @@ export default function Footer() {
             }`}
           >
             <p>&copy; 2026 AgentForge. All rights reserved.</p>
-            <p>AI visual generation platform for product businesses.</p>
+            <p>Built by ViralBrand — helping businesses create AI-powered visual content faster.</p>
           </div>
         </div>
       </footer>
 
-      <button
-        type="button"
-        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 text-xl font-black text-white shadow-2xl shadow-cyan-500/40 transition hover:scale-105"
-        aria-label="Open AI Chatbot"
-      >
-        AI
-      </button>
+  
     </>
   );
 }

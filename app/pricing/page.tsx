@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Script from "next/script";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
 
@@ -90,12 +91,14 @@ const plans: Plan[] = [
 ];
 
 export default function PricingPage() {
+  const router = useRouter();
   const { darkMode } = useTheme();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userId, setUserId] = useState("");
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [paymentMessage, setPaymentMessage] = useState("");
+  
 
   useEffect(() => {
     let active = true;
@@ -198,6 +201,7 @@ export default function PricingPage() {
           if (!verifyResponse.ok || !verifyData?.success) {
             throw new Error(verifyData?.error || "Payment verification failed.");
           }
+          router.push("/payment-success");
 
           setPaymentMessage(`${plan.creditsLabel} added successfully. Your AgentForge plan is active now.`);
           setLoadingPlan(null);
@@ -378,13 +382,6 @@ export default function PricingPage() {
         </section>
       </div>
 
-      <button
-        type="button"
-        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 text-xl font-black text-white shadow-2xl shadow-cyan-500/40 transition hover:scale-105"
-        aria-label="Open AI Chatbot"
-      >
-        AI
-      </button>
     </main>
   );
 }

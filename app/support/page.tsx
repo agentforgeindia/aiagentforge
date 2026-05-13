@@ -239,13 +239,7 @@ export default function SupportPage() {
         
       </div>
 
-      <button
-        type="button"
-        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 text-xl font-black text-white shadow-2xl shadow-cyan-500/40 transition hover:scale-105"
-        aria-label="Open AI Chatbot"
-      >
-        AI
-      </button>
+      
     </main>
   );
 }
