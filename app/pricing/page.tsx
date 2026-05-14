@@ -144,6 +144,10 @@ export default function PricingPage() {
 
       setLoadingPlan(plan.name);
 
+      if (typeof window !== "undefined" && (window as any).fbq) {
+  (window as any).fbq("track", "InitiateCheckout");
+}
+
       const orderResponse = await fetch("/api/razorpay/create-order", {
         method: "POST",
         headers: {

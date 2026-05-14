@@ -1,46 +1,59 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
 
-  const token = req.headers.get("authorization")?.replace("Bearer ", "");
+    const webhookUrl =
+      process.env.N8N_AGENTFORGE_AI_WEBHOOK_URL;
 
-  if (!token) {
-    return NextResponse.json({ error: "No auth token found" }, { status: 401 });
-  }
+    if (!webhookUrl) {
+      return NextResponse.json(
+        {
+          message:
+            "AgentForge AI webhook is not configured.",
+        },
+        { status: 500 }
+      );
+    }
 
-  const supabase = createClient(supabaseUrl, anonKey, {
-    global: {
+    const response = await fetch(webhookUrl, {
+      method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
-    },
-  });
+      body: JSON.stringify({
+        message: body.message,
+        page: body.page,
+        history: body.history || [],
+        source: "agentforge-website",
+      }),
+    });
 
-  const admin = createClient(supabaseUrl, serviceKey);
+    const data = await response.json();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    console.log("N8N RESPONSE:", data);
 
-  if (userError || !user) {
-    return NextResponse.json({ error: "User not logged in" }, { status: 401 });
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error(
+      "AgentForge AI Error:",
+      error
+    );
+
+    return NextResponse.json(
+      {
+        message:
+          "AgentForge AI is temporarily unavailable.",
+        recommendedPlan: null,
+        actions: [],
+        suggestions: [
+          "Textile business",
+          "Jewellery business",
+          "Product seller",
+        ],
+      },
+      { status: 500 }
+    );
   }
-
-  const userId = user.id;
-
-  await admin.from("generations").delete().eq("user_id", userId);
-  await admin.from("profiles").delete().eq("id", userId);
-
-  const { error: deleteError } = await admin.auth.admin.deleteUser(userId);
-
-  if (deleteError) {
-    return NextResponse.json({ error: deleteError.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ success: true });
 }

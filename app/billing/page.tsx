@@ -234,6 +234,10 @@ export default function BillingPage() {
         throw new Error("Razorpay checkout failed to load. Please refresh and try again.");
       }
 
+      if (typeof window !== "undefined" && (window as any).fbq) {
+  (window as any).fbq("track", "InitiateCheckout");
+}
+
       const orderResponse = await fetch("/api/razorpay/create-order", {
         method: "POST",
         headers: {

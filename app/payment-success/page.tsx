@@ -8,6 +8,12 @@ export default function PaymentSuccessPage() {
   const router = useRouter();
 
   useEffect(() => {
+
+    // Meta Purchase Event
+    if (typeof window !== "undefined" && (window as any).fbq) {
+      (window as any).fbq("track", "Purchase");
+    }
+
     const timer = setTimeout(() => {
       router.push("/");
     }, 3000);

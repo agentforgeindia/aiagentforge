@@ -70,7 +70,7 @@ export default function AgentForgeAI() {
       const res = await fetch("/api/agentforge-ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: finalMessage, page: pathname }),
+        body: JSON.stringify({ message: finalMessage, page: pathname, history: messages, }),
       });
 
       const data: BotResponse = await res.json();
