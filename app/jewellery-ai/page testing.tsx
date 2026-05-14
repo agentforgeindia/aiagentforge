@@ -14,8 +14,6 @@ import {
 import Link from "next/link";
 import { useAuth } from "@/app/components/AuthProvider";
 import { supabase } from "@/lib/supabase";
-import { canGenerate } from "@/lib/checkCredits";
-import { shouldDeductCredits } from "@/lib/deductCredits";
 
 type GenerationMode = "single" | "bulk";
 

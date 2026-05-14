@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
+import { useRouter, usePathname } from "next/navigation";
 
 interface AuthContextType {
   user: User | null;
@@ -20,6 +21,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [credits, setCredits] = useState(0);
 
+  const router = useRouter();
+  const pathname = usePathname();
+
   const fetchProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -31,6 +35,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!error && data) {
         setProfile(data);
         setCredits(data.credits || 0);
+
+        // Redirect if phone number missing
+        if (!data.phone && pathname !== "/complete-profile") {
+          router.push("/complete-profile");
+        }
       }
     } catch (err) {
       console.error("Error fetching profile:", err);
@@ -57,8 +66,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    // Listen for changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (mounted) {
         if (session) {
           setUser(session.user);
@@ -68,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(null);
           setCredits(0);
         }
+
         setLoading(false);
       }
     });
@@ -79,7 +91,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, credits, refreshProfile }}>
+    <AuthContext.Provider
+      value={{ user, profile, loading, credits, refreshProfile }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -87,8 +101,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
+
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
+
   return context;
 }

@@ -639,6 +639,7 @@ export default function Home() {
         accessories: resolvedAccessories,
         output_size: resolvedOutputSize,
         quality: resolvedQuality,
+        model_pose: pose,
         article_number: item.designNumber.trim() || null,
         custom_instruction: customInstruction || null,
         status: "pending",
@@ -915,21 +916,22 @@ if (shouldDeductCredits(profile)) {
                 }`}
               >
                 <div className="text-center">
-                  {previewImage ? (
-                    <img
-                      src={previewImage}
-                      alt="Uploaded textile pattern preview"
-                      className="mx-auto mb-4 h-36 w-36 rounded-3xl object-cover shadow-lg"
-                    />
-                  ) : (
-                    <img
-                      src="/banner-design.png"
-                      alt="Textile design pattern upload preview for AI mockup generation"
-                      className="mx-auto mb-4 h-36 w-36 rounded-3xl object-cover shadow-lg"
-                    />
-                  )}
+  {previewImage?.startsWith("blob:") || previewImage?.startsWith("http") ? (
+    <img
+      src={previewImage}
+      alt="Uploaded textile pattern preview"
+      className="mx-auto mb-4 h-36 w-36 rounded-3xl object-cover shadow-lg"
+    />
+  ) : (
+    <img
+      src="/banner-design.png"
+      alt="Textile design pattern upload preview for AI mockup generation"
+      className="mx-auto mb-4 h-36 w-36 rounded-3xl object-cover shadow-lg"
+    />
+  )}
 
-                  <p className="font-semibold">Textile Pattern</p>
+  <p className="font-semibold">Textile Pattern</p>
+
 
                   <p className={`mt-1 text-sm ${muted}`}>
                     {previewImage
@@ -941,19 +943,19 @@ if (shouldDeductCredits(profile)) {
 
               <div className="flex min-h-80 items-center justify-center rounded-[1.5rem] border border-cyan-300/30 bg-gradient-to-br from-cyan-400/20 via-blue-500/10 to-purple-500/20 p-6">
                 <div className="text-center">
-                  {previewResult ? (
-                    <img
-                      src={previewResult}
-                      alt="Generated model mockup preview"
-                      className="mx-auto mb-4 h-48 w-36 rounded-3xl object-cover shadow-lg shadow-cyan-400/30"
-                    />
-                  ) : (
-                    <img
-                      src="/banner-design-output.png"
-                      alt="AI generated textile fashion model mockup preview"
-                      className="mx-auto mb-4 h-48 w-36 rounded-3xl object-cover shadow-lg shadow-cyan-400/30"
-                    />
-                  )}
+                  {previewResult && previewResult.startsWith("http") ? (
+  <img
+    src={previewResult}
+    alt="Generated model mockup preview"
+    className="mx-auto mb-4 h-48 w-36 rounded-3xl object-cover shadow-lg shadow-cyan-400/30"
+  />
+) : (
+  <img
+    src="/banner-design-output.png"
+    alt="AI generated textile fashion model mockup preview"
+    className="mx-auto mb-4 h-48 w-36 rounded-3xl object-cover shadow-lg shadow-cyan-400/30"
+  />
+)}
 
                   <p className="font-semibold">Model Mockup</p>
 
@@ -1512,11 +1514,17 @@ if (shouldDeductCredits(profile)) {
                                   : "border-transparent"
                               }`}
                             >
-                              <img
-                                src={it.resultUrl}
-                                alt={`Uploaded textile design ${it.fileName} for AI mockup generation`}
-                                className="aspect-square w-full object-cover"
-                              />
+                              {it.resultUrl ? (
+  <img
+    src={it.resultUrl}
+    alt={`Generated AI mockup ${it.fileName}`}
+    className="aspect-square w-full object-cover"
+  />
+) : (
+  <div className="flex aspect-square w-full items-center justify-center text-xs text-black/50">
+    Loading...
+  </div>
+)}
                             </button>
                           ))}
                       </div>

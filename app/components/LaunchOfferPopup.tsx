@@ -7,8 +7,13 @@ export default function LaunchOfferPopup() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
+  const alreadyShown = localStorage.getItem("agentforge_offer_popup_seen");
+
+  if (alreadyShown) return;
+
   const timer = setTimeout(() => {
     setShow(true);
+    localStorage.setItem("agentforge_offer_popup_seen", "true");
   }, 5000);
 
   return () => clearTimeout(timer);
