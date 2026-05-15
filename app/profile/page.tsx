@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useTheme } from "@/app/components/ThemeProvider";
 import { supabase } from "@/lib/supabase";
+import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 export default function ProfilePage() {
   const { darkMode } = useTheme();

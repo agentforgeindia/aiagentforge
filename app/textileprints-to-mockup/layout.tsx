@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 export const metadata: Metadata = {
   title: "AI Textile Mockup Generator",

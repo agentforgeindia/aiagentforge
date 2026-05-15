@@ -8,6 +8,7 @@ import { useAuth } from "@/app/components/AuthProvider";
 import { Sparkles } from "lucide-react";
 import { canGenerate } from "@/lib/checkCredits";
 import { shouldDeductCredits } from "@/lib/deductCredits";
+import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 const WEBHOOK_URL =
   process.env.NEXT_PUBLIC_N8N_PRODUCTION_WEBHOOK ||
@@ -239,6 +240,8 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showPhonePopup, setShowPhonePopup] = useState(false);
+  const [phoneInput, setPhoneInput] = useState("");
 
   const [modelType, setModelType] = useState("Indian Male");
   const [product, setProduct] = useState("Shirt");
@@ -475,37 +478,57 @@ export default function Home() {
   };
 
   const uploadFile = async (file: File): Promise<string> => {
-    const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
-    const filePath = `textile-designs/${Date.now()}-${newId().slice(0, 6)}-${safeFileName}`;
+  const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
+  const filePath = `textile-designs/${Date.now()}-${newId().slice(0, 6)}-${safeFileName}`;
 
-    const { error } = await supabase.storage.from("designs").upload(filePath, file, {
-      cacheControl: "3600",
-      upsert: false,
-    });
+  const { error } = await supabase.storage.from("designs").upload(filePath, file, {
+    cacheControl: "3600",
+    upsert: false,
+  });
 
-    if (error) throw error;
+  if (error) throw error;
 
-    const { data } = supabase.storage.from("designs").getPublicUrl(filePath);
-    return data.publicUrl;
-  };
+  const { data } = supabase.storage.from("designs").getPublicUrl(filePath);
+  return data.publicUrl;
+};
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
+const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const files = Array.from(e.target.files || []);
 
-    if (files.length > 1 && !isEmpireUser) {
-      alert("Bulk generation is available only with the Empire Pack. Please upload one design at a time or upgrade to Empire Pack for bulk creation.");
-      if (e.target) e.target.value = "";
-      return;
-    }
+  if (!files.length) return;
 
-    const invalid = files.find((f) => !f.type.startsWith("image/"));
-    if (invalid) {
-      alert("Please upload image files only.");
-      return;
-    }
+  const planText = String(
+  profile?.plan ||
+    profile?.package ||
+    profile?.current_plan ||
+    profile?.subscription_plan ||
+    profile?.plan_name ||
+    ""
+).toLowerCase();
 
-    setUploading(true);
+const canUseBulk =
+  planText.includes("empire") ||
+  planText.includes("founder") ||
+  planText.includes("unlimited");
+
+if (files.length > 1 && !canUseBulk) {
+  alert(
+    "Bulk generation is available only with Empire, Founder Unlimited, or Unlimited plans. Please upload one design at a time or upgrade for bulk creation."
+  );
+
+  e.target.value = "";
+  return;
+}
+
+  const invalidFile = files.find((file) => !file.type.startsWith("image/"));
+
+  if (invalidFile) {
+    alert("Please upload image files only.");
+    e.target.value = "";
+    return;
+  }
+
+  setUploading(true);
 
     for (const file of files) {
       const id = newId();
@@ -676,16 +699,73 @@ export default function Home() {
     setActiveId(item.id);
   };
 
+  const hasSavedPhoneNumber = (profileData: any) => {
+    const phoneText = String(
+      profileData?.phone ||
+        profileData?.mobile ||
+        profileData?.phone_number ||
+        profileData?.whatsapp ||
+        "",
+    ).trim();
+
+    return phoneText.length >= 10;
+  };
+
+  const savePhoneNumber = async () => {
+    const cleanPhone = phoneInput.replace(/\D/g, "");
+
+    if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+      alert("Please enter a valid 10-digit Indian mobile number.");
+      return;
+    }
+
+    const userId = authUser?.id;
+
+    if (!userId) {
+      alert("Please login first.");
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({ phone: cleanPhone })
+      .eq("id", userId)
+      .select("*")
+      .single();
+
+    if (error) {
+      console.error("Phone save error:", error);
+      alert("Phone number save failed. Please try again.");
+      return;
+    }
+
+    setProfile(data);
+    refreshProfile?.();
+    setShowPhonePopup(false);
+    setPhoneInput("");
+
+    setTimeout(() => {
+      handleGenerate();
+    }, 100);
+  };
+
   const handleGenerate = async () => {
     const queue = items.filter((it) => it.status === "ready");
+
     if (!queue.length) {
       alert("Please upload at least one textile design first.");
       return;
     }
 
     const userId = authUser?.id;
+
     if (!userId) {
       alert("Please login to generate mockups.");
+      return;
+    }
+
+    if (!hasSavedPhoneNumber(profile)) {
+      setShowPhonePopup(true);
       return;
     }
 
@@ -693,51 +773,53 @@ export default function Home() {
     cancelRef.current = false;
 
     try {
-      const { data: profile, error: profileError } = await supabase
+      const { data: latestProfile, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .single();
 
-      const needed = requiredCredits * queue.length;
-
-      if (queue.length > 1 && !isEmpireProfile(profile)) {
-        alert("Bulk generation is available only with the Empire Pack. Please upgrade to Empire Pack to generate multiple textile mockups together.");
+      if (profileError || !latestProfile) {
+        alert("Unable to verify your profile. Please refresh and try again.");
         setLoading(false);
         return;
       }
 
-// Unlimited users bypass
-if (
-  profileError ||
-  !profile ||
-  !canGenerate(profile, needed)
-) {
-  alert(
-    `You don't have enough credits (${needed} required for ${queue.length} mockup${queue.length > 1 ? "s" : ""}). Please recharge to continue.`,
-  );
+      setProfile(latestProfile);
 
-  setLoading(false);
-  return;
-}
+      if (!hasSavedPhoneNumber(latestProfile)) {
+        setShowPhonePopup(true);
+        setLoading(false);
+        return;
+      }
 
-// Deduct only for normal users
-if (shouldDeductCredits(profile)) {
+      const needed = requiredCredits * queue.length;
 
-  const { error: deductError } = await supabase
-    .from("profiles")
-    .update({
-      credits: (profile.credits || 0) - needed,
-    })
-    .eq("id", userId);
+      if (!canGenerate(latestProfile, needed)) {
+        alert(
+          `You don't have enough credits (${needed} required for ${queue.length} mockup${queue.length > 1 ? "s" : ""}). Please recharge to continue.`,
+        );
 
-  if (!deductError) {
-    refreshProfile();
-  }
-}
+        setLoading(false);
+        return;
+      }
+
+      if (shouldDeductCredits(latestProfile)) {
+        const { error: deductError } = await supabase
+          .from("profiles")
+          .update({
+            credits: (latestProfile.credits || 0) - needed,
+          })
+          .eq("id", userId);
+
+        if (!deductError) {
+          refreshProfile?.();
+        }
+      }
 
       for (const item of queue) {
         if (cancelRef.current) break;
+
         try {
           await generateOne(item, userId);
         } catch (err: any) {
@@ -758,6 +840,7 @@ if (shouldDeductCredits(profile)) {
       setLoading(false);
     }
   };
+
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -867,6 +950,49 @@ if (shouldDeductCredits(profile)) {
       />
 
       <div className="relative z-10">
+        {showPhonePopup && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 px-4 backdrop-blur-md">
+            <div
+              className={`w-full max-w-md rounded-[2rem] border p-6 shadow-2xl ${
+                darkMode
+                  ? "border-cyan-400/30 bg-[#07111f] text-white"
+                  : "border-cyan-300/40 bg-white text-[#111827]"
+              }`}
+            >
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 text-2xl font-black text-white">
+                AF
+              </div>
+
+              <h2 className="text-2xl font-black">Add your phone number</h2>
+
+              <p className={`mt-2 text-sm ${darkMode ? "text-white/60" : "text-black/60"}`}>
+                Please add your WhatsApp/mobile number before creating AI mockups.
+              </p>
+
+              <input
+                value={phoneInput}
+                onChange={(e) => setPhoneInput(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                placeholder="Enter 10-digit mobile number"
+                inputMode="numeric"
+                maxLength={10}
+                className={`mt-5 w-full rounded-2xl border px-4 py-3 outline-none transition focus:border-cyan-400 ${
+                  darkMode
+                    ? "border-white/10 bg-white/5 text-white placeholder:text-white/35"
+                    : "border-black/10 bg-white text-black placeholder:text-black/35"
+                }`}
+              />
+
+              <button
+                type="button"
+                onClick={savePhoneNumber}
+                className="mt-4 w-full rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-3 font-bold text-white shadow-lg shadow-cyan-500/20"
+              >
+                Save & Continue
+              </button>
+            </div>
+          </div>
+        )}
+
         <section className="mx-auto grid max-w-7xl items-center gap-8 px-5 py-10 lg:grid-cols-[0.9fr_1.1fr] lg:py-16">
           <div>
             <div

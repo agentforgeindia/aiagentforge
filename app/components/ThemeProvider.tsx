@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 type ThemeContextType = {
   darkMode: boolean;

@@ -53,7 +53,7 @@ const termsSections = [
   },
   {
     title: "13. Contact Us",
-    body: "For legal questions, platform concerns, or support requests, contact us at help@aiagentforge.in.",
+    body: "For legal questions, platform concerns, or support requests, contact us at info@aiagentforge.in.",
   },
 ];
 
@@ -129,9 +129,9 @@ export default function TermsPage() {
             For legal questions, support, or account concerns, contact us at{" "}
             <a
               className="font-black text-cyan-600 underline"
-              href="mailto:help@aiagentforge.in"
+              href="mailto:info@aiagentforge.in"
             >
-              help@aiagentforge.in
+              info@aiagentforge.in
             </a>
             .
           </p>

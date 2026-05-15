@@ -7,6 +7,7 @@ import { useTheme } from "./ThemeProvider";
 import { useAuth } from "./AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { BadgeCheck } from "lucide-react";
+import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 const agents = [
   { title: "TextilePrints to Mockup AI", desc: "Textile design → fashion mockup", link: "/textileprints-to-mockup" },

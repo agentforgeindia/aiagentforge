@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
+import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 interface Creation {
   id: string;

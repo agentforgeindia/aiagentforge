@@ -8,6 +8,7 @@ import Footer from "./components/Footer";
 import AgentForgeAI from "./components/AgentForgeAI";
 import LaunchOfferPopup from "./components/LaunchOfferPopup";
 import Script from "next/script";
+import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -67,48 +68,56 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      suppressHydrationWarning
-    >
+  <html
+    lang="en"
+    className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    suppressHydrationWarning
+  >
+    <head>
+      <meta
+        name="facebook-domain-verification"
+        content="rulnxopysk6g6u6lp9ct0dp2pp8iom"
+      />
+    </head>
 
-      <head>
-        <meta
-          name="facebook-domain-verification"
-          content="rulnxopysk6g6u6lp9ct0dp2pp8iom"
-        />
-      </head>
+    <body className="relative min-h-full overflow-x-hidden flex flex-col">
+      <div className="fixed inset-0 -z-50 bg-[#070b14]" />
 
-      <body className="min-h-full flex flex-col">
+      <object
+        type="image/svg+xml"
+        data="/bg.svg"
+        className="fixed inset-0 -z-40 h-full w-full object-cover opacity-20"
+        aria-label="AgentForge Animated Background"
+      />
 
-        <ThemeProvider>
-          <AuthProvider>
-            <Navbar />
-            {children}
-            <Footer />
-            <AgentForgeAI />
-            <LaunchOfferPopup />
-          </AuthProvider>
-        </ThemeProvider>
+      <div className="fixed inset-0 -z-30 bg-[radial-gradient(circle_at_top_left,#22d3ee55,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf644,transparent_35%),radial-gradient(circle_at_bottom,#0ea5e944,transparent_30%),linear-gradient(to_bottom,transparent,rgba(0,0,0,0.08))]" />
 
-        <Script id="facebook-pixel" strategy="afterInteractive">
-          {`
-            !function(f,b,e,v,n,t,s)
-            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-            n.queue=[];t=b.createElement(e);t.async=!0;
-            t.src=v;s=b.getElementsByTagName(e)[0];
-            s.parentNode.insertBefore(t,s)}(window, document,'script',
-            'https://connect.facebook.net/en_US/fbevents.js');
+      <ThemeProvider>
+        <AuthProvider>
+          <Navbar />
+          {children}
+          <Footer />
+          <AgentForgeAI />
+          <LaunchOfferPopup />
+        </AuthProvider>
+      </ThemeProvider>
 
-            fbq('init', '1136318385188354');
-            fbq('track', 'PageView');
-          `}
-        </Script>
+      <Script id="facebook-pixel" strategy="afterInteractive">
+        {`
+          !function(f,b,e,v,n,t,s)
+          {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+          n.queue=[];t=b.createElement(e);t.async=!0;
+          t.src=v;s=b.getElementsByTagName(e)[0];
+          s.parentNode.insertBefore(t,s)}(window, document,'script',
+          'https://connect.facebook.net/en_US/fbevents.js');
 
-      </body>
-    </html>
-  );
+          fbq('init', '1136318385188354');
+          fbq('track', 'PageView');
+        `}
+      </Script>
+    </body>
+  </html>
+);
 }

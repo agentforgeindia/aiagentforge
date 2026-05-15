@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { useTheme } from "./components/ThemeProvider";
 import { Shirt, Gem, SprayCan } from "lucide-react";
 import LaunchOfferPopup from "@/app/components/LaunchOfferPopup";
+import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 type Agent = {
   title: string;
@@ -93,23 +94,26 @@ export default function Home() {
     : "bg-white/80 border-black/10 shadow-black/10";
   const muted = darkMode ? "text-white/65" : "text-black/60";
 
-  return (
-    <>
+ return (
+  <>
     <LaunchOfferPopup />
-    <main className={`relative min-h-screen overflow-hidden ${bg}`}>
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="fixed inset-0 h-full w-full object-cover opacity-20"
-      >
-        <source src="/bg.mp4" type="video/mp4" />
-      </video>
 
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee55,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf644,transparent_35%),linear-gradient(to_bottom,transparent,rgba(0,0,0,0.08))]" />
+    <main className={`relative min-h-screen overflow-hidden ${bg}`}>
+
+      {/* Animated SVG Background */}
+      <object
+        type="image/svg+xml"
+        data="/bg.svg"
+        className="fixed inset-0 h-full w-full object-cover opacity-20"
+        aria-label="AgentForge Animated Background"
+      />
+
+      {/* Gradient Glow Layer */}
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee66,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf655,transparent_35%),radial-gradient(circle_at_bottom,#0ea5e955,transparent_30%),linear-gradient(to_bottom,transparent,rgba(0,0,0,0.08))]" />
+
+      {/* Grid Overlay */}
       <div
-        className={`fixed inset-0 ${darkMode ? "opacity-[0.06]" : "opacity-[0.14]"}`}
+        className={`fixed inset-0 ${darkMode ? "opacity-[0.05]" : "opacity-[0.10]"}`}
         style={{
           backgroundImage:
             "linear-gradient(45deg, currentColor 1px, transparent 1px), linear-gradient(-45deg, currentColor 1px, transparent 1px)",

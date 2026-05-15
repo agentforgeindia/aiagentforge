@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useTheme } from "./ThemeProvider";
-
+import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 export default function Footer() {
   const { darkMode } = useTheme();

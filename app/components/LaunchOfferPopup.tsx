@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 export default function LaunchOfferPopup() {
   const [show, setShow] = useState(false);

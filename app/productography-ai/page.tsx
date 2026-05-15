@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useTheme } from "@/app/components/ThemeProvider";
+import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 export default function ProductographyAIPage() {
   const { darkMode } = useTheme();

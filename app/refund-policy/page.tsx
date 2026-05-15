@@ -41,7 +41,7 @@ const refundSections = [
   },
   {
     title: "10. Contact Us",
-    body: "For refund-related questions or billing concerns, contact us at help@aiagentforge.in.",
+    body: "For refund-related questions or billing concerns, contact us at info@aiagentforge.in.",
   },
 ];
 
@@ -117,9 +117,9 @@ export default function RefundPolicyPage() {
             For refund requests, payment support, or billing questions, contact us at{" "}
             <a
               className="font-black text-cyan-600 underline"
-              href="mailto:help@aiagentforge.in"
+              href="mailto:info@aiagentforge.in"
             >
-              help@aiagentforge.in
+              info@aiagentforge.in
             </a>
             .
           </p>

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
+import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 type Tab = "All" | "Textile" | "Jewellery" | "Productography";
 type Category = "Textile" | "Jewellery" | "Productography";

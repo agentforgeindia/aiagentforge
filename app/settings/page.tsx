@@ -2,6 +2,7 @@
 
 import { useTheme } from "@/app/components/ThemeProvider";
 import { supabase } from "@/lib/supabase";
+import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 export default function SettingsPage() {
   const { darkMode, toggleTheme } = useTheme();

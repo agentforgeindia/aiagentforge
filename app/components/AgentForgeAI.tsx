@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Bot, X, Send, Sparkles, MessageCircle, CreditCard } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 type Action = {
   label: string;

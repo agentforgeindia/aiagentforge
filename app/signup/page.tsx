@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
+import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 function isEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
@@ -28,8 +29,19 @@ export default function SignupPage() {
     isEmail(trimmedEmail) &&
     password.length >= 6;
 
-  async function ensureUserProfile(userId: string, userEmail?: string | null) {
-    const fullName = name.trim() || userEmail?.split("@")[0] || "Creator";
+  function isAlreadyRegisteredError(errorMessage: string) {
+    const message = errorMessage.toLowerCase();
+
+    return (
+      message.includes("already") ||
+      message.includes("registered") ||
+      message.includes("exists") ||
+      message.includes("user already")
+    );
+  }
+
+  async function ensureUserProfile(userId: string, userEmail?: string | null, userName?: string | null) {
+    const fullName = userName?.trim() || name.trim() || userEmail?.split("@")[0] || "Creator";
 
     const { error } = await supabase.from("profiles").upsert(
       {
@@ -37,13 +49,14 @@ export default function SignupPage() {
         email: userEmail ?? trimmedEmail,
         full_name: fullName,
         credits: 200,
+        plan: "free",
       },
       { onConflict: "id" },
     );
 
     if (error) {
       console.error("Profile setup failed:", error.message);
-      setMessage(`Profile setup failed: ${error.message}`);
+      setMessage("Account created, but profile setup failed. Please login once.");
       return false;
     }
 
@@ -73,10 +86,24 @@ export default function SignupPage() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        if (isAlreadyRegisteredError(error.message)) {
+          setMessage("This email is already registered. Please login instead.");
+          return;
+        }
+
+        throw error;
+      }
+
+      // Supabase can return a user with empty identities when the email already exists.
+      // In that case we should not run profile setup again; show a clean login message.
+      if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        setMessage("This email is already registered. Please login instead.");
+        return;
+      }
 
       if (data.user) {
-        const profileReady = await ensureUserProfile(data.user.id, data.user.email);
+        const profileReady = await ensureUserProfile(data.user.id, data.user.email, name);
         if (!profileReady) return;
 
         router.replace("/");
@@ -87,7 +114,14 @@ export default function SignupPage() {
       setMessage("Account created. Please verify your email, then login.");
       router.push("/login");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Signup failed. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "Signup failed. Please try again.";
+
+      if (isAlreadyRegisteredError(errorMessage)) {
+        setMessage("This email is already registered. Please login instead.");
+        return;
+      }
+
+      setMessage(errorMessage);
     } finally {
       setLoading(false);
     }

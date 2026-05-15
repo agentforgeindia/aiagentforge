@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 import { useRouter, usePathname } from "next/navigation";
+import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 interface AuthContextType {
   user: User | null;

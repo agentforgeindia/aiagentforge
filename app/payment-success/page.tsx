@@ -3,6 +3,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 export default function PaymentSuccessPage() {
   const router = useRouter();

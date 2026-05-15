@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "@/app/components/ThemeProvider";
+import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 export default function PrivacyPolicyPage() {
   const { darkMode } = useTheme();
@@ -54,7 +55,7 @@ export default function PrivacyPolicyPage() {
     },
     {
       title: "11. Contact Us",
-      body: "For privacy-related questions, account deletion requests, or data concerns, contact us at help@aiagentforge.in.",
+      body: "For privacy-related questions, account deletion requests, or data concerns, contact us at info@aiagentforge.in.",
     },
   ];
 
@@ -106,8 +107,8 @@ export default function PrivacyPolicyPage() {
           <h2 className="text-2xl font-black">Need help?</h2>
           <p className={`mx-auto mt-3 max-w-2xl leading-8 ${muted}`}>
             For privacy support, data deletion, or account-related questions, email us at{" "}
-            <a className="font-black text-cyan-600 underline" href="mailto:help@aiagentforge.in">
-              help@aiagentforge.in
+            <a className="font-black text-cyan-600 underline" href="mailto:info@aiagentforge.in">
+              info@aiagentforge.in
             </a>
             .
           </p>

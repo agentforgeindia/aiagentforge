@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 export default function CompleteProfilePage() {
   const router = useRouter();
