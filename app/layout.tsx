@@ -8,7 +8,6 @@ import Footer from "./components/Footer";
 import AgentForgeAI from "./components/AgentForgeAI";
 import LaunchOfferPopup from "./components/LaunchOfferPopup";
 import Script from "next/script";
-import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -68,56 +67,70 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-  <html
-    lang="en"
-    className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    suppressHydrationWarning
-  >
-    <head>
-      <meta
-        name="facebook-domain-verification"
-        content="rulnxopysk6g6u6lp9ct0dp2pp8iom"
-      />
-    </head>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <head>
+        <meta
+          name="facebook-domain-verification"
+          content="rulnxopysk6g6u6lp9ct0dp2pp8iom"
+        />
+      </head>
 
-    <body className="relative min-h-full overflow-x-hidden flex flex-col">
-      <div className="fixed inset-0 -z-50 bg-[#070b14]" />
+      <body className="relative min-h-full overflow-x-hidden flex flex-col">
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=AW-18170895451"
+          strategy="afterInteractive"
+        />
 
-      <object
-        type="image/svg+xml"
-        data="/bg.svg"
-        className="fixed inset-0 -z-40 h-full w-full object-cover opacity-20"
-        aria-label="AgentForge Animated Background"
-      />
+        <Script id="google-ads" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            window.gtag = function(){ window.dataLayer.push(arguments); };
+            window.gtag('js', new Date());
+            window.gtag('config', 'AW-18170895451');
+          `}
+        </Script>
 
-      <div className="fixed inset-0 -z-30 bg-[radial-gradient(circle_at_top_left,#22d3ee55,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf644,transparent_35%),radial-gradient(circle_at_bottom,#0ea5e944,transparent_30%),linear-gradient(to_bottom,transparent,rgba(0,0,0,0.08))]" />
+        <div className="fixed inset-0 -z-50 bg-[#070b14]" />
 
-      <ThemeProvider>
-        <AuthProvider>
-          <Navbar />
-          {children}
-          <Footer />
-          <AgentForgeAI />
-          <LaunchOfferPopup />
-        </AuthProvider>
-      </ThemeProvider>
+        <object
+          type="image/svg+xml"
+          data="/bg.svg"
+          className="fixed inset-0 -z-40 h-full w-full object-cover opacity-20"
+          aria-label="AgentForge Animated Background"
+        />
 
-      <Script id="facebook-pixel" strategy="afterInteractive">
-        {`
-          !function(f,b,e,v,n,t,s)
-          {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-          n.queue=[];t=b.createElement(e);t.async=!0;
-          t.src=v;s=b.getElementsByTagName(e)[0];
-          s.parentNode.insertBefore(t,s)}(window, document,'script',
-          'https://connect.facebook.net/en_US/fbevents.js');
+        <div className="fixed inset-0 -z-30 bg-[radial-gradient(circle_at_top_left,#22d3ee55,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf644,transparent_35%),radial-gradient(circle_at_bottom,#0ea5e944,transparent_30%),linear-gradient(to_bottom,transparent,rgba(0,0,0,0.08))]" />
 
-          fbq('init', '1136318385188354');
-          fbq('track', 'PageView');
-        `}
-      </Script>
-    </body>
-  </html>
-);
+        <ThemeProvider>
+          <AuthProvider>
+            <Navbar />
+            {children}
+            <Footer />
+            <AgentForgeAI />
+            <LaunchOfferPopup />
+          </AuthProvider>
+        </ThemeProvider>
+
+        <Script id="facebook-pixel" strategy="afterInteractive">
+          {`
+            !function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+
+            fbq('init', '1136318385188354');
+            fbq('track', 'PageView');
+          `}
+        </Script>
+      </body>
+    </html>
+  );
 }
