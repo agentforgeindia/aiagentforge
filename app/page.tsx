@@ -312,8 +312,8 @@ export default function Home() {
             <div className="mt-8 grid gap-5 md:grid-cols-3">
               {[
                 ["Starter", "For shopkeepers and testing", "₹1,999 / month"],
-                ["Growth", "For agents and daily sellers", "₹17,999 / month"],
-                ["Scale", "For factories and bulk output", "₹49,999 / month"],
+                ["Growth", "For agents and daily sellers", "₹9,999 / month"],
+                ["Scale", "For factories and bulk output", "₹39,999 / month"],
               ].map(([title, desc, price]) => (
                 <div
                   key={title}

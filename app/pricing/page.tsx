@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
-import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
+
 
 declare global {
   interface Window {
@@ -35,19 +35,24 @@ const plans: Plan[] = [
     amount: 1999,
     desc: "For small shops and creators starting with AI product visuals.",
     audience: "Small shops & creators",
-    credits: 2400,
-    creditsLabel: "2,400 Credits",
+    credits: 1800,
+    creditsLabel: "1,800 Credits",
     images: "Up to 120 standard generations",
     badge: "Best to Start",
     popular: false,
     features: [
-      "All AI agents access",
-      "15 credits per standard image",
-      "1080×1080 square export",
-      "Watermark-free outputs",
-      "Standard generation queue",
-      "Basic support",
-    ],
+          "All AI agents access",
+          "15 credits per standard image",
+         "1080×1080 square export",
+         "Watermark-free outputs",
+         "Standard generation queue",
+         "Mobile story outputs",
+         "Add company name on mockups",
+          "Add contact number & website",
+         "Article code placement support",
+         "Single model generation",
+         "Basic support",
+],
   },
   {
     name: "Pro Creator",
@@ -55,19 +60,22 @@ const plans: Plan[] = [
     amount: 9999,
     desc: "For sellers, agencies and growing brands creating content regularly.",
     audience: "Sellers, agencies & growing brands",
-    credits: 16000,
-    creditsLabel: "16,000 Credits",
+    credits: 12000,
+    creditsLabel: "12,000 Credits",
     images: "Up to 800 standard generations",
     badge: "Most Popular",
     popular: true,
     features: [
-      "Everything in Starter",
-      "Faster generation queue",
-      "Premium styles included",
-      "Mobile story outputs",
-      "Regenerate variations",
-      "Priority support",
-    ],
+          "Everything in Starter",
+         "Faster generation queue",
+          "Premium styles included",
+          "Mobile story outputs",
+         "Regenerate variations",
+          "Multiple model generation",
+          "Custom branding on outputs",
+          "Advanced article presentation",
+          "Priority support",
+],
   },
   {
     name: "Empire",
@@ -75,19 +83,20 @@ const plans: Plan[] = [
     amount: 39999,
     desc: "For factories, wholesalers and teams needing bulk AI production.",
     audience: "Factories, wholesalers & teams",
-    credits: 60000,
-    creditsLabel: "60,000 Credits",
-    images: "Up to 3,000 standard generations",
+    credits: 50000,
+    creditsLabel: "50,000 Credits",
+    images: "Up to 3,000+ standard generations",
     badge: "Bulk Studio",
     popular: false,
     features: [
-      "Everything in Pro Creator",
-      "Bulk upload mode",
-      "Bulk generate at discounted credits",
-      "Team workflow ready",
-      "Fastest processing queue",
-      "Dedicated business support",
-    ],
+        "Everything in Starter",
+        "Faster generation queue",
+        "Premium styles included",
+        "Regenerate variations",
+        "Multiple model generation",
+        "Custom branding on outputs",
+        "Priority support",
+],
   },
 ];
 
@@ -206,10 +215,8 @@ export default function PricingPage() {
           if (!verifyResponse.ok || !verifyData?.success) {
             throw new Error(verifyData?.error || "Payment verification failed.");
           }
-          router.push("/payment-success");
-
-          setPaymentMessage(`${plan.creditsLabel} added successfully. Your AgentForge plan is active now.`);
-          setLoadingPlan(null);
+         setLoadingPlan(null);
+router.push("/payment-success");
         },
         modal: {
           ondismiss: function () {

@@ -4,9 +4,9 @@ import Razorpay from "razorpay";
 export const runtime = "nodejs";
 
 const PLAN_CONFIG: Record<string, { amount: number; credits: number }> = {
-  Starter: { amount: 1999, credits: 2400 },
-  "Pro Creator": { amount: 9999, credits: 16000 },
-  Empire: { amount: 39999, credits: 60000 },
+  Starter: { amount: 1999, credits: 1800 },
+"Pro Creator": { amount: 9999, credits: 12000 },
+Empire: { amount: 39999, credits: 50000 },
 };
 
 function getRazorpay() {

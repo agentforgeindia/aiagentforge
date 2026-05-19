@@ -13,8 +13,8 @@ type BillingPlan = {
   amount: number;
   desc: string;
   audience: string;
-  credits: string;
-  creditsValue: number;
+  credits: number;
+creditsLabel: string;
   images: string;
   badge: string;
   popular: boolean;
@@ -65,19 +65,24 @@ const plans: BillingPlan[] = [
     amount: 1999,
     desc: "For small shops and creators starting with AI product visuals.",
     audience: "Small shops & creators",
-    credits: "2,400 Credits",
-    creditsValue: 2400,
+    credits: 1800,
+    creditsLabel: "1,800 Credits",
     images: "Up to 120 standard generations",
     badge: "Best to Start",
     popular: false,
     features: [
-      "All AI agents access",
-      "15 credits per standard image",
-      "1080×1080 square export",
-      "Watermark-free outputs",
-      "Standard generation queue",
-      "Basic support",
-    ],
+          "All AI agents access",
+          "15 credits per standard image",
+         "1080×1080 square export",
+         "Watermark-free outputs",
+         "Standard generation queue",
+         "Mobile story outputs",
+         "Add company name on mockups",
+          "Add contact number & website",
+         "Article code placement support",
+         "Single model generation",
+         "Basic support",
+],
   },
   {
     name: "Pro Creator",
@@ -85,19 +90,22 @@ const plans: BillingPlan[] = [
     amount: 9999,
     desc: "For sellers, agencies and growing brands creating content regularly.",
     audience: "Sellers, agencies & growing brands",
-    credits: "16,000 Credits",
-    creditsValue: 16000,
+    credits: 12000,
+    creditsLabel: "12,000 Credits",
     images: "Up to 800 standard generations",
     badge: "Most Popular",
     popular: true,
     features: [
-      "Everything in Starter",
-      "Faster generation queue",
-      "Premium styles included",
-      "Mobile story outputs",
-      "Regenerate variations",
-      "Priority support",
-    ],
+          "Everything in Starter",
+         "Faster generation queue",
+          "Premium styles included",
+          "Mobile story outputs",
+         "Regenerate variations",
+          "Multiple model generation",
+          "Custom branding on outputs",
+          "Advanced article presentation",
+          "Priority support",
+],
   },
   {
     name: "Empire",
@@ -105,19 +113,20 @@ const plans: BillingPlan[] = [
     amount: 39999,
     desc: "For factories, wholesalers and teams needing bulk AI production.",
     audience: "Factories, wholesalers & teams",
-    credits: "60,000 Credits",
-    creditsValue: 60000,
-    images: "Up to 3,000 standard generations",
+    credits: 50000,
+    creditsLabel: "50,000 Credits",
+    images: "Up to 3,000+ standard generations",
     badge: "Bulk Studio",
     popular: false,
     features: [
-      "Everything in Pro Creator",
-      "Bulk upload mode",
-      "Bulk generate at discounted credits",
-      "Team workflow ready",
-      "Fastest processing queue",
-      "Dedicated business support",
-    ],
+        "Everything in Starter",
+        "Faster generation queue",
+        "Premium styles included",
+        "Regenerate variations",
+        "Multiple model generation",
+        "Custom branding on outputs",
+        "Priority support",
+],
   },
 ];
 
@@ -249,7 +258,7 @@ export default function BillingPage() {
           planName: plan.name,
           userId: session.user.id,
           amount: plan.amount,
-          credits: plan.creditsValue,
+          credits: plan.credits,
         }),
       });
 
@@ -277,7 +286,7 @@ export default function BillingPage() {
         notes: {
           user_id: session.user.id,
           plan: plan.name,
-          credits: plan.creditsValue,
+          credits: plan.credits,
         },
         theme: {
           color: "#0891b2",
@@ -294,7 +303,7 @@ export default function BillingPage() {
               planName: plan.name,
               userId: session.user.id,
               amount: plan.amount,
-              credits: plan.creditsValue,
+              credits: plan.credits,
             }),
           });
 
@@ -303,9 +312,8 @@ export default function BillingPage() {
           if (!verifyResponse.ok) {
             throw new Error(verifyData?.error || "Payment verification failed.");
           }
-          router.push("/payment-success");
-          setMessage(`Payment successful. ${plan.credits} added to your account.`);
-          await refreshBilling();
+          setPayingPlan(null);
+router.push("/payment-success");
         },
         modal: {
           ondismiss: () => {
