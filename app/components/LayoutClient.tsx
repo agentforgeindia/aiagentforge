@@ -16,7 +16,7 @@ export default function LayoutClient({
   const pathname = usePathname();
 
   const isWorkshopPage =
-    pathname === "/workshop";
+  pathname.startsWith("/workshop");
 
   return (
     <>
