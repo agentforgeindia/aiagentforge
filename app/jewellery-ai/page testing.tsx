@@ -310,9 +310,21 @@ export default function JewelleryAIPage() {
         status: "pending"
       }]);
 
-      // Deduct credits
-      await supabase.from("profiles").update({ credits: (profile.credits || 0) - requiredCredits }).eq("id", userId);
-      refreshProfile();
+      
+      // Deduct credits safely
+const currentCredits = profile?.credits || 0;
+
+if (currentCredits < requiredCredits) {
+  alert("Not enough credits. Please upgrade or buy more credits.");
+  return;
+}
+
+await supabase
+  .from("profiles")
+  .update({ credits: currentCredits - requiredCredits })
+  .eq("id", userId);
+
+refreshProfile();
 
       // Trigger n8n
       await fetch(process.env.NEXT_PUBLIC_N8N_PRODUCTION_WEBHOOK || "", {

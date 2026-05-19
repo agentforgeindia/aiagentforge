@@ -658,7 +658,7 @@ export default function Home() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [dailyGalleryImage, setDailyGalleryImage] = useState("/Banner-design-output.png");
+  const [dailyGalleryImage, setDailyGalleryImage] = useState("/banner-design-output.png");
   const [showProfile, setShowProfile] = useState(false);
   const [showPhonePopup, setShowPhonePopup] = useState(false);
   const [phoneInput, setPhoneInput] = useState("");
@@ -1761,7 +1761,7 @@ if (files.length > 1 && !canUseBulk) {
     />
   ) : (
     <img
-      src="/Banner-design.png"
+      src="/banner-design.png"
       alt="Textile design pattern upload preview for AI mockup generation"
       className="mx-auto mb-3 h-36 w-36 rounded-3xl object-cover shadow-lg"
     />
@@ -1787,7 +1787,7 @@ if (files.length > 1 && !canUseBulk) {
       />
     ) : (
       <img
-        src="/Banner-design-output.png"
+        src="/banner-design-output.png"
         alt="AI generated textile fashion model mockup preview"
         className="mx-auto mb-3 h-44 w-36 rounded-3xl object-cover shadow-lg shadow-cyan-400/30"
       />

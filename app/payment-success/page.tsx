@@ -3,16 +3,27 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
 
   useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+
+    const amount = Number(searchParams.get("amount")) || 1999;
 
     // Meta Purchase Event
     if (typeof window !== "undefined" && (window as any).fbq) {
       (window as any).fbq("track", "Purchase");
+    }
+
+    // Google Ads Purchase Conversion
+    if (typeof window !== "undefined" && (window as any).gtag) {
+      (window as any).gtag("event", "conversion", {
+        send_to: "AW-18170895451/hLf_CMDA7q8cENu4x9hD",
+        value: amount,
+        currency: "INR",
+      });
     }
 
     const timer = setTimeout(() => {
