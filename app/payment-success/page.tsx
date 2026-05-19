@@ -17,14 +17,16 @@ export default function PaymentSuccessPage() {
       (window as any).fbq("track", "Purchase");
     }
 
-    // Google Ads Purchase Conversion
-    if (typeof window !== "undefined" && (window as any).gtag) {
-      (window as any).gtag("event", "conversion", {
-        send_to: "AW-18170895451/hLf_CMDA7q8cENu4x9hD",
-        value: amount,
-        currency: "INR",
-      });
-    }
+  // Google Ads Purchase Conversion
+if (typeof window !== "undefined") {
+  setTimeout(() => {
+    (window as any).gtag?.("event", "conversion", {
+      send_to: "AW-18170895451/hLf_CMDA7q8cENu4x9hD",
+      value: amount,
+      currency: "INR",
+    });
+  }, 1500);
+}
 
     const timer = setTimeout(() => {
       router.push("/");
