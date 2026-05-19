@@ -7,8 +7,8 @@ import { useEffect, useMemo, useState } from "react";
 
 
 const WORKSHOP_DATE = "2026-05-24T15:00:00+05:30";
-const REGISTER_LINK = "/signup?source=textile-workshop";
-const WHATSAPP_LINK = "https://wa.me/919041635032";
+const REGISTER_LINK = "/https://rzp.io/rzp/agentforge-workshop";
+const WHATSAPP_LINK = "https://rzp.io/rzp/agentforge-workshop";
 
 const heroImages = [
   { title: "Men Shirt Mockup", category: "Male Garments", src: "/Workshop/mens-shirt.png" },
