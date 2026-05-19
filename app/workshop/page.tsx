@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 
 
 const WORKSHOP_DATE = "2026-05-24T15:00:00+05:30";
-const REGISTER_LINK = "/https://rzp.io/rzp/agentforge-workshop";
+const REGISTER_LINK = "https://rzp.io/rzp/agentforge-workshop";
 const WHATSAPP_LINK = "https://rzp.io/rzp/agentforge-workshop";
 
 const heroImages = [
@@ -303,9 +303,9 @@ export default function WebinarLandingPage() {
               Workshop Starts In
             </p>
             <div className="grid grid-cols-4 gap-2 md:gap-4">
-             <TimeBox value={mounted ? timeLeft.days : 0} label="Days" />
+                <TimeBox value={mounted ? timeLeft.days : 0} label="Days" />
                 <TimeBox value={mounted ? timeLeft.hours : 0} label="Hours" />
-<               TimeBox value={mounted ? timeLeft.minutes : 0} label="Min" />
+                <TimeBox value={mounted ? timeLeft.minutes : 0} label="Min" />
                 <TimeBox value={mounted ? timeLeft.seconds : 0} label="Sec" />
             </div>
           </div>
@@ -514,37 +514,8 @@ export default function WebinarLandingPage() {
         <CenterCTA />
       </SectionWrap>
 
-      <section className="mx-auto max-w-7xl px-4 py-12 md:px-8">
-        <div className={`rounded-[2.5rem] border p-6 md:p-10 ${cardClass}`}>
-          <div className="text-center">
-            <p className="text-sm font-black uppercase tracking-[0.25em] text-violet-500">
-              For Factories & Wholesalers
-            </p>
-            <h2 className="mt-3 text-4xl font-black md:text-5xl">
-              Private Onboarding Available
-            </h2>
-          </div>
-
-          <div className="mt-8 grid gap-4 md:grid-cols-4">
-            {["Bulk Mockup Generation", "Faster Workflow Setup", "Dedicated Onboarding", "+1000 Founder Credits"].map((item) => (
-              <div key={item} className={`rounded-3xl border p-5 text-center font-black ${cardClass}`}>
-                {item}
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-8 text-center">
-            <a
-              href={WHATSAPP_LINK}
-              className="inline-flex rounded-2xl bg-green-500 px-7 py-4 font-black text-white shadow-xl"
-            >
-              Connect Privately on WhatsApp
-            </a>
-          </div>
-        </div>
-      </section>
-
-
+      
+      
 <SectionWrap eyebrow="FAQ" title="Before You Join">
   <div className="mx-auto grid max-w-4xl gap-4 text-left">
     {[
