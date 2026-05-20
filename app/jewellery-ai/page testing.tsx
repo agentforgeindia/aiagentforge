@@ -235,8 +235,11 @@ export default function JewelleryAIPage() {
 
       if (error) throw error;
 
-      const { data } = supabase.storage.from("designs").getPublicUrl(filePath);
-      return data.publicUrl;
+      const { data: publicUrlData } = supabase.storage
+  .from("designs")
+  .getPublicUrl(filePath);
+
+return publicUrlData.publicUrl;
     } catch (error) {
       console.error("Upload error:", error);
       alert("Image upload failed.");

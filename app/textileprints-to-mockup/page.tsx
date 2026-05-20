@@ -1235,8 +1235,11 @@ export default function Home() {
 
     if (error) throw error;
 
-    const { data } = supabase.storage.from("designs").getPublicUrl(filePath);
-    return data.publicUrl;
+    const { data: publicUrlData } = supabase.storage
+  .from("designs")
+  .getPublicUrl(filePath);
+
+return publicUrlData.publicUrl;
   };
 
   const uploadBrandLogo = async (file: File): Promise<string> => {
@@ -1252,8 +1255,11 @@ export default function Home() {
 
     if (error) throw error;
 
-    const { data } = supabase.storage.from("designs").getPublicUrl(filePath);
-    return data.publicUrl;
+    const { data: publicUrlData } = supabase.storage
+  .from("designs")
+  .getPublicUrl(filePath);
+
+return publicUrlData.publicUrl;
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
