@@ -1937,19 +1937,23 @@ export default function Home() {
               Textile design to premium model mockup
             </div>
 
-            <h1 className="max-w-2xl text-4xl font-black leading-[0.95] tracking-[-0.04em] lg:text-6xl">
-            AI Textile Mockup Generator
-            <span className="block bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
-             Upload. Generate. Done.
-            </span>
-             Sell Faster.
+            <h1 className="max-w-xl text-3xl font-black leading-[1.02] tracking-[-0.04em] lg:text-5xl">
+              AI Textile Mockup Generator
+              <span className="block bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
+                Upload. Generate. Done.
+              </span>
+              Sell Faster.
             </h1>
 
-            <p className={`mt-4 max-w-lg text-sm leading-6 lg:text-base ${muted}`}>
-              Generate catalogue-ready textile mockups, AI fashion model photos, kurti mockups, saree mockups, shirt mockups, and client preview images without stitching samples or expensive photoshoots.
+            <p
+              className={`mt-4 max-w-lg text-sm leading-6 lg:text-base ${muted}`}
+            >
+              Generate catalogue-ready textile mockups, AI fashion model photos,
+              kurti mockups, saree mockups, shirt mockups, and client preview
+              images without stitching samples or expensive photoshoots.
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-4">
+            <div className="mt-6 flex flex-wrap gap-3">
               <a
                 href="#try"
                 className="rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-6 py-3 text-sm font-black text-black shadow-xl shadow-cyan-500/25 transition hover:scale-105"
@@ -1958,7 +1962,7 @@ export default function Home() {
               </a>
               <Link
                 href="/gallery"
-                className={`rounded-full px-7 py-4 font-black ${darkMode ? "bg-white/10 text-white" : "bg-white text-black"}`}
+                className={`rounded-full px-6 py-3 text-sm font-black ${darkMode ? "bg-white/10 text-white" : "bg-white text-black"}`}
               >
                 View Gallery
               </Link>
@@ -1966,87 +1970,80 @@ export default function Home() {
           </div>
 
           <div
-            className={`flex h-fit flex-col rounded-[2rem] border p-4 shadow-2xl backdrop-blur-xl ${card}`}
+            className={`flex h-fit flex-col rounded-[1.5rem] border p-3 shadow-2xl backdrop-blur-xl sm:rounded-[2rem] sm:p-4 ${card}`}
           >
-            <div className="grid gap-4 sm:grid-cols-2">
-
+            <div className="grid grid-cols-2 gap-4">
               <div
-                className={`flex min-h-[250px] items-center justify-center rounded-[1.5rem] border p-6 ${
+                className={`flex w-full min-h-[170px] items-center justify-center rounded-[1.25rem] border p-3 sm:min-h-[210px] sm:rounded-[1.5rem] sm:p-4 ${
                   darkMode
                     ? "border-white/10 bg-black/25"
                     : "border-black/10 bg-[#fffaf0]"
                 }`}
               >
                 <div className="text-center">
-  {previewImage?.startsWith("blob:") || previewImage?.startsWith("http") ? (
-    <img
-      src={previewImage}
-      alt="Uploaded textile pattern preview"
-      className="mx-auto mb-4 h-28 w-28 rounded-3xl object-cover shadow-lg"
-    />
-  ) : (
-    <img
-      src="/banner-design.png"
-      alt="Textile design pattern upload preview for AI mockup generation"
-      className="mx-auto mb-4 h-28 w-28 rounded-3xl object-cover shadow-lg"
-    />
-  )}
+                  {previewImage?.startsWith("blob:") ||
+                  previewImage?.startsWith("http") ? (
+                    <img
+                      src={previewImage}
+                      alt="Uploaded textile pattern preview"
+                      className="mx-auto mb-3 h-28 w-28 rounded-2xl object-cover shadow-lg sm:h-36 sm:w-36 sm:rounded-3xl"
+                    />
+                  ) : (
+                    <img
+                      src="/banner-design.png"
+                      alt="Textile design pattern upload preview for AI mockup generation"
+                      className="mx-auto mb-3 h-28 w-28 rounded-2xl object-cover shadow-lg sm:h-36 sm:w-36 sm:rounded-3xl"
+                    />
+                  )}
 
-  <p className="font-semibold">Textile Pattern</p>
+                  </div>
+              </div>
 
-<p className={`mt-1 text-sm ${muted}`}>
-  {previewImage
-    ? "Uploaded design preview"
-    : "Upload textile design / pattern"}
-</p>
-</div>
-</div>
+              <div className="flex w-full min-h-[170px] items-center justify-center rounded-[1.25rem] border border-cyan-300/30 bg-gradient-to-br from-cyan-400/20 via-blue-500/10 to-purple-500/20 p-3 sm:min-h-[210px] sm:rounded-[1.5rem] sm:p-4">
+                <div className="text-center">
+                  {previewResult && previewResult.startsWith("http") ? (
+                    <img
+                      src={previewResult}
+                      alt="Generated model mockup preview"
+                      className="mx-auto mb-3 h-32 w-28 rounded-2xl object-cover shadow-lg shadow-cyan-400/30 sm:h-44 sm:w-36 sm:rounded-3xl"
+                    />
+                  ) : (
+                    <img
+                      src="/banner-design-output.png"
+                      alt="AI generated textile fashion model mockup preview"
+                      className="mx-auto mb-3 h-32 w-28 rounded-2xl object-cover shadow-lg shadow-cyan-400/30 sm:h-44 sm:w-36 sm:rounded-3xl"
+                    />
+                  )}
 
-<div className="flex min-h-[250px] items-center justify-center rounded-[1.5rem] border border-cyan-300/30 bg-gradient-to-br from-cyan-400/20 via-blue-500/10 to-purple-500/20 p-6">
-  <div className="text-center">
-    {previewResult && previewResult.startsWith("http") ? (
-      <img
-        src={previewResult}
-        alt="Generated model mockup preview"
-        className="mx-auto mb-4 h-40 w-32 rounded-3xl object-cover shadow-lg shadow-cyan-400/30"
-      />
-    ) : (
-      <img
-        src="/banner-design-output.png"
-        alt="AI generated textile fashion model mockup preview"
-        className="mx-auto mb-4 h-40 w-32 rounded-3xl object-cover shadow-lg shadow-cyan-400/30"
-      />
-    )}
+                  <p className="font-semibold">Model Mockup</p>
 
-    <p className="font-semibold">Model Mockup</p>
+                  <p className={`mt-1 text-sm ${muted}`}>
+                    {previewResult
+                      ? "Latest AI fashion output"
+                      : "AI fashion output"}
+                  </p>
+                </div>
+              </div>
+            </div>
 
-    <p className={`mt-1 text-sm ${muted}`}>
-      {previewResult
-        ? "Latest AI fashion output"
-        : "AI fashion output"}
-    </p>
-  </div>
-</div>
-</div>
-
-<div
-  className={`mt-4 flex items-center justify-center overflow-hidden rounded-[1.5rem] border ${
-    darkMode
-      ? "border-white/10 bg-black/25"
-      : "border-black/10 bg-white/80"
-  }`}
->
-  <img
-    src="/gallery/textile/banner.png"
-    alt="AgentForge textile gallery"
-    onError={(event) => {
-      event.currentTarget.src = "/banner.png";
-    }}
-    className="h-auto max-h-[320px] w-full object-contain"
-  />
-</div>
-</div>
-</section>
+            <div
+              className={`mt-4 flex items-center justify-center overflow-hidden rounded-[1.5rem] border ${
+                darkMode
+                  ? "border-white/10 bg-black/25"
+                  : "border-black/10 bg-white/80"
+              }`}
+            >
+              <img
+                src="/gallery/textile/banner.png"
+                alt="AgentForge textile gallery"
+                onError={(event) => {
+                  event.currentTarget.src = "/banner.png";
+                }}
+                className="h-auto max-h-[260px] w-full object-contain"
+              />
+            </div>
+          </div>
+        </section>
 
         <section id="try" className="mx-auto max-w-7xl px-3 py-5 sm:px-5 sm:py-8">
           <div
