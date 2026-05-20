@@ -738,6 +738,7 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const stepTopRef = useRef<HTMLDivElement | null>(null);
   const [dailyGalleryImage, setDailyGalleryImage] = useState(
     "/banner-design-output.png",
   );
@@ -1170,7 +1171,17 @@ export default function Home() {
     return baseCredits + extraCredits;
   };
 
-  const requiredCredits = getRequiredCredits();
+  const requiredCredits = getRequiredCredits(
+  customOutputSize.trim() || outputSize,
+  customQuality.trim() || quality,
+  {
+    company_name: useCompanyName ? companyName.trim() : "",
+    phone_number: useCompanyPhone ? companyPhone.trim() : "",
+    website: useCompanyWebsite ? companyWebsite.trim() : "",
+    address: useCompanyAddress ? companyAddress.trim() : "",
+  }
+);
+  
   const totalCreditsNeeded = requiredCredits * Math.max(readyItems.length, 1);
 
   const toggleAccessory = (item: string) => {
@@ -2478,7 +2489,7 @@ export default function Home() {
                 <div
                   className={`rounded-[1.5rem] p-3 sm:rounded-[2rem] sm:p-5 ${darkMode ? "bg-white/[0.035]" : "bg-white/70"}`}
                 >
-                  <div className="mt-8 grid grid-cols-2 gap-3">
+                  <div ref={stepTopRef} className="mt-8 grid grid-cols-2 gap-3">
   {[
     { step: "STEP 1", title: "Product", desc: "Category + product" },
     { step: "STEP 2", title: "Model", desc: "Usage + look" },
@@ -3021,9 +3032,16 @@ export default function Home() {
                 >
                   <button
                     type="button"
-                    onClick={() =>
-                      setBuilderStep((step) => Math.max(1, step - 1))
-                    }
+                    onClick={() => {
+  setBuilderStep((step) => Math.max(1, step - 1));
+
+  setTimeout(() => {
+    stepTopRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, 100);
+}}
                     disabled={Number(builderStep) === 1}
                     className={`rounded-2xl px-5 py-3 text-sm font-black transition disabled:opacity-40 sm:px-6 ${
                       darkMode
@@ -3038,9 +3056,16 @@ export default function Home() {
                     <button
                       type="button"
                       disabled={!canGoNext}
-                      onClick={() =>
-                        setBuilderStep((step) => Math.min(4, step + 1))
-                      }
+                      onClick={() => {
+  setBuilderStep((step) => Math.min(4, step + 1));
+
+  setTimeout(() => {
+    stepTopRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, 100);
+}}
                       className="flex-1 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 px-6 py-3 text-sm font-black text-black shadow-lg shadow-cyan-500/20 transition hover:scale-[1.02] disabled:opacity-40 sm:flex-none sm:px-8"
                     >
                       Next Step
