@@ -26,7 +26,11 @@ function getSupabaseAdmin() {
   });
 }
 
-function verifyRazorpaySignature(orderId: string, paymentId: string, signature: string) {
+function verifyRazorpaySignature(
+  orderId: string,
+  paymentId: string,
+  signature: string
+) {
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
   if (!keySecret) {
@@ -71,7 +75,10 @@ export async function POST(request: Request) {
     const plan = PLAN_CONFIG[planName];
 
     if (!plan) {
-      return NextResponse.json({ error: "Invalid plan selected." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid plan selected." },
+        { status: 400 }
+      );
     }
 
     if (Number(amount) !== plan.amount || Number(credits) !== plan.credits) {
@@ -88,28 +95,47 @@ export async function POST(request: Request) {
     );
 
     if (!isValid) {
-      return NextResponse.json({ error: "Invalid Razorpay signature." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid Razorpay signature." },
+        { status: 400 }
+      );
     }
 
     const supabaseAdmin = getSupabaseAdmin();
 
-    const { data: existingPayment, error: existingPaymentError } = await supabaseAdmin
+    // 1. FIRST insert payment record.
+    // If same payment ID comes again, unique constraint blocks it before credits update.
+    const { error: insertPaymentError } = await supabaseAdmin
       .from("payments")
-      .select("id")
-      .eq("razorpay_payment_id", razorpay_payment_id)
-      .maybeSingle();
-
-    if (existingPaymentError) throw existingPaymentError;
-
-    if (existingPayment) {
-      return NextResponse.json({
-        success: true,
-        alreadyProcessed: true,
-        creditsAdded: 0,
-        message: "Payment already processed. Credits not added again.",
+      .insert({
+        user_id: userId,
+        plan_name: planName,
+        amount: plan.amount,
+        credits: plan.credits,
+        currency: "INR",
+        status: "paid",
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
       });
+
+    if (insertPaymentError) {
+      if (
+        insertPaymentError.code === "23505" ||
+        insertPaymentError.message?.toLowerCase().includes("duplicate")
+      ) {
+        return NextResponse.json({
+          success: true,
+          alreadyProcessed: true,
+          creditsAdded: 0,
+          message: "Payment already processed. Credits not added again.",
+        });
+      }
+
+      throw insertPaymentError;
     }
 
+    // 2. Only first successful insert reaches here.
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("credits")
@@ -130,34 +156,6 @@ export async function POST(request: Request) {
       .eq("id", userId);
 
     if (updateProfileError) throw updateProfileError;
-
-    const { error: insertPaymentError } = await supabaseAdmin.from("payments").insert({
-      user_id: userId,
-      plan_name: planName,
-      amount: plan.amount,
-      credits: plan.credits,
-      currency: "INR",
-      status: "paid",
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-    });
-
-    if (insertPaymentError) {
-      if (
-        insertPaymentError.code === "23505" ||
-        insertPaymentError.message?.includes("duplicate")
-      ) {
-        return NextResponse.json({
-          success: true,
-          alreadyProcessed: true,
-          creditsAdded: 0,
-          message: "Payment already processed. Credits not added again.",
-        });
-      }
-
-      throw insertPaymentError;
-    }
 
     return NextResponse.json({
       success: true,
