@@ -166,9 +166,9 @@ export default function Navbar() {
 
             {showAgents && (
               <div
-                className={`absolute left-0 top-11 z-50 w-72 overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-xl ${
-                  darkMode ? "border-white/10 bg-[#0b1220]/95" : "border-black/10 bg-white/95"
-                }`}
+                className={`absolute right-0 top-14 z-[9999] w-80 overflow-hidden rounded-[2rem] border shadow-2xl backdrop-blur-2xl ${
+  darkMode ? "border-white/10 bg-[#0b1220]/98" : "border-black/10 bg-white/98"
+}`}
               >
                 {agents.map((agent) => (
                   <Link
@@ -186,7 +186,7 @@ export default function Navbar() {
         </nav>
 
         {/* Right side */}
-        <div className="flex items-center justify-between gap-2 px-3 py-3 overflow-hidden">
+        <div className="flex items-center justify-between gap-2 px-3 py-3 overflow-visible">
           {/* Credits badge — visible only when logged in */}
           {isLoggedIn && (
             <div
@@ -207,7 +207,7 @@ export default function Navbar() {
               Login
             </Link>
           ) : (
-            <div className="relative hidden sm:block" ref={profileRef}>
+            <div className="relative z-50 hidden sm:block" ref={profileRef}>
               {/* Avatar button */}
               <button
                 type="button"
