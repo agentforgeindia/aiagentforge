@@ -737,7 +737,6 @@ export default function Home() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
   const stepTopRef = useRef<HTMLDivElement | null>(null);
   const [dailyGalleryImage, setDailyGalleryImage] = useState(
     "/banner-design-output.png",
@@ -1172,16 +1171,17 @@ export default function Home() {
   };
 
   const requiredCredits = getRequiredCredits(
-  customOutputSize.trim() || outputSize,
-  customQuality.trim() || quality,
-  {
-    company_name: useCompanyName ? companyName.trim() : "",
-    phone_number: useCompanyPhone ? companyPhone.trim() : "",
-    website: useCompanyWebsite ? companyWebsite.trim() : "",
-    address: useCompanyAddress ? companyAddress.trim() : "",
-  }
-);
-  
+    customOutputSize.trim() || outputSize,
+    customQuality.trim() || quality,
+    {
+      company_name: useCompanyName ? companyName.trim() : "",
+      phone_number: useCompanyPhone ? companyPhone.trim() : "",
+      website: useCompanyWebsite ? companyWebsite.trim() : "",
+      address: useCompanyAddress ? companyAddress.trim() : "",
+    },
+  );
+
+
   const totalCreditsNeeded = requiredCredits * Math.max(readyItems.length, 1);
 
   const toggleAccessory = (item: string) => {
@@ -1236,10 +1236,10 @@ export default function Home() {
     if (error) throw error;
 
     const { data: publicUrlData } = supabase.storage
-  .from("designs")
-  .getPublicUrl(filePath);
+      .from("designs")
+      .getPublicUrl(filePath);
 
-return publicUrlData.publicUrl;
+    return publicUrlData.publicUrl;
   };
 
   const uploadBrandLogo = async (file: File): Promise<string> => {
@@ -1256,10 +1256,10 @@ return publicUrlData.publicUrl;
     if (error) throw error;
 
     const { data: publicUrlData } = supabase.storage
-  .from("designs")
-  .getPublicUrl(filePath);
+      .from("designs")
+      .getPublicUrl(filePath);
 
-return publicUrlData.publicUrl;
+    return publicUrlData.publicUrl;
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1670,7 +1670,16 @@ return publicUrlData.publicUrl;
     const queue = items.filter((it) => it.status === "ready");
 
     if (!queue.length) {
-      alert("Please upload at least one textile design first.");
+      alert("Please upload your textile design before starting generation.");
+      setBuilderStep(1);
+
+      setTimeout(() => {
+        stepTopRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 100);
+
       return;
     }
 
@@ -2504,9 +2513,18 @@ return publicUrlData.publicUrl;
   ].map((item, index) => (
     <div
   key={item.step}
-  onClick={() => setCurrentStep(index + 1)}
+  onClick={() => {
+    setBuilderStep(index + 1);
+
+    setTimeout(() => {
+      stepTopRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 100);
+  }}
   className={`relative cursor-pointer overflow-hidden rounded-3xl border p-4 shadow-sm transition-all duration-300 active:scale-[0.98] ${
-    currentStep === index + 1
+    builderStep === index + 1
       ? "border-cyan-300 bg-gradient-to-br from-cyan-400 to-blue-500 text-white shadow-cyan-200/60"
       : "border-cyan-100 bg-white/80 text-slate-900 hover:border-cyan-200"
   }`}
@@ -2516,7 +2534,7 @@ return publicUrlData.publicUrl;
       <div className="relative z-10 flex items-start justify-between gap-2">
         <div>
           <p className={`text-[10px] font-black tracking-[0.22em] ${
-           currentStep === index + 1 ? "text-white/80" : "text-cyan-600"
+           builderStep === index + 1 ? "text-white/80" : "text-cyan-600"
           }`}>
             {item.step}
           </p>
@@ -2526,14 +2544,14 @@ return publicUrlData.publicUrl;
           </h3>
 
           <p className={`mt-1 text-[11px] font-semibold ${
-            index === 3 ? "text-white/80" : "text-slate-500"
+            builderStep === index + 1 ? "text-white/80" : "text-slate-500"
           }`}>
             {item.desc}
           </p>
         </div>
 
         <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black ${
-          index === 3
+          builderStep === index + 1
             ? "bg-white text-cyan-600"
             : "bg-cyan-400 text-white"
         }`}>
