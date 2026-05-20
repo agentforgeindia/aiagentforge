@@ -1929,7 +1929,7 @@ export default function Home() {
           </div>
         )}
 
-        <section className="mx-auto grid w-full max-w-7xl items-start gap-5 px-3 py-5 sm:px-4 lg:grid-cols-[0.55fr_1.45fr] lg:py-8">
+        <section className="mx-auto grid w-full max-w-7xl items-start gap-5 px-3 py-5 sm:px-4 lg:grid-cols-[0.9fr_1.1fr] lg:py-8">
           <div>
             <div
               className={`mb-5 inline-flex rounded-full px-4 py-2 text-sm font-semibold ${darkMode ? "border border-cyan-400/30 bg-cyan-400/10 text-cyan-200" : "border border-cyan-700/20 bg-cyan-500/15 text-cyan-900"}`}
@@ -1972,9 +1972,9 @@ export default function Home() {
           <div
             className={`flex h-fit flex-col rounded-[1.5rem] border p-3 shadow-2xl backdrop-blur-xl sm:rounded-[2rem] sm:p-4 ${card}`}
           >
-            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div
-                className={`flex min-h-[170px] items-center justify-center rounded-[1.25rem] border p-3 sm:min-h-[210px] sm:rounded-[1.5rem] sm:p-4 ${
+                className={`flex w-full min-h-[170px] items-center justify-center rounded-[1.25rem] border p-3 sm:min-h-[210px] sm:rounded-[1.5rem] sm:p-4 ${
                   darkMode
                     ? "border-white/10 bg-black/25"
                     : "border-black/10 bg-[#fffaf0]"
@@ -1996,17 +1996,10 @@ export default function Home() {
                     />
                   )}
 
-                  <p className="font-semibold">Textile Pattern</p>
-
-                  <p className={`mt-1 text-sm ${muted}`}>
-                    {previewImage
-                      ? "Uploaded design preview"
-                      : "Upload textile design / pattern"}
-                  </p>
-                </div>
+                  </div>
               </div>
 
-              <div className="flex min-h-[170px] items-center justify-center rounded-[1.25rem] border border-cyan-300/30 bg-gradient-to-br from-cyan-400/20 via-blue-500/10 to-purple-500/20 p-3 sm:min-h-[210px] sm:rounded-[1.5rem] sm:p-4">
+              <div className="flex w-full min-h-[170px] items-center justify-center rounded-[1.25rem] border border-cyan-300/30 bg-gradient-to-br from-cyan-400/20 via-blue-500/10 to-purple-500/20 p-3 sm:min-h-[210px] sm:rounded-[1.5rem] sm:p-4">
                 <div className="text-center">
                   {previewResult && previewResult.startsWith("http") ? (
                     <img
