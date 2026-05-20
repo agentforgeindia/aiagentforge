@@ -26,11 +26,7 @@ function getSupabaseAdmin() {
   });
 }
 
-function verifyRazorpaySignature(
-  orderId: string,
-  paymentId: string,
-  signature: string
-) {
+function verifyRazorpaySignature(orderId: string, paymentId: string, signature: string) {
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
   if (!keySecret) {
@@ -75,10 +71,7 @@ export async function POST(request: Request) {
     const plan = PLAN_CONFIG[planName];
 
     if (!plan) {
-      return NextResponse.json(
-        { error: "Invalid plan selected." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid plan selected." }, { status: 400 });
     }
 
     if (Number(amount) !== plan.amount || Number(credits) !== plan.credits) {
@@ -95,25 +88,18 @@ export async function POST(request: Request) {
     );
 
     if (!isValid) {
-      return NextResponse.json(
-        { error: "Invalid Razorpay signature." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid Razorpay signature." }, { status: 400 });
     }
 
     const supabaseAdmin = getSupabaseAdmin();
 
-    // 1. Pehle check karo payment already processed hai ya nahi
-    const { data: existingPayment, error: existingPaymentError } =
-      await supabaseAdmin
-        .from("payments")
-        .select("id, credits, status")
-        .eq("razorpay_payment_id", razorpay_payment_id)
-        .maybeSingle();
+    const { data: existingPayment, error: existingPaymentError } = await supabaseAdmin
+      .from("payments")
+      .select("id")
+      .eq("razorpay_payment_id", razorpay_payment_id)
+      .maybeSingle();
 
-    if (existingPaymentError) {
-      throw existingPaymentError;
-    }
+    if (existingPaymentError) throw existingPaymentError;
 
     if (existingPayment) {
       return NextResponse.json({
@@ -124,21 +110,38 @@ export async function POST(request: Request) {
       });
     }
 
-    // 2. Payment ko record karo before credits update
-    // Same payment dobara hit hua to unique constraint usko rok degi
-    const { error: insertPaymentError } = await supabaseAdmin
-      .from("payments")
-      .insert({
-        user_id: userId,
-        plan_name: planName,
-        amount: plan.amount,
-        credits: plan.credits,
-        currency: "INR",
-        status: "paid",
-        razorpay_order_id,
-        razorpay_payment_id,
-        razorpay_signature,
-      });
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("credits")
+      .eq("id", userId)
+      .single();
+
+    if (profileError) throw profileError;
+
+    const currentCredits = Number(profile?.credits || 0);
+    const newCredits = currentCredits + plan.credits;
+
+    const { error: updateProfileError } = await supabaseAdmin
+      .from("profiles")
+      .update({
+        credits: newCredits,
+        plan: planName,
+      })
+      .eq("id", userId);
+
+    if (updateProfileError) throw updateProfileError;
+
+    const { error: insertPaymentError } = await supabaseAdmin.from("payments").insert({
+      user_id: userId,
+      plan_name: planName,
+      amount: plan.amount,
+      credits: plan.credits,
+      currency: "INR",
+      status: "paid",
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    });
 
     if (insertPaymentError) {
       if (
@@ -154,33 +157,6 @@ export async function POST(request: Request) {
       }
 
       throw insertPaymentError;
-    }
-
-    // 3. Current credits lo
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .select("credits")
-      .eq("id", userId)
-      .single();
-
-    if (profileError) {
-      throw profileError;
-    }
-
-    const currentCredits = Number(profile?.credits || 0);
-    const newCredits = currentCredits + plan.credits;
-
-    // 4. Credits add karo
-    const { error: updateProfileError } = await supabaseAdmin
-      .from("profiles")
-      .update({
-        credits: newCredits,
-        plan: planName,
-      })
-      .eq("id", userId);
-
-    if (updateProfileError) {
-      throw updateProfileError;
     }
 
     return NextResponse.json({

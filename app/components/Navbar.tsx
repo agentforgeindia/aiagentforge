@@ -95,23 +95,36 @@ export default function Navbar() {
       }`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4">
-        {/* Logo */}
-        <Link href="/" className="group flex shrink-0 items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl shadow-lg transition-transform duration-200 group-hover:scale-105">
-            <img src="/logo-new.jpg" alt="AF" className="h-full w-full object-cover" />
-          </div>
-          <div className="flex flex-col justify-center">
-            <h1 className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 bg-clip-text pb-0.5 text-xl font-black leading-tight text-transparent">
-              AgentForge
-            </h1>
-            <div className="flex items-center gap-1.5">
-              <p className={`text-[9px] font-black uppercase tracking-[0.15em] leading-none ${muted}`}>
-                Upload | Generate | Done
-              </p>
-              <BadgeCheck className="h-3 w-3 fill-cyan-500 text-white" />
-            </div>
-          </div>
-        </Link>
+       
+       {/* Logo */}
+<Link
+  href="/"
+  className="group flex min-w-0 shrink items-center gap-2 overflow-hidden"
+>
+  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl shadow-lg transition-transform duration-200 group-hover:scale-105 sm:h-11 sm:w-11">
+    <img
+  src="/af-logo.png"
+  alt="AgentForge"
+  className="h-10 w-10 shrink-0 rounded-2xl"
+/>
+  </div>
+
+  <div className="min-w-0 flex-1">
+    <h1 className="truncate bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 bg-clip-text text-lg font-black leading-tight text-transparent sm:text-xl">
+      AgentForge
+    </h1>
+
+    <div className="flex items-center gap-1">
+      <p
+        className={`truncate text-[8px] font-black uppercase tracking-[0.12em] leading-none sm:text-[9px] ${muted}`}
+      >
+        Upload | Generate | Done
+      </p>
+
+      <BadgeCheck className="h-3 w-3 shrink-0 fill-cyan-500 text-white" />
+    </div>
+  </div>
+</Link>
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-1 text-sm font-medium lg:flex">
@@ -173,7 +186,7 @@ export default function Navbar() {
         </nav>
 
         {/* Right side */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2 px-3 py-3 overflow-hidden">
           {/* Credits badge — visible only when logged in */}
           {isLoggedIn && (
             <div
@@ -348,7 +361,7 @@ export default function Navbar() {
               {isLoggedIn ? (
                 <>
                   {/* Mobile: user info + credits */}
-                  <div className="flex items-center gap-3 rounded-2xl px-4 py-3">
+                 <div className="flex min-w-0 items-center gap-2">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full">
                       {user?.avatarUrl ? (
                         <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />

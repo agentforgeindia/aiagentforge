@@ -11,8 +11,7 @@ import { shouldDeductCredits } from "@/lib/deductCredits";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 const WEBHOOK_URL =
-  process.env.NEXT_PUBLIC_N8N_PRODUCTION_WEBHOOK ||
-  "/api/generate-mockup";
+  process.env.NEXT_PUBLIC_N8N_PRODUCTION_WEBHOOK || "/api/generate-mockup";
 
 const isEmpireProfile = (profile: any) => {
   const planText = String(
@@ -26,9 +25,9 @@ const isEmpireProfile = (profile: any) => {
 
   return Boolean(
     profile?.is_empire ||
-      profile?.empire_pack ||
-      profile?.has_empire ||
-      planText.includes("empire"),
+    profile?.empire_pack ||
+    profile?.has_empire ||
+    planText.includes("empire"),
   );
 };
 
@@ -95,10 +94,9 @@ type IconName =
   | "holding"
   | "pointing"
   | "fullBody"
-| "halfBody"
-| "closeupShot"
-| "smiling";
-
+  | "halfBody"
+  | "closeupShot"
+  | "smiling";
 
 const iconFileByVisualIcon: Partial<Record<IconName, string>> = {
   pattern: "flat fabric layout",
@@ -181,20 +179,20 @@ const exactIconFileByTitle: Record<string, string> = {
   "pathani suit": "pathani suit",
   "2 piece suit": "two piece",
   "3 piece suit": "three piece suit",
-  "blazer": "blazer",
-  "waistcoat": "waistcoat",
+  blazer: "blazer",
+  waistcoat: "waistcoat",
   "t-shirt": "tshirt",
-  "hoodie": "hoodie",
+  hoodie: "hoodie",
   "co-ord set": "co-ord set",
   "ladies suit": "ladies suits",
   "salwar kameez": "salwar kameez",
-  "kurti": "kurti",
-  "saree": "saree",
-  "lehenga": "lehenga",
-  "gown": "gown",
-  "dress": "dress",
-  "dupatta": "dupatta",
-  "blouse": "blouse",
+  kurti: "kurti",
+  saree: "saree",
+  lehenga: "lehenga",
+  gown: "gown",
+  dress: "dress",
+  dupatta: "dupatta",
+  blouse: "blouse",
   "sharara suit": "sharara suit",
   "palazzo suit": "palazzo suit",
   "boys shirt": "boys-shirt",
@@ -203,20 +201,20 @@ const exactIconFileByTitle: Record<string, string> = {
   "girls frock": "girls-frok",
   "kids suit": "kids-suits",
   "kids night suit": "kids-night-suit",
-  "bedsheet": "bedsheet",
-  "curtain": "curtain",
+  bedsheet: "bedsheet",
+  curtain: "curtain",
   "pillow cover": "pillow-cover",
   "cushion cover": "cushion cover",
   "sofa cover": "sofa cover",
   "table cover": "table cover",
-  "towel": "towel",
-  "blanket": "blanket",
-  "quilt": "quilt",
-  "bathrobe": "bathrobe",
+  towel: "towel",
+  blanket: "blanket",
+  quilt: "quilt",
+  bathrobe: "bathrobe",
   "luxury bedroom setup": "luxury bedroom setup",
   "fabric bag": "fabric bag",
-  "scarf": "scarf",
-  "stole": "stole",
+  scarf: "scarf",
+  stole: "stole",
   "wall fabric panel": "wall fabric panel",
   "carpet / rug": "sofa cover",
   "upholstery fabric": "upholstery fabric",
@@ -231,7 +229,7 @@ const exactIconFileByTitle: Record<string, string> = {
   "couple model": "model holding product",
   "family scene": "family lifestyle scene",
   "no model / flat lay": "no model",
-  "mannequin": "mannequin",
+  mannequin: "mannequin",
   "no model": "no model",
   "model standing beside product": "standing beside product",
   "model holding product": "model holding product",
@@ -257,22 +255,22 @@ const exactIconFileByTitle: Record<string, string> = {
   "studio professional": "photo studio setup",
   "white background": "white background",
   "luxury editorial": "luxury editorial",
-  "none": "none",
-  "sunglasses": "sunglasses",
-  "watch": "wrist watch",
-  "bracelet": "bracelet",
+  none: "none",
+  sunglasses: "sunglasses",
+  watch: "wrist watch",
+  bracelet: "bracelet",
   "square (1:1)": "square",
   "mobile (9:16)": "mobile",
-  "premium": "premium",
+  premium: "premium",
   "ultra hd": "ultra hd",
   "full body": "full body",
   "half body": "half body",
   "close-up shot": "close-up shot",
-  "happy": "happy",
-  "confident": "confident",
-  "chill": "chill",
-  "serious": "serious",
-  "smiling": "smiling",
+  happy: "happy",
+  confident: "confident",
+  chill: "chill",
+  serious: "serious",
+  smiling: "smiling",
   "soft look": "soft look",
 };
 
@@ -281,9 +279,22 @@ const iconPath = (file: string) => `/icons/${file}.svg`;
 function FallbackLineIcon({ icon }: { icon: IconName }) {
   const stroke = "url(#afStrokeFallback)";
   return (
-    <svg viewBox="0 0 64 64" className="h-48 w-48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <svg
+      viewBox="0 0 64 64"
+      className="h-14 w-14 sm:h-16 sm:w-16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
       <defs>
-        <linearGradient id="afStrokeFallback" x1="10" y1="10" x2="54" y2="54" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id="afStrokeFallback"
+          x1="10"
+          y1="10"
+          x2="54"
+          y2="54"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop stopColor="#22d3ee" />
           <stop offset="0.55" stopColor="#3b82f6" />
           <stop offset="1" stopColor="#a855f7" />
@@ -292,12 +303,30 @@ function FallbackLineIcon({ icon }: { icon: IconName }) {
       {icon === "none" ? (
         <>
           <circle cx="32" cy="32" r="18" stroke={stroke} strokeWidth="4" />
-          <path d="M20 44L44 20" stroke={stroke} strokeWidth="4" strokeLinecap="round" />
+          <path
+            d="M20 44L44 20"
+            stroke={stroke}
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
         </>
       ) : (
         <>
-          <rect x="16" y="17" width="32" height="30" rx="9" stroke={stroke} strokeWidth="4" />
-          <path d="M23 29c5-5 13 5 18 0M23 38c5-5 13 5 18 0" stroke={stroke} strokeWidth="4" strokeLinecap="round" />
+          <rect
+            x="16"
+            y="17"
+            width="32"
+            height="30"
+            rx="9"
+            stroke={stroke}
+            strokeWidth="4"
+          />
+          <path
+            d="M23 29c5-5 13 5 18 0M23 38c5-5 13 5 18 0"
+            stroke={stroke}
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
         </>
       )}
     </svg>
@@ -315,7 +344,7 @@ function VisualIcon({ icon, fileName }: { icon: IconName; fileName?: string }) {
       src={iconPath(finalFile)}
       alt=""
       loading="lazy"
-      className="h-48 w-48 object-contain drop-shadow-sm transition duration-300 group-hover:scale-110"
+      className="h-14 w-14 object-contain drop-shadow-sm transition duration-300 group-hover:scale-105 sm:h-16 sm:w-16"
       onError={() => setFailed(true)}
       aria-hidden="true"
     />
@@ -324,7 +353,8 @@ function VisualIcon({ icon, fileName }: { icon: IconName; fileName?: string }) {
 
 function optionIcon(title: string): IconName {
   const key = title.toLowerCase();
-  if (key.includes("men's wear") || key.includes("mens wear")) return "mensWear";
+  if (key.includes("men's wear") || key.includes("mens wear"))
+    return "mensWear";
   if (key.includes("ladies wear") || key.includes("women")) return "ladiesWear";
   if (key.includes("kids")) return "kidsWear";
   if (key.includes("home textile")) return "homeTextile";
@@ -341,14 +371,33 @@ function optionIcon(title: string): IconName {
   if (key.includes("blanket") || key.includes("quilt")) return "blanket";
   if (key.includes("rug") || key.includes("carpet")) return "rug";
   if (key.includes("bag")) return "bag";
-  if (key.includes("scarf") || key.includes("stole") || key.includes("dupatta")) return "scarf";
+  if (key.includes("scarf") || key.includes("stole") || key.includes("dupatta"))
+    return "scarf";
   if (key.includes("wall")) return "wallPanel";
   if (key.includes("roll")) return "fabricRoll";
   if (key.includes("saree")) return "saree";
-  if (key.includes("dress") || key.includes("gown") || key.includes("lehenga") || key.includes("frock")) return "dress";
-  if (key.includes("kurta") || key.includes("kameez") || key.includes("salwar")) return "kurta";
-  if (key.includes("suit") || key.includes("blazer") || key.includes("waistcoat") || key.includes("pathani")) return "suit";
-  if (key.includes("t-shirt") || key.includes("hoodie") || key.includes("co-ord")) return "tshirt";
+  if (
+    key.includes("dress") ||
+    key.includes("gown") ||
+    key.includes("lehenga") ||
+    key.includes("frock")
+  )
+    return "dress";
+  if (key.includes("kurta") || key.includes("kameez") || key.includes("salwar"))
+    return "kurta";
+  if (
+    key.includes("suit") ||
+    key.includes("blazer") ||
+    key.includes("waistcoat") ||
+    key.includes("pathani")
+  )
+    return "suit";
+  if (
+    key.includes("t-shirt") ||
+    key.includes("hoodie") ||
+    key.includes("co-ord")
+  )
+    return "tshirt";
   if (key.includes("shirt")) return "shirt";
   if (key.includes("indian female")) return "indianFemale";
   if (key.includes("indian male")) return "indianMale";
@@ -368,10 +417,17 @@ function optionIcon(title: string): IconName {
   if (key.includes("outdoor")) return "outdoor";
   if (key.includes("studio")) return "studio";
   if (key.includes("white")) return "whitebg";
-  if (key.includes("luxury") || key.includes("hotel") || key.includes("editorial")) return "luxury";
+  if (
+    key.includes("luxury") ||
+    key.includes("hotel") ||
+    key.includes("editorial")
+  )
+    return "luxury";
   if (key.includes("none") || key.includes("no model")) return "none";
-  if (key.includes("9:16") || key.includes("1920") || key.includes("mobile")) return "mobile";
-  if (key.includes("1:1") || key.includes("1080") || key.includes("square")) return "square";
+  if (key.includes("9:16") || key.includes("1920") || key.includes("mobile"))
+    return "mobile";
+  if (key.includes("1:1") || key.includes("1080") || key.includes("square"))
+    return "square";
   if (key.includes("ultra")) return "ultra";
   if (key.includes("premium")) return "premium";
   if (key.includes("front")) return "frontPose";
@@ -381,7 +437,7 @@ function optionIcon(title: string): IconName {
   if (key.includes("sitting")) return "sittingPose";
   if (key.includes("close-up")) return "closeupShot";
   if (key.includes("full body")) return "fullBody";
-if (key.includes("half body")) return "halfBody";
+  if (key.includes("half body")) return "halfBody";
   if (key.includes("auto")) return "autoPose";
   if (key.includes("happy")) return "happy";
   if (key.includes("confident")) return "confident";
@@ -389,7 +445,12 @@ if (key.includes("half body")) return "halfBody";
   if (key.includes("serious")) return "serious";
   if (key.includes("smiling")) return "smiling";
   if (key.includes("soft")) return "softLook";
-  if (key.includes("fabric") || key.includes("display") || key.includes("hanging")) return "universalFabric";
+  if (
+    key.includes("fabric") ||
+    key.includes("display") ||
+    key.includes("hanging")
+  )
+    return "universalFabric";
   return "pattern";
 }
 
@@ -407,13 +468,16 @@ function OptionCard({
   darkMode: boolean;
 }) {
   const finalIcon = icon || optionIcon(title);
-  const iconFile = exactIconFileByTitle[title.toLowerCase()] || iconFileByVisualIcon[finalIcon] || "none";
+  const iconFile =
+    exactIconFileByTitle[title.toLowerCase()] ||
+    iconFileByVisualIcon[finalIcon] ||
+    "none";
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`group relative flex min-h-[150px] flex-col items-center justify-center rounded-[28px] p-4 text-center transition-all duration-300 active:scale-[0.97] ${
+      className={`group relative flex min-h-[116px] min-w-0 flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
         active
           ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
           : darkMode
@@ -422,7 +486,7 @@ function OptionCard({
       }`}
     >
       <div
-        className={`mb-3 flex h-[76px] w-[76px] items-center justify-center rounded-[24px] ${
+        className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center rounded-[20px] sm:mb-3 sm:h-[76px] sm:w-[76px] sm:rounded-[24px] ${
           active
             ? "bg-white/15 shadow-lg shadow-cyan-400/25"
             : darkMode
@@ -434,7 +498,7 @@ function OptionCard({
       </div>
 
       <p
-        className={`text-center text-sm font-black leading-4 ${active ? "text-[#0077b6]" : darkMode ? "text-white/70" : "text-black/70"}`}
+        className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${active ? "text-[#0077b6]" : darkMode ? "text-white/70" : "text-black/70"}`}
       >
         {title}
       </p>
@@ -442,7 +506,13 @@ function OptionCard({
   );
 }
 
-type GenStatus = "uploading" | "ocr" | "ready" | "generating" | "done" | "failed";
+type GenStatus =
+  | "uploading"
+  | "ocr"
+  | "ready"
+  | "generating"
+  | "done"
+  | "failed";
 
 type GenItem = {
   id: string;
@@ -483,7 +553,6 @@ const extractDesignNumberFromText = (text: string): string => {
   return "";
 };
 
-
 type TextileCategory =
   | "Men's Wear"
   | "Ladies Wear"
@@ -492,12 +561,20 @@ type TextileCategory =
   | "Decor & Accessories"
   | "Universal Fabric";
 
-const textileCategories: { title: TextileCategory; icon: IconName; hint: string }[] = [
+const textileCategories: {
+  title: TextileCategory;
+  icon: IconName;
+  hint: string;
+}[] = [
   { title: "Men's Wear", icon: "shirt", hint: "Shirts, kurtas, suits" },
   { title: "Ladies Wear", icon: "dress", hint: "Suits, saree, kurti" },
   { title: "Kids Wear", icon: "tshirt", hint: "Kids fashion mockups" },
   { title: "Home Textile", icon: "pattern", hint: "Bedsheets, curtains" },
-  { title: "Decor & Accessories", icon: "luxury", hint: "Cushions, bags, rugs" },
+  {
+    title: "Decor & Accessories",
+    icon: "luxury",
+    hint: "Cushions, bags, rugs",
+  },
   { title: "Universal Fabric", icon: "pattern", hint: "Flat fabric preview" },
 ];
 
@@ -640,14 +717,16 @@ const brandPositions = [
   ["bottom-right", "Bottom Right"],
 ] as const;
 
-
-
 export default function Home() {
   const { darkMode } = useTheme();
   const { user: authUser, credits: userCredits, refreshProfile } = useAuth();
 
   const user = {
-    name: authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "User",
+    name:
+      authUser?.user_metadata?.full_name ||
+      authUser?.user_metadata?.name ||
+      authUser?.email?.split("@")[0] ||
+      "User",
     email: authUser?.email,
   };
 
@@ -658,12 +737,16 @@ export default function Home() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [dailyGalleryImage, setDailyGalleryImage] = useState("/banner-design-output.png");
+  const [currentStep, setCurrentStep] = useState(1);
+  const [dailyGalleryImage, setDailyGalleryImage] = useState(
+    "/banner-design-output.png",
+  );
   const [showProfile, setShowProfile] = useState(false);
   const [showPhonePopup, setShowPhonePopup] = useState(false);
   const [phoneInput, setPhoneInput] = useState("");
 
-  const [textileCategory, setTextileCategory] = useState<TextileCategory>("Men\'s Wear");
+  const [textileCategory, setTextileCategory] =
+    useState<TextileCategory>("Men\'s Wear");
   const [modelUsage, setModelUsage] = useState("Single Model");
   const [modelType, setModelType] = useState("Indian Model");
   const [product, setProduct] = useState("Men\'s Shirt");
@@ -692,15 +775,19 @@ export default function Home() {
   const [useCompanyAddress, setUseCompanyAddress] = useState(false);
   const [useCompanyLogo, setUseCompanyLogo] = useState(false);
   const [companyNamePosition, setCompanyNamePosition] = useState("bottom-left");
-  const [companyPhonePosition, setCompanyPhonePosition] = useState("bottom-left");
-  const [companyWebsitePosition, setCompanyWebsitePosition] = useState("bottom-right");
-  const [companyAddressPosition, setCompanyAddressPosition] = useState("bottom-left");
-  
+  const [companyPhonePosition, setCompanyPhonePosition] =
+    useState("bottom-left");
+  const [companyWebsitePosition, setCompanyWebsitePosition] =
+    useState("bottom-right");
+  const [companyAddressPosition, setCompanyAddressPosition] =
+    useState("bottom-left");
 
   const [watermarkPosition, setWatermarkPosition] = useState<
     "top-left" | "top-right" | "bottom-left" | "bottom-right" | "center"
   >("bottom-right");
-  const [watermarkColor, setWatermarkColor] = useState<"white" | "black">("white");
+  const [watermarkColor, setWatermarkColor] = useState<"white" | "black">(
+    "white",
+  );
   const [pose, setPose] = useState("Auto");
   const [customPose, setCustomPose] = useState("");
   const [faceExpression, setFaceExpression] = useState("Happy");
@@ -714,18 +801,29 @@ export default function Home() {
   const [builderStep, setBuilderStep] = useState(1);
 
   const activeItem =
-    items.find((it) => it.id === activeId) || items.find((it) => it.resultUrl) || items[0] || null;
+    items.find((it) => it.id === activeId) ||
+    items.find((it) => it.resultUrl) ||
+    items[0] ||
+    null;
   const previewImage = activeItem?.url || null;
   const previewResult = activeItem?.resultUrl || null;
   const showResult = !!previewResult;
-  const readyItems = items.filter((it) => it.status === "ready" || it.status === "done");
+  const readyItems = items.filter(
+    (it) => it.status === "ready" || it.status === "done",
+  );
   const isHomeLikeCategory =
     textileCategory === "Home Textile" ||
     textileCategory === "Decor & Accessories" ||
     textileCategory === "Universal Fabric";
-  const dynamicProducts = productOptionsByCategory[textileCategory] || productOptionsByCategory["Men's Wear"];
-  const dynamicModelUsageOptions = isHomeLikeCategory ? homeModelUsageOptions : apparelModelUsageOptions;
-  const dynamicPoseOptions = isHomeLikeCategory ? homeSceneOptions : apparelPoseOptions;
+  const dynamicProducts =
+    productOptionsByCategory[textileCategory] ||
+    productOptionsByCategory["Men's Wear"];
+  const dynamicModelUsageOptions = isHomeLikeCategory
+    ? homeModelUsageOptions
+    : apparelModelUsageOptions;
+  const dynamicPoseOptions = isHomeLikeCategory
+    ? homeSceneOptions
+    : apparelPoseOptions;
   const showFaceExpression = !/no model|flat lay|mannequin/i.test(modelUsage);
   const builderStepMeta = [
     { id: 1, title: "Product", sub: "Category + product" },
@@ -739,7 +837,13 @@ export default function Home() {
       : builderStep === 2
         ? Boolean(modelUsage && (customModelType.trim() || modelType))
         : builderStep === 3
-          ? Boolean((customPose.trim() || pose) && (!showFaceExpression || customFaceExpression.trim() || faceExpression) && (customShootStyle.trim() || shootStyle))
+          ? Boolean(
+              (customPose.trim() || pose) &&
+              (!showFaceExpression ||
+                customFaceExpression.trim() ||
+                faceExpression) &&
+              (customShootStyle.trim() || shootStyle),
+            )
           : true;
 
   const textileFacts = [
@@ -837,7 +941,8 @@ export default function Home() {
 
           return (
             row?.show_in_gallery === true &&
-            (categoryText.includes("textile") || categoryText.includes("mockup"))
+            (categoryText.includes("textile") ||
+              categoryText.includes("mockup"))
           );
         })
         .map(
@@ -849,11 +954,15 @@ export default function Home() {
             row?.result_url ||
             row?.url,
         )
-        .filter((url): url is string => typeof url === "string" && url.startsWith("http"));
+        .filter(
+          (url): url is string =>
+            typeof url === "string" && url.startsWith("http"),
+        );
 
       if (!textileOutputs.length) return false;
 
-      const dayIndex = Math.floor(Date.now() / 86400000) % textileOutputs.length;
+      const dayIndex =
+        Math.floor(Date.now() / 86400000) % textileOutputs.length;
       if (mounted) setDailyGalleryImage(textileOutputs[dayIndex]);
       return true;
     };
@@ -1011,10 +1120,54 @@ export default function Home() {
     darkMode,
   ]);
 
-  const getRequiredCredits = () => {
-    if ((customQuality.trim() || quality) === "Ultra HD") return 20;
-    if ((customOutputSize.trim() || outputSize) === "1080x1920") return 17;
-    return 15;
+  const getRequiredCredits = (
+    sizeValue = customOutputSize.trim() || outputSize,
+    qualityValue = customQuality.trim() || quality,
+    brandDetails?: {
+      company_name?: string;
+      phone_number?: string;
+      website?: string;
+      address?: string;
+    },
+  ) => {
+    const normalizedSize = sizeValue.trim();
+    const normalizedQuality = qualityValue.trim().toLowerCase();
+
+    let baseCredits = 15;
+
+    if (normalizedSize === "1080x1080" && normalizedQuality === "premium") {
+      baseCredits = 15;
+    } else if (
+      normalizedSize === "1080x1080" &&
+      normalizedQuality === "ultra hd"
+    ) {
+      baseCredits = 20;
+    } else if (
+      normalizedSize === "1080x1920" &&
+      normalizedQuality === "premium"
+    ) {
+      baseCredits = 17;
+    } else if (
+      normalizedSize === "1080x1920" &&
+      normalizedQuality === "ultra hd"
+    ) {
+      baseCredits = 20;
+    }
+
+    const details = brandDetails || {
+      company_name: useCompanyName ? companyName.trim() : "",
+      phone_number: useCompanyPhone ? companyPhone.trim() : "",
+      website: useCompanyWebsite ? companyWebsite.trim() : "",
+      address: useCompanyAddress ? companyAddress.trim() : "",
+    };
+
+    const extraCredits =
+      (details.company_name?.trim() ? 1 : 0) +
+      (details.phone_number?.trim() ? 1 : 0) +
+      (details.website?.trim() ? 1 : 0) +
+      (details.address?.trim() ? 1 : 0);
+
+    return baseCredits + extraCredits;
   };
 
   const requiredCredits = getRequiredCredits();
@@ -1059,97 +1212,101 @@ export default function Home() {
   };
 
   const uploadFile = async (file: File): Promise<string> => {
-  const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
-  const filePath = `textile-designs/${Date.now()}-${newId().slice(0, 6)}-${safeFileName}`;
+    const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
+    const filePath = `textile-designs/${Date.now()}-${newId().slice(0, 6)}-${safeFileName}`;
 
-  const { error } = await supabase.storage.from("designs").upload(filePath, file, {
-    cacheControl: "3600",
-    upsert: false,
-  });
+    const { error } = await supabase.storage
+      .from("designs")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
 
-  if (error) throw error;
+    if (error) throw error;
 
-  const { data } = supabase.storage.from("designs").getPublicUrl(filePath);
-  return data.publicUrl;
-};
+    const { data } = supabase.storage.from("designs").getPublicUrl(filePath);
+    return data.publicUrl;
+  };
 
-const uploadBrandLogo = async (file: File): Promise<string> => {
-  const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
-  const filePath = `brand-logos/${authUser?.id || "guest"}/${Date.now()}-${newId().slice(0, 6)}-${safeFileName}`;
+  const uploadBrandLogo = async (file: File): Promise<string> => {
+    const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
+    const filePath = `brand-logos/${authUser?.id || "guest"}/${Date.now()}-${newId().slice(0, 6)}-${safeFileName}`;
 
-  const { error } = await supabase.storage.from("designs").upload(filePath, file, {
-    cacheControl: "3600",
-    upsert: true,
-  });
+    const { error } = await supabase.storage
+      .from("designs")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: true,
+      });
 
-  if (error) throw error;
+    if (error) throw error;
 
-  const { data } = supabase.storage.from("designs").getPublicUrl(filePath);
-  return data.publicUrl;
-};
+    const { data } = supabase.storage.from("designs").getPublicUrl(filePath);
+    return data.publicUrl;
+  };
 
-const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  if (!file.type.startsWith("image/")) {
-    alert("Please upload a logo image only.");
-    e.target.value = "";
-    return;
-  }
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload a logo image only.");
+      e.target.value = "";
+      return;
+    }
 
-  setUploadingLogo(true);
+    setUploadingLogo(true);
 
-  try {
-    const logoUrl = await uploadBrandLogo(file);
-    setCompanyLogoUrl(logoUrl);
-    setUseCompanyLogo(true);
-  } catch (err: any) {
-    console.error("Logo upload error:", err);
-    alert(err?.message || "Logo upload failed.");
-  } finally {
-    setUploadingLogo(false);
-    e.target.value = "";
-  }
-};
+    try {
+      const logoUrl = await uploadBrandLogo(file);
+      setCompanyLogoUrl(logoUrl);
+      setUseCompanyLogo(true);
+    } catch (err: any) {
+      console.error("Logo upload error:", err);
+      alert(err?.message || "Logo upload failed.");
+    } finally {
+      setUploadingLogo(false);
+      e.target.value = "";
+    }
+  };
 
-const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const files = Array.from(e.target.files || []);
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
 
-  if (!files.length) return;
+    if (!files.length) return;
 
-  const planText = String(
-  profile?.plan ||
-    profile?.package ||
-    profile?.current_plan ||
-    profile?.subscription_plan ||
-    profile?.plan_name ||
-    ""
-).toLowerCase();
+    const planText = String(
+      profile?.plan ||
+        profile?.package ||
+        profile?.current_plan ||
+        profile?.subscription_plan ||
+        profile?.plan_name ||
+        "",
+    ).toLowerCase();
 
-const canUseBulk =
-  planText.includes("empire") ||
-  planText.includes("founder") ||
-  planText.includes("unlimited");
+    const canUseBulk =
+      planText.includes("empire") ||
+      planText.includes("founder") ||
+      planText.includes("unlimited");
 
-if (files.length > 1 && !canUseBulk) {
-  alert(
-    "Bulk generation is available only with Empire, Founder Unlimited, or Unlimited plans. Please upload one design at a time or upgrade for bulk creation."
-  );
+    if (files.length > 1 && !canUseBulk) {
+      alert(
+        "Bulk generation is available only with Empire, Founder Unlimited, or Unlimited plans. Please upload one design at a time or upgrade for bulk creation.",
+      );
 
-  e.target.value = "";
-  return;
-}
+      e.target.value = "";
+      return;
+    }
 
-  const invalidFile = files.find((file) => !file.type.startsWith("image/"));
+    const invalidFile = files.find((file) => !file.type.startsWith("image/"));
 
-  if (invalidFile) {
-    alert("Please upload image files only.");
-    e.target.value = "";
-    return;
-  }
+    if (invalidFile) {
+      alert("Please upload image files only.");
+      e.target.value = "";
+      return;
+    }
 
-  setUploading(true);
+    setUploading(true);
 
     for (const file of files) {
       const id = newId();
@@ -1176,7 +1333,9 @@ if (files.length > 1 && !canUseBulk) {
 
         setItems((prev) =>
           prev.map((it) =>
-            it.id === id ? { ...it, designNumber: detected, status: "ready" } : it,
+            it.id === id
+              ? { ...it, designNumber: detected, status: "ready" }
+              : it,
           ),
         );
 
@@ -1186,7 +1345,11 @@ if (files.length > 1 && !canUseBulk) {
         setItems((prev) =>
           prev.map((it) =>
             it.id === id
-              ? { ...it, status: "failed", error: err?.message || "Upload failed" }
+              ? {
+                  ...it,
+                  status: "failed",
+                  error: err?.message || "Upload failed",
+                }
               : it,
           ),
         );
@@ -1204,7 +1367,9 @@ if (files.length > 1 && !canUseBulk) {
 
   const updateItemDesignNumber = (id: string, value: string) => {
     setItems((prev) =>
-      prev.map((it) => (it.id === id ? { ...it, designNumber: value.toUpperCase() } : it)),
+      prev.map((it) =>
+        it.id === id ? { ...it, designNumber: value.toUpperCase() } : it,
+      ),
     );
   };
 
@@ -1223,7 +1388,8 @@ if (files.length > 1 && !canUseBulk) {
       }
 
       const row = data as any;
-      const finalImage = row?.output_image_url || row?.output_url || row?.image_url;
+      const finalImage =
+        row?.output_image_url || row?.output_url || row?.image_url;
 
       if (row?.status === "completed" && finalImage) {
         return finalImage as string;
@@ -1244,7 +1410,9 @@ if (files.length > 1 && !canUseBulk) {
   const generateOne = async (item: GenItem, userId: string): Promise<void> => {
     const generationId = newId();
     setItems((prev) =>
-      prev.map((it) => (it.id === item.id ? { ...it, status: "generating" } : it)),
+      prev.map((it) =>
+        it.id === item.id ? { ...it, status: "generating" } : it,
+      ),
     );
 
     const resolvedModelType = customModelType.trim() || modelType;
@@ -1264,8 +1432,14 @@ if (files.length > 1 && !canUseBulk) {
         phone_number: companyPhonePosition,
         website: companyWebsitePosition,
         address: companyAddressPosition,
-        },
+      },
     };
+    const itemCredits = getRequiredCredits(
+      resolvedOutputSize,
+      resolvedQuality,
+      selectedBrandDetails,
+    );
+
     const resolvedFaceExpression = showFaceExpression
       ? customFaceExpression.trim() || faceExpression
       : "Not applicable";
@@ -1291,6 +1465,8 @@ if (files.length > 1 && !canUseBulk) {
       accessories: resolvedAccessories,
       output_size: resolvedOutputSize,
       quality: resolvedQuality,
+      required_credits: itemCredits,
+      credits_required: itemCredits,
       face_expression: resolvedFaceExpression,
       model_expression: resolvedFaceExpression,
       design_number: item.designNumber.trim(),
@@ -1304,13 +1480,23 @@ if (files.length > 1 && !canUseBulk) {
         customInstruction,
         `Category: ${textileCategory}`,
         `Model usage / interaction: ${modelUsage}`,
-        showFaceExpression ? `Model face expression: ${resolvedFaceExpression}` : "No face expression needed because no human face/model is selected.",
+        showFaceExpression
+          ? `Model face expression: ${resolvedFaceExpression}`
+          : "No face expression needed because no human face/model is selected.",
         `Article number color must be auto-selected according to final creative contrast.`,
-        selectedBrandDetails.company_name ? `Add company name "${selectedBrandDetails.company_name}" at ${companyNamePosition}.` : "",
-        selectedBrandDetails.phone_number ? `Add phone number "${selectedBrandDetails.phone_number}" at ${companyPhonePosition}.` : "",
-        selectedBrandDetails.website ? `Add website "${selectedBrandDetails.website}" at ${companyWebsitePosition}.` : "",
-        selectedBrandDetails.address ? `Add address "${selectedBrandDetails.address}" at ${companyAddressPosition}.` : "",
-        ]
+        selectedBrandDetails.company_name
+          ? `Add company name "${selectedBrandDetails.company_name}" at ${companyNamePosition}.`
+          : "",
+        selectedBrandDetails.phone_number
+          ? `Add phone number "${selectedBrandDetails.phone_number}" at ${companyPhonePosition}.`
+          : "",
+        selectedBrandDetails.website
+          ? `Add website "${selectedBrandDetails.website}" at ${companyWebsitePosition}.`
+          : "",
+        selectedBrandDetails.address
+          ? `Add address "${selectedBrandDetails.address}" at ${companyAddressPosition}.`
+          : "",
+      ]
         .filter(Boolean)
         .join(" | "),
     };
@@ -1338,57 +1524,57 @@ if (files.length > 1 && !canUseBulk) {
       throw new Error(`Database record failed: ${dbError.message}`);
     }
 
-    const WEBHOOK_URL =
-  process.env.NEXT_PUBLIC_N8N_PRODUCTION_WEBHOOK || "";
+    const WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_PRODUCTION_WEBHOOK || "";
 
     const response = await fetch(WEBHOOK_URL, {
-  method: "POST",
-  mode: "cors",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    generation_id: generationId,
-    user_id: userId,
-    design_url: item.url,
+      method: "POST",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        generation_id: generationId,
+        user_id: userId,
+        design_url: item.url,
 
-    textile_category: textileCategory,
-    model_usage: modelUsage,
-    model_type: resolvedModelType,
-    product_type: resolvedProduct,
-    shoot_style: resolvedShootStyle,
-    accessories: resolvedAccessories,
-    output_size: resolvedOutputSize,
-    quality: resolvedQuality,
+        textile_category: textileCategory,
+        model_usage: modelUsage,
+        model_type: resolvedModelType,
+        product_type: resolvedProduct,
+        shoot_style: resolvedShootStyle,
+        accessories: resolvedAccessories,
+        output_size: resolvedOutputSize,
+        quality: resolvedQuality,
+        required_credits: itemCredits,
+        credits_required: itemCredits,
 
-    face_expression: resolvedFaceExpression,
-    model_expression: resolvedFaceExpression,
-    model_pose: pose,
+        face_expression: resolvedFaceExpression,
+        model_expression: resolvedFaceExpression,
+        model_pose: pose,
 
-    design_number: item.designNumber.trim(),
-    text_on_image: item.designNumber.trim(),
-    article_number: item.designNumber.trim(),
+        design_number: item.designNumber.trim(),
+        text_on_image: item.designNumber.trim(),
+        article_number: item.designNumber.trim(),
 
-    watermark_position: watermarkPosition,
-    article_position: watermarkPosition,
-    watermark_color: "auto",
-    article_color: "auto",
+        watermark_position: watermarkPosition,
+        article_position: watermarkPosition,
+        watermark_color: "auto",
+        article_color: "auto",
 
-    company_name: selectedBrandDetails.company_name,
-    company_phone: selectedBrandDetails.phone_number,
-    company_website: selectedBrandDetails.website,
-    company_address: selectedBrandDetails.address,
+        company_name: selectedBrandDetails.company_name,
+        company_phone: selectedBrandDetails.phone_number,
+        company_website: selectedBrandDetails.website,
+        company_address: selectedBrandDetails.address,
 
-    company_name_position: companyNamePosition,
-    company_phone_position: companyPhonePosition,
-    company_website_position: companyWebsitePosition,
-    company_address_position: companyAddressPosition,
+        company_name_position: companyNamePosition,
+        company_phone_position: companyPhonePosition,
+        company_website_position: companyWebsitePosition,
+        company_address_position: companyAddressPosition,
 
-    brand_details: selectedBrandDetails,
-    custom_instruction: payload.custom_instruction,
-  }),
-});
-
+        brand_details: selectedBrandDetails,
+        custom_instruction: payload.custom_instruction,
+      }),
+    });
 
     const text = await response.text();
     if (!response.ok) {
@@ -1398,13 +1584,16 @@ if (files.length > 1 && !canUseBulk) {
     const data = text ? JSON.parse(text) : {};
     const immediateImage =
       data?.image_url || data?.output_image_url || data?.image || data?.url;
-    const finalImage = immediateImage || (await pollGenerationResult(generationId));
+    const finalImage =
+      immediateImage || (await pollGenerationResult(generationId));
 
     if (!finalImage && cancelRef.current) return;
 
     setItems((prev) =>
       prev.map((it) =>
-        it.id === item.id ? { ...it, resultUrl: finalImage || "", status: "done" } : it,
+        it.id === item.id
+          ? { ...it, resultUrl: finalImage || "", status: "done" }
+          : it,
       ),
     );
     setActiveId(item.id);
@@ -1537,7 +1726,11 @@ if (files.length > 1 && !canUseBulk) {
           setItems((prev) =>
             prev.map((it) =>
               it.id === item.id
-                ? { ...it, status: "failed", error: err?.message || "Generation failed" }
+                ? {
+                    ...it,
+                    status: "failed",
+                    error: err?.message || "Generation failed",
+                  }
                 : it,
             ),
           );
@@ -1551,7 +1744,6 @@ if (files.length > 1 && !canUseBulk) {
       refreshProfile?.(); // ✅ generation ke baad UI credits refresh karo
     }
   };
-
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -1642,7 +1834,9 @@ if (files.length > 1 && !canUseBulk) {
   );
 
   return (
-    <main className={`relative min-h-screen overflow-hidden ${pageBg}`}>
+    <main
+      className={`relative min-h-screen overflow-x-hidden pb-28 sm:pb-0 ${pageBg}`}
+    >
       <div
         className={`absolute inset-0 ${darkMode ? "opacity-[0.06]" : "opacity-[0.16]"}`}
         style={{
@@ -1676,13 +1870,18 @@ if (files.length > 1 && !canUseBulk) {
 
               <h2 className="text-2xl font-black">Add your phone number</h2>
 
-              <p className={`mt-2 text-sm ${darkMode ? "text-white/60" : "text-black/60"}`}>
-                Please add your WhatsApp/mobile number before creating AI mockups.
+              <p
+                className={`mt-2 text-sm ${darkMode ? "text-white/60" : "text-black/60"}`}
+              >
+                Please add your WhatsApp/mobile number before creating AI
+                mockups.
               </p>
 
               <input
                 value={phoneInput}
-                onChange={(e) => setPhoneInput(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                onChange={(e) =>
+                  setPhoneInput(e.target.value.replace(/\D/g, "").slice(0, 10))
+                }
                 placeholder="Enter 10-digit mobile number"
                 inputMode="numeric"
                 maxLength={10}
@@ -1704,7 +1903,7 @@ if (files.length > 1 && !canUseBulk) {
           </div>
         )}
 
-        <section className="mx-auto grid max-w-7xl items-start gap-5 px-4 py-6 lg:grid-cols-[0.55fr_1.45fr] lg:py-8">
+        <section className="mx-auto grid w-full max-w-7xl items-start gap-5 px-3 py-5 sm:px-4 lg:grid-cols-[0.55fr_1.45fr] lg:py-8">
           <div>
             <div
               className={`mb-5 inline-flex rounded-full px-4 py-2 text-sm font-semibold ${darkMode ? "border border-cyan-400/30 bg-cyan-400/10 text-cyan-200" : "border border-cyan-700/20 bg-cyan-500/15 text-cyan-900"}`}
@@ -1713,15 +1912,19 @@ if (files.length > 1 && !canUseBulk) {
             </div>
 
             <h1 className="max-w-xl text-3xl font-black leading-[1.02] tracking-[-0.04em] lg:text-5xl">
-            AI Textile Mockup Generator
-            <span className="block bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
-             Upload. Generate. Done.
-            </span>
-             Sell Faster.
+              AI Textile Mockup Generator
+              <span className="block bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
+                Upload. Generate. Done.
+              </span>
+              Sell Faster.
             </h1>
 
-            <p className={`mt-4 max-w-lg text-sm leading-6 lg:text-base ${muted}`}>
-              Generate catalogue-ready textile mockups, AI fashion model photos, kurti mockups, saree mockups, shirt mockups, and client preview images without stitching samples or expensive photoshoots.
+            <p
+              className={`mt-4 max-w-lg text-sm leading-6 lg:text-base ${muted}`}
+            >
+              Generate catalogue-ready textile mockups, AI fashion model photos,
+              kurti mockups, saree mockups, shirt mockups, and client preview
+              images without stitching samples or expensive photoshoots.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
@@ -1741,95 +1944,97 @@ if (files.length > 1 && !canUseBulk) {
           </div>
 
           <div
-            className={`flex h-fit flex-col rounded-[2rem] border p-4 shadow-2xl backdrop-blur-xl ${card}`}
+            className={`flex h-fit flex-col rounded-[1.5rem] border p-3 shadow-2xl backdrop-blur-xl sm:rounded-[2rem] sm:p-4 ${card}`}
           >
-            <div className="grid gap-4 sm:grid-cols-2">
-
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
               <div
-                className={`flex min-h-[210px] items-center justify-center rounded-[1.5rem] border p-4 ${
+                className={`flex min-h-[170px] items-center justify-center rounded-[1.25rem] border p-3 sm:min-h-[210px] sm:rounded-[1.5rem] sm:p-4 ${
                   darkMode
                     ? "border-white/10 bg-black/25"
                     : "border-black/10 bg-[#fffaf0]"
                 }`}
               >
                 <div className="text-center">
-  {previewImage?.startsWith("blob:") || previewImage?.startsWith("http") ? (
-    <img
-      src={previewImage}
-      alt="Uploaded textile pattern preview"
-      className="mx-auto mb-3 h-36 w-36 rounded-3xl object-cover shadow-lg"
-    />
-  ) : (
-    <img
-      src="/banner-design.png"
-      alt="Textile design pattern upload preview for AI mockup generation"
-      className="mx-auto mb-3 h-36 w-36 rounded-3xl object-cover shadow-lg"
-    />
-  )}
+                  {previewImage?.startsWith("blob:") ||
+                  previewImage?.startsWith("http") ? (
+                    <img
+                      src={previewImage}
+                      alt="Uploaded textile pattern preview"
+                      className="mx-auto mb-3 h-28 w-28 rounded-2xl object-cover shadow-lg sm:h-36 sm:w-36 sm:rounded-3xl"
+                    />
+                  ) : (
+                    <img
+                      src="/banner-design.png"
+                      alt="Textile design pattern upload preview for AI mockup generation"
+                      className="mx-auto mb-3 h-28 w-28 rounded-2xl object-cover shadow-lg sm:h-36 sm:w-36 sm:rounded-3xl"
+                    />
+                  )}
 
-  <p className="font-semibold">Textile Pattern</p>
+                  <p className="font-semibold">Textile Pattern</p>
 
-<p className={`mt-1 text-sm ${muted}`}>
-  {previewImage
-    ? "Uploaded design preview"
-    : "Upload textile design / pattern"}
-</p>
-</div>
-</div>
+                  <p className={`mt-1 text-sm ${muted}`}>
+                    {previewImage
+                      ? "Uploaded design preview"
+                      : "Upload textile design / pattern"}
+                  </p>
+                </div>
+              </div>
 
-<div className="flex min-h-[210px] items-center justify-center rounded-[1.5rem] border border-cyan-300/30 bg-gradient-to-br from-cyan-400/20 via-blue-500/10 to-purple-500/20 p-4">
-  <div className="text-center">
-    {previewResult && previewResult.startsWith("http") ? (
-      <img
-        src={previewResult}
-        alt="Generated model mockup preview"
-        className="mx-auto mb-3 h-44 w-36 rounded-3xl object-cover shadow-lg shadow-cyan-400/30"
-      />
-    ) : (
-      <img
-        src="/banner-design-output.png"
-        alt="AI generated textile fashion model mockup preview"
-        className="mx-auto mb-3 h-44 w-36 rounded-3xl object-cover shadow-lg shadow-cyan-400/30"
-      />
-    )}
+              <div className="flex min-h-[170px] items-center justify-center rounded-[1.25rem] border border-cyan-300/30 bg-gradient-to-br from-cyan-400/20 via-blue-500/10 to-purple-500/20 p-3 sm:min-h-[210px] sm:rounded-[1.5rem] sm:p-4">
+                <div className="text-center">
+                  {previewResult && previewResult.startsWith("http") ? (
+                    <img
+                      src={previewResult}
+                      alt="Generated model mockup preview"
+                      className="mx-auto mb-3 h-32 w-28 rounded-2xl object-cover shadow-lg shadow-cyan-400/30 sm:h-44 sm:w-36 sm:rounded-3xl"
+                    />
+                  ) : (
+                    <img
+                      src="/banner-design-output.png"
+                      alt="AI generated textile fashion model mockup preview"
+                      className="mx-auto mb-3 h-32 w-28 rounded-2xl object-cover shadow-lg shadow-cyan-400/30 sm:h-44 sm:w-36 sm:rounded-3xl"
+                    />
+                  )}
 
-    <p className="font-semibold">Model Mockup</p>
+                  <p className="font-semibold">Model Mockup</p>
 
-    <p className={`mt-1 text-sm ${muted}`}>
-      {previewResult
-        ? "Latest AI fashion output"
-        : "AI fashion output"}
-    </p>
-  </div>
-</div>
-</div>
+                  <p className={`mt-1 text-sm ${muted}`}>
+                    {previewResult
+                      ? "Latest AI fashion output"
+                      : "AI fashion output"}
+                  </p>
+                </div>
+              </div>
+            </div>
 
-<div
-  className={`mt-4 flex items-center justify-center overflow-hidden rounded-[1.5rem] border ${
-    darkMode
-      ? "border-white/10 bg-black/25"
-      : "border-black/10 bg-white/80"
-  }`}
->
-  <img
-    src="/gallery/textile/banner.png"
-    alt="AgentForge textile gallery"
-    onError={(event) => {
-      event.currentTarget.src = "/banner.png";
-    }}
-    className="h-auto max-h-[260px] w-full object-contain"
-  />
-</div>
-</div>
-</section>
+            <div
+              className={`mt-4 flex items-center justify-center overflow-hidden rounded-[1.5rem] border ${
+                darkMode
+                  ? "border-white/10 bg-black/25"
+                  : "border-black/10 bg-white/80"
+              }`}
+            >
+              <img
+                src="/gallery/textile/banner.png"
+                alt="AgentForge textile gallery"
+                onError={(event) => {
+                  event.currentTarget.src = "/banner.png";
+                }}
+                className="h-auto max-h-[260px] w-full object-contain"
+              />
+            </div>
+          </div>
+        </section>
 
-        <section id="try" className="mx-auto max-w-7xl px-5 py-8">
-          <div className={`rounded-[1.75rem] border p-4 shadow-2xl backdrop-blur-xl lg:p-6 ${card}`}
+        <section id="try" className="mx-auto max-w-7xl px-3 py-5 sm:px-5 sm:py-8">
+          <div
+            className={`rounded-[1.25rem] border p-3 shadow-2xl backdrop-blur-xl sm:rounded-[1.75rem] sm:p-4 lg:p-6 ${card}`}
           >
-            <div className="mb-6">
-              <h3 className="text-3xl font-black">Create Your Mockup</h3>
-              <p className={`mt-2 ${muted}`}>
-                Upload one textile design on normal packs. Bulk creation is unlocked for Empire Pack users only.
+            <div className="mb-5 sm:mb-6">
+              <h3 className="text-2xl font-black sm:text-3xl">Create Your Mockup</h3>
+              <p className={`mt-2 text-sm sm:text-base ${muted}`}>
+                Upload one textile design on normal packs. Bulk creation is
+                unlocked for Empire Pack users only.
               </p>
               <div
                 className={`mt-4 inline-flex rounded-full px-4 py-2 text-xs font-black ${
@@ -1838,7 +2043,9 @@ if (files.length > 1 && !canUseBulk) {
                     : "border border-amber-400/30 bg-amber-400/10 text-amber-600"
                 }`}
               >
-                {isEmpireUser ? "Empire Pack Active — Bulk Unlocked" : "Bulk Locked — Upgrade to Empire Pack"}
+                {isEmpireUser
+                  ? "Empire Pack Active — Bulk Unlocked"
+                  : "Bulk Locked — Upgrade to Empire Pack"}
               </div>
             </div>
 
@@ -1852,7 +2059,9 @@ if (files.length > 1 && !canUseBulk) {
                       <VisualIcon icon="pattern" />
                     </div>
                     <p className="text-lg font-semibold">
-                      {isEmpireUser ? "Upload Textile Design(s)" : "Upload Textile Design"}
+                      {isEmpireUser
+                        ? "Upload Textile Design(s)"
+                        : "Upload Textile Design"}
                     </p>
                     <p className={`mt-2 text-sm ${muted}`}>
                       {isEmpireUser
@@ -1872,12 +2081,12 @@ if (files.length > 1 && !canUseBulk) {
                   />
                 </label>
 
-               
-
                 {activeItem && (
                   <div
                     className={`mt-4 rounded-2xl border p-4 ${
-                      darkMode ? "border-white/10 bg-white/[0.04]" : "border-black/10 bg-white/80"
+                      darkMode
+                        ? "border-white/10 bg-white/[0.04]"
+                        : "border-black/10 bg-white/80"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -1886,12 +2095,15 @@ if (files.length > 1 && !canUseBulk) {
                           Article Number
                         </p>
                         <p className={`mt-1 text-xs ${muted}`}>
-                          Auto-filled from uploaded image name/OCR. User can edit or clear/delete before generation.
+                          Auto-filled from uploaded image name/OCR. User can
+                          edit or clear/delete before generation.
                         </p>
                       </div>
                       <span
                         className={`rounded-full px-3 py-1 text-[10px] font-black ${
-                          darkMode ? "bg-white/10 text-white/70" : "bg-cyan-50 text-cyan-800"
+                          darkMode
+                            ? "bg-white/10 text-white/70"
+                            : "bg-cyan-50 text-cyan-800"
                         }`}
                       >
                         Auto
@@ -1901,13 +2113,17 @@ if (files.length > 1 && !canUseBulk) {
                     <div className="mt-4 flex gap-2">
                       <input
                         value={activeItem.designNumber}
-                        onChange={(e) => updateItemDesignNumber(activeItem.id, e.target.value)}
+                        onChange={(e) =>
+                          updateItemDesignNumber(activeItem.id, e.target.value)
+                        }
                         placeholder="Example: ART-1023"
                         className={`min-w-0 flex-1 rounded-2xl border px-4 py-3 text-sm font-black outline-none transition focus:border-cyan-400 ${inputClass}`}
                       />
                       <button
                         type="button"
-                        onClick={() => updateItemDesignNumber(activeItem.id, "")}
+                        onClick={() =>
+                          updateItemDesignNumber(activeItem.id, "")
+                        }
                         className={`rounded-2xl border px-4 text-xs font-black transition ${
                           darkMode
                             ? "border-white/10 bg-white/[0.04] text-white/70 hover:border-rose-400 hover:text-rose-300"
@@ -1921,10 +2137,16 @@ if (files.length > 1 && !canUseBulk) {
                     {previewImage && (
                       <div
                         className={`relative mt-4 overflow-hidden rounded-2xl border ${
-                          darkMode ? "border-white/10 bg-black/20" : "border-black/10 bg-white"
+                          darkMode
+                            ? "border-white/10 bg-black/20"
+                            : "border-black/10 bg-white"
                         }`}
                       >
-                        <img src={previewImage} alt="Article number position preview" className="h-32 w-full object-cover" />
+                        <img
+                          src={previewImage}
+                          alt="Article number position preview"
+                          className="h-32 w-full object-cover"
+                        />
                         {activeItem.designNumber && (
                           <span
                             className={`absolute rounded-xl bg-black/65 px-3 py-1 text-xs font-black text-white backdrop-blur ${
@@ -1978,22 +2200,34 @@ if (files.length > 1 && !canUseBulk) {
                                 : "border-black/10 bg-white/80"
                           }`}
                         >
-                          <div className="h-50 w-50 flex-shrink-0 overflow-hidden rounded-xl bg-black/10">
+                          <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl bg-black/10">
                             {it.url ? (
-                              <img src={it.url} alt={`AI textile mockup result for ${it.fileName}`} className="h-full w-full object-cover" />
+                              <img
+                                src={it.url}
+                                alt={`AI textile mockup result for ${it.fileName}`}
+                                className="h-full w-full object-cover"
+                              />
                             ) : (
-                              <div className="flex h-full w-full items-center justify-center text-xs text-black/40">...</div>
+                              <div className="flex h-full w-full items-center justify-center text-xs text-black/40">
+                                ...
+                              </div>
                             )}
                           </div>
                           <div className="flex-1 overflow-hidden">
-                            <p className="truncate text-xs font-bold">{it.fileName}</p>
+                            <p className="truncate text-xs font-bold">
+                              {it.fileName}
+                            </p>
                             <div className="mt-1 flex items-center gap-2">
-                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${statusColor[it.status]}`}>
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-[10px] font-black ${statusColor[it.status]}`}
+                              >
                                 {statusLabel[it.status]}
                               </span>
                               <input
                                 value={it.designNumber}
-                                onChange={(e) => updateItemDesignNumber(it.id, e.target.value)}
+                                onChange={(e) =>
+                                  updateItemDesignNumber(it.id, e.target.value)
+                                }
                                 onClick={(e) => e.stopPropagation()}
                                 placeholder="Code"
                                 className={`min-w-0 flex-1 rounded-md border px-2 py-0.5 text-[11px] font-black outline-none ${inputClass}`}
@@ -2006,7 +2240,7 @@ if (files.length > 1 && !canUseBulk) {
                               e.stopPropagation();
                               removeItem(it.id);
                             }}
-                            className="flex-shrink-0 rounded-lg px-2 py-1 text-xs font-black text-rose-500 hover:bg-rose-500/10"
+                            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-base font-black text-rose-500 hover:bg-rose-500/10 sm:text-xs"
                           >
                             ✕
                           </button>
@@ -2016,7 +2250,7 @@ if (files.length > 1 && !canUseBulk) {
                   </div>
                 )}
 
-                                <div className="mt-4 grid gap-4">
+                <div className="mt-4 grid gap-4">
                   <div
                     className={`rounded-2xl border p-4 ${darkMode ? "border-white/10 bg-white/[0.04]" : "border-black/10 bg-white/80"}`}
                   >
@@ -2034,7 +2268,9 @@ if (files.length > 1 && !canUseBulk) {
                     </button>
 
                     <p className={`mt-3 text-xs ${muted}`}>
-                      Article number is auto-filled below upload. Color will be selected automatically by AI according to the final creative background.
+                      Article number is auto-filled below upload. Color will be
+                      selected automatically by AI according to the final
+                      creative background.
                     </p>
 
                     {showTextBox && (
@@ -2049,7 +2285,7 @@ if (files.length > 1 && !canUseBulk) {
                                 key={val}
                                 type="button"
                                 onClick={() => setWatermarkPosition(val)}
-                                className={`rounded-xl border py-2 text-xs font-black transition ${
+                                className={`rounded-xl border py-3 text-xs font-black transition sm:py-2 ${
                                   watermarkPosition === val
                                     ? "border-cyan-400 bg-cyan-400/20 text-cyan-700"
                                     : darkMode
@@ -2063,8 +2299,11 @@ if (files.length > 1 && !canUseBulk) {
                           </div>
                         </div>
 
-                        <div className={`rounded-2xl border p-3 text-xs font-semibold ${darkMode ? "border-white/10 bg-black/20 text-white/55" : "border-black/10 bg-cyan-50 text-black/60"}`}>
-                          Auto color enabled: AI will pick white/black or contrast color according to background.
+                        <div
+                          className={`rounded-2xl border p-3 text-xs font-semibold ${darkMode ? "border-white/10 bg-black/20 text-white/55" : "border-black/10 bg-cyan-50 text-black/60"}`}
+                        >
+                          Auto color enabled: AI will pick white/black or
+                          contrast color according to background.
                         </div>
                       </div>
                     )}
@@ -2096,171 +2335,201 @@ if (files.length > 1 && !canUseBulk) {
                       />
                     )}
                   </div>
-                
-                   <div
-                  className={`mt-4 rounded-[1.35rem] p-4 ${
-                    darkMode ? "bg-white/[0.045]" : "bg-white/80"
-                  }`}
-                >
-                  <div className="mb-4 flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-widest text-cyan-600">
-                        Company Details Overlay
-                      </p>
-                      <p className={`mt-1 text-xs leading-5 ${muted}`}>
-                        Optional. Save once, then tick only what you want on the final output.
-                      </p>
-                    </div>
-                    <span className={`rounded-full px-3 py-1 text-[10px] font-black ${darkMode ? "bg-white/10 text-white/70" : "bg-cyan-50 text-cyan-800"}`}>
-                      Optional
-                    </span>
-                  </div>
 
-                  <div className="space-y-3">
-                    <input
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
-                      placeholder="Company name"
-                      className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-cyan-400 ${inputClass}`}
-                    />
-
-                    <input
-                      value={companyPhone}
-                      onChange={(e) => setCompanyPhone(e.target.value)}
-                      placeholder="Phone / WhatsApp number"
-                      inputMode="tel"
-                      className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-cyan-400 ${inputClass}`}
-                    />
-
-                    <input
-                      value={companyWebsite}
-                      onChange={(e) => setCompanyWebsite(e.target.value)}
-                      placeholder="Website"
-                      className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-cyan-400 ${inputClass}`}
-                    />
-
-                    <textarea
-                      value={companyAddress}
-                      onChange={(e) => setCompanyAddress(e.target.value)}
-                      placeholder="Address"
-                      rows={2}
-                      className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-cyan-400 ${inputClass}`}
-                    />
-
-                    
-                  </div>
-
-                  <div className="mt-4 space-y-3">
-                    {[
-                      ["Company", useCompanyName, setUseCompanyName, companyNamePosition, setCompanyNamePosition, Boolean(companyName.trim())],
-                      ["Phone", useCompanyPhone, setUseCompanyPhone, companyPhonePosition, setCompanyPhonePosition, Boolean(companyPhone.trim())],
-                      ["Website", useCompanyWebsite, setUseCompanyWebsite, companyWebsitePosition, setCompanyWebsitePosition, Boolean(companyWebsite.trim())],
-                      ["Address", useCompanyAddress, setUseCompanyAddress, companyAddressPosition, setCompanyAddressPosition, Boolean(companyAddress.trim())],
-                    ].map(([label, checked, setChecked, position, setPosition, enabled]: any) => (
-                      <div
-                        key={label}
-                        className={`rounded-2xl px-3 py-3 ${darkMode ? "bg-white/[0.035]" : "bg-white/70"}`}
-                      >
-                        <label className="flex items-center justify-between gap-3">
-                          <span className="flex items-center gap-2 text-xs font-black">
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              disabled={!enabled}
-                              onChange={(e) => setChecked(e.target.checked)}
-                              className="h-4 w-4 accent-cyan-500"
-                            />
-                            {label}
-                          </span>
-
-                          <select
-                            value={position}
-                            disabled={!checked || !enabled}
-                            onChange={(e) => setPosition(e.target.value)}
-                            className={`max-w-[150px] rounded-xl border px-2 py-2 text-[11px] font-bold outline-none ${
-                              darkMode
-                                ? "border-white/10 bg-black/30 text-white disabled:text-white/30"
-                                : "border-black/10 bg-white text-black disabled:text-black/30"
-                            }`}
-                          >
-                            {brandPositions.map(([value, title]) => (
-                              <option key={value} value={value}>
-                                {title}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
+                  <div
+                    className={`mt-4 rounded-[1.35rem] p-4 ${
+                      darkMode ? "bg-white/[0.045]" : "bg-white/80"
+                    }`}
+                  >
+                    <div className="mb-4 flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-black uppercase tracking-widest text-cyan-600">
+                          Company Details Overlay
+                        </p>
+                        <p className={`mt-1 text-xs leading-5 ${muted}`}>
+                          Optional. Save once, then tick only what you want on
+                          the final output.
+                        </p>
                       </div>
-                    ))}
+                      <span
+                        className={`rounded-full px-3 py-1 text-[10px] font-black ${darkMode ? "bg-white/10 text-white/70" : "bg-cyan-50 text-cyan-800"}`}
+                      >
+                        Optional
+                      </span>
+                    </div>
+
+                    <div className="space-y-3">
+                      <input
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        placeholder="Company name"
+                        className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-cyan-400 ${inputClass}`}
+                      />
+
+                      <input
+                        value={companyPhone}
+                        onChange={(e) => setCompanyPhone(e.target.value)}
+                        placeholder="Phone / WhatsApp number"
+                        inputMode="tel"
+                        className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-cyan-400 ${inputClass}`}
+                      />
+
+                      <input
+                        value={companyWebsite}
+                        onChange={(e) => setCompanyWebsite(e.target.value)}
+                        placeholder="Website"
+                        className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-cyan-400 ${inputClass}`}
+                      />
+
+                      <textarea
+                        value={companyAddress}
+                        onChange={(e) => setCompanyAddress(e.target.value)}
+                        placeholder="Address"
+                        rows={2}
+                        className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-cyan-400 ${inputClass}`}
+                      />
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      {[
+                        [
+                          "Company",
+                          useCompanyName,
+                          setUseCompanyName,
+                          companyNamePosition,
+                          setCompanyNamePosition,
+                          Boolean(companyName.trim()),
+                        ],
+                        [
+                          "Phone",
+                          useCompanyPhone,
+                          setUseCompanyPhone,
+                          companyPhonePosition,
+                          setCompanyPhonePosition,
+                          Boolean(companyPhone.trim()),
+                        ],
+                        [
+                          "Website",
+                          useCompanyWebsite,
+                          setUseCompanyWebsite,
+                          companyWebsitePosition,
+                          setCompanyWebsitePosition,
+                          Boolean(companyWebsite.trim()),
+                        ],
+                        [
+                          "Address",
+                          useCompanyAddress,
+                          setUseCompanyAddress,
+                          companyAddressPosition,
+                          setCompanyAddressPosition,
+                          Boolean(companyAddress.trim()),
+                        ],
+                      ].map(
+                        ([
+                          label,
+                          checked,
+                          setChecked,
+                          position,
+                          setPosition,
+                          enabled,
+                        ]: any) => (
+                          <div
+                            key={label}
+                            className={`rounded-2xl px-3 py-3 ${darkMode ? "bg-white/[0.035]" : "bg-white/70"}`}
+                          >
+                            <label className="flex items-center justify-between gap-3">
+                              <span className="flex items-center gap-2 text-xs font-black">
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  disabled={!enabled}
+                                  onChange={(e) => setChecked(e.target.checked)}
+                                  className="h-4 w-4 accent-cyan-500"
+                                />
+                                {label}
+                              </span>
+
+                              <select
+                                value={position}
+                                disabled={!checked || !enabled}
+                                onChange={(e) => setPosition(e.target.value)}
+                                className={`max-w-[150px] rounded-xl border px-2 py-2 text-[11px] font-bold outline-none ${
+                                  darkMode
+                                    ? "border-white/10 bg-black/30 text-white disabled:text-white/30"
+                                    : "border-black/10 bg-white text-black disabled:text-black/30"
+                                }`}
+                              >
+                                {brandPositions.map(([value, title]) => (
+                                  <option key={value} value={value}>
+                                    {title}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                          </div>
+                        ),
+                      )}
+                    </div>
                   </div>
                 </div>
-
-
-                  
-                </div>
               </div>
 
-              
+              <div className="min-w-0 space-y-6">
+                <div
+                  className={`rounded-[1.5rem] p-3 sm:rounded-[2rem] sm:p-5 ${darkMode ? "bg-white/[0.035]" : "bg-white/70"}`}
+                >
+                  <div className="mt-8 grid grid-cols-2 gap-3">
+  {[
+    { step: "STEP 1", title: "Product", desc: "Category + product" },
+    { step: "STEP 2", title: "Model", desc: "Usage + look" },
+    { step: "STEP 3", title: "Shoot", desc: "Pose + style" },
+    { step: "STEP 4", title: "Final", desc: "Extras + generate" },
+  ].map((item, index) => (
+    <div
+  key={item.step}
+  onClick={() => setCurrentStep(index + 1)}
+  className={`relative cursor-pointer overflow-hidden rounded-3xl border p-4 shadow-sm transition-all duration-300 active:scale-[0.98] ${
+    currentStep === index + 1
+      ? "border-cyan-300 bg-gradient-to-br from-cyan-400 to-blue-500 text-white shadow-cyan-200/60"
+      : "border-cyan-100 bg-white/80 text-slate-900 hover:border-cyan-200"
+  }`}
+>
+      <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-cyan-200/30 blur-2xl" />
 
-              <div className="space-y-6">
-                <div className={`rounded-[2rem] p-5 ${darkMode ? "bg-white/[0.035]" : "bg-white/70"}`}>
-  <div className="grid grid-cols-4 gap-3">
-    {builderStepMeta.map((step, index) => {
-      const completed = builderStep > step.id;
-      const active = builderStep === step.id;
+      <div className="relative z-10 flex items-start justify-between gap-2">
+        <div>
+          <p className={`text-[10px] font-black tracking-[0.22em] ${
+           currentStep === index + 1 ? "text-white/80" : "text-cyan-600"
+          }`}>
+            {item.step}
+          </p>
 
-      return (
-        <div key={step.id} className="relative">
-          <button
-            type="button"
-            onClick={() => setBuilderStep(step.id)}
-            className={`relative w-full overflow-hidden rounded-[26px] px-4 py-5 text-left transition-all duration-300 ${
-              active
-                ? "bg-gradient-to-r from-cyan-400 to-blue-500 text-black shadow-2xl shadow-cyan-500/30 scale-[1.02]"
-                : completed
-                  ? darkMode
-                    ? "bg-cyan-500/10 text-white"
-                    : "bg-cyan-50 text-black"
-                  : darkMode
-                    ? "bg-white/[0.04] text-white/45"
-                    : "bg-white text-black/45"
-            }`}
-          >
-            <div className="text-[11px] font-black uppercase tracking-[0.22em]">
-              Step {step.id}
-            </div>
+          <h3 className="mt-1 text-lg font-black leading-none">
+            {item.title}
+          </h3>
 
-            <div className="mt-2 text-[20px] font-black leading-none">
-              {step.title}
-            </div>
-
-            <div className="mt-2 text-xs font-semibold opacity-70">
-              {step.sub}
-            </div>
-
-            {completed && (
-              <div className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-cyan-400 text-[16px] font-black text-black">
-                ✓
-              </div>
-            )}
-          </button>
-
-          {index !== builderStepMeta.length - 1 && (
-            <div
-              className={`absolute left-[calc(100%-6px)] top-1/2 h-[4px] w-[14px] -translate-y-1/2 rounded-full transition-all duration-300 ${
-                builderStep > step.id
-                  ? "bg-gradient-to-r from-cyan-400 to-blue-500"
-                  : darkMode
-                    ? "bg-white/10"
-                    : "bg-black/10"
-              }`}
-            />
-          )}
+          <p className={`mt-1 text-[11px] font-semibold ${
+            index === 3 ? "text-white/80" : "text-slate-500"
+          }`}>
+            {item.desc}
+          </p>
         </div>
-      );
-    })}
-  </div>
 
+        <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black ${
+          index === 3
+            ? "bg-white text-cyan-600"
+            : "bg-cyan-400 text-white"
+        }`}>
+          ✓
+        </div>
+      </div>
+
+      {index !== 3 && (
+        <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-cyan-300 to-blue-400" />
+      )}
+    </div>
+  ))}
+</div>
                 </div>
 
                 {builderStep === 1 && (
@@ -2268,16 +2537,17 @@ if (files.length > 1 && !canUseBulk) {
                     <section>
                       <div className="mb-4 flex items-center justify-between">
                         <div>
-                          <h4 className="text-lg font-black uppercase tracking-widest text-cyan-600">
+                          <h4 className="text-base font-black uppercase tracking-widest text-cyan-600 sm:text-lg">
                             1. Select Category
                           </h4>
                           <p className={`mt-1 text-xs ${muted}`}>
-                            Pehle category choose karo. Product options automatically change honge.
+                            Pehle category choose karo. Product options
+                            automatically change honge.
                           </p>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
                         {textileCategories.map((item) => (
                           <OptionCard
                             key={item.title}
@@ -2286,7 +2556,9 @@ if (files.length > 1 && !canUseBulk) {
                             active={textileCategory === item.title}
                             onClick={() => {
                               setTextileCategory(item.title);
-                              const firstProduct = productOptionsByCategory[item.title]?.[0] || "Men's Shirt";
+                              const firstProduct =
+                                productOptionsByCategory[item.title]?.[0] ||
+                                "Men's Shirt";
                               setProduct(firstProduct);
                               setCustomProduct("");
                               setModelUsage(
@@ -2314,11 +2586,11 @@ if (files.length > 1 && !canUseBulk) {
                     </section>
 
                     <section>
-                      <h4 className="mb-4 text-lg font-black uppercase tracking-widest text-cyan-600">
+                      <h4 className="mb-4 text-base font-black uppercase tracking-widest text-cyan-600 sm:text-lg">
                         2. Select Product Type
                       </h4>
 
-                      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
                         {dynamicProducts.map((item) => (
                           <OptionCard
                             key={item}
@@ -2345,11 +2617,11 @@ if (files.length > 1 && !canUseBulk) {
                 {builderStep === 2 && (
                   <div className="space-y-6">
                     <section>
-                      <h4 className="mb-4 text-lg font-black uppercase tracking-widest text-cyan-600">
+                      <h4 className="mb-4 text-base font-black uppercase tracking-widest text-cyan-600 sm:text-lg">
                         3. Model / Scene Usage
                       </h4>
 
-                      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
                         {dynamicModelUsageOptions.map((item) => (
                           <OptionCard
                             key={item}
@@ -2368,16 +2640,18 @@ if (files.length > 1 && !canUseBulk) {
                     </section>
 
                     <section>
-                      <h4 className="mb-4 text-lg font-black uppercase tracking-widest text-cyan-600">
+                      <h4 className="mb-4 text-base font-black uppercase tracking-widest text-cyan-600 sm:text-lg">
                         4. Model Look
                       </h4>
 
-                      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
                         {modelLookOptions.map((item) => (
                           <OptionCard
                             key={item}
                             title={item}
-                            active={!customModelType.trim() && modelType === item}
+                            active={
+                              !customModelType.trim() && modelType === item
+                            }
                             onClick={() => {
                               setModelType(item);
                               setCustomModelType("");
@@ -2399,11 +2673,11 @@ if (files.length > 1 && !canUseBulk) {
                 {builderStep === 3 && (
                   <div className="space-y-6">
                     <section>
-                      <p className="mb-4 text-lg font-black uppercase tracking-widest text-cyan-600">
+                      <p className="mb-4 text-base font-black uppercase tracking-widest text-cyan-600 sm:text-lg">
                         5. {isHomeLikeCategory ? "Scene / View" : "Pose"}
                       </p>
 
-                      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
                         {dynamicPoseOptions.map((item) => (
                           <OptionCard
                             key={item}
@@ -2429,16 +2703,19 @@ if (files.length > 1 && !canUseBulk) {
 
                     {showFaceExpression && (
                       <section>
-                        <h4 className="mb-4 text-lg font-black uppercase tracking-widest text-cyan-600">
+                        <h4 className="mb-4 text-base font-black uppercase tracking-widest text-cyan-600 sm:text-lg">
                           6. Face Expression
                         </h4>
 
-                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
                           {faceExpressionOptions.map((item) => (
                             <OptionCard
                               key={item}
                               title={item}
-                              active={!customFaceExpression.trim() && faceExpression === item}
+                              active={
+                                !customFaceExpression.trim() &&
+                                faceExpression === item
+                              }
                               onClick={() => {
                                 setFaceExpression(item);
                                 setCustomFaceExpression("");
@@ -2457,10 +2734,12 @@ if (files.length > 1 && !canUseBulk) {
                     )}
 
                     <section>
-                      <h4 className="mb-4 text-lg font-black uppercase tracking-widest text-cyan-600">
-                        {showFaceExpression ? "7. Select Shoot Style" : "6. Select Shoot Style"}
+                      <h4 className="mb-4 text-base font-black uppercase tracking-widest text-cyan-600 sm:text-lg">
+                        {showFaceExpression
+                          ? "7. Select Shoot Style"
+                          : "6. Select Shoot Style"}
                       </h4>
-                      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
                         {[
                           "Outdoor Premium",
                           "Studio Professional",
@@ -2470,7 +2749,9 @@ if (files.length > 1 && !canUseBulk) {
                           <OptionCard
                             key={item}
                             title={item}
-                            active={!customShootStyle.trim() && shootStyle === item}
+                            active={
+                              !customShootStyle.trim() && shootStyle === item
+                            }
                             onClick={() => {
                               setShootStyle(item);
                               setCustomShootStyle("");
@@ -2491,19 +2772,23 @@ if (files.length > 1 && !canUseBulk) {
                 {builderStep === 4 && (
                   <div className="space-y-6">
                     <section>
-                      <h4 className="mb-4 text-lg font-black uppercase tracking-widest text-cyan-600">
-                        {showFaceExpression ? "8. Accessories / Styling" : "7. Accessories / Styling"}
+                      <h4 className="mb-4 text-base font-black uppercase tracking-widest text-cyan-600 sm:text-lg">
+                        {showFaceExpression
+                          ? "8. Accessories / Styling"
+                          : "7. Accessories / Styling"}
                       </h4>
                       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                        {["None", "Sunglasses", "Watch", "Bracelet"].map((item) => (
-                          <OptionCard
-                            key={item}
-                            title={item}
-                            active={accessories.includes(item)}
-                            onClick={() => toggleAccessory(item)}
-                            darkMode={darkMode}
-                          />
-                        ))}
+                        {["None", "Sunglasses", "Watch", "Bracelet"].map(
+                          (item) => (
+                            <OptionCard
+                              key={item}
+                              title={item}
+                              active={accessories.includes(item)}
+                              onClick={() => toggleAccessory(item)}
+                              darkMode={darkMode}
+                            />
+                          ),
+                        )}
                       </div>
                       {renderCustomInput(
                         isHomeLikeCategory
@@ -2515,15 +2800,17 @@ if (files.length > 1 && !canUseBulk) {
                     </section>
 
                     <section>
-                      <h4 className="mb-4 text-lg font-black uppercase tracking-widest text-cyan-600">
-                        {showFaceExpression ? "9. Output & Quality" : "8. Output & Quality"}
+                      <h4 className="mb-4 text-base font-black uppercase tracking-widest text-cyan-600 sm:text-lg">
+                        {showFaceExpression
+                          ? "9. Output & Quality"
+                          : "8. Output & Quality"}
                       </h4>
                       <div className="grid gap-5 lg:grid-cols-2">
                         <div className="space-y-4">
                           <p className="text-xs font-black uppercase tracking-widest text-slate-400">
                             Select Size
                           </p>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-2 gap-3 sm:gap-4">
                             {["Square (1:1)", "Mobile (9:16)"].map((item) => (
                               <OptionCard
                                 key={item}
@@ -2531,10 +2818,16 @@ if (files.length > 1 && !canUseBulk) {
                                 active={
                                   !customOutputSize.trim() &&
                                   outputSize ===
-                                    (item.includes("1:1") ? "1080x1080" : "1080x1920")
+                                    (item.includes("1:1")
+                                      ? "1080x1080"
+                                      : "1080x1920")
                                 }
                                 onClick={() => {
-                                  setOutputSize(item.includes("1:1") ? "1080x1080" : "1080x1920");
+                                  setOutputSize(
+                                    item.includes("1:1")
+                                      ? "1080x1080"
+                                      : "1080x1920",
+                                  );
                                   setCustomOutputSize("");
                                 }}
                                 darkMode={darkMode}
@@ -2551,12 +2844,14 @@ if (files.length > 1 && !canUseBulk) {
                           <p className="text-xs font-black uppercase tracking-widest text-slate-400">
                             Select Quality
                           </p>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-2 gap-3 sm:gap-4">
                             {["Premium", "Ultra HD"].map((item) => (
                               <OptionCard
                                 key={item}
                                 title={item}
-                                active={!customQuality.trim() && quality === item}
+                                active={
+                                  !customQuality.trim() && quality === item
+                                }
                                 onClick={() => {
                                   setQuality(item);
                                   setCustomQuality("");
@@ -2576,14 +2871,19 @@ if (files.length > 1 && !canUseBulk) {
 
                     <div className="pt-2">
                       <button
-                        disabled={loading || uploading || readyItems.length === 0}
+                        disabled={
+                          loading || uploading || readyItems.length === 0
+                        }
                         onClick={handleGenerate}
-                        className={`flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 py-5 text-lg font-black text-black shadow-xl shadow-cyan-500/25 transition hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50`}
+                        className={`flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-4 text-base font-black text-black shadow-xl shadow-cyan-500/25 transition hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 sm:gap-3 sm:py-5 sm:text-lg`}
                       >
                         {loading ? (
                           <>
                             <div className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent" />
-                            <span>Generating {readyItems.length} Mockup{readyItems.length > 1 ? "s" : ""}...</span>
+                            <span>
+                              Generating {readyItems.length} Mockup
+                              {readyItems.length > 1 ? "s" : ""}...
+                            </span>
                           </>
                         ) : (
                           <>
@@ -2599,119 +2899,136 @@ if (files.length > 1 && !canUseBulk) {
                         )}
                       </button>
                     </div>
-                   {showResult && (
-  <div className={`mt-6 overflow-hidden rounded-[2.5rem] border shadow-2xl backdrop-blur-xl ${card}`}>
-    <div className="flex flex-col">
-      <div className="flex items-center justify-center bg-black/5 p-5">
-        {previewResult ? (
-          <img
-            src={previewResult}
-            alt="Final AI textile mockup generated using AgentForge"
-            className="w-full max-w-[360px] rounded-3xl object-cover shadow-2xl transition hover:scale-[1.02]"
-          />
-        ) : (
-          <div className="flex h-[400px] w-full flex-col items-center justify-center text-center">
-            <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-cyan-400 border-t-transparent" />
-            <p className="font-bold">Finalizing your masterpiece...</p>
-          </div>
-        )}
-      </div>
+                    {showResult && (
+                      <div
+                        className={`mt-6 overflow-hidden rounded-[1.5rem] border shadow-2xl backdrop-blur-xl sm:rounded-[2.5rem] ${card}`}
+                      >
+                        <div className="flex flex-col">
+                          <div className="flex items-center justify-center bg-black/5 p-3 sm:p-5">
+                            {previewResult ? (
+                              <img
+                                src={previewResult}
+                                alt="Final AI textile mockup generated using AgentForge"
+                                className="w-full max-w-[360px] rounded-3xl object-cover shadow-2xl transition hover:scale-[1.02]"
+                              />
+                            ) : (
+                              <div className="flex h-[400px] w-full flex-col items-center justify-center text-center">
+                                <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-cyan-400 border-t-transparent" />
+                                <p className="font-bold">
+                                  Finalizing your masterpiece...
+                                </p>
+                              </div>
+                            )}
+                          </div>
 
-      <div className="p-6 lg:p-8">
-        <div className="mb-6">
-          <span className="text-[11px] font-black uppercase tracking-[0.3em] text-cyan-600">
-            Success
-          </span>
-          <h3 className="mt-2 text-3xl font-black">Generation Complete</h3>
-          <p className={`mt-3 text-sm leading-relaxed ${muted}`}>
-            Your premium model mockup is ready. You can now download it or share it directly with your clients.
-          </p>
-        </div>
+                          <div className="p-4 sm:p-6 lg:p-8">
+                            <div className="mb-5 sm:mb-6">
+                              <span className="text-[11px] font-black uppercase tracking-[0.3em] text-cyan-600">
+                                Success
+                              </span>
+                              <h3 className="mt-2 text-2xl font-black sm:text-3xl">
+                                Generation Complete
+                              </h3>
+                              <p
+                                className={`mt-3 text-sm leading-relaxed ${muted}`}
+                              >
+                                Your premium model mockup is ready. You can now
+                                download it or share it directly with your
+                                clients.
+                              </p>
+                            </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <button
-            onClick={handleDownloadResult}
-            className="flex items-center justify-center gap-3 rounded-2xl bg-emerald-500 px-5 py-3 font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-105 active:scale-95"
-          >
-            <span>Download HD</span>
-          </button>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <button
+                                onClick={handleDownloadResult}
+                                className="flex items-center justify-center gap-3 rounded-2xl bg-emerald-500 px-5 py-3 font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-105 active:scale-95"
+                              >
+                                <span>Download HD</span>
+                              </button>
 
-          <button
-            onClick={handleNativeShare}
-            className="flex items-center justify-center gap-3 rounded-2xl bg-blue-500 px-5 py-3 font-black text-white shadow-lg shadow-blue-500/20 transition hover:scale-105 active:scale-95"
-          >
-            <span>Share Now</span>
-          </button>
-        </div>
+                              <button
+                                onClick={handleNativeShare}
+                                className="flex items-center justify-center gap-3 rounded-2xl bg-blue-500 px-5 py-3 font-black text-white shadow-lg shadow-blue-500/20 transition hover:scale-105 active:scale-95"
+                              >
+                                <span>Share Now</span>
+                              </button>
+                            </div>
 
-        <a
-          href={whatsappLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-3 flex w-full items-center justify-center gap-3 rounded-2xl bg-[#25D366] px-5 py-3 font-black text-white shadow-lg shadow-green-500/20 transition hover:scale-105 active:scale-95"
-        >
-          <span>Share on WhatsApp</span>
-        </a>
+                            <a
+                              href={whatsappLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-3 flex w-full items-center justify-center gap-3 rounded-2xl bg-[#25D366] px-5 py-3 font-black text-white shadow-lg shadow-green-500/20 transition hover:scale-105 active:scale-95"
+                            >
+                              <span>Share on WhatsApp</span>
+                            </a>
 
-        {items.filter((it) => it.resultUrl).length > 1 && (
-          <div className="mt-6">
-            <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-cyan-600">
-              All Generated Mockups
-            </p>
+                            {items.filter((it) => it.resultUrl).length > 1 && (
+                              <div className="mt-6">
+                                <p className="mb-3 text-[11px] font-black uppercase tracking-widest text-cyan-600">
+                                  All Generated Mockups
+                                </p>
 
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-              {items
-                .filter((it) => it.resultUrl)
-                .map((it) => (
-                  <button
-                    key={it.id}
-                    type="button"
-                    onClick={() => setActiveId(it.id)}
-                    className={`overflow-hidden rounded-xl border-2 transition ${
-                      activeId === it.id
-                        ? "border-cyan-400 shadow-lg shadow-cyan-400/30"
-                        : "border-transparent"
-                    }`}
-                  >
-                    {it.resultUrl ? (
-                      <img
-                        src={it.resultUrl}
-                        alt={`Generated AI mockup ${it.fileName}`}
-                        className="aspect-square w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex aspect-square w-full items-center justify-center text-xs text-black/50">
-                        Loading...
+                                <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                                  {items
+                                    .filter((it) => it.resultUrl)
+                                    .map((it) => (
+                                      <button
+                                        key={it.id}
+                                        type="button"
+                                        onClick={() => setActiveId(it.id)}
+                                        className={`overflow-hidden rounded-xl border-2 transition ${
+                                          activeId === it.id
+                                            ? "border-cyan-400 shadow-lg shadow-cyan-400/30"
+                                            : "border-transparent"
+                                        }`}
+                                      >
+                                        {it.resultUrl ? (
+                                          <img
+                                            src={it.resultUrl}
+                                            alt={`Generated AI mockup ${it.fileName}`}
+                                            className="aspect-square w-full object-cover"
+                                          />
+                                        ) : (
+                                          <div className="flex aspect-square w-full items-center justify-center text-xs text-black/50">
+                                            Loading...
+                                          </div>
+                                        )}
+                                      </button>
+                                    ))}
+                                </div>
+                              </div>
+                            )}
+
+                            <div className="mt-6 rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-4 sm:mt-8 sm:rounded-3xl sm:p-6">
+                              <p className="text-[11px] font-black uppercase tracking-widest text-cyan-600">
+                                Pro Tip
+                              </p>
+                              <p className="mt-3 text-sm font-bold leading-relaxed">
+                                High-res source images with clean backgrounds
+                                lead to the most royal and crisp model outputs.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     )}
-                  </button>
-                ))}
-            </div>
-          </div>
-        )}
+                  </div>
+                )}
 
-        <div className="mt-8 rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-6">
-          <p className="text-[11px] font-black uppercase tracking-widest text-cyan-600">
-            Pro Tip
-          </p>
-          <p className="mt-3 text-sm font-bold leading-relaxed">
-            High-res source images with clean backgrounds lead to the most royal and crisp model outputs.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-                </div>
-              )}
-
-                <div className="flex items-center justify-between gap-3 pt-2">
+                <div
+                  className={`sticky bottom-3 z-[90] mt-4 flex items-center justify-between gap-3 rounded-3xl border p-2 shadow-2xl backdrop-blur-xl sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none ${darkMode ? "border-white/10 bg-[#07111f]/92" : "border-black/10 bg-white/92"}`}
+                >
                   <button
                     type="button"
-                    onClick={() => setBuilderStep((step) => Math.max(1, step - 1))}
+                    onClick={() =>
+                      setBuilderStep((step) => Math.max(1, step - 1))
+                    }
                     disabled={Number(builderStep) === 1}
-                    className={`rounded-2xl px-6 py-3 text-sm font-black transition disabled:opacity-40 ${
-                      darkMode ? "bg-white/[0.06] text-white" : "bg-white text-black"
+                    className={`rounded-2xl px-5 py-3 text-sm font-black transition disabled:opacity-40 sm:px-6 ${
+                      darkMode
+                        ? "bg-white/[0.06] text-white"
+                        : "bg-white text-black"
                     }`}
                   >
                     Back
@@ -2721,8 +3038,10 @@ if (files.length > 1 && !canUseBulk) {
                     <button
                       type="button"
                       disabled={!canGoNext}
-                      onClick={() => setBuilderStep((step) => Math.min(4, step + 1))}
-                      className="rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 px-8 py-3 text-sm font-black text-black shadow-lg shadow-cyan-500/20 transition hover:scale-[1.02] disabled:opacity-40"
+                      onClick={() =>
+                        setBuilderStep((step) => Math.min(4, step + 1))
+                      }
+                      className="flex-1 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 px-6 py-3 text-sm font-black text-black shadow-lg shadow-cyan-500/20 transition hover:scale-[1.02] disabled:opacity-40 sm:flex-none sm:px-8"
                     >
                       Next Step
                     </button>
@@ -2732,30 +3051,29 @@ if (files.length > 1 && !canUseBulk) {
             </div>
           </div>
         </section>
-
       </div>
 
       {loading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md">
           <div className="mx-auto max-w-lg p-6 text-center text-white">
             <div className="relative mx-auto mb-10 h-32 w-32">
-  <div className="absolute inset-0 animate-ping rounded-full bg-cyan-400 opacity-20" />
-  <div className="absolute -inset-3 animate-pulse rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 opacity-40 blur-2xl" />
-  <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white shadow-2xl ring-4 ring-cyan-400/60">
-    <img
-      src="/logo-new.jpg"
-      alt="AgentForge"
-      className="h-full w-full object-cover"
-      style={{ animation: "afLogoFloat 2.4s ease-in-out infinite" }}
-    />
-  </div>
-  <style>{`
+              <div className="absolute inset-0 animate-ping rounded-full bg-cyan-400 opacity-20" />
+              <div className="absolute -inset-3 animate-pulse rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 opacity-40 blur-2xl" />
+              <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white shadow-2xl ring-4 ring-cyan-400/60">
+                <img
+                  src="/logo-new.jpg"
+                  alt="AgentForge"
+                  className="h-full w-full object-cover"
+                  style={{ animation: "afLogoFloat 2.4s ease-in-out infinite" }}
+                />
+              </div>
+              <style>{`
     @keyframes afLogoFloat {
       0%, 100% { transform: scale(1) rotate(-4deg); }
       50%      { transform: scale(1.1) rotate(4deg); }
     }
   `}</style>
-</div>
+            </div>
 
             <h3 className="text-3xl font-black">AI is Crafting...</h3>
             <p className="mt-4 text-white/70">

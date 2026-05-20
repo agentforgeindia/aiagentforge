@@ -80,22 +80,22 @@ const tabs: Tab[] = ["All", "Textile", "Jewellery", "Productography"];
 
 function CtaCard({ isLoggedIn }: { isLoggedIn: boolean }) {
   return (
-    <div className="flex aspect-[4/5] flex-col items-center justify-center rounded-[1.35rem] border border-cyan-400/35 bg-[#07111f] p-6 text-center text-white shadow-xl shadow-cyan-500/20">
-      <p className="mb-4 rounded-full bg-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">
+    <div className="flex aspect-[4/5] flex-col items-center justify-center overflow-hidden rounded-[1.35rem] border border-cyan-400/35 bg-[#07111f] p-4 text-center text-white shadow-lg shadow-cyan-500/20">
+      <p className="mb-3 rounded-full bg-white/10 px-4 py-2 text-[9px] font-black uppercase tracking-[0.2em] text-cyan-200">
         AgentForge
       </p>
 
-      <h3 className="text-2xl font-black leading-tight">
+      <h3 className="max-w-[130px] text-xl font-black leading-[1.05]">
         Want visuals like this?
       </h3>
 
-      <p className="mt-3 max-w-xs text-sm leading-6 text-white/75">
-        Upload your product, choose an agent, and generate premium visuals in minutes.
+      <p className="mt-3 line-clamp-3 text-xs leading-5 text-white/75">
+        Upload your product and generate premium visuals in minutes.
       </p>
 
       <Link
         href={isLoggedIn ? "/pricing" : "/signup"}
-        className="mt-6 rounded-full bg-white px-6 py-3 text-sm font-black text-black transition hover:scale-105"
+        className="mt-4 rounded-full bg-white px-5 py-2.5 text-xs font-black text-black transition hover:scale-105"
       >
         {isLoggedIn ? "Upgrade Plan" : "Sign Up Now"}
       </Link>
@@ -121,12 +121,8 @@ function ImageCard({
         className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
       />
 
-      <div className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-[11px] font-black text-black shadow backdrop-blur">
-        {item.category}
-      </div>
-
       <div className="absolute inset-x-0 bottom-0 translate-y-2 bg-gradient-to-t from-black/85 via-black/35 to-transparent p-4 text-left opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-        <h3 className="text-base font-black text-white">{item.title}</h3>
+       <h3 className="text-base font-black text-white">Premium AI Visual</h3>
         <p className="mt-1 text-xs text-white/75">{item.desc}</p>
       </div>
     </button>
@@ -245,9 +241,6 @@ export default function GalleryPage() {
                     alt="AI textile mockup example created with AgentForge AI"
                     className="h-full w-full object-cover"
                   />
-                  <div className="absolute left-6 top-6 rounded-full bg-white/90 px-3 py-1 text-[11px] font-black text-black">
-                    textile/design-1.png
-                  </div>
                 </div>
 
                 <div className="relative overflow-hidden rounded-[1.6rem] bg-black/5">
@@ -256,9 +249,6 @@ export default function GalleryPage() {
                     alt="AI jewellery photoshoot example created with AgentForge AI"
                     className="h-full w-full object-cover"
                   />
-                  <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-black text-black">
-                    jewellery/design-1.png
-                  </div>
                 </div>
 
                 <div className="relative overflow-hidden rounded-[1.6rem] bg-black/5">
@@ -267,35 +257,23 @@ export default function GalleryPage() {
                     alt="AI product photography example created with AgentForge AI"
                     className="h-full w-full object-cover"
                   />
-                  <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-black text-black">
-                    productography/design-1.png
-                  </div>
                 </div>
-              </div>
-
-              <div className="absolute inset-x-8 bottom-8 rounded-3xl bg-white/92 p-5 text-black shadow-2xl backdrop-blur">
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-600">
-                  Public Demo Images
-                </p>
-                <p className="mt-1 text-xl font-black">
-                  Safe gallery for marketing showcase
-                </p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mb-8 flex justify-center">
-          <div className="flex w-full gap-2 overflow-x-auto rounded-full border border-black/10 bg-white/75 p-2 shadow-lg shadow-black/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/10 md:w-auto">
+        <div className="mt-8 rounded-[1.5rem] bg-white/90 p-2 shadow-lg">
+  <div className="flex items-center justify-between gap-1">
             {tabs.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-black transition ${
-                  activeTab === tab
-                    ? "bg-black text-white dark:bg-white dark:text-black"
-                    : "text-black/60 hover:bg-black/5 dark:text-white/65 dark:hover:bg-white/10"
-                }`}
+                className={`rounded-full px-3 py-2 text-[13px] font-black transition whitespace-nowrap ${
+  activeTab === tab
+    ? "bg-black text-white"
+    : "text-black/60 hover:bg-black/5"
+}`}
               >
                 {tab}
               </button>
