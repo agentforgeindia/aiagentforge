@@ -39,6 +39,7 @@ export const metadata: Metadata = {
   icons: {
     icon: "/logo-new.jpg",
   },
+  manifest: "/manifest.json",
 
   openGraph: {
     title: "AgentForge AI",
