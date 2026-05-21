@@ -1,47 +1,45 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * AppIntro
  * --------
- * Plays /App-intro.mp4 as a full-screen intro when the site is opened inside
- * the installed app shell (mobile TWA, desktop Electron, or PWA standalone).
+ * Static brand intro shown only inside the installed app shell
+ * (mobile TWA, desktop Electron, or PWA standalone).
  *
- * Behaviour:
- * - Renders nothing for regular browser visits.
- * - Renders only once per session (sessionStorage flag).
- * - Skippable; auto-dismisses when the video finishes.
- * - White background with floating AI/design doodles (no black screen).
+ * Design:
+ * - Light off-white background with soft brand-tinted radial glows.
+ * - Centred logo + wordmark + thin brand-gradient loading bar.
+ * - Floating AI/design doodles drift gently in the background.
+ * - Auto-dismisses after 4s (between user-requested 3–5s range).
+ * - No black surfaces anywhere; logo sits on white with a gradient halo.
  */
+
+const INTRO_DURATION_MS = 4000;
+const FADE_OUT_MS = 500;
+
 export default function AppIntro() {
   const [visible, setVisible] = useState(false);
   const [exiting, setExiting] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
+  // Decide on mount whether to show the intro
   useEffect(() => {
     if (typeof window === "undefined") return;
-
-    // Show only once per session
     if (sessionStorage.getItem("af_app_intro_shown") === "1") return;
 
     const ua = navigator.userAgent.toLowerCase();
     const params = new URLSearchParams(window.location.search);
 
     const isInApp =
-      // PWA / TWA installed (Chrome reports standalone for installed PWAs and TWAs)
       window.matchMedia("(display-mode: standalone)").matches ||
       window.matchMedia("(display-mode: fullscreen)").matches ||
       window.matchMedia("(display-mode: minimal-ui)").matches ||
-      // iOS Safari "Add to Home Screen"
-      // @ts-expect-error - standalone is a non-standard iOS Safari property
+      // @ts-expect-error - non-standard iOS Safari property
       window.navigator.standalone === true ||
-      // Electron desktop wrapper
       ua.includes("electron") ||
       ua.includes("agentforgedesktop") ||
-      // Android TWA launches with this referrer
       document.referrer.startsWith("android-app://") ||
-      // Explicit override (set by Electron loader / TWA start_url)
       params.get("source") === "app";
 
     if (!isInApp) return;
@@ -50,19 +48,21 @@ export default function AppIntro() {
     sessionStorage.setItem("af_app_intro_shown", "1");
   }, []);
 
-  const close = () => {
-    if (exiting) return;
-    setExiting(true);
-    setTimeout(() => setVisible(false), 450);
-  };
-
-  // Safety: if video can't load for any reason, auto-close after 8s
+  // Auto-dismiss
   useEffect(() => {
     if (!visible) return;
-    const t = window.setTimeout(close, 8000);
+    const t = window.setTimeout(() => triggerClose(), INTRO_DURATION_MS);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
+
+  const triggerClose = () => {
+    setExiting((prev) => {
+      if (prev) return prev;
+      window.setTimeout(() => setVisible(false), FADE_OUT_MS);
+      return true;
+    });
+  };
 
   if (!visible) return null;
 
@@ -70,36 +70,94 @@ export default function AppIntro() {
     <div
       role="dialog"
       aria-label="App intro"
-      className={`fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-white transition-opacity duration-500 ${
+      className={`fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-[#fafbff] transition-opacity duration-500 ${
         exiting ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}
     >
-      {/* Soft tinted glow so pure white is not flat */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,#a78bfa22,transparent_45%),radial-gradient(circle_at_80%_15%,#22d3ee22,transparent_40%),radial-gradient(circle_at_50%_95%,#f472b622,transparent_45%)]" />
+      {/* Soft brand-tinted radial glows — light theme, no black */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,#a78bfa33,transparent_45%),radial-gradient(circle_at_82%_15%,#22d3ee33,transparent_42%),radial-gradient(circle_at_50%_95%,#f472b633,transparent_45%)]" />
 
-      {/* Floating AI / design doodles */}
+      {/* Floating doodles */}
       <FloatingDoodles />
 
-      {/* Video */}
-      <video
-        ref={videoRef}
-        src="/App-intro.mp4"
-        autoPlay
-        muted
-        playsInline
-        onEnded={close}
-        onError={close}
-        className="relative z-10 max-h-[80vh] max-w-[90vw] rounded-3xl shadow-[0_30px_90px_-20px_rgba(80,40,200,0.35)] ring-1 ring-black/5"
-      />
+      {/* Centre stack — logo + wordmark + loading bar */}
+      <div className="relative z-10 flex flex-col items-center px-6">
+        {/* Gradient halo */}
+        <div className="relative">
+          <div className="absolute inset-0 -m-10 rounded-full bg-[conic-gradient(from_0deg,#22d3ee,#a78bfa,#f472b6,#22d3ee)] opacity-40 blur-2xl af-halo-spin" />
+          <div className="absolute inset-0 -m-6 rounded-full bg-white/60 blur-xl" />
 
-      {/* Skip button */}
+          {/* Logo (no black frame — sits directly on the soft white background) */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/af-logo.png"
+            alt="AI Agentforge"
+            className="relative h-32 w-32 sm:h-40 sm:w-40 select-none af-logo-enter drop-shadow-[0_12px_28px_rgba(124,58,237,0.35)]"
+            draggable={false}
+          />
+        </div>
+
+        {/* Wordmark */}
+        <div className="mt-6 text-center">
+          <div className="text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl af-text-rise">
+            AI Agentforge
+          </div>
+          <div className="mt-1 text-xs font-medium text-gray-500 sm:text-sm af-text-rise-slow">
+            Designing with intelligence
+          </div>
+        </div>
+
+        {/* Brand-gradient loading bar */}
+        <div className="mt-6 h-1 w-40 overflow-hidden rounded-full bg-black/5">
+          <div
+            className="h-full bg-gradient-to-r from-cyan-400 via-violet-500 to-pink-400 af-loader"
+            style={{ animationDuration: `${INTRO_DURATION_MS}ms` }}
+          />
+        </div>
+      </div>
+
+      {/* Skip */}
       <button
         type="button"
-        onClick={close}
-        className="absolute right-4 top-4 z-20 rounded-full border border-black/10 bg-white/80 px-4 py-1.5 text-sm font-medium text-gray-800 shadow-sm backdrop-blur transition hover:bg-white sm:right-6 sm:top-6"
+        onClick={triggerClose}
+        className="absolute right-4 top-4 z-20 rounded-full border border-black/5 bg-white/80 px-4 py-1.5 text-sm font-medium text-gray-700 shadow-sm backdrop-blur transition hover:bg-white sm:right-6 sm:top-6"
       >
         Skip
       </button>
+
+      {/* Component-scoped keyframes */}
+      <style>{`
+        @keyframes af-logo-enter {
+          0%   { opacity: 0; transform: scale(0.85); }
+          60%  { opacity: 1; transform: scale(1.04); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        .af-logo-enter {
+          animation: af-logo-enter 900ms cubic-bezier(0.22, 1, 0.36, 1) both,
+                     af-logo-breathe 2.4s ease-in-out 900ms infinite;
+        }
+        @keyframes af-logo-breathe {
+          0%, 100% { transform: scale(1); }
+          50%      { transform: scale(1.03); }
+        }
+        @keyframes af-halo-spin {
+          to { transform: rotate(360deg); }
+        }
+        .af-halo-spin { animation: af-halo-spin 10s linear infinite; }
+
+        @keyframes af-text-rise {
+          0%   { opacity: 0; transform: translateY(8px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .af-text-rise      { animation: af-text-rise 700ms cubic-bezier(0.22, 1, 0.36, 1) 300ms both; }
+        .af-text-rise-slow { animation: af-text-rise 700ms cubic-bezier(0.22, 1, 0.36, 1) 500ms both; }
+
+        @keyframes af-loader-fill {
+          0%   { transform: translateX(-100%); }
+          100% { transform: translateX(0); }
+        }
+        .af-loader { animation: af-loader-fill linear forwards; }
+      `}</style>
     </div>
   );
 }
@@ -122,18 +180,18 @@ type Doodle = {
 const PALETTE = ["#7c3aed", "#0ea5e9", "#f472b6", "#22d3ee", "#a855f7", "#06b6d4", "#ec4899"];
 
 const DOODLES: Doodle[] = [
-  { Icon: SparkleDoodle, top: "8%", left: "10%", size: 42, delay: 0, duration: 6, rotate: -8, color: PALETTE[0] },
-  { Icon: PencilDoodle, top: "14%", left: "82%", size: 48, delay: 0.6, duration: 7, rotate: 12, color: PALETTE[1] },
-  { Icon: PaletteDoodle, top: "22%", left: "4%", size: 56, delay: 1.2, duration: 8, rotate: -15, color: PALETTE[2] },
-  { Icon: WandDoodle, top: "70%", left: "86%", size: 50, delay: 0.3, duration: 7.5, rotate: 18, color: PALETTE[3] },
-  { Icon: CameraDoodle, top: "78%", left: "8%", size: 52, delay: 0.9, duration: 6.5, rotate: -10, color: PALETTE[4] },
-  { Icon: SparkleDoodle, top: "52%", left: "92%", size: 36, delay: 1.5, duration: 5, rotate: 22, color: PALETTE[5] },
-  { Icon: DiamondDoodle, top: "30%", left: "90%", size: 42, delay: 0.4, duration: 8, rotate: -8, color: PALETTE[6] },
-  { Icon: ShirtDoodle, top: "62%", left: "2%", size: 56, delay: 1.0, duration: 7, rotate: 8, color: PALETTE[0] },
-  { Icon: ChipDoodle, top: "88%", left: "62%", size: 46, delay: 0.7, duration: 6.5, rotate: -14, color: PALETTE[1] },
-  { Icon: StarDoodle, top: "6%", left: "48%", size: 38, delay: 1.8, duration: 5.5, rotate: 14, color: PALETTE[2] },
-  { Icon: SparkleDoodle, top: "44%", left: "16%", size: 30, delay: 2.1, duration: 5, rotate: -6, color: PALETTE[3] },
-  { Icon: BoltDoodle, top: "38%", left: "70%", size: 40, delay: 0.2, duration: 6, rotate: 10, color: PALETTE[4] },
+  { Icon: SparkleDoodle,  top: "8%",  left: "10%", size: 38, delay: 0.0, duration: 5.0, rotate: -8,  color: PALETTE[0] },
+  { Icon: PencilDoodle,   top: "14%", left: "82%", size: 44, delay: 0.4, duration: 5.5, rotate: 12,  color: PALETTE[1] },
+  { Icon: PaletteDoodle,  top: "22%", left: "4%",  size: 50, delay: 0.8, duration: 6.0, rotate: -15, color: PALETTE[2] },
+  { Icon: WandDoodle,     top: "70%", left: "86%", size: 46, delay: 0.2, duration: 5.5, rotate: 18,  color: PALETTE[3] },
+  { Icon: CameraDoodle,   top: "78%", left: "8%",  size: 48, delay: 0.6, duration: 5.0, rotate: -10, color: PALETTE[4] },
+  { Icon: SparkleDoodle,  top: "52%", left: "92%", size: 32, delay: 1.0, duration: 4.5, rotate: 22,  color: PALETTE[5] },
+  { Icon: DiamondDoodle,  top: "30%", left: "90%", size: 38, delay: 0.3, duration: 6.0, rotate: -8,  color: PALETTE[6] },
+  { Icon: ShirtDoodle,    top: "62%", left: "2%",  size: 50, delay: 0.7, duration: 5.5, rotate: 8,   color: PALETTE[0] },
+  { Icon: ChipDoodle,     top: "88%", left: "62%", size: 42, delay: 0.5, duration: 5.0, rotate: -14, color: PALETTE[1] },
+  { Icon: StarDoodle,     top: "6%",  left: "48%", size: 34, delay: 1.2, duration: 4.5, rotate: 14,  color: PALETTE[2] },
+  { Icon: SparkleDoodle,  top: "44%", left: "16%", size: 28, delay: 1.4, duration: 4.2, rotate: -6,  color: PALETTE[3] },
+  { Icon: BoltDoodle,     top: "38%", left: "70%", size: 36, delay: 0.1, duration: 5.0, rotate: 10,  color: PALETTE[4] },
 ];
 
 function FloatingDoodles() {
@@ -142,13 +200,18 @@ function FloatingDoodles() {
       <style>{`
         @keyframes af-float {
           0%   { transform: translate(0, 0) rotate(var(--rot, 0deg)); }
-          50%  { transform: translate(0, -14px) rotate(calc(var(--rot, 0deg) + 4deg)); }
+          50%  { transform: translate(0, -12px) rotate(calc(var(--rot, 0deg) + 6deg)); }
           100% { transform: translate(0, 0) rotate(var(--rot, 0deg)); }
         }
+        @keyframes af-doodle-in {
+          0%   { opacity: 0; transform: scale(0.6) rotate(var(--rot, 0deg)); }
+          100% { opacity: 0.85; transform: scale(1) rotate(var(--rot, 0deg)); }
+        }
         .af-doodle {
-          animation: af-float var(--af-dur, 6s) ease-in-out infinite;
-          animation-delay: var(--af-delay, 0s);
-          opacity: 0.85;
+          opacity: 0;
+          animation:
+            af-doodle-in 500ms cubic-bezier(0.22, 1, 0.36, 1) var(--af-delay, 0s) forwards,
+            af-float var(--af-dur, 5s) ease-in-out var(--af-delay, 0s) infinite;
           will-change: transform;
         }
       `}</style>
@@ -166,7 +229,6 @@ function FloatingDoodles() {
                   width: d.size,
                   height: d.size,
                   color: d.color,
-                  // CSS custom props for keyframes
                   ["--af-dur" as never]: `${d.duration}s`,
                   ["--af-delay" as never]: `${d.delay}s`,
                   ["--rot" as never]: `${d.rotate}deg`,
@@ -183,7 +245,7 @@ function FloatingDoodles() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Doodle SVGs (hand-drawn style)                                     */
+/* Doodle SVGs                                                        */
 /* ------------------------------------------------------------------ */
 
 function SparkleDoodle({ className }: { className?: string }) {
