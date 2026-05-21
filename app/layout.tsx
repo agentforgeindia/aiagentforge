@@ -5,6 +5,7 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import { AuthProvider } from "./components/AuthProvider";
 import Script from "next/script";
 import LayoutClient from "./components/LayoutClient";
+import AppIntro from "./components/AppIntro";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -78,6 +79,8 @@ export default function RootLayout({
       </head>
 
       <body className="relative min-h-full overflow-x-hidden flex flex-col">
+        <AppIntro />
+
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=AW-18170895451"
           strategy="afterInteractive"
