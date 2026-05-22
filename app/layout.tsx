@@ -5,7 +5,6 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import { AuthProvider } from "./components/AuthProvider";
 import Script from "next/script";
 import LayoutClient from "./components/LayoutClient";
-import AppIntro from "./components/AppIntro";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,8 +38,9 @@ export const metadata: Metadata = {
 
   icons: {
     icon: "/logo-new.jpg",
-  },
-  manifest: "/manifest.json",
+    },
+  manifest: "/manifest.json",  
+
 
   openGraph: {
     title: "AgentForge AI",
@@ -72,6 +72,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+      <link rel="manifest" href="/manifest.json"></link>
         <meta
           name="facebook-domain-verification"
           content="rulnxopysk6g6u6lp9ct0dp2pp8iom"
@@ -79,8 +80,6 @@ export default function RootLayout({
       </head>
 
       <body className="relative min-h-full overflow-x-hidden flex flex-col">
-        <AppIntro />
-
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=AW-18170895451"
           strategy="afterInteractive"

@@ -153,6 +153,7 @@ export default function WorkshopThankYouPage() {
           </p>
 
         </div>
+        
 
       </section>
 

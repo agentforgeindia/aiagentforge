@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
-const webhookUrl = process.env.N8N_JEWELLERY_WEBHOOK_URL;
+const webhookUrl =
+  process.env.N8N_JEWELLERY_WEBHOOK_URL ||
+  "https://n8n.aiagentforge.in/webhook/generate-jewellery";
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -15,12 +17,16 @@ async function createGenerationRows(body: any) {
       ? [
           {
             id: body.generation_id,
+            user_id: body.user_id || null,
             status: "pending",
+            
           },
         ]
       : (body.items || []).map((item: any) => ({
           id: item.generation_id,
+          user_id: body.user_id || null,
           status: "pending",
+          batch_id: body.batch_id || null,
         }));
 
   const response = await fetch(`${supabaseUrl}/rest/v1/generations`, {
@@ -45,7 +51,12 @@ async function createGenerationRows(body: any) {
   }
 
   if (!response.ok) {
-    throw new Error(data?.message || data?.error || rawText || "Failed to create generation rows.");
+    throw new Error(
+      data?.message ||
+        data?.error ||
+        rawText ||
+        "Failed to create generation rows."
+    );
   }
 
   return data;
@@ -53,15 +64,6 @@ async function createGenerationRows(body: any) {
 
 export async function POST(request: NextRequest) {
   try {
-    if (!webhookUrl) {
-      return NextResponse.json(
-        {
-          error: "Missing env: N8N_JEWELLERY_WEBHOOK_URL",
-        },
-        { status: 500 }
-      );
-    }
-
     const body = await request.json();
 
     if (!body?.generation_mode) {
@@ -71,7 +73,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create pending rows first so frontend can poll the same generation id.
+    if (body.generation_mode === "single" && !body.generation_id) {
+      return NextResponse.json(
+        { error: "generation_id is required for single generation" },
+        { status: 400 }
+      );
+    }
+
+    if (body.generation_mode === "bulk" && !Array.isArray(body.items)) {
+      return NextResponse.json(
+        { error: "items array is required for bulk generation" },
+        { status: 400 }
+      );
+    }
+
     await createGenerationRows(body);
 
     const webhookResponse = await fetch(webhookUrl, {
@@ -105,7 +120,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       mode: body.generation_mode,
-      generation_id: body.generation_mode === "single" ? body.generation_id : undefined,
+      generation_id:
+        body.generation_mode === "single" ? body.generation_id : undefined,
       generation_ids:
         body.generation_mode === "bulk"
           ? body.items?.map((item: any) => item.generation_id)
@@ -122,7 +138,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Unexpected server error",
+        error:
+          error instanceof Error ? error.message : "Unexpected server error",
       },
       { status: 500 }
     );

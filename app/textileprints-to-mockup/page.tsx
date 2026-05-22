@@ -1262,6 +1262,146 @@ export default function Home() {
     return publicUrlData.publicUrl;
   };
 
+  // ============================================================
+  // LOGO OVERLAY (Canvas-based post-processing)
+  // FAL/n8n output + company logo → composite → upload → public URL
+  // Same system as jewellery page
+  // ============================================================
+
+  const loadImageAsElement = async (url: string): Promise<HTMLImageElement> => {
+    const response = await fetch(url, { mode: "cors" });
+    if (!response.ok) throw new Error(`Image fetch failed: ${response.status}`);
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(img);
+      };
+      img.onerror = (e) => {
+        URL.revokeObjectURL(objectUrl);
+        reject(e);
+      };
+      img.src = objectUrl;
+    });
+  };
+
+  const compositeLogoOnImage = async (
+    baseImageUrl: string,
+    logoImageUrl: string,
+  ): Promise<Blob | null> => {
+    try {
+      const [baseImg, logoImg] = await Promise.all([
+        loadImageAsElement(baseImageUrl),
+        loadImageAsElement(logoImageUrl),
+      ]);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = baseImg.naturalWidth;
+      canvas.height = baseImg.naturalHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+
+      ctx.drawImage(baseImg, 0, 0);
+
+      // Logo: 14% of width, top-right, 3% padding
+      const targetWidth = Math.round(canvas.width * 0.14);
+      const targetHeight = Math.round(
+        (logoImg.naturalHeight / logoImg.naturalWidth) * targetWidth,
+      );
+      const padding = Math.round(canvas.width * 0.03);
+      const x = canvas.width - targetWidth - padding;
+      const y = padding;
+
+      // Subtle rounded white pill behind logo
+      const pillPad = Math.round(targetWidth * 0.08);
+      ctx.save();
+      ctx.fillStyle = "rgba(255,255,255,0.78)";
+      ctx.beginPath();
+      const r = Math.round(targetHeight * 0.18);
+      const rx = x - pillPad;
+      const ry = y - pillPad;
+      const rw = targetWidth + pillPad * 2;
+      const rh = targetHeight + pillPad * 2;
+      ctx.moveTo(rx + r, ry);
+      ctx.lineTo(rx + rw - r, ry);
+      ctx.quadraticCurveTo(rx + rw, ry, rx + rw, ry + r);
+      ctx.lineTo(rx + rw, ry + rh - r);
+      ctx.quadraticCurveTo(rx + rw, ry + rh, rx + rw - r, ry + rh);
+      ctx.lineTo(rx + r, ry + rh);
+      ctx.quadraticCurveTo(rx, ry + rh, rx, ry + rh - r);
+      ctx.lineTo(rx, ry + r);
+      ctx.quadraticCurveTo(rx, ry, rx + r, ry);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      ctx.drawImage(logoImg, x, y, targetWidth, targetHeight);
+
+      return await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((blob) => resolve(blob), "image/png", 0.95);
+      });
+    } catch (error) {
+      console.error("Canvas composite failed:", error);
+      return null;
+    }
+  };
+
+  const uploadCompositeBlobToSupabase = async (
+    blob: Blob,
+    folder: string,
+  ): Promise<string> => {
+    const filePath = `${folder}/${authUser?.id || "guest"}/${Date.now()}-${newId().slice(0, 6)}-composite.png`;
+    const file = new File([blob], "composite.png", { type: "image/png" });
+    const { error } = await supabase.storage
+      .from("designs")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+    if (error) throw error;
+    const { data } = supabase.storage.from("designs").getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
+  const applyLogoOverlay = async (
+    rawOutputUrl: string,
+    logoUrl: string,
+    generationId: string,
+  ): Promise<string> => {
+    if (!logoUrl || logoUrl.startsWith("data:") || logoUrl.startsWith("blob:")) {
+      return rawOutputUrl;
+    }
+    try {
+      const compositeBlob = await compositeLogoOnImage(rawOutputUrl, logoUrl);
+      if (!compositeBlob) return rawOutputUrl;
+
+      const compositeUrl = await uploadCompositeBlobToSupabase(
+        compositeBlob,
+        "textile-outputs",
+      );
+
+      // Persist composite URL in generations row
+      await supabase
+        .from("generations")
+        .update({
+          output_url: compositeUrl,
+          output_image_url: compositeUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", generationId);
+
+      return compositeUrl;
+    } catch (error) {
+      console.error(
+        "Logo overlay pipeline failed, falling back to raw output:",
+        error,
+      );
+      return rawOutputUrl;
+    }
+  };
+
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1601,10 +1741,16 @@ export default function Home() {
     const data = text ? JSON.parse(text) : {};
     const immediateImage =
       data?.image_url || data?.output_image_url || data?.image || data?.url;
-    const finalImage =
+    const rawFinalImage =
       immediateImage || (await pollGenerationResult(generationId));
 
-    if (!finalImage && cancelRef.current) return;
+    if (!rawFinalImage && cancelRef.current) return;
+
+    // Apply Canvas-based logo overlay if a brand logo is uploaded
+    const finalImage =
+      useCompanyLogo && companyLogoUrl && rawFinalImage
+        ? await applyLogoOverlay(rawFinalImage, companyLogoUrl, generationId)
+        : rawFinalImage;
 
     setItems((prev) =>
       prev.map((it) =>
