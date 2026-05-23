@@ -9,6 +9,7 @@ import { Sparkles } from "lucide-react";
 import { canGenerate } from "@/lib/checkCredits";
 import { shouldDeductCredits } from "@/lib/deductCredits";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
+import SignupPromptPopup from "@/app/components/SignupPromptPopup";
 
 const WEBHOOK_URL =
   process.env.NEXT_PUBLIC_N8N_PRODUCTION_WEBHOOK || "/api/generate-mockup";
@@ -344,7 +345,8 @@ function VisualIcon({ icon, fileName }: { icon: IconName; fileName?: string }) {
       src={iconPath(finalFile)}
       alt=""
       loading="lazy"
-      className="h-14 w-14 object-contain drop-shadow-sm transition duration-300 group-hover:scale-105 sm:h-16 sm:w-16"
+      className="block h-full w-full object-cover transition duration-300 group-hover:scale-105"
+      style={{ mixBlendMode: "multiply" }}
       onError={() => setFailed(true)}
       aria-hidden="true"
     />
@@ -482,16 +484,14 @@ function OptionCard({
           ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
           : darkMode
             ? "bg-white/[0.045] hover:-translate-y-1 hover:bg-white/[0.08] hover:shadow-lg hover:shadow-cyan-500/10"
-            : "bg-white/90 hover:-translate-y-1 hover:bg-white hover:shadow-xl hover:shadow-cyan-500/10"
+            : "bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:from-cyan-100/80 hover:via-white hover:to-blue-100/40 hover:shadow-xl hover:shadow-cyan-500/10"
       }`}
     >
       <div
-        className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center rounded-[20px] sm:mb-3 sm:h-[76px] sm:w-[76px] sm:rounded-[24px] ${
+        className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${
           active
-            ? "bg-white/15 shadow-lg shadow-cyan-400/25"
-            : darkMode
-              ? "bg-white/[0.07]"
-              : "bg-[#eefaff] shadow-sm"
+            ? "shadow-lg shadow-cyan-400/25"
+            : "shadow-sm"
         }`}
       >
         <VisualIcon icon={finalIcon} fileName={iconFile} />
@@ -743,6 +743,7 @@ export default function Home() {
   );
   const [showProfile, setShowProfile] = useState(false);
   const [showPhonePopup, setShowPhonePopup] = useState(false);
+  const [showSignupPopup, setShowSignupPopup] = useState(false);
   const [phoneInput, setPhoneInput] = useState("");
 
   const [textileCategory, setTextileCategory] =
@@ -1264,9 +1265,60 @@ export default function Home() {
 
   // ============================================================
   // LOGO OVERLAY (Canvas-based post-processing)
-  // FAL/n8n output + company logo → composite → upload → public URL
+  // FAL/n8n output + company logo (+ AF logo for free accounts)
+  // → composite → upload → public URL
   // Same system as jewellery page
   // ============================================================
+
+  const AF_LOGO_PATH = "/af-logo.png";
+
+  const drawLogoInCorner = (
+    ctx: CanvasRenderingContext2D,
+    canvasWidth: number,
+    canvasHeight: number,
+    logoImg: HTMLImageElement,
+    corner: "top-right" | "bottom-right" | "top-left" | "bottom-left",
+    widthRatio: number,
+    opacity: number = 1,
+  ) => {
+    const targetWidth = Math.round(canvasWidth * widthRatio);
+    const targetHeight = Math.round(
+      (logoImg.naturalHeight / logoImg.naturalWidth) * targetWidth,
+    );
+    const padding = Math.round(canvasWidth * 0.03);
+
+    const x = corner.includes("right")
+      ? canvasWidth - targetWidth - padding
+      : padding;
+    const y = corner.includes("bottom")
+      ? canvasHeight - targetHeight - padding
+      : padding;
+
+    const pillPad = Math.round(targetWidth * 0.08);
+    const r = Math.round(targetHeight * 0.18);
+    const rx = x - pillPad;
+    const ry = y - pillPad;
+    const rw = targetWidth + pillPad * 2;
+    const rh = targetHeight + pillPad * 2;
+
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    ctx.fillStyle = "rgba(255,255,255,0.78)";
+    ctx.beginPath();
+    ctx.moveTo(rx + r, ry);
+    ctx.lineTo(rx + rw - r, ry);
+    ctx.quadraticCurveTo(rx + rw, ry, rx + rw, ry + r);
+    ctx.lineTo(rx + rw, ry + rh - r);
+    ctx.quadraticCurveTo(rx + rw, ry + rh, rx + rw - r, ry + rh);
+    ctx.lineTo(rx + r, ry + rh);
+    ctx.quadraticCurveTo(rx, ry + rh, rx, ry + rh - r);
+    ctx.lineTo(rx, ry + r);
+    ctx.quadraticCurveTo(rx, ry, rx + r, ry);
+    ctx.closePath();
+    ctx.fill();
+    ctx.drawImage(logoImg, x, y, targetWidth, targetHeight);
+    ctx.restore();
+  };
 
   const loadImageAsElement = async (url: string): Promise<HTMLImageElement> => {
     const response = await fetch(url, { mode: "cors" });
@@ -1289,13 +1341,29 @@ export default function Home() {
 
   const compositeLogoOnImage = async (
     baseImageUrl: string,
-    logoImageUrl: string,
+    companyLogoUrl: string | null,
+    showAfWatermark: boolean,
   ): Promise<Blob | null> => {
     try {
-      const [baseImg, logoImg] = await Promise.all([
-        loadImageAsElement(baseImageUrl),
-        loadImageAsElement(logoImageUrl),
+      const baseImg = await loadImageAsElement(baseImageUrl);
+
+      // Load both logos in parallel; tolerate individual failures
+      const [companyLogoImg, afLogoImg] = await Promise.all([
+        companyLogoUrl
+          ? loadImageAsElement(companyLogoUrl).catch((e) => {
+              console.warn("Company logo load failed:", e);
+              return null;
+            })
+          : Promise.resolve(null),
+        showAfWatermark
+          ? loadImageAsElement(AF_LOGO_PATH).catch((e) => {
+              console.warn("AF logo load failed:", e);
+              return null;
+            })
+          : Promise.resolve(null),
       ]);
+
+      if (!companyLogoImg && !afLogoImg) return null;
 
       const canvas = document.createElement("canvas");
       canvas.width = baseImg.naturalWidth;
@@ -1303,41 +1371,18 @@ export default function Home() {
       const ctx = canvas.getContext("2d");
       if (!ctx) return null;
 
+      // 1. Base output
       ctx.drawImage(baseImg, 0, 0);
 
-      // Logo: 14% of width, top-right, 3% padding
-      const targetWidth = Math.round(canvas.width * 0.14);
-      const targetHeight = Math.round(
-        (logoImg.naturalHeight / logoImg.naturalWidth) * targetWidth,
-      );
-      const padding = Math.round(canvas.width * 0.03);
-      const x = canvas.width - targetWidth - padding;
-      const y = padding;
+      // 2. Company logo — top-right, 14% width
+      if (companyLogoImg) {
+        drawLogoInCorner(ctx, canvas.width, canvas.height, companyLogoImg, "top-right", 0.14, 1);
+      }
 
-      // Subtle rounded white pill behind logo
-      const pillPad = Math.round(targetWidth * 0.08);
-      ctx.save();
-      ctx.fillStyle = "rgba(255,255,255,0.78)";
-      ctx.beginPath();
-      const r = Math.round(targetHeight * 0.18);
-      const rx = x - pillPad;
-      const ry = y - pillPad;
-      const rw = targetWidth + pillPad * 2;
-      const rh = targetHeight + pillPad * 2;
-      ctx.moveTo(rx + r, ry);
-      ctx.lineTo(rx + rw - r, ry);
-      ctx.quadraticCurveTo(rx + rw, ry, rx + rw, ry + r);
-      ctx.lineTo(rx + rw, ry + rh - r);
-      ctx.quadraticCurveTo(rx + rw, ry + rh, rx + rw - r, ry + rh);
-      ctx.lineTo(rx + r, ry + rh);
-      ctx.quadraticCurveTo(rx, ry + rh, rx, ry + rh - r);
-      ctx.lineTo(rx, ry + r);
-      ctx.quadraticCurveTo(rx, ry, rx + r, ry);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-
-      ctx.drawImage(logoImg, x, y, targetWidth, targetHeight);
+      // 3. AF logo — bottom-right, 10% width, slightly translucent
+      if (afLogoImg) {
+        drawLogoInCorner(ctx, canvas.width, canvas.height, afLogoImg, "bottom-right", 0.10, 0.88);
+      }
 
       return await new Promise<Blob | null>((resolve) => {
         canvas.toBlob((blob) => resolve(blob), "image/png", 0.95);
@@ -1367,14 +1412,31 @@ export default function Home() {
 
   const applyLogoOverlay = async (
     rawOutputUrl: string,
-    logoUrl: string,
-    generationId: string,
+    options: {
+      companyLogoUrl?: string;
+      afWatermark?: boolean;
+      generationId: string;
+    },
   ): Promise<string> => {
-    if (!logoUrl || logoUrl.startsWith("data:") || logoUrl.startsWith("blob:")) {
+    const { companyLogoUrl, afWatermark, generationId } = options;
+
+    const safeCompanyLogo =
+      companyLogoUrl &&
+      !companyLogoUrl.startsWith("data:") &&
+      !companyLogoUrl.startsWith("blob:")
+        ? companyLogoUrl
+        : null;
+
+    if (!safeCompanyLogo && !afWatermark) {
       return rawOutputUrl;
     }
+
     try {
-      const compositeBlob = await compositeLogoOnImage(rawOutputUrl, logoUrl);
+      const compositeBlob = await compositeLogoOnImage(
+        rawOutputUrl,
+        safeCompanyLogo,
+        Boolean(afWatermark),
+      );
       if (!compositeBlob) return rawOutputUrl;
 
       const compositeUrl = await uploadCompositeBlobToSupabase(
@@ -1746,11 +1808,32 @@ export default function Home() {
 
     if (!rawFinalImage && cancelRef.current) return;
 
-    // Apply Canvas-based logo overlay if a brand logo is uploaded
-    const finalImage =
-      useCompanyLogo && companyLogoUrl && rawFinalImage
-        ? await applyLogoOverlay(rawFinalImage, companyLogoUrl, generationId)
-        : rawFinalImage;
+    // Determine free account (no Empire / Founder / Unlimited plan)
+    const planText = String(
+      profile?.plan ||
+        profile?.package ||
+        profile?.current_plan ||
+        profile?.subscription_plan ||
+        profile?.plan_name ||
+        "",
+    ).toLowerCase();
+    const isPaidAccount =
+      planText.includes("empire") ||
+      planText.includes("founder") ||
+      planText.includes("unlimited") ||
+      planText.includes("pro") ||
+      planText.includes("growth") ||
+      planText.includes("creator");
+    const isFreeAccount = !isPaidAccount;
+
+    // Apply Canvas-based logo overlay — company logo (top-right) + AF logo (bottom-right for free accounts)
+    const finalImage = rawFinalImage
+      ? await applyLogoOverlay(rawFinalImage, {
+          companyLogoUrl: useCompanyLogo ? companyLogoUrl : undefined,
+          afWatermark: isFreeAccount,
+          generationId,
+        })
+      : rawFinalImage;
 
     setItems((prev) =>
       prev.map((it) =>
@@ -1832,7 +1915,7 @@ export default function Home() {
     const userId = authUser?.id;
 
     if (!userId) {
-      alert("Please login to generate mockups.");
+      setShowSignupPopup(true);
       return;
     }
 
@@ -3293,6 +3376,13 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      <SignupPromptPopup
+        open={showSignupPopup}
+        onClose={() => setShowSignupPopup(false)}
+        source="textile-ai"
+        context="textile mockup"
+      />
     </main>
   );
 }

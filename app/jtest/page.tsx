@@ -25,6 +25,7 @@ import {
   Wand2,
   X,
 } from "lucide-react";
+import SignupPromptPopup from "@/app/components/SignupPromptPopup";
 
 type GenerationMode = "single" | "bulk";
 type BuilderStep = 1 | 2 | 3 | 4;
@@ -219,8 +220,17 @@ function OptionCard({
   onClick: () => void;
 }) {
   const Icon = option.icon;
-  const [iconFailed, setIconFailed] = useState(false);
-  const iconSrc = option.iconFile ? `/jewellery-icon/${option.iconFile}.svg` : "";
+  const [iconAttempt, setIconAttempt] = useState(0);
+
+  // Multi-source resolution: jewellery-icon → underscore variant → space variant → lucide
+  const sources = option.iconFile
+    ? [
+        `/jewellery-icon/${option.iconFile}.svg`,
+        `/jewellery-icon/${option.iconFile.replace(/-/g, "_")}.svg`,
+        `/jewellery-icon/${option.iconFile.replace(/-/g, " ")}.svg`,
+      ]
+    : [];
+  const showLucide = iconAttempt >= sources.length;
 
   return (
     <button
@@ -230,26 +240,30 @@ function OptionCard({
         "group relative flex min-h-[118px] flex-col items-center justify-center rounded-[24px] border p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4",
         active
           ? "scale-[1.025] border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/60"
-          : "border-slate-200 bg-white/90 hover:-translate-y-1 hover:border-cyan-300 hover:bg-white hover:shadow-xl hover:shadow-cyan-500/10 dark:border-white/10 dark:bg-white/[0.045] dark:hover:bg-white/[0.08]",
+          : "border-cyan-100 bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:border-cyan-300 hover:from-cyan-100/80 hover:via-white hover:to-blue-100/40 hover:shadow-xl hover:shadow-cyan-500/10 dark:border-white/10 dark:bg-white/[0.045] dark:hover:bg-white/[0.08]",
       )}
     >
       <div
         className={clsx(
-          "mb-3 flex h-16 w-16 items-center justify-center rounded-[22px] transition sm:h-[76px] sm:w-[76px] sm:rounded-[26px]",
+          "mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-[22px] transition sm:h-[80px] sm:w-[80px] sm:rounded-[26px]",
+          // No background fill — let the icon image fully cover the box
           active
-            ? "bg-white/80 text-cyan-700 shadow-md shadow-cyan-400/20 dark:bg-white/[0.10] dark:text-cyan-200"
-            : "bg-[#eefaff] text-cyan-700 shadow-sm shadow-cyan-500/10 dark:bg-white/[0.07] dark:text-cyan-200",
+            ? "text-cyan-700 shadow-md shadow-cyan-400/20 dark:text-cyan-200"
+            : "text-cyan-700 shadow-sm shadow-cyan-500/10 dark:text-cyan-200",
         )}
       >
-        {iconSrc && !iconFailed ? (
+        {!showLucide && sources.length > 0 ? (
           <img
-            src={iconSrc}
+            src={sources[iconAttempt]}
             alt=""
-            className="h-14 w-14 object-contain drop-shadow-md transition duration-300 group-hover:scale-110 sm:h-16 sm:w-16"
-            onError={() => setIconFailed(true)}
+            className="block h-full w-full object-cover transition duration-300 group-hover:scale-110"
+            style={{ mixBlendMode: "multiply" }}
+            onError={() => setIconAttempt((n) => n + 1)}
           />
         ) : (
-          <Icon className="h-8 w-8" />
+          <div className="flex h-full w-full items-center justify-center bg-cyan-50 dark:bg-white/[0.07]">
+            <Icon className="h-9 w-9" />
+          </div>
         )}
       </div>
       <p className={clsx("text-[12px] font-black leading-4 sm:text-sm", active ? "text-cyan-700 dark:text-cyan-200" : "text-slate-700 dark:text-white/75")}>{option.label}</p>
@@ -357,54 +371,113 @@ function JewelleryLoadingModal({
   fact: { title: string; text: string };
   progress: number;
 }) {
+  // Floating decorative jewellery icons scattered around the popup
+  const floatingIcons = [
+    { Icon: Diamond,  x: "6%",  y: "10%", size: 58, delay: "0s",   rotate: -14, color: "text-cyan-400/55" },
+    { Icon: Gem,      x: "86%", y: "14%", size: 66, delay: "0.7s", rotate: 16,  color: "text-purple-400/55" },
+    { Icon: Sparkles, x: "10%", y: "72%", size: 50, delay: "1.2s", rotate: 8,   color: "text-amber-400/60" },
+    { Icon: Crown,    x: "82%", y: "68%", size: 62, delay: "0.4s", rotate: -18, color: "text-cyan-500/55" },
+    { Icon: Diamond,  x: "3%",  y: "42%", size: 42, delay: "1.5s", rotate: 22,  color: "text-pink-400/55" },
+    { Icon: Sparkles, x: "92%", y: "42%", size: 46, delay: "0.9s", rotate: -8,  color: "text-blue-400/55" },
+    { Icon: Gem,      x: "22%", y: "4%",  size: 38, delay: "1.8s", rotate: -20, color: "text-amber-500/55" },
+    { Icon: Crown,    x: "70%", y: "3%",  size: 40, delay: "0.2s", rotate: 8,   color: "text-purple-500/55" },
+    { Icon: Sparkles, x: "32%", y: "88%", size: 36, delay: "1.4s", rotate: 14,  color: "text-cyan-500/55" },
+    { Icon: Diamond,  x: "62%", y: "88%", size: 44, delay: "0.55s",rotate: -10, color: "text-rose-400/55" },
+  ];
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/85 px-4 backdrop-blur-2xl">
-      <div className="mx-auto max-w-lg p-6 text-center">
-        {/* Animated AgentForge logo (textile-style, light theme) */}
-        <div className="relative mx-auto mb-10 h-32 w-32">
-          <div className="absolute inset-0 animate-ping rounded-full bg-cyan-400 opacity-30" />
-          <div className="absolute -inset-3 animate-pulse rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 opacity-40 blur-2xl" />
-          <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white shadow-2xl ring-4 ring-cyan-400/60">
-            <img
-              src="/logo-new.jpg"
-              alt="AgentForge"
-              className="h-full w-full object-cover"
-              style={{ animation: "afLogoFloat 2.4s ease-in-out infinite" }}
-              onError={(e) => {
-                e.currentTarget.src = "/agentforge.png";
-              }}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden px-4">
+      {/* Transparent backdrop — page through dikhega, sirf soft glassy haze */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/40 via-white/15 to-purple-50/40 backdrop-blur-[2px]" />
+
+      {/* Floating jewellery illustrations behind the popup */}
+      {floatingIcons.map((item, i) => {
+        const Icon = item.Icon;
+        return (
+          <div
+            key={i}
+            className="pointer-events-none absolute"
+            style={{
+              left: item.x,
+              top: item.y,
+              animation: `jFloat ${4.5 + i * 0.35}s ease-in-out ${item.delay} infinite, jSpin ${10 + i}s linear ${item.delay} infinite`,
+            }}
+          >
+            <div style={{ transform: `rotate(${item.rotate}deg)` }}>
+              <Icon
+                size={item.size}
+                strokeWidth={1.25}
+                className={`${item.color} drop-shadow-[0_8px_24px_rgba(34,211,238,0.25)]`}
+              />
+            </div>
+          </div>
+        );
+      })}
+
+      <style>{`
+        @keyframes jFloat {
+          0%, 100% { transform: translateY(0px); }
+          50%      { transform: translateY(-18px); }
+        }
+        @keyframes jSpin {
+          0%   { filter: hue-rotate(0deg); }
+          100% { filter: hue-rotate(20deg); }
+        }
+        @keyframes afLogoFloat {
+          0%, 100% { transform: scale(1) rotate(-4deg); }
+          50%      { transform: scale(1.1) rotate(4deg); }
+        }
+      `}</style>
+
+      {/* The popup card itself — glassy white with cyan glow */}
+      <div className="relative z-10 w-full max-w-md overflow-hidden rounded-[2rem] border border-cyan-200/70 bg-white/90 p-7 shadow-[0_20px_60px_-15px_rgba(34,211,238,0.45)] backdrop-blur-2xl sm:p-8">
+        {/* Subtle inner glow blobs */}
+        <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-cyan-300/30 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-purple-300/30 blur-3xl" />
+
+        <div className="relative">
+          {/* Animated AgentForge logo */}
+          <div className="relative mx-auto mb-6 h-24 w-24">
+            <div className="absolute inset-0 animate-ping rounded-full bg-cyan-400 opacity-30" />
+            <div className="absolute -inset-2 animate-pulse rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 opacity-40 blur-2xl" />
+            <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white shadow-2xl ring-4 ring-cyan-400/60">
+              <img
+                src="/logo-new.jpg"
+                alt="AgentForge"
+                className="h-full w-full object-cover"
+                style={{ animation: "afLogoFloat 2.4s ease-in-out infinite" }}
+                onError={(e) => {
+                  e.currentTarget.src = "/agentforge.png";
+                }}
+              />
+            </div>
+          </div>
+
+          <h3 className="text-center text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+            AI is Crafting...
+          </h3>
+          <p className="mt-3 text-center text-sm leading-6 text-slate-600">
+            Generating your premium jewellery visual. Please do not refresh.
+          </p>
+
+          <div className="mt-6 overflow-hidden rounded-full bg-slate-200/80">
+            <div
+              className="h-3 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 transition-all duration-700"
+              style={{ width: `${progress}%` }}
             />
           </div>
-          <style>{`
-            @keyframes afLogoFloat {
-              0%, 100% { transform: scale(1) rotate(-4deg); }
-              50%      { transform: scale(1.1) rotate(4deg); }
-            }
-          `}</style>
-        </div>
-
-        <h3 className="text-3xl font-black text-slate-900">AI is Crafting...</h3>
-        <p className="mt-4 text-base leading-7 text-slate-600">
-          Generating your premium jewellery visual. Please do not refresh.
-        </p>
-
-        <div className="mt-8 overflow-hidden rounded-full bg-slate-200">
-          <div
-            className="h-3 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 transition-all duration-700"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-        <p className="mt-2 text-xs font-black uppercase tracking-widest text-cyan-700">
-          {progress}% processing
-        </p>
-
-        <div className="mt-8 overflow-hidden rounded-2xl border border-cyan-200/70 bg-white p-6 text-left shadow-xl shadow-cyan-500/10">
-          <p className="text-[11px] font-black uppercase tracking-widest text-cyan-700">
-            {fact.title}
+          <p className="mt-2 text-center text-xs font-black uppercase tracking-widest text-cyan-700">
+            {progress}% processing
           </p>
-          <p className="mt-2 text-sm leading-relaxed text-slate-700">
-            {fact.text}
-          </p>
+
+          <div className="mt-6 overflow-hidden rounded-2xl border border-cyan-200/70 bg-gradient-to-br from-cyan-50/80 via-white to-purple-50/40 p-5 text-left shadow-inner">
+            <p className="text-[11px] font-black uppercase tracking-widest text-cyan-700">
+              {fact.title}
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-700">
+              {fact.text}
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -457,6 +530,7 @@ export default function JewelleryAIPage() {
   const [customInstruction, setCustomInstruction] = useState("");
   const [showPromptBox, setShowPromptBox] = useState(false);
 
+  const [showSignupPopup, setShowSignupPopup] = useState(false);
   const [companyLogoPreview, setCompanyLogoPreview] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [companyWebsite, setCompanyWebsite] = useState("");
@@ -761,15 +835,83 @@ const loadImageAsElement = async (url: string): Promise<HTMLImageElement> => {
   });
 };
 
+const AF_LOGO_PATH = "/af-logo.png";
+
+const drawLogoInCorner = (
+  ctx: CanvasRenderingContext2D,
+  canvasWidth: number,
+  canvasHeight: number,
+  logoImg: HTMLImageElement,
+  corner: "top-right" | "bottom-right" | "top-left" | "bottom-left",
+  widthRatio: number,
+  opacity: number = 1,
+) => {
+  const targetWidth = Math.round(canvasWidth * widthRatio);
+  const targetHeight = Math.round(
+    (logoImg.naturalHeight / logoImg.naturalWidth) * targetWidth,
+  );
+  const padding = Math.round(canvasWidth * 0.03);
+
+  const x = corner.includes("right")
+    ? canvasWidth - targetWidth - padding
+    : padding;
+  const y = corner.includes("bottom")
+    ? canvasHeight - targetHeight - padding
+    : padding;
+
+  // Rounded white pill behind logo
+  const pillPad = Math.round(targetWidth * 0.08);
+  const r = Math.round(targetHeight * 0.18);
+  const rx = x - pillPad;
+  const ry = y - pillPad;
+  const rw = targetWidth + pillPad * 2;
+  const rh = targetHeight + pillPad * 2;
+
+  ctx.save();
+  ctx.globalAlpha = opacity;
+  ctx.fillStyle = "rgba(255,255,255,0.78)";
+  ctx.beginPath();
+  ctx.moveTo(rx + r, ry);
+  ctx.lineTo(rx + rw - r, ry);
+  ctx.quadraticCurveTo(rx + rw, ry, rx + rw, ry + r);
+  ctx.lineTo(rx + rw, ry + rh - r);
+  ctx.quadraticCurveTo(rx + rw, ry + rh, rx + rw - r, ry + rh);
+  ctx.lineTo(rx + r, ry + rh);
+  ctx.quadraticCurveTo(rx, ry + rh, rx, ry + rh - r);
+  ctx.lineTo(rx, ry + r);
+  ctx.quadraticCurveTo(rx, ry, rx + r, ry);
+  ctx.closePath();
+  ctx.fill();
+  ctx.drawImage(logoImg, x, y, targetWidth, targetHeight);
+  ctx.restore();
+};
+
 const compositeLogoOnImage = async (
   baseImageUrl: string,
-  logoImageUrl: string,
+  companyLogoUrl: string | null,
+  showAfWatermark: boolean,
 ): Promise<Blob | null> => {
   try {
-    const [baseImg, logoImg] = await Promise.all([
-      loadImageAsElement(baseImageUrl),
-      loadImageAsElement(logoImageUrl),
+    const baseImg = await loadImageAsElement(baseImageUrl);
+
+    // Load logos in parallel; tolerate individual failures
+    const [companyLogoImg, afLogoImg] = await Promise.all([
+      companyLogoUrl
+        ? loadImageAsElement(companyLogoUrl).catch((e) => {
+            console.warn("Company logo load failed:", e);
+            return null;
+          })
+        : Promise.resolve(null),
+      showAfWatermark
+        ? loadImageAsElement(AF_LOGO_PATH).catch((e) => {
+            console.warn("AF logo load failed:", e);
+            return null;
+          })
+        : Promise.resolve(null),
     ]);
+
+    // Nothing to overlay → bail
+    if (!companyLogoImg && !afLogoImg) return null;
 
     const canvas = document.createElement("canvas");
     canvas.width = baseImg.naturalWidth;
@@ -777,43 +919,18 @@ const compositeLogoOnImage = async (
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
 
-    // 1. Draw base FAL output
+    // 1. Base FAL output
     ctx.drawImage(baseImg, 0, 0);
 
-    // 2. Logo box: 14% of width, top-right corner, ~3% padding
-    const targetWidth = Math.round(canvas.width * 0.14);
-    const targetHeight = Math.round(
-      (logoImg.naturalHeight / logoImg.naturalWidth) * targetWidth,
-    );
-    const padding = Math.round(canvas.width * 0.03);
-    const x = canvas.width - targetWidth - padding;
-    const y = padding;
+    // 2. Company logo — top-right, 14% width
+    if (companyLogoImg) {
+      drawLogoInCorner(ctx, canvas.width, canvas.height, companyLogoImg, "top-right", 0.14, 1);
+    }
 
-    // 3. Subtle white pill behind logo so it pops on any background
-    const pillPad = Math.round(targetWidth * 0.08);
-    ctx.save();
-    ctx.fillStyle = "rgba(255,255,255,0.78)";
-    ctx.beginPath();
-    const r = Math.round(targetHeight * 0.18);
-    const rx = x - pillPad;
-    const ry = y - pillPad;
-    const rw = targetWidth + pillPad * 2;
-    const rh = targetHeight + pillPad * 2;
-    ctx.moveTo(rx + r, ry);
-    ctx.lineTo(rx + rw - r, ry);
-    ctx.quadraticCurveTo(rx + rw, ry, rx + rw, ry + r);
-    ctx.lineTo(rx + rw, ry + rh - r);
-    ctx.quadraticCurveTo(rx + rw, ry + rh, rx + rw - r, ry + rh);
-    ctx.lineTo(rx + r, ry + rh);
-    ctx.quadraticCurveTo(rx, ry + rh, rx, ry + rh - r);
-    ctx.lineTo(rx, ry + r);
-    ctx.quadraticCurveTo(rx, ry, rx + r, ry);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-
-    // 4. Draw logo
-    ctx.drawImage(logoImg, x, y, targetWidth, targetHeight);
+    // 3. AF watermark logo — bottom-right, 10% width, slightly translucent
+    if (afLogoImg) {
+      drawLogoInCorner(ctx, canvas.width, canvas.height, afLogoImg, "bottom-right", 0.10, 0.88);
+    }
 
     return await new Promise<Blob | null>((resolve) => {
       canvas.toBlob((blob) => resolve(blob), "image/png", 0.95);
@@ -838,18 +955,39 @@ const uploadBlobToSupabase = async (blob: Blob, folder: string) => {
 
 const applyLogoOverlay = async (
   rawOutputUrl: string,
-  logoUrl: string,
-  generationId: string,
+  options: {
+    companyLogoUrl?: string;
+    afWatermark?: boolean;
+    generationId: string;
+  },
 ): Promise<string> => {
-  // No logo, or logo is local/blob/data URL → skip overlay
-  if (!logoUrl || logoUrl.startsWith("data:") || logoUrl.startsWith("blob:")) {
+  const { companyLogoUrl, afWatermark, generationId } = options;
+
+  // Sanitize company logo URL — accept only real http(s) URLs
+  const safeCompanyLogo =
+    companyLogoUrl &&
+    !companyLogoUrl.startsWith("data:") &&
+    !companyLogoUrl.startsWith("blob:")
+      ? companyLogoUrl
+      : null;
+
+  // Nothing to overlay → return raw
+  if (!safeCompanyLogo && !afWatermark) {
     return rawOutputUrl;
   }
+
   try {
-    const compositeBlob = await compositeLogoOnImage(rawOutputUrl, logoUrl);
+    const compositeBlob = await compositeLogoOnImage(
+      rawOutputUrl,
+      safeCompanyLogo,
+      Boolean(afWatermark),
+    );
     if (!compositeBlob) return rawOutputUrl;
 
-    const compositeUrl = await uploadBlobToSupabase(compositeBlob, "jewellery-outputs");
+    const compositeUrl = await uploadBlobToSupabase(
+      compositeBlob,
+      "jewellery-outputs",
+    );
 
     // Persist composite URL — My Creations + downloads see the branded version
     await supabase
@@ -914,7 +1052,7 @@ const handleGenerate = async () => {
 
   try {
     if (!authUser?.id) {
-      alert("Please login first.");
+      setShowSignupPopup(true);
       return;
     }
 
@@ -1119,10 +1257,12 @@ if (!response.ok) {
         })
         .eq("id", generationId);
 
-      // Apply logo overlay if available
-      const finalUrl = useCompanyLogo && companyLogoPreview
-        ? await applyLogoOverlay(immediateImage, companyLogoPreview, generationId)
-        : immediateImage;
+      // Apply logo overlay — company logo (top-right) + AF logo (bottom-right for free accounts)
+      const finalUrl = await applyLogoOverlay(immediateImage, {
+        companyLogoUrl: useCompanyLogo ? companyLogoPreview : undefined,
+        afWatermark: isFreeAccount,
+        generationId,
+      });
 
       setGeneratedOutputUrl(finalUrl);
       setGenerationProgress(100);
@@ -1142,10 +1282,12 @@ if (!response.ok) {
 
       if (row?.status === "completed" && finalImage) {
         setGenerationProgress(88);
-        // Apply logo overlay if a real (uploaded) logo URL is available
-        const finalUrl = useCompanyLogo && companyLogoPreview
-          ? await applyLogoOverlay(finalImage, companyLogoPreview, generationId)
-          : finalImage;
+        // Apply logo overlay — company logo (top-right) + AF logo (bottom-right for free accounts)
+        const finalUrl = await applyLogoOverlay(finalImage, {
+          companyLogoUrl: useCompanyLogo ? companyLogoPreview : undefined,
+          afWatermark: isFreeAccount,
+          generationId,
+        });
         setGeneratedOutputUrl(finalUrl);
         setGenerationProgress(100);
         refreshProfile?.();
@@ -1181,6 +1323,14 @@ if (!response.ok) {
           progress={generationProgress}
         />
       )}
+
+      <SignupPromptPopup
+        open={showSignupPopup}
+        onClose={() => setShowSignupPopup(false)}
+        source="jewellery-ai"
+        context="jewellery visual"
+      />
+
 
       <div
         className="absolute inset-0 opacity-[0.14] dark:opacity-[0.06]"
