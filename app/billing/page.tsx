@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
-import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 type BillingPlan = {
   name: string;
@@ -14,10 +13,11 @@ type BillingPlan = {
   desc: string;
   audience: string;
   credits: number;
-creditsLabel: string;
+  creditsLabel: string;
   images: string;
   badge: string;
   popular: boolean;
+  factoryFocus?: boolean;
   features: string[];
 };
 
@@ -48,10 +48,6 @@ type RazorpayOptions = {
   };
 };
 
-type RazorpayConstructor = new (options: RazorpayOptions) => {
-  open: () => void;
-};
-
 declare global {
   interface Window {
     Razorpay?: any;
@@ -63,7 +59,7 @@ const plans: BillingPlan[] = [
     name: "Starter",
     price: "₹1,999",
     amount: 1999,
-    desc: "For small shops and creators starting with AI product visuals.",
+    desc: "For small shops, creators and new sellers who want premium product visuals without costly shoots.",
     audience: "Small shops & creators",
     credits: 1800,
     creditsLabel: "1,800 Credits",
@@ -71,24 +67,23 @@ const plans: BillingPlan[] = [
     badge: "Best to Start",
     popular: false,
     features: [
-          "All AI agents access",
-          "15 credits per standard image",
-         "1080×1080 square export",
-         "Watermark-free outputs",
-         "Standard generation queue",
-         "Mobile story outputs",
-         "Add company name on mockups",
-          "Add contact number & website",
-         "Article code placement support",
-         "Single model generation",
-         "Basic support",
-],
+      "Access to all AgentForge AI agents",
+      "15 credits per standard image",
+      "1080×1080 HD square export",
+      "Watermark-free business outputs",
+      "Textile, jewellery & product visuals",
+      "Company name, contact & website support",
+      "Article code / design code placement",
+      "Single model generation",
+      "Standard generation queue",
+      "Basic support",
+    ],
   },
   {
     name: "Pro Creator",
     price: "₹9,999",
     amount: 9999,
-    desc: "For sellers, agencies and growing brands creating content regularly.",
+    desc: "For sellers, agencies and growing brands creating daily catalog, WhatsApp and social media content.",
     audience: "Sellers, agencies & growing brands",
     credits: 12000,
     creditsLabel: "12,000 Credits",
@@ -96,37 +91,40 @@ const plans: BillingPlan[] = [
     badge: "Most Popular",
     popular: true,
     features: [
-          "Everything in Starter",
-         "Faster generation queue",
-          "Premium styles included",
-          "Mobile story outputs",
-         "Regenerate variations",
-          "Multiple model generation",
-          "Custom branding on outputs",
-          "Advanced article presentation",
-          "Priority support",
-],
+      "Everything included in Starter",
+      "Faster generation queue",
+      "Premium shoot styles included",
+      "Regenerate variations for better results",
+      "Multiple model generation",
+      "Mobile story & catalogue-ready outputs",
+      "Custom branding on outputs",
+      "Advanced article presentation",
+      "Priority support",
+    ],
   },
   {
     name: "Empire",
     price: "₹39,999",
     amount: 39999,
-    desc: "For factories, wholesalers and teams needing bulk AI production.",
-    audience: "Factories, wholesalers & teams",
+    desc: "For factories, wholesalers and bulk teams who need large-scale AI production for catalogues and client previews.",
+    audience: "Factories, wholesalers & bulk teams",
     credits: 50000,
     creditsLabel: "50,000 Credits",
     images: "Up to 3,000+ standard generations",
     badge: "Bulk Studio",
     popular: false,
+    factoryFocus: true,
     features: [
-        "Everything in Starter",
-        "Faster generation queue",
-        "Premium styles included",
-        "Regenerate variations",
-        "Multiple model generation",
-        "Custom branding on outputs",
-        "Priority support",
-],
+      "Everything included in Pro Creator",
+      "Bulk production workflow for factories",
+      "High-volume catalogue generation",
+      "Priority generation queue",
+      "Dedicated setup guidance",
+      "Team usage planning support",
+      "Bulk branding & article code support",
+      "Monthly production review",
+      "Premium priority support",
+    ],
   },
 ];
 
@@ -148,6 +146,7 @@ function loadRazorpayScript() {
 export default function BillingPage() {
   const router = useRouter();
   const { darkMode } = useTheme();
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [credits, setCredits] = useState<number | null>(null);
@@ -245,8 +244,8 @@ export default function BillingPage() {
       }
 
       if (typeof window !== "undefined" && (window as any).fbq) {
-  (window as any).fbq("track", "InitiateCheckout");
-}
+        (window as any).fbq("track", "InitiateCheckout");
+      }
 
       const orderResponse = await fetch("/api/razorpay/create-order", {
         method: "POST",
@@ -278,7 +277,7 @@ export default function BillingPage() {
         amount: plan.amount * 100,
         currency: "INR",
         name: "AgentForge",
-        description: `${plan.name} Plan - ${plan.credits}`,
+        description: `${plan.name} Plan - ${plan.creditsLabel}`,
         order_id: orderData.order.id,
         prefill: {
           email: userEmail || session.user.email || "",
@@ -312,8 +311,10 @@ export default function BillingPage() {
           if (!verifyResponse.ok) {
             throw new Error(verifyData?.error || "Payment verification failed.");
           }
+
+          await refreshBilling();
           setPayingPlan(null);
-router.push("/payment-success");
+          router.push("/payment-success");
         },
         modal: {
           ondismiss: () => {
@@ -328,7 +329,6 @@ router.push("/payment-success");
       const errorMessage = error instanceof Error ? error.message : "Payment failed. Please try again.";
       console.error("Payment error:", error);
       setMessage(errorMessage);
-    } finally {
       setPayingPlan(null);
     }
   }
@@ -336,13 +336,16 @@ router.push("/payment-success");
   const bg = darkMode ? "bg-[#070b14] text-white" : "bg-[#fff8e8] text-[#111827]";
   const card = darkMode
     ? "border-white/10 bg-white/[0.07] shadow-black/40"
-    : "border-black/10 bg-white/80 shadow-black/10";
-  const muted = darkMode ? "text-white/55" : "text-black/55";
+    : "border-black/10 bg-white/85 shadow-black/10";
+  const softCard = darkMode
+    ? "border-white/10 bg-white/[0.05]"
+    : "border-cyan-200/70 bg-white/70";
+  const muted = darkMode ? "text-white/60" : "text-black/60";
+  const strongMuted = darkMode ? "text-white/75" : "text-black/70";
 
   return (
     <main className={`relative min-h-screen overflow-hidden ${bg}`}>
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee55,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf644,transparent_35%)]" />
-
       <div
         className={`fixed inset-0 ${darkMode ? "opacity-[0.06]" : "opacity-[0.14]"}`}
         style={{
@@ -353,8 +356,12 @@ router.push("/payment-success");
       />
 
       <div className="relative z-10">
-        <section className="mx-auto max-w-7xl px-5 py-14 text-center">
-          <div className="mx-auto mb-5 inline-flex rounded-full border border-cyan-400/30 bg-cyan-400/10 px-5 py-2 text-sm font-semibold text-cyan-600">
+        <section className="mx-auto max-w-7xl px-5 pb-10 pt-14 text-center">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-[1.5rem] border border-cyan-300/40 bg-white shadow-2xl shadow-cyan-500/20">
+            <img src="/logo-new.jpg" alt="AgentForge logo" className="h-16 w-16 rounded-2xl object-cover" />
+          </div>
+
+          <div className="mx-auto mb-5 inline-flex rounded-full border border-cyan-400/30 bg-cyan-400/10 px-5 py-2 text-sm font-black text-cyan-600">
             Billing & Credits
           </div>
 
@@ -366,7 +373,7 @@ router.push("/payment-success");
           </h2>
 
           <p className={`mx-auto mt-6 max-w-3xl text-lg leading-8 ${muted}`}>
-            Check your credit balance, current plan, and upgrade instantly using Razorpay.
+            Track your credits, check your active plan and upgrade instantly for textile, jewellery and productography AI visuals.
           </p>
 
           {message && (
@@ -377,22 +384,34 @@ router.push("/payment-success");
         </section>
 
         <section className="mx-auto max-w-6xl px-5 pb-10">
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div className="rounded-[2rem] border border-cyan-400/30 bg-gradient-to-br from-cyan-400/10 to-blue-500/10 p-8 text-center backdrop-blur-xl">
-              <p className={`text-sm font-bold uppercase tracking-widest ${muted}`}>Credit Balance</p>
+          <div className="grid gap-6 md:grid-cols-3">
+            <div className="rounded-[2rem] border border-cyan-400/30 bg-gradient-to-br from-cyan-400/10 to-blue-500/10 p-8 text-center backdrop-blur-xl md:col-span-1">
+              <p className={`text-sm font-black uppercase tracking-widest ${muted}`}>Credit Balance</p>
               <p className="mt-3 text-6xl font-black text-cyan-500">🪙 {loading ? "..." : credits}</p>
-              <p className={`mt-3 text-sm ${muted}`}>Standard square generation uses 15 credits</p>
+              <p className={`mt-3 text-sm ${muted}`}>Standard image generation uses 15 credits.</p>
             </div>
 
-            <div className={`flex flex-col items-center justify-center rounded-[2rem] border p-8 text-center shadow-xl backdrop-blur-xl ${card}`}>
-              <p className={`text-sm font-bold uppercase tracking-widest ${muted}`}>Current Plan</p>
+            <div className={`rounded-[2rem] border p-8 shadow-xl backdrop-blur-xl ${card}`}>
+              <p className={`text-sm font-black uppercase tracking-widest ${muted}`}>Current Plan</p>
               <p className="mt-3 text-3xl font-black">{currentPlan}</p>
-              <p className={`mt-3 text-sm ${muted}`}>Upgrade from the billing page itself</p>
+              <p className={`mt-3 text-sm ${muted}`}>Your plan controls monthly credits, queue speed and bulk production access.</p>
+
               {!isLoggedIn && (
-                <Link href="/login" className="mt-5 inline-flex rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-6 py-2.5 text-sm font-black text-white shadow-lg shadow-cyan-500/20 transition hover:scale-105">
+                <Link
+                  href="/login"
+                  className="mt-5 inline-flex rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-6 py-2.5 text-sm font-black text-white shadow-lg shadow-cyan-500/20 transition hover:scale-105"
+                >
                   Login to Upgrade
                 </Link>
               )}
+            </div>
+
+            <div className={`rounded-[2rem] border p-8 shadow-xl backdrop-blur-xl ${softCard}`}>
+              <p className="text-sm font-black uppercase tracking-widest text-cyan-600">AgentForge AI</p>
+              <h3 className="mt-3 text-2xl font-black">Upload. Generate. Done.</h3>
+              <p className={`mt-3 text-sm leading-6 ${muted}`}>
+                Premium AI visuals for textile sellers, jewellery brands, product shoots, wholesalers and factories.
+              </p>
             </div>
           </div>
         </section>
@@ -400,7 +419,7 @@ router.push("/payment-success");
         <section className="mx-auto max-w-7xl px-5 pb-16">
           <div className="mb-8 text-center">
             <h3 className="text-3xl font-black md:text-4xl">Upgrade Your Plan</h3>
-            <p className={`mt-3 ${muted}`}>Same pricing, now directly payable from Billing.</p>
+            <p className={`mt-3 ${muted}`}>Same pricing, direct payment, instant credits after successful verification.</p>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -409,40 +428,60 @@ router.push("/payment-success");
                 key={plan.name}
                 className={`relative flex h-full flex-col rounded-[2rem] border p-6 shadow-2xl backdrop-blur-xl transition hover:-translate-y-1 ${card} ${
                   plan.popular ? "z-10 border-cyan-400 xl:scale-105" : ""
-                }`}
+                } ${plan.factoryFocus ? "ring-1 ring-purple-400/30" : ""}`}
               >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-5 py-2 text-xs font-black text-white shadow-xl">
-                    {plan.badge}
-                  </div>
-                )}
+                <div
+                  className={`absolute -top-4 left-1/2 -translate-x-1/2 rounded-full px-5 py-2 text-xs font-black text-white shadow-xl ${
+                    plan.popular || plan.factoryFocus
+                      ? "bg-gradient-to-r from-cyan-400 to-blue-600"
+                      : "bg-gradient-to-r from-cyan-400 to-purple-500"
+                  }`}
+                >
+                  {plan.badge}
+                </div>
 
-                <div className="mb-5 flex items-start justify-between gap-4">
+                <div className="mb-5 mt-3 flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-sm font-semibold text-cyan-600">{plan.audience}</p>
+                    <p className="text-sm font-bold text-cyan-600">{plan.audience}</p>
                     <h3 className="mt-2 text-3xl font-black tracking-tight">{plan.name}</h3>
-                    <p className={`mt-2 text-sm ${muted}`}>{plan.desc}</p>
+                    <p className={`mt-2 text-sm leading-6 ${muted}`}>{plan.desc}</p>
                   </div>
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-cyan-100 bg-white shadow-inner">
                     <img src="/logo-new.jpg" alt="AgentForge Logo" className="h-full w-full object-cover" />
                   </div>
                 </div>
 
-                <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/10 p-5">
-                  <div className="flex items-end gap-2">
+                <div
+                  className={`rounded-3xl border p-5 ${
+                    plan.factoryFocus
+                      ? "border-purple-300/40 bg-gradient-to-br from-purple-400/10 to-cyan-400/10"
+                      : "border-cyan-400/20 bg-cyan-400/10"
+                  }`}
+                >
+                  <div className="flex flex-wrap items-end gap-2">
                     <p className="text-5xl font-black tracking-tight">{plan.price}</p>
                     <p className={`pb-2 text-sm ${muted}`}>/ month</p>
                   </div>
-                  <p className="mt-4 rounded-full bg-white px-4 py-2 text-center text-sm font-black text-black">{plan.credits}</p>
-                  <p className={`mt-3 text-sm font-semibold ${muted}`}>{plan.images}</p>
+                  <p className="mt-4 rounded-full bg-white px-4 py-2 text-center text-sm font-black text-black">
+                    {plan.creditsLabel}
+                  </p>
+                  <p className={`mt-3 text-center text-sm font-bold ${strongMuted}`}>{plan.images}</p>
                 </div>
+
+                {plan.factoryFocus && (
+                  <div className="mt-5 rounded-2xl border border-purple-300/30 bg-purple-400/10 px-4 py-3 text-sm font-bold text-purple-500">
+                    Built for bulk catalogue, factory sampling and wholesale client previews.
+                  </div>
+                )}
 
                 <div className="mt-6 flex-1">
                   <h4 className="mb-4 text-sm font-black uppercase tracking-[0.18em] text-cyan-600">What you will get</h4>
                   <div className={`space-y-3 text-sm leading-6 ${muted}`}>
                     {plan.features.map((feature) => (
                       <p key={feature} className="flex gap-3">
-                        <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-400/20 text-xs font-black text-cyan-600">✓</span>
+                        <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-400/20 text-xs font-black text-cyan-600">
+                          ✓
+                        </span>
                         <span>{feature}</span>
                       </p>
                     ))}
@@ -456,6 +495,8 @@ router.push("/payment-success");
                   className={`mt-6 w-full rounded-2xl py-4 font-black shadow-xl transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${
                     plan.popular
                       ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-cyan-500/25"
+                      : plan.factoryFocus
+                      ? "bg-gradient-to-r from-purple-500 to-blue-600 text-white shadow-purple-500/20"
                       : darkMode
                       ? "bg-white text-black"
                       : "bg-black text-white"
@@ -469,30 +510,43 @@ router.push("/payment-success");
         </section>
 
         <section className="mx-auto max-w-7xl px-5 pb-16">
-          <div className={`rounded-[2rem] border p-8 text-center backdrop-blur-xl ${card}`}>
-            <h3 className="mx-auto max-w-4xl text-3xl font-black leading-tight md:text-4xl">
-              One traditional shoot can cost ₹15,000–₹50,000.
-            </h3>
-            <p className={`mx-auto mt-4 max-w-3xl text-lg leading-8 ${muted}`}>
-              With AgentForge, you can create hundreds of premium AI visuals for textile, jewellery, and products at a fraction of the cost.
-            </p>
+          <div className={`grid gap-6 rounded-[2rem] border p-8 backdrop-blur-xl md:grid-cols-[1.1fr_0.9fr] ${card}`}>
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.18em] text-cyan-600">Why Upgrade?</p>
+              <h3 className="mt-3 max-w-4xl text-3xl font-black leading-tight md:text-4xl">
+                One traditional shoot can cost ₹15,000–₹50,000.
+              </h3>
+              <p className={`mt-4 max-w-3xl text-lg leading-8 ${muted}`}>
+                With AgentForge, you can create hundreds of premium AI visuals for textile, jewellery and products at a fraction of the cost.
+              </p>
+            </div>
 
-            <div className="mt-8 flex flex-wrap justify-center gap-4">
-              {!isLoggedIn && (
-                <Link href="/login" className="rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-8 py-4 font-black text-white shadow-xl shadow-cyan-500/25">
-                  Login to Start
+            <div className={`rounded-[1.5rem] border p-6 ${softCard}`}>
+              <h4 className="text-xl font-black">Need bulk for your factory?</h4>
+              <p className={`mt-3 text-sm leading-6 ${muted}`}>
+                Empire is designed for wholesalers, factories and teams that need repeated catalogue production, article-code handling and monthly output planning.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                {!isLoggedIn && (
+                  <Link
+                    href="/login"
+                    className="rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-6 py-3 text-sm font-black text-white shadow-xl shadow-cyan-500/25"
+                  >
+                    Login to Start
+                  </Link>
+                )}
+
+                <Link
+                  href="/pricing"
+                  className={`rounded-full px-6 py-3 text-sm font-black ${darkMode ? "bg-white/10 text-white" : "bg-white text-black shadow-sm"}`}
+                >
+                  Compare Pricing
                 </Link>
-              )}
-
-              <Link href="/pricing" className={`rounded-full px-8 py-4 font-black ${darkMode ? "bg-white/10 text-white" : "bg-white text-black"}`}>
-                Open Pricing Page
-              </Link>
+              </div>
             </div>
           </div>
         </section>
       </div>
-
-  
     </main>
   );
 }

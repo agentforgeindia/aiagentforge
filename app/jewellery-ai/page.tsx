@@ -1332,6 +1332,49 @@ if (!response.ok) {
       />
 
       <div className="relative z-10">
+        {/* Newly Launched announcement strip */}
+        <div className="mx-auto max-w-7xl px-3 pt-4 sm:px-4">
+          <div
+            className="relative overflow-hidden rounded-2xl border border-white/20 bg-gradient-to-r from-rose-500 via-pink-500 to-amber-400 px-4 py-3 text-white shadow-xl shadow-rose-500/25 sm:rounded-3xl sm:px-6 sm:py-4"
+            style={{ animation: "afNewlyPulse 2.6s ease-in-out infinite" }}
+          >
+            <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-10 left-0 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
+            <div className="relative flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <div className="flex items-center gap-3">
+                <span
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/25 text-lg ring-2 ring-white/40 backdrop-blur"
+                  style={{ animation: "afNewlySpark 1.4s ease-in-out infinite" }}
+                  aria-hidden="true"
+                >
+                  ✨
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/90">
+                    Newly Launched
+                  </p>
+                  <p className="text-sm font-black sm:text-base">
+                    AgentForge Jewellery AI Studio is now live — try it free
+                  </p>
+                </div>
+              </div>
+              <span className="hidden shrink-0 rounded-full bg-white/95 px-4 py-1.5 text-xs font-black text-rose-600 shadow-md sm:inline-flex">
+                LIVE NOW
+              </span>
+            </div>
+          </div>
+          <style>{`
+            @keyframes afNewlyPulse {
+              0%, 100% { box-shadow: 0 10px 30px -10px rgba(244,63,94,0.55); }
+              50%      { box-shadow: 0 16px 40px -8px rgba(244,63,94,0.85); }
+            }
+            @keyframes afNewlySpark {
+              0%, 100% { transform: scale(1) rotate(0deg); }
+              50%      { transform: scale(1.15) rotate(12deg); }
+            }
+          `}</style>
+        </div>
+
         <section className="mx-auto grid w-full max-w-7xl items-start gap-5 px-3 py-5 sm:px-4 lg:grid-cols-[0.9fr_1.1fr] lg:py-8">
           <div>
             <div className="mb-5 inline-flex rounded-full border border-cyan-700/20 bg-cyan-500/15 px-4 py-2 text-sm font-semibold text-cyan-900 dark:border-cyan-400/30 dark:bg-cyan-400/10 dark:text-cyan-200">

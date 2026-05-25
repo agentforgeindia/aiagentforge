@@ -1748,7 +1748,15 @@ export default function Home() {
       throw new Error(`Database record failed: ${dbError.message}`);
     }
 
-    const WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_PRODUCTION_WEBHOOK || "";
+    // Use the module-scoped WEBHOOK_URL (defined at top of file).
+    // Don't shadow with `|| ""` — empty string causes the fetch to go to the
+    // current origin and return the Next.js 404 page, which masks the real
+    // problem (missing env var or n8n workflow inactive).
+    if (!WEBHOOK_URL || !/^https?:\/\//i.test(WEBHOOK_URL)) {
+      throw new Error(
+        `Webhook URL not configured. Check NEXT_PUBLIC_N8N_PRODUCTION_WEBHOOK env var. Got: "${WEBHOOK_URL}"`,
+      );
+    }
 
     const response = await fetch(WEBHOOK_URL, {
       method: "POST",

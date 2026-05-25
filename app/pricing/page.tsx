@@ -33,7 +33,7 @@ const plans: Plan[] = [
     name: "Starter",
     price: "₹1,999",
     amount: 1999,
-    desc: "For small shops and creators starting with AI product visuals.",
+    desc: "For small shops, creators and new sellers who want premium product visuals without costly shoots.",
     audience: "Small shops & creators",
     credits: 1800,
     creditsLabel: "1,800 Credits",
@@ -41,24 +41,23 @@ const plans: Plan[] = [
     badge: "Best to Start",
     popular: false,
     features: [
-          "All AI agents access",
-          "15 credits per standard image",
-         "1080×1080 square export",
-         "Watermark-free outputs",
-         "Standard generation queue",
-         "Mobile story outputs",
-         "Add company name on mockups",
-          "Add contact number & website",
-         "Article code placement support",
-         "Single model generation",
-         "Basic support",
-],
+      "Access to all AgentForge AI agents",
+      "15 credits per standard image",
+      "1080×1080 HD square export",
+      "Watermark-free business outputs",
+      "Textile, jewellery & product visuals",
+      "Company name, contact & website support",
+      "Article code / design code placement",
+      "Single model generation",
+      "Standard generation queue",
+      "Basic support",
+    ],
   },
   {
     name: "Pro Creator",
     price: "₹9,999",
     amount: 9999,
-    desc: "For sellers, agencies and growing brands creating content regularly.",
+    desc: "For sellers, agencies and growing brands creating daily catalog, WhatsApp and social media content.",
     audience: "Sellers, agencies & growing brands",
     credits: 12000,
     creditsLabel: "12,000 Credits",
@@ -66,37 +65,39 @@ const plans: Plan[] = [
     badge: "Most Popular",
     popular: true,
     features: [
-          "Everything in Starter",
-         "Faster generation queue",
-          "Premium styles included",
-          "Mobile story outputs",
-         "Regenerate variations",
-          "Multiple model generation",
-          "Custom branding on outputs",
-          "Advanced article presentation",
-          "Priority support",
-],
+      "Everything included in Starter",
+      "Faster generation queue",
+      "Premium shoot styles included",
+      "Regenerate variations for better results",
+      "Multiple model generation",
+      "Mobile story & catalogue-ready outputs",
+      "Custom branding on outputs",
+      "Advanced article presentation",
+      "Priority support",
+    ],
   },
   {
     name: "Empire",
     price: "₹39,999",
     amount: 39999,
-    desc: "For factories, wholesalers and teams needing bulk AI production.",
-    audience: "Factories, wholesalers & teams",
+    desc: "For factories, wholesalers and bulk teams who need large-scale AI production for catalogues and client previews.",
+    audience: "Factories, wholesalers & bulk teams",
     credits: 50000,
     creditsLabel: "50,000 Credits",
     images: "Up to 3,000+ standard generations",
     badge: "Bulk Studio",
     popular: false,
     features: [
-        "Everything in Starter",
-        "Faster generation queue",
-        "Premium styles included",
-        "Regenerate variations",
-        "Multiple model generation",
-        "Custom branding on outputs",
-        "Priority support",
-],
+      "Everything included in Pro Creator",
+      "Bulk production workflow for factories",
+      "High-volume catalogue generation",
+      "Priority generation queue",
+      "Dedicated setup guidance",
+      "Team usage planning support",
+      "Bulk branding & article code support",
+      "Monthly production review",
+      "Premium priority support",
+    ],
   },
 ];
 
@@ -270,6 +271,18 @@ router.push("/payment-success");
             Choose your monthly image volume and start creating premium business visuals.
           </p>
 
+          <div className={`mx-auto mt-8 flex max-w-4xl flex-col items-center justify-center gap-4 rounded-[2rem] border px-5 py-4 backdrop-blur-xl sm:flex-row ${card}`}>
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-cyan-100 bg-white shadow-inner">
+              <img src="/logo-new.jpg" alt="AgentForge Logo" className="h-full w-full object-cover" />
+            </div>
+            <div className="text-center sm:text-left">
+              <p className="text-lg font-black">AgentForge AI</p>
+              <p className={`text-sm leading-6 ${muted}`}>
+                Built for Indian sellers, agencies, textile wholesalers and factories — upload design, generate premium visuals, share with clients.
+              </p>
+            </div>
+          </div>
+
           {paymentMessage && (
             <div className="mx-auto mt-6 max-w-3xl rounded-3xl border border-cyan-400/30 bg-cyan-400/10 px-5 py-4 text-sm font-bold text-cyan-600 backdrop-blur-xl">
               {paymentMessage}
@@ -370,7 +383,7 @@ router.push("/payment-success");
               One traditional shoot can cost ₹15,000–₹50,000.
             </h3>
             <p className={`mx-auto mt-4 max-w-3xl text-lg leading-8 ${muted}`}>
-              With AgentForge, you can create hundreds of premium AI visuals for textile, jewellery, and products at a fraction of the cost.
+              With AgentForge, small sellers can start lean, agencies can scale faster, and factories can generate bulk catalogue visuals without waiting for sampling, stitching and photoshoots.
             </p>
 
             <div className="mt-8 flex flex-wrap justify-center gap-4">

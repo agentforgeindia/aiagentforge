@@ -194,8 +194,26 @@ export default function Home() {
               <Link
                 key={item.title}
                 href={item.link}
-                className={`group overflow-hidden rounded-[2rem] border shadow-xl backdrop-blur-xl transition hover:-translate-y-1 ${card}`}
+                className={`group relative overflow-hidden rounded-[2rem] border shadow-xl backdrop-blur-xl transition hover:-translate-y-1 ${card}`}
               >
+                {item.isNew && (
+                  <>
+                    <span
+                      aria-hidden="true"
+                      className="pointer-events-none absolute right-3 top-3 z-20 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-amber-400 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-lg shadow-rose-500/30 ring-2 ring-white/50"
+                      style={{ animation: "afNewPulse 1.8s ease-in-out infinite" }}
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                      Newly Launched
+                    </span>
+                    <style>{`
+                      @keyframes afNewPulse {
+                        0%, 100% { transform: scale(1); box-shadow: 0 8px 22px -8px rgba(244,63,94,0.55); }
+                        50%      { transform: scale(1.06); box-shadow: 0 10px 26px -6px rgba(244,63,94,0.75); }
+                      }
+                    `}</style>
+                  </>
+                )}
                 <div className="h-48 w-full overflow-hidden">
                   <img
                     src={item.imageSrc}

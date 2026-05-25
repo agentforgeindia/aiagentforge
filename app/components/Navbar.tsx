@@ -10,9 +10,9 @@ import { BadgeCheck } from "lucide-react";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 const agents = [
-  { title: "TextilePrints to Mockup AI", desc: "Textile design → fashion mockup", link: "/textileprints-to-mockup" },
-  { title: "Jewellery AI Studio", desc: "Premium jewellery model shoots", link: "/jewellery-ai" },
-  { title: "Productography AI", desc: "Product photos → ad visuals", link: "/productography-ai" },
+  { title: "TextilePrints to Mockup AI", desc: "Textile design → fashion mockup", link: "/textileprints-to-mockup", isNew: false },
+  { title: "Jewellery AI Studio", desc: "Premium jewellery model shoots", link: "/jewellery-ai", isNew: true },
+  { title: "Productography AI", desc: "Product photos → ad visuals", link: "/productography-ai", isNew: true },
 ];
 
 const navLinks = [
@@ -176,7 +176,15 @@ export default function Navbar() {
                     href={agent.link}
                     className={`block px-4 py-3 transition-colors ${darkMode ? "hover:bg-white/8" : "hover:bg-cyan-50"}`}
                   >
-                    <p className="text-sm font-bold">{agent.title}</p>
+                    <p className="flex items-center gap-2 text-sm font-bold">
+                      <span className="truncate">{agent.title}</span>
+                      {agent.isNew && (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-amber-400 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-white shadow shadow-rose-500/30">
+                          <span className="h-1 w-1 rounded-full bg-white" />
+                          New
+                        </span>
+                      )}
+                    </p>
                     <p className={`mt-0.5 text-xs ${muted}`}>{agent.desc}</p>
                   </Link>
                 ))}
@@ -352,8 +360,18 @@ export default function Navbar() {
               </Link>
             ))}
             {agents.map((agent) => (
-              <Link key={agent.title} href={agent.link} className="rounded-2xl px-4 py-3 hover:bg-cyan-400/10">
-                {agent.title}
+              <Link
+                key={agent.title}
+                href={agent.link}
+                className="flex items-center justify-between gap-2 rounded-2xl px-4 py-3 hover:bg-cyan-400/10"
+              >
+                <span className="truncate">{agent.title}</span>
+                {agent.isNew && (
+                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-amber-400 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-white shadow shadow-rose-500/30">
+                    <span className="h-1 w-1 rounded-full bg-white" />
+                    New
+                  </span>
+                )}
               </Link>
             ))}
 
