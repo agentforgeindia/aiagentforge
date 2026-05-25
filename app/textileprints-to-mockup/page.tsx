@@ -738,6 +738,7 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const stepTopRef = useRef<HTMLDivElement | null>(null);
+  const logoInputRef = useRef<HTMLInputElement | null>(null);
   const [dailyGalleryImage, setDailyGalleryImage] = useState(
     "/banner-design-output.png",
   );
@@ -1639,6 +1640,7 @@ export default function Home() {
     const resolvedShootStyle = customShootStyle.trim() || shootStyle;
     const resolvedOutputSize = customOutputSize.trim() || outputSize;
     const resolvedQuality = customQuality.trim() || quality;
+    const resolvedPose = customPose.trim() || pose;
     const resolvedAccessories = resolveAccessories();
     const selectedBrandDetails = {
       company_name: useCompanyName ? companyName.trim() : "",
@@ -1688,6 +1690,9 @@ export default function Home() {
       credits_required: itemCredits,
       face_expression: resolvedFaceExpression,
       model_expression: resolvedFaceExpression,
+      model_pose: resolvedPose,
+      custom_pose: resolvedPose,
+      pose: resolvedPose,
       design_number: item.designNumber.trim(),
       text_on_image: item.designNumber.trim(),
       article_number: item.designNumber.trim(),
@@ -1769,7 +1774,9 @@ export default function Home() {
 
         face_expression: resolvedFaceExpression,
         model_expression: resolvedFaceExpression,
-        model_pose: pose,
+        model_pose: resolvedPose,
+        custom_pose: resolvedPose,
+        pose: resolvedPose,
 
         design_number: item.designNumber.trim(),
         text_on_image: item.designNumber.trim(),
@@ -2599,12 +2606,62 @@ export default function Home() {
                           the final output.
                         </p>
                       </div>
-                      <span
-                        className={`rounded-full px-3 py-1 text-[10px] font-black ${darkMode ? "bg-white/10 text-white/70" : "bg-cyan-50 text-cyan-800"}`}
+                      <button
+                        type="button"
+                        onClick={() => logoInputRef.current?.click()}
+                        disabled={uploadingLogo}
+                        className={`rounded-full px-3 py-1.5 text-[11px] font-black disabled:opacity-60 ${darkMode ? "bg-white/10 text-cyan-200" : "bg-cyan-50 text-cyan-700"}`}
                       >
-                        Optional
-                      </span>
+                        {uploadingLogo ? "Uploading…" : "Upload Logo"}
+                      </button>
                     </div>
+
+                    <input
+                      ref={logoInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={handleLogoUpload}
+                    />
+
+                    <div className={`mb-4 flex items-center gap-3 rounded-2xl border p-3 ${darkMode ? "border-white/10 bg-white/[0.035]" : "border-black/10 bg-white/70"}`}>
+                      <div className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl ${darkMode ? "bg-white/10 text-cyan-200" : "bg-cyan-50 text-cyan-700"}`}>
+                        {companyLogoUrl ? (
+                          <img src={companyLogoUrl} alt="Company logo" className="h-full w-full object-cover" />
+                        ) : (
+                          <Sparkles className="h-6 w-6" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-black">Brand logo on output</p>
+                        <p className={`mt-0.5 text-[11px] ${muted}`}>
+                          {companyLogoUrl ? "Logo ready. Tick below to apply." : "Upload PNG / JPG / WEBP — top-right par lagega."}
+                        </p>
+                      </div>
+                      {companyLogoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCompanyLogoUrl("");
+                            setUseCompanyLogo(false);
+                          }}
+                          className="rounded-lg px-2 py-1 text-[11px] font-bold text-rose-500 hover:bg-rose-500/10"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+
+                    <label className={`mb-4 flex items-center gap-2 rounded-2xl px-3 py-3 text-xs font-black ${darkMode ? "bg-white/[0.035]" : "bg-white/70"}`}>
+                      <input
+                        type="checkbox"
+                        checked={useCompanyLogo}
+                        disabled={!companyLogoUrl}
+                        onChange={(e) => setUseCompanyLogo(e.target.checked)}
+                        className="h-4 w-4 accent-cyan-500"
+                      />
+                      Use logo on output (top-right)
+                    </label>
 
                     <div className="space-y-3">
                       <input

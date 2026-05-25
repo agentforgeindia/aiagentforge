@@ -99,7 +99,7 @@ const modelUsageOptions: Option[] = [
 
 const modelLookOptions: Option[] = [
   { title: "Indian", hint: "Indian market look", icon: <UserRound />, iconFile: "/Productography-icons/indian model.svg" },
-  { title: "European", hint: "Global premium look", icon: <UserRound />, iconFile: "/Productography-icons/european model.svg" },
+  { title: "European", hint: "Global premium look", icon: <UserRound />, iconFile: "/Productography-icons/european-model.svg" },
   { title: "Asian", hint: "East/South Asian look", icon: <UserRound />, iconFile: "/Productography-icons/middle asian model.svg" },
   { title: "Arabic", hint: "Middle East premium", icon: <UserRound />, iconFile: "/Productography-icons/middle eastern models.svg" },
   { title: "African", hint: "African model look", icon: <UserRound />, iconFile: "/Productography-icons/african models.svg" },
@@ -1263,24 +1263,51 @@ export default function ProductographyPage() {
               </div>
 
               <div ref={stepTopRef}>
-                <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {stepMeta.map((step) => (
-                    <button
+                <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {stepMeta.map((step, index) => (
+                    <div
                       key={step.id}
-                      type="button"
                       onClick={() => goStep(step.id)}
-                      className={`rounded-2xl border p-3 text-left transition ${
+                      className={`relative cursor-pointer overflow-hidden rounded-3xl border p-4 shadow-sm transition-all duration-300 active:scale-[0.98] ${
                         builderStep === step.id
-                          ? "border-cyan-400 bg-cyan-400/10 shadow-lg shadow-cyan-400/10"
+                          ? "border-cyan-300 bg-gradient-to-br from-cyan-400 to-blue-500 text-white shadow-cyan-200/60"
                           : darkMode
-                            ? "border-white/10 bg-white/[0.03]"
-                            : "border-black/10 bg-white/70"
+                            ? "border-white/10 bg-white/[0.04] text-white hover:border-cyan-200"
+                            : "border-cyan-100 bg-white/80 text-slate-900 hover:border-cyan-200"
                       }`}
                     >
-                      <p className="text-xs font-black text-cyan-600">Step {step.id}</p>
-                      <p className="mt-1 font-black">{step.title}</p>
-                      <p className={`text-xs ${muted}`}>{step.sub}</p>
-                    </button>
+                      <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-cyan-200/30 blur-2xl" />
+
+                      <div className="relative z-10 flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className={`text-[10px] font-black tracking-[0.22em] ${
+                            builderStep === step.id ? "text-white/80" : "text-cyan-600"
+                          }`}>
+                            STEP {step.id}
+                          </p>
+
+                          <h3 className="mt-1 text-lg font-black leading-none">{step.title}</h3>
+
+                          <p className={`mt-1 text-[11px] font-semibold ${
+                            builderStep === step.id
+                              ? "text-white/80"
+                              : darkMode ? "text-white/50" : "text-slate-500"
+                          }`}>
+                            {step.sub}
+                          </p>
+                        </div>
+
+                        <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black ${
+                          builderStep === step.id ? "bg-white text-cyan-600" : "bg-cyan-400 text-white"
+                        }`}>
+                          ✓
+                        </div>
+                      </div>
+
+                      {index !== stepMeta.length - 1 && (
+                        <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-cyan-300 to-blue-400" />
+                      )}
+                    </div>
                   ))}
                 </div>
 

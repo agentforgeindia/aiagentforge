@@ -66,28 +66,18 @@ const MORE_JEWELLERY_OPTIONS = [
   "Kada",
 ];
 
-const OUTPUT_TYPES: OptionItem[] = [
-  { label: "Luxury Studio", icon: Crown, hint: "Premium polished", iconFile: "luxury-studio" },
-  { label: "White Background", icon: Square, hint: "Catalogue ready", iconFile: "white-background" },
-  { label: "Bridal Campaign", icon: Sparkles, hint: "Wedding rich", iconFile: "bridal-campaign" },
-  { label: "Premium Lifestyle", icon: ImageIcon, hint: "Aspirational scene", iconFile: "premium-lifestyle" },
-  { label: "Instagram Ad", icon: Layers3, hint: "Social creative", iconFile: "instagram-ad" },
-];
-
 const MODEL_USAGE_BY_JEWELLERY: Record<string, OptionItem[]> = {
   Ring: [
     { label: "No Model", icon: Package, hint: "Pure product", iconFile: "no-model" },
-    { label: "Hand Model", icon: Hand, hint: "Ring close-up", iconFile: "hand-model" },
+    { label: "Hand Model", icon: Hand, hint: "Ring close-up", iconFile: "hand-close-up" },
     { label: "Couple Hands", icon: UserRound, hint: "Engagement feel", iconFile: "couple-hands" },
-    { label: "Luxury Flat Lay", icon: ImageIcon, hint: "Premium surface", iconFile: "flat-lay" },
-    { label: "Editorial Model", icon: BadgeCheck, hint: "Campaign look", iconFile: "editorial-model" },
+    { label: "Luxury Flat Lay", icon: ImageIcon, hint: "Premium surface", iconFile: "luxury-flat-ray" },
   ],
   Earrings: [
     { label: "No Model", icon: Package, hint: "Pure product", iconFile: "no-model" },
     { label: "Ear Close-up", icon: UserRound, hint: "Wearing detail", iconFile: "ear-close-up" },
     { label: "Female Model", icon: UserRound, hint: "Wearable luxury", iconFile: "female-model" },
     { label: "Bridal Model", icon: Crown, hint: "Wedding style", iconFile: "bridal-model" },
-    { label: "Editorial Model", icon: BadgeCheck, hint: "Fashion look", iconFile: "editorial-model" },
   ],
   Necklace: [
     { label: "No Model", icon: Package, hint: "Pure product", iconFile: "no-model" },
@@ -98,10 +88,9 @@ const MODEL_USAGE_BY_JEWELLERY: Record<string, OptionItem[]> = {
   ],
   Bracelet: [
     { label: "No Model", icon: Package, hint: "Pure product", iconFile: "no-model" },
-    { label: "Hand Model", icon: Hand, hint: "Wrist detail", iconFile: "hand-model" },
+    { label: "Hand Model", icon: Hand, hint: "Wrist detail", iconFile: "hand-close-up" },
     { label: "Wrist Close-up", icon: ScanSearch, hint: "Texture focus", iconFile: "wrist-close-up" },
     { label: "Lifestyle Hand", icon: ImageIcon, hint: "Natural usage", iconFile: "lifestyle-hand" },
-    { label: "Editorial Model", icon: BadgeCheck, hint: "Campaign look", iconFile: "editorial-model" },
   ],
   "More Options": [
     { label: "No Model", icon: Package, hint: "Product only", iconFile: "no-model" },
@@ -116,8 +105,8 @@ const POSE_OPTIONS: OptionItem[] = [
   { label: "Auto Pose", icon: Wand2, hint: "Best fit", iconFile: "auto-pose" },
   { label: "Front Pose", icon: UserRound, hint: "Clean front", iconFile: "front-pose" },
   { label: "Side Pose", icon: UserRound, hint: "Angle look", iconFile: "side-pose" },
-  { label: "Hand Close-up", icon: Hand, hint: "Ring/bracelet", iconFile: "hand-close-up" },
-  { label: "Neck Close-up", icon: Gem, hint: "Necklace detail", iconFile: "neck-close-up" },
+  { label: "Half Body", icon: UserRound, hint: "Waist-up", iconFile: "half-body" },
+  { label: "Full Body", icon: UserRound, hint: "Editorial", iconFile: "full-body" },
 ];
 
 const MODEL_LOOK_OPTIONS: OptionItem[] = [
@@ -480,8 +469,27 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+const isFreeAccountFromProfile = (profile: any): boolean => {
+  const planText = String(
+    profile?.plan ||
+      profile?.package ||
+      profile?.current_plan ||
+      profile?.subscription_plan ||
+      profile?.plan_name ||
+      "",
+  ).toLowerCase();
+  const paid =
+    planText.includes("empire") ||
+    planText.includes("founder") ||
+    planText.includes("unlimited") ||
+    planText.includes("pro") ||
+    planText.includes("growth") ||
+    planText.includes("creator");
+  return !paid;
+};
+
 export default function JewelleryAIPage() {
-  const { user: authUser, credits: userCredits, refreshProfile } = useAuth();
+  const { user: authUser, credits: userCredits, refreshProfile, profile } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
   const stepTopRef = useRef<HTMLDivElement | null>(null);
@@ -497,7 +505,6 @@ export default function JewelleryAIPage() {
   const [jewelleryType, setJewelleryType] = useState("Ring");
   const [moreJewellery, setMoreJewellery] = useState<string[]>([]);
   const [customJewellery, setCustomJewellery] = useState("");
-  const [outputType, setOutputType] = useState("Luxury Studio");
   const [modelType, setModelType] = useState("No Model");
   const [pose, setPose] = useState("Auto Pose");
   const [modelLook, setModelLook] = useState("Indian Model");
@@ -525,7 +532,7 @@ export default function JewelleryAIPage() {
   const [useCompanyLogo, setUseCompanyLogo] = useState(true);
   const [useCompanyName, setUseCompanyName] = useState(true);
   const [useCompanyWebsite, setUseCompanyWebsite] = useState(true);
-  const [isFreeAccount] = useState(true);
+  const isFreeAccount = useMemo(() => isFreeAccountFromProfile(profile), [profile]);
 
   useEffect(() => {
     try {
@@ -538,7 +545,6 @@ export default function JewelleryAIPage() {
         setJewelleryType(settings.jewelleryType || "Ring");
         setMoreJewellery(Array.isArray(settings.moreJewellery) ? settings.moreJewellery : []);
         setCustomJewellery(settings.customJewellery || "");
-        setOutputType(settings.outputType || "Luxury Studio");
         setModelType(settings.modelType || "No Model");
         setPose(settings.pose || "Auto Pose");
         setModelLook(settings.modelLook || "Indian Model");
@@ -580,7 +586,6 @@ export default function JewelleryAIPage() {
           jewelleryType,
           moreJewellery,
           customJewellery,
-          outputType,
           modelType,
           pose,
           modelLook,
@@ -609,7 +614,6 @@ export default function JewelleryAIPage() {
     jewelleryType,
     moreJewellery,
     customJewellery,
-    outputType,
     modelType,
     pose,
     modelLook,
@@ -747,7 +751,7 @@ export default function JewelleryAIPage() {
     builderStep === 1
       ? Boolean(selectedJewelleryLabel)
       : builderStep === 2
-        ? Boolean(outputType && shootStyle && accessory)
+        ? Boolean(shootStyle && accessory)
         : builderStep === 3
           ? Boolean(modelType && pose && modelLook && faceExpression && outputSize && quality)
           : true;
@@ -1130,7 +1134,7 @@ const WEBHOOK_URL =
       is_empire: String(profile.plan || "").toLowerCase().includes("empire"),
       jewellery_type: selectedJewelleryLabel,
       more_jewellery: moreJewellery,
-      output_type: outputType,
+      output_type: customShootStyle || shootStyle,
       model_type: modelType,
       pose: customPose || pose,
       model_look: customModelLook || modelLook,
@@ -1394,8 +1398,8 @@ if (!response.ok) {
                 <p className="mt-1 truncate text-sm font-black">{selectedJewelleryLabel}</p>
               </div>
               <div className="rounded-2xl bg-cyan-50 p-3 text-center dark:bg-white/[0.05]">
-                <p className="text-xs text-slate-500 dark:text-white/50">Output</p>
-                <p className="mt-1 truncate text-sm font-black">{outputType}</p>
+                <p className="text-xs text-slate-500 dark:text-white/50">Shoot</p>
+                <p className="mt-1 truncate text-sm font-black">{customShootStyle || shootStyle}</p>
               </div>
               <div className="rounded-2xl bg-cyan-50 p-3 text-center dark:bg-white/[0.05]">
                 <p className="text-xs text-slate-500 dark:text-white/50">Credits</p>
@@ -1495,7 +1499,7 @@ if (!response.ok) {
                   <div className="mt-3 space-y-2">
                     <SummaryRow label="Mode" value={generationMode === "single" ? "Single" : "Bulk"} />
                     <SummaryRow label="Jewellery" value={selectedJewelleryLabel} />
-                    <SummaryRow label="Output" value={outputType} />
+                    <SummaryRow label="Shoot" value={customShootStyle || shootStyle} />
                     <SummaryRow label="Model" value={modelType} />
                     <SummaryRow label="Frame" value={`${outputSize} / ${quality}`} />
                     <SummaryRow label="Credits" value={String(credits)} />
@@ -1505,22 +1509,50 @@ if (!response.ok) {
 
               <div>
                 <div ref={stepTopRef} className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-                  {builderStepMeta.map((step) => (
-                    <button
+                  {builderStepMeta.map((step, index) => (
+                    <div
                       key={step.id}
-                      type="button"
                       onClick={() => goToStep(step.id)}
                       className={clsx(
-                        "rounded-2xl border p-3 text-left transition",
+                        "relative cursor-pointer overflow-hidden rounded-3xl border p-4 shadow-sm transition-all duration-300 active:scale-[0.98]",
                         builderStep === step.id
-                          ? "border-cyan-400 bg-cyan-400/15 shadow-lg shadow-cyan-500/10"
-                          : "border-black/10 bg-white/70 hover:border-cyan-300 dark:border-white/10 dark:bg-white/[0.04]",
+                          ? "border-cyan-300 bg-gradient-to-br from-cyan-400 to-blue-500 text-white shadow-cyan-200/60"
+                          : "border-cyan-100 bg-white/80 text-slate-900 hover:border-cyan-200 dark:border-white/10 dark:bg-white/[0.04] dark:text-white",
                       )}
                     >
-                      <p className="text-[11px] font-black uppercase tracking-widest text-cyan-600">Step {step.id}</p>
-                      <p className="mt-1 text-sm font-black">{step.title}</p>
-                      <p className="mt-1 text-xs text-slate-500 dark:text-white/45">{step.sub}</p>
-                    </button>
+                      <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-cyan-200/30 blur-2xl" />
+
+                      <div className="relative z-10 flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className={clsx(
+                            "text-[10px] font-black tracking-[0.22em]",
+                            builderStep === step.id ? "text-white/80" : "text-cyan-600",
+                          )}>
+                            STEP {step.id}
+                          </p>
+
+                          <h3 className="mt-1 text-lg font-black leading-none">{step.title}</h3>
+
+                          <p className={clsx(
+                            "mt-1 text-[11px] font-semibold",
+                            builderStep === step.id ? "text-white/80" : "text-slate-500 dark:text-white/50",
+                          )}>
+                            {step.sub}
+                          </p>
+                        </div>
+
+                        <div className={clsx(
+                          "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black",
+                          builderStep === step.id ? "bg-white text-cyan-600" : "bg-cyan-400 text-white",
+                        )}>
+                          ✓
+                        </div>
+                      </div>
+
+                      {index !== builderStepMeta.length - 1 && (
+                        <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-cyan-300 to-blue-400" />
+                      )}
+                    </div>
                   ))}
                 </div>
 
@@ -1543,14 +1575,6 @@ if (!response.ok) {
                     )}
 
                     <TextInputBox label="Other Jewellery / Custom Type" value={customJewellery} onChange={setCustomJewellery} placeholder="Example: Kundan choker, temple jewellery, custom pendant..." />
-
-                    <SelectionGrid
-                      title="Output Direction"
-                      subtitle="Select final visual style."
-                      options={OUTPUT_TYPES}
-                      value={outputType}
-                      onChange={setOutputType}
-                    />
 
                     <div className="rounded-[1.35rem] border border-black/10 bg-white/70 p-4 dark:border-white/10 dark:bg-white/[0.045]">
                       <p className="text-xs font-black uppercase tracking-widest text-cyan-600">Jewellery Protection Notes</p>
@@ -1625,7 +1649,6 @@ if (!response.ok) {
                     <div className="rounded-[1.35rem] border border-cyan-300/40 bg-gradient-to-br from-cyan-400/10 via-blue-500/10 to-purple-500/10 p-5">
                       <div className="grid gap-3 sm:grid-cols-2">
                         <SummaryRow label="Jewellery" value={selectedJewelleryLabel} />
-                        <SummaryRow label="Output" value={outputType} />
                         <SummaryRow label="Shoot" value={customShootStyle || shootStyle} />
                         <SummaryRow label="Model" value={modelType} />
                         <SummaryRow label="Pose" value={customPose || pose} />
