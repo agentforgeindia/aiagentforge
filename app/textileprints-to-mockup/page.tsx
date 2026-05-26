@@ -5,7 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
 import { useAuth } from "@/app/components/AuthProvider";
-import { Sparkles } from "lucide-react";
+import { Crown, Sparkles, Upload, UploadCloud, X } from "lucide-react";
 import { canGenerate } from "@/lib/checkCredits";
 import { shouldDeductCredits } from "@/lib/deductCredits";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
@@ -2319,7 +2319,7 @@ export default function Home() {
                 >
                   <div>
                     <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-blue-400 text-white shadow-lg shadow-cyan-400/25">
-                      <VisualIcon icon="pattern" />
+                      <UploadCloud className="h-8 w-8" />
                     </div>
                     <p className="text-lg font-semibold">
                       {isEmpireUser
@@ -2599,27 +2599,23 @@ export default function Home() {
                     )}
                   </div>
 
+                  {/* Company / Brand details card */}
                   <div
-                    className={`mt-4 rounded-[1.35rem] p-4 ${
-                      darkMode ? "bg-white/[0.045]" : "bg-white/80"
+                    className={`mt-4 rounded-[1.35rem] border p-4 ${
+                      darkMode ? "border-white/10 bg-white/[0.045]" : "border-black/10 bg-white/80"
                     }`}
                   >
-                    <div className="mb-4 flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-black uppercase tracking-widest text-cyan-600">
-                          Company Details Overlay
-                        </p>
-                        <p className={`mt-1 text-xs leading-5 ${muted}`}>
-                          Optional. Save once, then tick only what you want on
-                          the final output.
-                        </p>
-                      </div>
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <p className="text-xs font-black uppercase tracking-widest text-cyan-600">
+                        Company / Branding
+                      </p>
                       <button
                         type="button"
                         onClick={() => logoInputRef.current?.click()}
                         disabled={uploadingLogo}
-                        className={`rounded-full px-3 py-1.5 text-[11px] font-black disabled:opacity-60 ${darkMode ? "bg-white/10 text-cyan-200" : "bg-cyan-50 text-cyan-700"}`}
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-black disabled:opacity-60 ${darkMode ? "bg-white/10 text-cyan-200" : "bg-cyan-50 text-cyan-700"}`}
                       >
+                        <Upload className="h-3.5 w-3.5" />
                         {uploadingLogo ? "Uploading…" : "Upload Logo"}
                       </button>
                     </div>
@@ -2632,18 +2628,18 @@ export default function Home() {
                       onChange={handleLogoUpload}
                     />
 
-                    <div className={`mb-4 flex items-center gap-3 rounded-2xl border p-3 ${darkMode ? "border-white/10 bg-white/[0.035]" : "border-black/10 bg-white/70"}`}>
+                    <div className={`mb-3 flex items-center gap-3 rounded-2xl border p-3 ${darkMode ? "border-white/10 bg-white/[0.04]" : "border-black/10 bg-white/70"}`}>
                       <div className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl ${darkMode ? "bg-white/10 text-cyan-200" : "bg-cyan-50 text-cyan-700"}`}>
                         {companyLogoUrl ? (
                           <img src={companyLogoUrl} alt="Company logo" className="h-full w-full object-cover" />
                         ) : (
-                          <Sparkles className="h-6 w-6" />
+                          <Crown className="h-6 w-6" />
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-black">Brand logo on output</p>
-                        <p className={`mt-0.5 text-[11px] ${muted}`}>
-                          {companyLogoUrl ? "Logo ready. Tick below to apply." : "Upload PNG / JPG / WEBP — top-right par lagega."}
+                        <p className="text-xs font-bold">Logo on output</p>
+                        <p className={`text-[11px] ${muted}`}>
+                          {companyLogoUrl ? "Uploaded — appears top-right of generated image" : "Optional. Will overlay top-right corner."}
                         </p>
                       </div>
                       {companyLogoUrl && (
@@ -2653,22 +2649,21 @@ export default function Home() {
                             setCompanyLogoUrl("");
                             setUseCompanyLogo(false);
                           }}
-                          className="rounded-lg px-2 py-1 text-[11px] font-bold text-rose-500 hover:bg-rose-500/10"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-rose-500 hover:bg-rose-500/10"
                         >
-                          Remove
+                          <X className="h-4 w-4" />
                         </button>
                       )}
                     </div>
 
-                    <label className={`mb-4 flex items-center gap-2 rounded-2xl px-3 py-3 text-xs font-black ${darkMode ? "bg-white/[0.035]" : "bg-white/70"}`}>
+                    <label className={`mb-3 flex items-center gap-2 text-xs font-bold ${muted}`}>
                       <input
                         type="checkbox"
                         checked={useCompanyLogo}
                         disabled={!companyLogoUrl}
                         onChange={(e) => setUseCompanyLogo(e.target.checked)}
-                        className="h-4 w-4 accent-cyan-500"
                       />
-                      Use logo on output (top-right)
+                      Use logo on output
                     </label>
 
                     <div className="space-y-3">

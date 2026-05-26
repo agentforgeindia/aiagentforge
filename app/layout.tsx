@@ -77,6 +77,8 @@ export default function RootLayout({
           name="facebook-domain-verification"
           content="rulnxopysk6g6u6lp9ct0dp2pp8iom"
         />
+
+        <meta name="p:domain_verify" content="71b4ae903a22aedcf510fdf811f2df07"/>
       </head>
 
       <body className="relative min-h-full overflow-x-hidden flex flex-col">

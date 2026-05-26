@@ -19,8 +19,7 @@ const navLinks = [
   { label: "Home", href: "/" },
   { label: "Pricing", href: "/pricing" },
   { label: "Gallery", href: "/gallery" },
-  // { label: "Support", href: "/support" },
-  { label: "Credits", href: "/billing" },
+  { label: "Support", href: "/support" },
 ];
 
 // Safe helper to get user initials from name or email

@@ -19,6 +19,7 @@ import {
   Share2,
   ShoppingBag,
   Sparkles,
+  Upload,
   UploadCloud,
   UserRound,
   Wand2,
@@ -1232,8 +1233,9 @@ export default function ProductographyPage() {
                     <button
                       type="button"
                       onClick={() => logoInputRef.current?.click()}
-                      className="rounded-full bg-cyan-50 px-3 py-1.5 text-[11px] font-black text-cyan-700 dark:bg-white/10 dark:text-cyan-200"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-cyan-50 px-3 py-1.5 text-[11px] font-black text-cyan-700 dark:bg-white/10 dark:text-cyan-200"
                     >
+                      <Upload className="h-3.5 w-3.5" />
                       {uploadingLogo ? "Uploading..." : "Upload Logo"}
                     </button>
                   </div>

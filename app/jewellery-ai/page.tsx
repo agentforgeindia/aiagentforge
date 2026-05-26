@@ -529,9 +529,12 @@ export default function JewelleryAIPage() {
   const [companyName, setCompanyName] = useState("");
   const [companyWebsite, setCompanyWebsite] = useState("");
   const [companyPhone, setCompanyPhone] = useState("");
+  const [companyAddress, setCompanyAddress] = useState("");
   const [useCompanyLogo, setUseCompanyLogo] = useState(true);
   const [useCompanyName, setUseCompanyName] = useState(true);
   const [useCompanyWebsite, setUseCompanyWebsite] = useState(true);
+  const [useCompanyPhone, setUseCompanyPhone] = useState(true);
+  const [useCompanyAddress, setUseCompanyAddress] = useState(false);
   const isFreeAccount = useMemo(() => isFreeAccountFromProfile(profile), [profile]);
 
   useEffect(() => {
@@ -563,6 +566,8 @@ export default function JewelleryAIPage() {
         setUseCompanyLogo(settings.useCompanyLogo ?? true);
         setUseCompanyName(settings.useCompanyName ?? true);
         setUseCompanyWebsite(settings.useCompanyWebsite ?? true);
+        setUseCompanyPhone(settings.useCompanyPhone ?? true);
+        setUseCompanyAddress(settings.useCompanyAddress ?? false);
       }
 
       if (savedCompany) {
@@ -571,6 +576,7 @@ export default function JewelleryAIPage() {
         setCompanyName(company.companyName || "");
         setCompanyWebsite(company.companyWebsite || "");
         setCompanyPhone(company.companyPhone || "");
+        setCompanyAddress(company.companyAddress || "");
       }
     } catch (error) {
       console.warn("Jewellery saved settings could not be loaded.", error);
@@ -604,6 +610,8 @@ export default function JewelleryAIPage() {
           useCompanyLogo,
           useCompanyName,
           useCompanyWebsite,
+          useCompanyPhone,
+          useCompanyAddress,
         }),
       );
     } catch (error) {
@@ -632,6 +640,8 @@ export default function JewelleryAIPage() {
     useCompanyLogo,
     useCompanyName,
     useCompanyWebsite,
+    useCompanyPhone,
+    useCompanyAddress,
   ]);
 
   useEffect(() => {
@@ -643,12 +653,13 @@ export default function JewelleryAIPage() {
           companyName,
           companyWebsite,
           companyPhone,
+          companyAddress,
         }),
       );
     } catch (error) {
       console.warn("Jewellery company details could not be saved.", error);
     }
-  }, [companyLogoPreview, companyName, companyWebsite, companyPhone]);
+  }, [companyLogoPreview, companyName, companyWebsite, companyPhone, companyAddress]);
   
   
 
@@ -689,7 +700,8 @@ export default function JewelleryAIPage() {
       (useCompanyLogo && companyLogoPreview ? 1 : 0) +
       (useCompanyName && companyName.trim() ? 1 : 0) +
       (useCompanyWebsite && companyWebsite.trim() ? 1 : 0) +
-      (companyPhone.trim() ? 1 : 0);
+      (useCompanyPhone && companyPhone.trim() ? 1 : 0) +
+      (useCompanyAddress && companyAddress.trim() ? 1 : 0);
 
     const perImageCredits = base + brandingCredits;
     return generationMode === "single" ? perImageCredits : Math.max(uploads.length, 1) * perImageCredits;
@@ -704,7 +716,10 @@ export default function JewelleryAIPage() {
     companyName,
     useCompanyWebsite,
     companyWebsite,
+    useCompanyPhone,
     companyPhone,
+    useCompanyAddress,
+    companyAddress,
   ]);
 
   const previewImage = uploads[0]?.preview || null;
@@ -1152,7 +1167,8 @@ const WEBHOOK_URL =
         logo_url: logoUrl,
         company_name: useCompanyName ? companyName.trim() : "",
         website: useCompanyWebsite ? companyWebsite.trim() : "",
-        phone: companyPhone.trim(),
+        phone: useCompanyPhone ? companyPhone.trim() : "",
+        address: useCompanyAddress ? companyAddress.trim() : "",
       },
     };
 
@@ -1508,10 +1524,16 @@ if (!response.ok) {
                   </div>
                 )}
 
+                {/* Company / Brand details card */}
                 <div className="mt-4 rounded-[1.35rem] border border-black/10 bg-white/80 p-4 dark:border-white/10 dark:bg-white/[0.045]">
                   <div className="mb-3 flex items-center justify-between gap-3">
-                    <p className="text-xs font-black uppercase tracking-widest text-cyan-600">Company Details</p>
-                    <button type="button" onClick={() => logoInputRef.current?.click()} className="rounded-full bg-cyan-50 px-3 py-1.5 text-[11px] font-black text-cyan-700 dark:bg-white/10 dark:text-cyan-200">
+                    <p className="text-xs font-black uppercase tracking-widest text-cyan-600">Company / Branding</p>
+                    <button
+                      type="button"
+                      onClick={() => logoInputRef.current?.click()}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-cyan-50 px-3 py-1.5 text-[11px] font-black text-cyan-700 dark:bg-white/10 dark:text-cyan-200"
+                    >
+                      <Upload className="h-3.5 w-3.5" />
                       Upload Logo
                     </button>
                   </div>
@@ -1519,21 +1541,74 @@ if (!response.ok) {
 
                   <div className="mb-3 flex items-center gap-3 rounded-2xl border border-black/10 bg-white/70 p-3 dark:border-white/10 dark:bg-white/[0.04]">
                     <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-cyan-50 text-cyan-700 dark:bg-white/10 dark:text-cyan-200">
-                      {companyLogoPreview ? <img src={companyLogoPreview} alt="Company logo" className="h-full w-full object-cover" /> : <Crown className="h-6 w-6" />}
+                      {companyLogoPreview ? (
+                        <img src={companyLogoPreview} alt="Company logo" className="h-full w-full object-cover" />
+                      ) : (
+                        <Crown className="h-6 w-6" />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold">Branding on output</p>
-                      <p className="text-[11px] text-slate-500 dark:text-white/45">Logo, name, website optional</p>
+                      <p className="text-xs font-bold">Logo on output</p>
+                      <p className="text-[11px] text-slate-500 dark:text-white/45">
+                        {companyLogoPreview ? "Uploaded — appears top-right of generated image" : "Optional. Will overlay top-right corner."}
+                      </p>
                     </div>
+                    {companyLogoPreview && (
+                      <button
+                        type="button"
+                        onClick={() => { setCompanyLogoPreview(""); setUseCompanyLogo(false); }}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-rose-500 hover:bg-rose-500/10"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
 
                   <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-white/60"><input type="checkbox" checked={useCompanyLogo} onChange={(e) => setUseCompanyLogo(e.target.checked)} /> Use logo</label>
-                    <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="Company name" className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:border-cyan-400 dark:border-white/10 dark:bg-black/20" />
-                    <label className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-white/60"><input type="checkbox" checked={useCompanyName} onChange={(e) => setUseCompanyName(e.target.checked)} /> Show company name</label>
-                    <input value={companyWebsite} onChange={(e) => setCompanyWebsite(e.target.value)} placeholder="Website" className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:border-cyan-400 dark:border-white/10 dark:bg-black/20" />
-                    <label className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-white/60"><input type="checkbox" checked={useCompanyWebsite} onChange={(e) => setUseCompanyWebsite(e.target.checked)} /> Show website</label>
-                    <input value={companyPhone} onChange={(e) => setCompanyPhone(e.target.value)} placeholder="Phone / WhatsApp optional" className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:border-cyan-400 dark:border-white/10 dark:bg-black/20" />
+                    <label className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-white/60">
+                      <input type="checkbox" checked={useCompanyLogo} onChange={(e) => setUseCompanyLogo(e.target.checked)} />
+                      Use logo on output
+                    </label>
+                    <input
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      placeholder="Company name"
+                      className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:border-cyan-400 dark:border-white/10 dark:bg-black/20 dark:text-white"
+                    />
+                    <label className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-white/60">
+                      <input type="checkbox" checked={useCompanyName} onChange={(e) => setUseCompanyName(e.target.checked)} />
+                      Show company name
+                    </label>
+                    <input
+                      value={companyWebsite}
+                      onChange={(e) => setCompanyWebsite(e.target.value)}
+                      placeholder="Website"
+                      className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:border-cyan-400 dark:border-white/10 dark:bg-black/20 dark:text-white"
+                    />
+                    <label className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-white/60">
+                      <input type="checkbox" checked={useCompanyWebsite} onChange={(e) => setUseCompanyWebsite(e.target.checked)} />
+                      Show website
+                    </label>
+                    <input
+                      value={companyPhone}
+                      onChange={(e) => setCompanyPhone(e.target.value)}
+                      placeholder="Phone / WhatsApp"
+                      className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:border-cyan-400 dark:border-white/10 dark:bg-black/20 dark:text-white"
+                    />
+                    <label className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-white/60">
+                      <input type="checkbox" checked={useCompanyPhone} onChange={(e) => setUseCompanyPhone(e.target.checked)} />
+                      Show phone
+                    </label>
+                    <input
+                      value={companyAddress}
+                      onChange={(e) => setCompanyAddress(e.target.value)}
+                      placeholder="Address (optional)"
+                      className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:border-cyan-400 dark:border-white/10 dark:bg-black/20 dark:text-white"
+                    />
+                    <label className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-white/60">
+                      <input type="checkbox" checked={useCompanyAddress} onChange={(e) => setUseCompanyAddress(e.target.checked)} />
+                      Show address
+                    </label>
                   </div>
                 </div>
 

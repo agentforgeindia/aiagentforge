@@ -6,6 +6,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
+import {
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  Sparkles,
+  Wallet,
+  X as XIcon,
+} from "lucide-react";
 
 
 declare global {
@@ -257,28 +265,103 @@ router.push("/payment-success");
         }}
       />
 
-      <div className="relative z-10">
-        <section className="mx-auto max-w-7xl px-5 py-14 text-center">
-          <h2 className="mx-auto max-w-5xl text-5xl font-black leading-tight md:text-7xl">
-            One Pricing for
-            <span className="block bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent">
-              Every AI Visual Agent
-            </span>
-          </h2>
+      {/* Floating Doodles — pricing themed */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        {/* Top band */}
+        <div className="float-slow absolute left-[6%] top-[6%] text-4xl opacity-65 sm:text-5xl">💎</div>
+        <div className="float-medium absolute right-[8%] top-[10%] text-4xl opacity-65 sm:text-5xl">💰</div>
+        <div className="float-fast absolute left-[22%] top-[14%] text-2xl opacity-55 sm:text-3xl">✨</div>
+        <div className="float-medium absolute right-[24%] top-[6%] text-3xl opacity-60 sm:text-4xl">🪙</div>
+        <div className="float-slow absolute left-[42%] top-[3%] text-2xl opacity-50 sm:text-3xl">⭐</div>
+        <div className="float-fast absolute right-[42%] top-[18%] text-3xl opacity-60 sm:text-4xl">🚀</div>
 
-          <p className={`mx-auto mt-6 max-w-3xl text-lg leading-8 ${muted}`}>
-            Textile mockups, jewellery visuals, and product photography — one simple credit-based pricing system.
-            Choose your monthly image volume and start creating premium business visuals.
+        {/* Side accents */}
+        <div className="float-medium absolute left-[3%] top-[28%] text-3xl opacity-55 sm:text-4xl">💸</div>
+        <div className="float-slow absolute right-[4%] top-[32%] text-3xl opacity-55 sm:text-4xl">🎁</div>
+        <div className="float-fast absolute left-[8%] top-[44%] text-3xl opacity-55 sm:text-4xl">⚡</div>
+        <div className="float-medium absolute right-[6%] top-[46%] text-3xl opacity-55 sm:text-4xl">🏆</div>
+
+        {/* Middle band */}
+        <div className="float-slow absolute left-[35%] top-[52%] text-2xl opacity-50 sm:text-3xl">📦</div>
+        <div className="float-medium absolute right-[30%] top-[58%] text-2xl opacity-55 sm:text-3xl">🛒</div>
+        <div className="float-fast absolute left-[14%] top-[62%] text-3xl opacity-55 sm:text-4xl">📈</div>
+        <div className="float-slow absolute right-[14%] top-[66%] text-3xl opacity-55 sm:text-4xl">🔥</div>
+
+        {/* Lower band */}
+        <div className="float-fast absolute left-[20%] top-[78%] text-2xl opacity-55 sm:text-3xl">✦</div>
+        <div className="float-medium absolute right-[18%] top-[82%] text-3xl opacity-60 sm:text-4xl">💎</div>
+        <div className="float-slow absolute left-[48%] top-[88%] text-2xl opacity-50 sm:text-3xl">💫</div>
+      </div>
+
+      <div className="relative z-10">
+        <section className="relative mx-auto max-w-6xl px-4 py-12 text-center sm:px-5 sm:py-20 md:py-24">
+          {/* Glow aura */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-1/2 top-20 -z-10 h-[420px] w-[720px] max-w-[95vw] -translate-x-1/2 rounded-full"
+            style={{
+              background:
+                "radial-gradient(closest-side, rgba(34,211,238,0.28), rgba(59,130,246,0.12) 55%, transparent 75%)",
+              filter: "blur(8px)",
+            }}
+          />
+
+          {/* Eyebrow */}
+          <div className="mx-auto mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-300/60 bg-white/80 px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.32em] text-cyan-700 shadow-md shadow-cyan-300/30 backdrop-blur sm:text-[11px] dark:border-cyan-400/30 dark:bg-white/10 dark:text-cyan-200">
+            <Sparkles className="h-3.5 w-3.5 animate-pulse text-cyan-500" />
+            Transparent Pricing · No Hidden Fees
+            <Sparkles className="h-3.5 w-3.5 animate-pulse text-blue-500" />
+          </div>
+
+          {/* Heading */}
+          <h1 className="mx-auto max-w-4xl text-[28px] font-black leading-[1.05] tracking-tight sm:text-5xl md:text-6xl">
+            <span className="block">One Simple Pricing</span>
+            <span className="af-shimmer-text mt-3 block text-[22px] sm:text-4xl md:text-5xl">
+              for Every AI Visual Agent
+            </span>
+          </h1>
+
+          <p className={`mx-auto mt-5 max-w-2xl text-sm leading-7 sm:mt-6 sm:text-base sm:leading-8 ${muted}`}>
+            Textile mockups, jewellery shoots, product photography — ek hi
+            credit system mein. Premium visuals, instant delivery, zero studio
+            kharcha.
           </p>
 
-          <div className={`mx-auto mt-8 flex max-w-4xl flex-col items-center justify-center gap-4 rounded-[2rem] border px-5 py-4 backdrop-blur-xl sm:flex-row ${card}`}>
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-cyan-100 bg-white shadow-inner">
-              <img src="/logo-new.jpg" alt="AgentForge Logo" className="h-full w-full object-cover" />
+          {/* Live info banner */}
+          <p className="mt-6 inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-400/10 px-3.5 py-1.5 text-[11px] font-semibold text-cyan-700 sm:text-xs dark:text-cyan-200">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500" />
+            </span>
+            Credits never expire · Top-up anytime · Cancel anytime
+          </p>
+
+          {/* Trust strip — savings focused */}
+          <div className={`mx-auto mt-8 grid max-w-2xl grid-cols-3 gap-2 rounded-2xl border px-3 py-3 text-center backdrop-blur sm:mt-10 sm:gap-4 sm:px-4 ${
+            darkMode ? "border-white/10 bg-white/[0.05]" : "border-black/10 bg-white/70"
+          }`}>
+            <div>
+              <p className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-lg font-black text-transparent sm:text-2xl">
+                Up to 95%
+              </p>
+              <p className={`text-[10px] font-bold uppercase tracking-wider sm:text-xs ${muted}`}>
+                Cost saved vs shoot
+              </p>
             </div>
-            <div className="text-center sm:text-left">
-              <p className="text-lg font-black">AgentForge AI</p>
-              <p className={`text-sm leading-6 ${muted}`}>
-                Built for Indian sellers, agencies, textile wholesalers and factories — upload design, generate premium visuals, share with clients.
+            <div className={`border-x ${darkMode ? "border-white/10" : "border-black/10"}`}>
+              <p className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-lg font-black text-transparent sm:text-2xl">
+                15 Credits
+              </p>
+              <p className={`text-[10px] font-bold uppercase tracking-wider sm:text-xs ${muted}`}>
+                Per premium visual
+              </p>
+            </div>
+            <div>
+              <p className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-lg font-black text-transparent sm:text-2xl">
+                ~30 sec
+              </p>
+              <p className={`text-[10px] font-bold uppercase tracking-wider sm:text-xs ${muted}`}>
+                Per generation
               </p>
             </div>
           </div>
@@ -297,12 +380,29 @@ router.push("/payment-success");
               </p>
               <Link
                 href="/login?redirect=/pricing"
-                className="mt-5 inline-flex rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-7 py-3 font-black text-white shadow-xl shadow-cyan-500/25"
+                className="mt-5 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-7 py-3 font-black text-white shadow-xl shadow-cyan-500/25"
               >
                 Login to Start
+                <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
           )}
+
+          {/* Inline keyframes */}
+          <style>{`
+            @keyframes afShimmerText {
+              0%, 100% { background-position: 0% 50%; }
+              50%      { background-position: 100% 50%; }
+            }
+            .af-shimmer-text {
+              background-image: linear-gradient(90deg, #22d3ee, #06b6d4, #3b82f6, #6366f1, #3b82f6, #22d3ee);
+              background-size: 240% 240%;
+              -webkit-background-clip: text;
+              background-clip: text;
+              color: transparent;
+              animation: afShimmerText 6s ease-in-out infinite;
+            }
+          `}</style>
         </section>
 
         <section className="mx-auto max-w-7xl px-5 pb-16">
@@ -372,6 +472,177 @@ router.push("/payment-success");
                 >
                   {loadingPlan === plan.name ? "Starting Payment..." : isLoggedIn ? `Choose ${plan.name}` : "Login to Choose"}
                 </button>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* AI vs Traditional Shoot — Cost Comparison */}
+        <section className="mx-auto max-w-7xl px-5 pb-12 sm:pb-16">
+          <div className="mb-8 text-center sm:mb-10">
+            <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-600">
+              The Math
+            </p>
+            <h3 className="mt-2 text-3xl font-black leading-tight sm:text-4xl md:text-5xl">
+              <span className="bg-gradient-to-r from-cyan-400 via-cyan-500 to-blue-600 bg-clip-text text-transparent">
+                Why AgentForge costs less than one photoshoot
+              </span>
+            </h3>
+            <p className={`mx-auto mt-3 max-w-2xl text-sm leading-7 sm:text-base ${muted}`}>
+              Ek traditional product shoot mein hi ₹15,000 – ₹50,000 lag jaate hain.
+              AgentForge mein utne paisey mein hazaaron visuals banao — bina kisi studio, model ya wait ke.
+            </p>
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-2">
+            {/* Traditional */}
+            <div className={`relative overflow-hidden rounded-[2rem] border p-6 backdrop-blur-xl sm:p-7 ${card}`}>
+              <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-rose-400/20 blur-3xl" />
+              <div className="relative">
+                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-rose-500">
+                  Traditional Shoot
+                </p>
+                <div className="mt-3 flex items-end gap-2">
+                  <p className="text-3xl font-black tracking-tight sm:text-4xl">₹15,000</p>
+                  <p className={`pb-1.5 text-sm ${muted}`}>– ₹50,000+ per shoot</p>
+                </div>
+                <p className={`mt-1 text-xs ${muted}`}>Per single product / collection</p>
+
+                <ul className={`mt-5 space-y-2.5 text-sm leading-6 ${muted}`}>
+                  {[
+                    "Studio rental & lighting setup",
+                    "Photographer + assistant fee",
+                    "Model + makeup + stylist",
+                    "Props, location, transport",
+                    "3 – 7 days waiting time",
+                    "Limited retakes / re-shoots",
+                    "Post-production editing extra",
+                  ].map((line) => (
+                    <li key={line} className="flex items-start gap-2.5">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-500/15 text-rose-500">
+                        <XIcon className="h-3 w-3" />
+                      </span>
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* AgentForge */}
+            <div className="relative overflow-hidden rounded-[2rem] border-2 border-cyan-400 bg-gradient-to-br from-cyan-50 via-white to-blue-50 p-6 shadow-2xl shadow-cyan-500/20 sm:p-7 dark:from-white/[0.05] dark:via-white/[0.04] dark:to-white/[0.03]">
+              <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-cyan-400/30 blur-3xl" />
+              <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-white shadow-lg shadow-cyan-500/30">
+                <Sparkles className="h-3 w-3" />
+                Best Value
+              </span>
+              <div className="relative">
+                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-cyan-600">
+                  AgentForge AI
+                </p>
+                <div className="mt-3 flex items-end gap-2">
+                  <p className="text-3xl font-black tracking-tight sm:text-4xl">15 Credits</p>
+                  <p className={`pb-1.5 text-sm ${muted}`}>per premium visual</p>
+                </div>
+                <p className={`mt-1 text-xs ${muted}`}>15 credits = 1 standard HD visual</p>
+
+                <ul className="mt-5 space-y-2.5 text-sm leading-6">
+                  {[
+                    "Zero studio, zero setup",
+                    "Built-in AI models & styles",
+                    "No props, no MUA, no location",
+                    "Output ready in ~30 seconds",
+                    "Unlimited regeneration & variations",
+                    "Article code & branding included",
+                    "Catalogue-ready 1080×1080 HD",
+                  ].map((line) => (
+                    <li key={line} className="flex items-start gap-2.5">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-cyan-600">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                      </span>
+                      <span className={darkMode ? "text-white/85" : "text-black/80"}>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Savings callout */}
+          <div className={`relative mt-6 overflow-hidden rounded-[2rem] border p-6 text-center backdrop-blur-xl sm:p-8 ${card}`}>
+            <div className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-cyan-400/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-12 -right-12 h-44 w-44 rounded-full bg-blue-500/20 blur-3xl" />
+            <div className="relative">
+              <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-600">
+                Real example
+              </p>
+              <h4 className="mt-2 text-2xl font-black sm:text-3xl">
+                <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">
+                  1 month traditional cost
+                </span>{" "}
+                ={" "}
+                <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">
+                  1 year+ AgentForge
+                </span>
+              </h4>
+              <p className={`mx-auto mt-3 max-w-3xl text-sm leading-7 sm:text-base ${muted}`}>
+                Agar aap mahine mein sirf 2 product shoots karte ho (≈₹40,000), us paise mein
+                AgentForge ki <span className="font-black text-cyan-600">Empire plan</span>{" "}
+                aaegi — yaani <span className="font-black">3,000+ AI visuals</span> har mahine,
+                aur saath mein bulk catalogue workflow.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* What you actually save on */}
+        <section className="mx-auto max-w-7xl px-5 pb-12 sm:pb-16">
+          <div className="mb-8 text-center sm:mb-10">
+            <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-600">
+              Where the savings come from
+            </p>
+            <h3 className="mt-2 text-2xl font-black leading-tight sm:text-3xl md:text-4xl">
+              <span className="bg-gradient-to-r from-cyan-400 via-cyan-500 to-blue-600 bg-clip-text text-transparent">
+                Sab kharcha skip — sirf result rakho
+              </span>
+            </h3>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                Icon: Wallet,
+                title: "Studio & Equipment",
+                desc: "No rental, lights, backdrops, or camera gear bills.",
+              },
+              {
+                Icon: Sparkles,
+                title: "Models & MUA",
+                desc: "AI ke andar built-in model looks aur poses available.",
+              },
+              {
+                Icon: Clock,
+                title: "Time & Sampling",
+                desc: "7-din ka wait gone — 30 second mein result.",
+              },
+              {
+                Icon: CheckCircle2,
+                title: "Editing & Retakes",
+                desc: "Unlimited regenerate — har shot tumhare mann ka.",
+              },
+            ].map(({ Icon, title, desc }) => (
+              <div
+                key={title}
+                className={`group relative overflow-hidden rounded-[1.5rem] border p-5 backdrop-blur-xl transition hover:-translate-y-1 ${card}`}
+              >
+                <span className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-cyan-400/15 blur-2xl transition group-hover:scale-125" />
+                <div className="relative">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/30">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <h4 className="text-base font-black sm:text-lg">{title}</h4>
+                  <p className={`mt-2 text-sm leading-6 ${muted}`}>{desc}</p>
+                </div>
               </div>
             ))}
           </div>

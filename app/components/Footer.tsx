@@ -53,7 +53,7 @@ export default function Footer() {
               {/* SOCIAL ICONS */}
               <div className="mt-5 flex items-center gap-4">
                 <a
-                  href="https://instagram.com/agentforgeindia"
+                  href="https://www.instagram.com/agentforgeindia/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="transition hover:scale-110 hover:text-cyan-400"
@@ -62,7 +62,7 @@ export default function Footer() {
                 </a>
 
                 <a
-                  href="https://facebook.com/Agentforgeindia"
+                  href="https://www.facebook.com/Agentforgeindia"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="transition hover:scale-110 hover:text-cyan-400"
@@ -71,7 +71,7 @@ export default function Footer() {
                 </a>
 
                 <a
-                  href="https://youtube.com/agentforgeindia"
+                  href="https://www.youtube.com/@agentforgeindia"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="transition hover:scale-110 hover:text-cyan-400"
@@ -89,7 +89,7 @@ export default function Footer() {
                 </a>
 
                 <a
-                  href="https://linkedin.com/agentforgeindia"
+                  href="https://www.linkedin.com/in/agentforgeindia/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="transition hover:scale-110 hover:text-cyan-400"
@@ -98,7 +98,7 @@ export default function Footer() {
                 </a>
 
                 <a
-                  href="https://pinterest.com/agentforgeindia"
+                  href="https://in.pinterest.com/agentforgeindia/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="transition hover:scale-110 hover:text-cyan-400"
@@ -165,6 +165,13 @@ export default function Footer() {
                   className="block transition-colors hover:text-cyan-500"
                 >
                   Settings
+                </Link>
+
+                <Link
+                  href="/support"
+                  className="block transition-colors hover:text-cyan-500"
+                >
+                  Support
                 </Link>
               </div>
             </div>
