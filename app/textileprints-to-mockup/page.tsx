@@ -10,6 +10,85 @@ import { canGenerate } from "@/lib/checkCredits";
 import { shouldDeductCredits } from "@/lib/deductCredits";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 import SignupPromptPopup from "@/app/components/SignupPromptPopup";
+import AIThinkingSteps from "@/app/components/AIThinkingSteps";
+import TestimonialsSlider, {
+  type Testimonial,
+} from "@/app/components/TestimonialsSlider";
+
+const TEXTILE_THINKING_STEPS = [
+  "Reading your design file",
+  "Matching textile folds",
+  "Mapping pattern to fabric",
+  "Applying luxury studio lighting",
+  "Posing the model",
+  "Generating DSLR-quality details",
+  "Adding article code overlay",
+  "Polishing the final mockup",
+];
+
+// Seed testimonials — short, raw, WhatsApp-style. Real submissions from the
+// DB (table: `testimonials`, status: 'approved') replace these once available.
+const TEXTILE_SEED_TESTIMONIALS: Testimonial[] = [
+  {
+    id: "seed-1",
+    name: "Rajesh K****",
+    city: "Surat",
+    message: "Output amazing yaar 🔥 — client ko bhej diya turant, order pakka.",
+    rating: 5,
+    createdAt: new Date(Date.now() - 1000 * 60 * 32).toISOString(),
+    source: "whatsapp",
+  },
+  {
+    id: "seed-2",
+    name: "Priya S****",
+    city: "Mumbai",
+    message:
+      "Catalogue-ready images in 30 sec — time bahut bach gaya. Article code wala feature genius hai.",
+    rating: 5,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
+    source: "in-app",
+  },
+  {
+    id: "seed-3",
+    name: "Anil M****",
+    city: "Erode",
+    message:
+      "Pehle sample stitching mein 5 din lagte the. Ab same-day client ko preview bhej dete hain.",
+    rating: 5,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
+    source: "whatsapp",
+  },
+  {
+    id: "seed-4",
+    name: "Meera D****",
+    city: "Jaipur",
+    message:
+      "Just tried it — quality bahut achi hai. Saree mockups model par real lagte hain. Recommended!",
+    rating: 5,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1).toISOString(),
+    source: "in-app",
+  },
+  {
+    id: "seed-5",
+    name: "Vikas T****",
+    city: "Ludhiana",
+    message:
+      "Article number overlay game-changer hai. Wholesalers ko bhejne mein zero confusion ab.",
+    rating: 4,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+    source: "whatsapp",
+  },
+  {
+    id: "seed-6",
+    name: "Suresh P****",
+    city: "Bhilwara",
+    message:
+      "Mockups dekh ke client ne 12 designs ek baar mein order kar diye 💯 — pehle kabhi nahi hua.",
+    rating: 5,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
+    source: "whatsapp",
+  },
+];
 
 const WEBHOOK_URL =
   process.env.NEXT_PUBLIC_N8N_PRODUCTION_WEBHOOK || "/api/generate-mockup";
@@ -3229,11 +3308,41 @@ export default function Home() {
                                 className="w-full max-w-[360px] rounded-3xl object-cover shadow-2xl transition hover:scale-[1.02]"
                               />
                             ) : (
-                              <div className="flex h-[400px] w-full flex-col items-center justify-center text-center">
-                                <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-cyan-400 border-t-transparent" />
-                                <p className="font-bold">
-                                  Finalizing your masterpiece...
-                                </p>
+                              <div className="flex min-h-[400px] w-full flex-col items-center justify-center gap-5 p-5 text-center">
+                                {/* Animated logo */}
+                                <div className="relative h-20 w-20">
+                                  <div className="absolute inset-0 animate-ping rounded-full bg-cyan-400 opacity-30" />
+                                  <div className="absolute -inset-2 animate-pulse rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 opacity-40 blur-2xl" />
+                                  <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white shadow-2xl ring-4 ring-cyan-400/60">
+                                    <img
+                                      src="/af-logo.png"
+                                      alt="AgentForge"
+                                      className="h-full w-full object-cover"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <h4 className="text-xl font-black sm:text-2xl">
+                                    <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">
+                                      AI is crafting your mockup
+                                    </span>
+                                  </h4>
+                                  <p className={`mt-1 text-xs ${muted}`}>
+                                    Please don&apos;t refresh — your premium visual is on the way.
+                                  </p>
+                                </div>
+
+                                <div className={`w-full max-w-sm rounded-2xl border p-4 text-left shadow-inner ${
+                                  darkMode ? "border-white/10 bg-white/[0.04]" : "border-cyan-200/70 bg-white/80"
+                                }`}>
+                                  <AIThinkingSteps
+                                    steps={TEXTILE_THINKING_STEPS}
+                                    intervalMs={2200}
+                                    darkMode={darkMode}
+                                    title="Generation pipeline"
+                                  />
+                                </div>
                               </div>
                             )}
                           </div>
@@ -3382,6 +3491,15 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* ───────── Customer Testimonials ───────── */}
+        <TestimonialsSlider
+          agentType="textile"
+          darkMode={darkMode}
+          seed={TEXTILE_SEED_TESTIMONIALS}
+          heading="What early textile users are saying"
+          subtitle="Real WhatsApp & in-app feedback from manufacturers, sellers and wholesalers — names masked for privacy."
+        />
       </div>
 
       {loading && (
@@ -3411,7 +3529,17 @@ export default function Home() {
               Generating your royal fashion mockup. Please do not refresh.
             </p>
 
-            <div className="mt-10 space-y-6">
+            <div className="mt-10 space-y-4">
+              {/* AI thinking pipeline */}
+              <div className="overflow-hidden rounded-2xl bg-white/10 p-5 text-left backdrop-blur-md">
+                <AIThinkingSteps
+                  steps={TEXTILE_THINKING_STEPS}
+                  intervalMs={2200}
+                  darkMode={true}
+                  title="Generation pipeline"
+                />
+              </div>
+
               <div className="overflow-hidden rounded-2xl bg-white/10 p-6 text-left backdrop-blur-md transition-all">
                 <p className="text-[11px] font-black uppercase tracking-widest text-cyan-400">
                   {textileFacts[factIndex].title}

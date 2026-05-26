@@ -149,6 +149,7 @@ type SocialPlatform = {
     | { kind: "pinterest"; user: string; profileUrl: string }
     | { kind: "instagram"; permalink: string }
     | { kind: "youtube"; uploadsPlaylistId: string }
+    | { kind: "linkedin"; vanity: string; profileUrl: string }
     | { kind: "none"; tagline: string };
 };
 
@@ -227,8 +228,9 @@ const socialPlatforms: SocialPlatform[] = [
     iconColor: "text-white",
     cta: "Connect on LinkedIn",
     embed: {
-      kind: "none",
-      tagline: "Updates, launches & behind-the-scenes from the AgentForge team.",
+      kind: "linkedin",
+      vanity: "agentforgeindia",
+      profileUrl: "https://in.linkedin.com/in/agentforgeindia?trk=profile-badge",
     },
   },
 ];
@@ -292,6 +294,27 @@ export default function SupportPage() {
     s.src = "https://www.instagram.com/embed.js";
     s.async = true;
     s.onload = process;
+    document.body.appendChild(s);
+  }, []);
+
+  // Load LinkedIn Profile Badge widget
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const scriptId = "linkedin-profile-badge";
+    const render = () => {
+      (window as any).IN?.parse?.();
+      (window as any).LIRenderAll?.();
+    };
+    if (document.getElementById(scriptId)) {
+      window.setTimeout(render, 60);
+      return;
+    }
+    const s = document.createElement("script");
+    s.id = scriptId;
+    s.src = "https://platform.linkedin.com/badges/js/profile.js";
+    s.async = true;
+    s.defer = true;
+    s.onload = () => window.setTimeout(render, 60);
     document.body.appendChild(s);
   }, []);
 
@@ -571,8 +594,75 @@ export default function SupportPage() {
               </p>
             </div>
 
-            <div className="grid gap-5 md:grid-cols-3">
-              {tutorials.map((item, index) => (
+            {/* Featured video — highlighted at top */}
+            {tutorials[0] && (
+              <div className="relative mb-5 overflow-hidden rounded-[1.75rem] border-2 border-cyan-400 shadow-2xl shadow-cyan-500/25">
+                {/* Glow halo */}
+                <div className="pointer-events-none absolute -inset-1 -z-10 rounded-[1.75rem] bg-gradient-to-r from-cyan-400/40 via-blue-500/40 to-purple-500/40 blur-2xl" />
+
+                <div className="grid items-stretch lg:grid-cols-[1.6fr_1fr]">
+                  {/* Big video */}
+                  <div className="relative aspect-video w-full overflow-hidden bg-black">
+                    <iframe
+                      src={`https://www.youtube.com/embed/${tutorials[0].youtubeId}?rel=0&modestbranding=1`}
+                      title={tutorials[0].title}
+                      className="h-full w-full"
+                      loading="lazy"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                    {/* Featured ribbon */}
+                    <span className="absolute left-3 top-3 inline-flex animate-pulse items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-white shadow-lg shadow-amber-500/40">
+                      <Sparkles className="h-3 w-3" />
+                      Start here
+                    </span>
+                  </div>
+
+                  {/* Side meta */}
+                  <div className={`flex flex-col justify-center gap-4 p-6 sm:p-8 ${
+                    darkMode ? "bg-gradient-to-br from-cyan-500/10 via-white/[0.04] to-blue-500/10" : "bg-gradient-to-br from-cyan-50 via-white to-blue-50"
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white shadow-md shadow-cyan-500/30">
+                        <PlayCircle className="h-3 w-3" />
+                        Featured · Video 1
+                      </span>
+                    </div>
+                    <h4 className="text-xl font-black leading-tight sm:text-2xl md:text-3xl">
+                      <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">
+                        {tutorials[0].title}
+                      </span>
+                    </h4>
+                    <p className={`text-sm leading-6 sm:text-[15px] sm:leading-7 ${muted}`}>
+                      {tutorials[0].desc}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${
+                        darkMode ? "border-white/10 bg-white/[0.04] text-white/70" : "border-black/10 bg-white text-black/65"
+                      }`}>
+                        <BadgeCheck className="h-3 w-3 text-cyan-500" />
+                        Recommended first
+                      </span>
+                      <a
+                        href={`https://youtu.be/${tutorials[0].youtubeId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${
+                          darkMode ? "bg-white/10 text-white/70" : "bg-black/[0.04] text-black/65"
+                        }`}
+                      >
+                        <PlayCircle className="h-3 w-3" />
+                        Watch on YouTube
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* The other two videos — 2-column grid below */}
+            <div className="grid gap-5 md:grid-cols-2">
+              {tutorials.slice(1).map((item, index) => (
                 <div key={item.title} className={`group overflow-hidden rounded-3xl border transition hover:-translate-y-1 ${softCard}`}>
                   <div className="relative aspect-video w-full overflow-hidden bg-black">
                     <iframe
@@ -588,7 +678,7 @@ export default function SupportPage() {
                   <div className="p-5">
                     <p className="inline-flex items-center gap-1.5 rounded-full bg-cyan-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-700 dark:bg-white/10 dark:text-cyan-200">
                       <PlayCircle className="h-3 w-3" />
-                      Video {index + 1}
+                      Video {index + 2}
                     </p>
                     <h4 className="mt-2 text-lg font-black">{item.title}</h4>
                     <p className={`mt-2 text-sm leading-6 ${muted}`}>{item.desc}</p>
@@ -674,7 +764,7 @@ export default function SupportPage() {
                     </span>
                     <div>
                       <p className="text-sm font-black text-emerald-700 dark:text-emerald-200">WhatsApp Chat</p>
-                      <p className="text-[11px] font-semibold text-emerald-700/70 dark:text-emerald-200/70">+91 90416 35032 · Fastest reply</p>
+                      <p className="text-[11px] font-semibold text-emerald-700/70 dark:text-emerald-200/70">Chat instantly · Fastest reply</p>
                     </div>
                   </div>
                   <ChevronRight className="h-5 w-5 text-emerald-700 transition group-hover:translate-x-1 dark:text-emerald-200" />
@@ -696,21 +786,36 @@ export default function SupportPage() {
                   <ChevronRight className="h-5 w-5 text-cyan-700 transition group-hover:translate-x-1 dark:text-cyan-200" />
                 </a>
 
-                <a
-                  href="tel:+919041635032"
-                  className="group flex items-center justify-between gap-3 rounded-2xl border border-violet-300/50 bg-violet-50 px-5 py-4 text-left transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/20 dark:border-violet-400/30 dark:bg-violet-500/10"
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      window.dispatchEvent(new Event("openAgentForgeAI"));
+                    }
+                  }}
+                  className="group relative flex w-full items-center justify-between gap-3 overflow-hidden rounded-2xl border border-violet-300/50 bg-violet-50 px-5 py-4 text-left transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/20 dark:border-violet-400/30 dark:bg-violet-500/10"
                 >
+                  {/* Live dot in corner */}
+                  <span className="absolute right-3 top-3 flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                  </span>
+
                   <div className="flex items-center gap-3">
                     <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-400 to-fuchsia-500 text-white shadow-md shadow-violet-500/40">
-                      <Phone className="h-5 w-5" />
+                      <Sparkles className="h-5 w-5" />
                     </span>
                     <div>
-                      <p className="text-sm font-black text-violet-700 dark:text-violet-200">Call Us</p>
-                      <p className="text-[11px] font-semibold text-violet-700/70 dark:text-violet-200/70">+91 90416 35032 · Mon – Sat · 10am – 7pm IST</p>
+                      <p className="text-sm font-black text-violet-700 dark:text-violet-200">
+                        24×7 AI Chat Support
+                      </p>
+                      <p className="text-[11px] font-semibold text-violet-700/70 dark:text-violet-200/70">
+                        Instant answers · always online
+                      </p>
                     </div>
                   </div>
                   <ChevronRight className="h-5 w-5 text-violet-700 transition group-hover:translate-x-1 dark:text-violet-200" />
-                </a>
+                </button>
               </div>
             </div>
           </div>
@@ -914,15 +1019,27 @@ export default function SupportPage() {
                       )}
 
                       {platform.embed.kind === "twitter" && (
-                        <div className="h-[360px] overflow-hidden">
+                        <div className={`h-[360px] overflow-y-auto overflow-x-hidden ${darkMode ? "bg-black" : "bg-white"} [scrollbar-width:thin]`}>
                           <a
                             className="twitter-timeline"
                             data-height="360"
                             data-theme={darkMode ? "dark" : "light"}
-                            data-chrome="noheader nofooter noborders transparent"
-                            href={`https://twitter.com/${platform.embed.handle}`}
+                            data-chrome="noheader nofooter transparent"
+                            data-tweet-limit="3"
+                            href={`https://twitter.com/${platform.embed.handle}?ref_src=twsrc%5Etfw`}
                           >
-                            Tweets by @{platform.embed.handle}
+                            <div className={`flex h-[360px] flex-col items-center justify-center gap-3 p-6 text-center ${darkMode ? "text-white" : "text-black"}`}>
+                              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-black text-white shadow-lg">
+                                <FaXTwitter className="h-7 w-7" />
+                              </div>
+                              <p className="text-sm font-black">Loading latest posts…</p>
+                              <p className={`text-xs ${muted}`}>
+                                @{platform.embed.handle}
+                              </p>
+                              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-black px-3 py-1.5 text-[11px] font-black text-white">
+                                View on X →
+                              </span>
+                            </div>
                           </a>
                         </div>
                       )}
@@ -978,6 +1095,36 @@ export default function SupportPage() {
                           allowFullScreen
                           className="block h-[360px] w-full border-0"
                         />
+                      )}
+
+                      {platform.embed.kind === "linkedin" && (
+                        <div className={`flex h-[360px] items-start justify-center overflow-auto p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${darkMode ? "bg-[#0a0f1c]" : "bg-white"}`}>
+                          <div
+                            className="badge-base LI-profile-badge"
+                            data-locale="en_US"
+                            data-size="medium"
+                            data-theme={darkMode ? "dark" : "light"}
+                            data-type="VERTICAL"
+                            data-vanity={platform.embed.vanity}
+                            data-version="v1"
+                          >
+                            <div className="flex h-full flex-col items-center justify-center gap-3 p-4 text-center">
+                              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0A66C2] text-white shadow-lg">
+                                <FaLinkedinIn className="h-6 w-6" />
+                              </div>
+                              <p className="text-sm font-black">{platform.displayName}</p>
+                              <p className={`text-xs ${muted}`}>Loading LinkedIn profile…</p>
+                              <a
+                                className="badge-base__link LI-simple-link mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#0A66C2] px-3 py-1.5 text-[11px] font-black text-white"
+                                href={platform.embed.profileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                View on LinkedIn →
+                              </a>
+                            </div>
+                          </div>
+                        </div>
                       )}
 
                       {platform.embed.kind === "none" && (
@@ -1041,38 +1188,7 @@ export default function SupportPage() {
         </section>
 
         {/* ───────── Still need help CTA ───────── */}
-        <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-5">
-          <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-r from-cyan-400 to-blue-600 p-8 text-center text-white shadow-2xl shadow-cyan-500/30 md:p-10">
-            <div className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full bg-white/15 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-10 -left-10 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
-
-            <div className="relative">
-              <div className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 backdrop-blur">
-                <Headphones className="h-6 w-6" />
-              </div>
-              <h3 className="text-3xl font-black md:text-4xl">Still need help?</h3>
-              <p className="mx-auto mt-3 max-w-2xl text-white/85">
-                Our team is always here for you — log in and start creating
-                premium AI visuals right away.
-              </p>
-
-              <div className="mt-7 flex flex-wrap justify-center gap-4">
-                <a
-                  href="mailto:support@agentforge.in"
-                  className="rounded-full bg-white px-8 py-4 font-black text-black transition hover:scale-105"
-                >
-                  Contact Support
-                </a>
-                <Link
-                  href="/login"
-                  className="rounded-full bg-black/20 px-8 py-4 font-black text-white transition hover:scale-105"
-                >
-                  Login
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
+        
       </div>
     </main>
   );

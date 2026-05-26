@@ -14,6 +14,7 @@ import {
   Wallet,
   X as XIcon,
 } from "lucide-react";
+import TrustBadges from "@/app/components/TrustBadges";
 
 
 declare global {
@@ -403,6 +404,15 @@ router.push("/payment-success");
               animation: afShimmerText 6s ease-in-out infinite;
             }
           `}</style>
+        </section>
+
+        {/* ───────── Trust Badges ───────── */}
+        <section className="mx-auto max-w-7xl px-5 pb-8">
+          <TrustBadges
+            variant="grid"
+            darkMode={darkMode}
+            title="Why customers trust AgentForge"
+          />
         </section>
 
         <section className="mx-auto max-w-7xl px-5 pb-16">

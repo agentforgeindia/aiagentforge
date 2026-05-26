@@ -193,15 +193,16 @@ export default function Navbar() {
         </nav>
 
         {/* Right side */}
-        <div className="flex items-center justify-between gap-2 px-3 py-3 overflow-visible">
-          {/* Credits badge — visible only when logged in */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Credits badge — visible only when logged in (sm+) */}
           {isLoggedIn && (
             <div
-              className={`hidden rounded-full px-4 py-2 text-sm font-black sm:block ${
-                darkMode ? "bg-white/10 text-white" : "bg-white text-black shadow-sm"
+              className={`hidden h-10 items-center gap-1.5 rounded-full px-3 text-[13px] font-black sm:inline-flex ${
+                darkMode ? "bg-white/10 text-white" : "border border-black/5 bg-white text-black shadow-sm"
               }`}
             >
-              🪙 {credits}
+              <span className="text-base leading-none">🪙</span>
+              <span style={{ fontVariantNumeric: "tabular-nums" }}>{credits}</span>
             </div>
           )}
 
@@ -209,7 +210,7 @@ export default function Navbar() {
           {!isLoggedIn ? (
             <Link
               href="/login"
-              className="hidden rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-cyan-500/20 transition-all duration-200 hover:shadow-cyan-500/30 hover:brightness-110 sm:inline-flex"
+              className="hidden h-10 items-center rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-5 text-sm font-black text-white shadow-lg shadow-cyan-500/20 transition-all duration-200 hover:shadow-cyan-500/30 hover:brightness-110 sm:inline-flex"
             >
               Login
             </Link>
@@ -307,18 +308,26 @@ export default function Navbar() {
             </div>
           )}
 
-          {/* Theme toggle */}
+          {/* Subtle separator between user cluster and utility cluster (sm+) */}
+          <div
+            className={`mx-1 hidden h-6 w-px sm:block ${
+              darkMode ? "bg-white/10" : "bg-black/10"
+            }`}
+            aria-hidden="true"
+          />
+
+          {/* Theme toggle — slightly tighter on mobile */}
           <button
             type="button"
             onClick={toggleTheme}
-            className={`relative flex h-10 w-[74px] items-center rounded-full p-1 transition-colors duration-300 ${
+            className={`relative flex h-10 w-[60px] items-center rounded-full p-1 transition-colors duration-300 sm:w-[68px] ${
               darkMode ? "bg-white/15" : "bg-black/10"
             }`}
             aria-label="Toggle theme"
           >
             <span
               className={`flex h-8 w-8 items-center justify-center rounded-full bg-white text-base shadow-md transition-transform duration-300 ${
-                darkMode ? "translate-x-8" : "translate-x-0"
+                darkMode ? "translate-x-5 sm:translate-x-7" : "translate-x-0"
               }`}
             >
               {darkMode ? "🌙" : "☀️"}
@@ -329,7 +338,7 @@ export default function Navbar() {
           <button
             type="button"
             onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className={`flex h-10 w-10 items-center justify-center rounded-full text-xl transition-colors lg:hidden ${
+            className={`flex h-10 w-10 items-center justify-center rounded-full text-lg transition-colors lg:hidden ${
               darkMode ? "bg-white/10 text-white" : "bg-black/10 text-black"
             }`}
             aria-label="Toggle menu"

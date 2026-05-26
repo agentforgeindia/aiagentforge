@@ -59,6 +59,13 @@ export default function AgentForgeAI() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  // Allow other components to open the chat by dispatching `openAgentForgeAI`
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener("openAgentForgeAI", handler);
+    return () => window.removeEventListener("openAgentForgeAI", handler);
+  }, []);
+
   async function sendMessage(text?: string) {
     const finalMessage = (text || input).trim();
     if (!finalMessage || loading) return;

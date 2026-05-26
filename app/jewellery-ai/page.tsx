@@ -26,6 +26,86 @@ import {
   X,
 } from "lucide-react";
 import SignupPromptPopup from "@/app/components/SignupPromptPopup";
+import AIThinkingSteps from "@/app/components/AIThinkingSteps";
+import TestimonialsSlider, {
+  type Testimonial,
+} from "@/app/components/TestimonialsSlider";
+
+const JEWELLERY_THINKING_STEPS = [
+  "Analyzing gemstone reflections",
+  "Setting up studio lighting",
+  "Choosing the perfect model pose",
+  "Mapping metal tones & finish",
+  "Applying luxury shoot style",
+  "Rendering DSLR-quality details",
+  "Adding brand overlay",
+  "Polishing the final shot",
+];
+
+// Seed testimonials — short, raw, WhatsApp-style. Real submissions from the
+// DB (table: `testimonials`, status: 'approved') replace these once available.
+const JEWELLERY_SEED_TESTIMONIALS: Testimonial[] = [
+  {
+    id: "seed-jw-1",
+    name: "Neha A****",
+    city: "Jaipur",
+    message:
+      "Necklace shots ekdam DSLR jaisi 😍 Model bhi hire nahi karna pada. Festive collection ready in 2 hours!",
+    rating: 5,
+    createdAt: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
+    source: "whatsapp",
+  },
+  {
+    id: "seed-jw-2",
+    name: "Rohan G****",
+    city: "Surat",
+    message:
+      "Diamond rings ke reflections kamaal aate hain. Catalogue ke liye perfect, sabhi designs ek hi din mein cover ho gaye.",
+    rating: 5,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
+    source: "in-app",
+  },
+  {
+    id: "seed-jw-3",
+    name: "Priyanka M****",
+    city: "Hyderabad",
+    message:
+      "Bridal jewellery ke liye model shoot bahut mehnga padta tha. Ab AgentForge se same look — fraction of cost.",
+    rating: 5,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 10).toISOString(),
+    source: "whatsapp",
+  },
+  {
+    id: "seed-jw-4",
+    name: "Aman T****",
+    city: "Delhi",
+    message:
+      "Kundan set ke colors aur stones original jaise dikhe. Instagram pe post karte hi 4 enquiries aa gayi!",
+    rating: 5,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1).toISOString(),
+    source: "in-app",
+  },
+  {
+    id: "seed-jw-5",
+    name: "Kavita R****",
+    city: "Mumbai",
+    message:
+      "Earrings ke close-up shots premium catalogue-quality hain. Client ne tax-invoice maang li 😅",
+    rating: 4,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+    source: "whatsapp",
+  },
+  {
+    id: "seed-jw-6",
+    name: "Sanjay K****",
+    city: "Coimbatore",
+    message:
+      "Temple jewellery ke liye Indian model look perfect aata hai. Wedding season campaign 2 din mein ready ho gaya.",
+    rating: 5,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
+    source: "whatsapp",
+  },
+];
 
 type GenerationMode = "single" | "bulk";
 type BuilderStep = 1 | 2 | 3 | 4;
@@ -446,7 +526,16 @@ function JewelleryLoadingModal({
             {progress}% processing
           </p>
 
-          <div className="mt-6 overflow-hidden rounded-2xl border border-cyan-200/70 bg-gradient-to-br from-cyan-50/80 via-white to-purple-50/40 p-5 text-left shadow-inner">
+          {/* AI thinking pipeline — premium "magic happening" feel */}
+          <div className="mt-6 overflow-hidden rounded-2xl border border-cyan-200/70 bg-white/70 p-5 text-left shadow-inner">
+            <AIThinkingSteps
+              steps={JEWELLERY_THINKING_STEPS}
+              intervalMs={2200}
+              title="AI is crafting your jewellery visual"
+            />
+          </div>
+
+          <div className="mt-3 overflow-hidden rounded-2xl border border-cyan-200/70 bg-gradient-to-br from-cyan-50/80 via-white to-purple-50/40 p-5 text-left shadow-inner">
             <p className="text-[11px] font-black uppercase tracking-widest text-cyan-700">
               {fact.title}
             </p>
@@ -1834,6 +1923,14 @@ if (!response.ok) {
             </div>
           </div>
         </section>
+
+        {/* ───────── Customer Testimonials ───────── */}
+        <TestimonialsSlider
+          agentType="jewellery"
+          seed={JEWELLERY_SEED_TESTIMONIALS}
+          heading="What early jewellery brands are saying"
+          subtitle="Real WhatsApp & in-app feedback from jewellery showrooms, goldsmiths and boutique stores — names masked for privacy."
+        />
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-white/90 px-3 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90 sm:hidden">

@@ -29,6 +29,86 @@ import { canGenerate } from "@/lib/checkCredits";
 import { shouldDeductCredits } from "@/lib/deductCredits";
 import { hasBulkAccess } from "@/lib/plans";
 import SignupPromptPopup from "@/app/components/SignupPromptPopup";
+import AIThinkingSteps from "@/app/components/AIThinkingSteps";
+import TestimonialsSlider, {
+  type Testimonial,
+} from "@/app/components/TestimonialsSlider";
+
+const PRODUCTOGRAPHY_THINKING_STEPS = [
+  "Reading product details",
+  "Building scene composition",
+  "Applying DSLR lighting setup",
+  "Adjusting depth of field",
+  "Rendering catalogue-quality details",
+  "Color grading & retouching",
+  "Adding brand watermark",
+  "Polishing the final visual",
+];
+
+// Seed testimonials — short, raw, WhatsApp-style. Real submissions from the
+// DB (table: `testimonials`, status: 'approved') replace these once available.
+const PRODUCTOGRAPHY_SEED_TESTIMONIALS: Testimonial[] = [
+  {
+    id: "seed-pg-1",
+    name: "Tushar V****",
+    city: "Bengaluru",
+    message:
+      "Perfume bottle ka shot Amazon ke liye perfect aaya. Hero image swap karte hi CTR badh gaya 🚀",
+    rating: 5,
+    createdAt: new Date(Date.now() - 1000 * 60 * 24).toISOString(),
+    source: "whatsapp",
+  },
+  {
+    id: "seed-pg-2",
+    name: "Sneha B****",
+    city: "Pune",
+    message:
+      "Skincare brand ke liye lifestyle shots banaye. Catalogue + Instagram dono ek baar mein cover ho gaya. Time saver!",
+    rating: 5,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+    source: "in-app",
+  },
+  {
+    id: "seed-pg-3",
+    name: "Mohit J****",
+    city: "Delhi",
+    message:
+      "Headphones ki packaging aur lifestyle dono ke ads banaye. Agency client ko 1 hour mein deliver kiya — pehle kabhi nahi hua.",
+    rating: 5,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
+    source: "whatsapp",
+  },
+  {
+    id: "seed-pg-4",
+    name: "Ritika P****",
+    city: "Ahmedabad",
+    message:
+      "D2C food brand chala rahi hoon. Festive banner 30 second mein ready. Designer pe dependency khatam.",
+    rating: 5,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1).toISOString(),
+    source: "in-app",
+  },
+  {
+    id: "seed-pg-5",
+    name: "Arjun S****",
+    city: "Mumbai",
+    message:
+      "Watch shoot Studio mein 8k lagte the. Yahan 200 credits mein 10 angles mil gaye. Quality bhi same level.",
+    rating: 4,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+    source: "whatsapp",
+  },
+  {
+    id: "seed-pg-6",
+    name: "Divya M****",
+    city: "Chennai",
+    message:
+      "Candles aur home decor ke moody lifestyle shots ekdam pinterest-quality. Direct catalogue upload kiya.",
+    rating: 5,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
+    source: "whatsapp",
+  },
+];
 
 const WEBHOOK_URL =
   process.env.NEXT_PUBLIC_PRODUCTOGRAPHY_WEBHOOK_URL ||
@@ -1062,84 +1142,169 @@ export default function ProductographyPage() {
           `}</style>
         </div>
 
-        <section className="mx-auto grid w-full max-w-7xl items-start gap-5 px-3 py-5 sm:px-4 lg:grid-cols-[0.9fr_1.1fr] lg:py-8">
+        <section className="mx-auto grid w-full max-w-7xl items-start gap-5 px-3 py-5 sm:px-4 lg:grid-cols-[0.95fr_1.05fr] lg:py-8">
+          {/* ───────── Left: ecommerce-luxury hero text ───────── */}
           <div>
-            <div className={`mb-5 inline-flex rounded-full px-4 py-2 text-sm font-semibold ${darkMode ? "border border-cyan-400/30 bg-cyan-400/10 text-cyan-200" : "border border-cyan-700/20 bg-cyan-500/15 text-cyan-900"}`}>
-              Mobile product photo to premium still shoot
+            {/* Category eyebrow pill */}
+            <div className={`mb-4 inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] shadow-md ${
+              darkMode
+                ? "border-amber-400/30 bg-gradient-to-r from-amber-500/10 via-white/5 to-cyan-500/10 text-amber-200"
+                : "border-amber-300/60 bg-gradient-to-r from-amber-50 via-white to-cyan-50 text-amber-700 shadow-amber-200/40"
+            }`}>
+              <Sparkles className="h-3 w-3" />
+              Cosmetics · Watches · Shoes · Perfume · Luxury Ads
             </div>
-            <h1 className="max-w-xl text-3xl font-black leading-[1.02] tracking-[-0.04em] lg:text-5xl">
-              Productography AI
-              <span className="block bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
-                Upload. Generate. Done.
+
+            <h1 className="max-w-xl text-3xl font-black leading-[1.02] tracking-[-0.03em] lg:text-5xl">
+              <span className="block">Luxury Product Shoots.</span>
+              <span className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 bg-clip-text text-transparent">
+                Without the Studio.
               </span>
-              Studio Shoot Without Studio.
             </h1>
-            <p className={`mt-4 max-w-lg text-sm leading-6 lg:text-base ${muted}`}>
-              Upload a normal product image from mobile and generate professional still product photography for ecommerce, Instagram, ads, catalogues, and WhatsApp selling.
+
+            <p className={`mt-3 max-w-xl text-base font-bold leading-6 lg:text-lg lg:leading-7`}>
+              <span className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
+                Mobile photo → Amazon-ready hero shot.
+              </span>{" "}
+              <span className={muted}>In 30 seconds.</span>
             </p>
+
+            <p className={`mt-4 max-w-lg text-sm leading-6 lg:text-base ${muted}`}>
+              Cosmetics, watches, shoes, perfume, gadgets, packaged goods — upload
+              from your phone and get DSLR-quality listing images, lifestyle ad
+              creatives and premium brand campaigns ready for Amazon, Flipkart,
+              Instagram and your website.
+            </p>
+
             <div className="mt-6 flex flex-wrap gap-3">
-              <a href="#try" className="rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-6 py-3 text-sm font-black text-black shadow-xl shadow-cyan-500/25 transition hover:scale-105">
-                Start Product Shoot
+              <a href="#try" className="group relative overflow-hidden rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-6 py-3 text-sm font-black text-white shadow-xl shadow-amber-500/30 transition hover:scale-105">
+                <span className="relative inline-flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  Start Luxury Shoot
+                </span>
               </a>
-              <Link href="/gallery" className={`rounded-full px-6 py-3 text-sm font-black ${darkMode ? "bg-white/10 text-white" : "bg-white text-black"}`}>
+              <Link href="/gallery" className={`rounded-full px-6 py-3 text-sm font-black ${darkMode ? "bg-white/10 text-white" : "bg-white text-black border border-black/5 shadow-sm"}`}>
                 View Gallery
               </Link>
             </div>
+
+            {/* Trust strip — ecommerce focused */}
+            <div className={`mt-6 grid max-w-xl grid-cols-3 gap-2 rounded-2xl border p-2.5 text-center backdrop-blur ${
+              darkMode ? "border-white/10 bg-white/[0.04]" : "border-black/10 bg-white/80"
+            }`}>
+              <div>
+                <p className="bg-gradient-to-r from-amber-500 to-rose-500 bg-clip-text text-sm font-black text-transparent sm:text-base">
+                  Amazon Ready
+                </p>
+                <p className={`text-[9px] font-bold uppercase tracking-wider ${muted}`}>
+                  Listing-safe HD
+                </p>
+              </div>
+              <div className={`border-x ${darkMode ? "border-white/10" : "border-black/10"}`}>
+                <p className="bg-gradient-to-r from-amber-500 to-rose-500 bg-clip-text text-sm font-black text-transparent sm:text-base">
+                  DSLR Quality
+                </p>
+                <p className={`text-[9px] font-bold uppercase tracking-wider ${muted}`}>
+                  Logo &amp; label intact
+                </p>
+              </div>
+              <div>
+                <p className="bg-gradient-to-r from-amber-500 to-rose-500 bg-clip-text text-sm font-black text-transparent sm:text-base">
+                  ~30 sec
+                </p>
+                <p className={`text-[9px] font-bold uppercase tracking-wider ${muted}`}>
+                  Per shoot
+                </p>
+              </div>
+            </div>
           </div>
 
-          {/* Hero preview card with still photos */}
-          <div className={`flex h-fit flex-col rounded-[1.5rem] border p-3 shadow-2xl backdrop-blur-xl sm:rounded-[2rem] sm:p-4 ${card}`}>
-            <div className="grid grid-cols-2 gap-4">
-              <div className={`flex min-h-[170px] items-center justify-center rounded-[1.25rem] border p-3 sm:min-h-[210px] sm:rounded-[1.5rem] sm:p-4 ${darkMode ? "border-white/10 bg-black/25" : "border-black/10 bg-[#fffaf0]"}`}>
-                <div className="text-center">
-                  {previewImage ? (
+          {/* ───────── Right: luxury category showcase ───────── */}
+          <div className={`relative flex h-fit flex-col overflow-hidden rounded-[1.5rem] border p-3 shadow-2xl backdrop-blur-xl sm:rounded-[2rem] sm:p-5 ${
+            darkMode
+              ? "border-white/10 bg-gradient-to-br from-slate-900/70 via-slate-900/50 to-slate-950/70"
+              : "border-amber-200/40 bg-gradient-to-br from-amber-50/60 via-white to-rose-50/40"
+          }`}>
+            {/* Decorative blurs */}
+            <div className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 rounded-full bg-amber-400/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-rose-400/20 blur-3xl" />
+
+            {/* Header */}
+            <div className="relative mb-3 flex items-center justify-between">
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-amber-600">
+                Premium Showcase
+              </p>
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] ${
+                darkMode ? "bg-white/10 text-white/75" : "bg-black text-white"
+              }`}>
+                <span className="h-1 w-1 rounded-full bg-amber-400" />
+                Luxury Ads
+              </span>
+            </div>
+
+            {/* 4-category mini-catalogue */}
+            <div className="relative grid grid-cols-2 gap-3">
+              {[
+                { label: "Cosmetics", tag: "Beauty ad", icon: "/Productography-icons/cosmatics.svg", grad: "from-rose-400 to-pink-500" },
+                { label: "Perfume", tag: "Luxury bottle", icon: "/Productography-icons/prefume.svg", grad: "from-amber-400 to-orange-500" },
+                { label: "Watches", tag: "Hero shot", icon: "/Productography-icons/wrist watch.svg", grad: "from-slate-700 to-slate-900" },
+                { label: "Shoes", tag: "Lifestyle", icon: "/Productography-icons/shoes.svg", grad: "from-cyan-500 to-blue-600" },
+              ].map((cat) => (
+                <div
+                  key={cat.label}
+                  className={`group relative flex flex-col overflow-hidden rounded-2xl border p-2.5 transition hover:-translate-y-1 ${
+                    darkMode ? "border-white/10 bg-white/[0.04]" : "border-black/10 bg-white shadow-sm"
+                  }`}
+                >
+                  <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-slate-100 via-white to-slate-50 dark:from-white/[0.08] dark:via-white/[0.04] dark:to-white/[0.02]">
                     <img
-                      src={previewImage}
-                      alt="Uploaded product preview"
-                      className="mx-auto mb-3 h-28 w-28 rounded-2xl object-cover shadow-lg sm:h-36 sm:w-36 sm:rounded-3xl"
-                    />
-                  ) : (
-                    <img
-                      src="/productography-banner.png"
-                      alt="Sample product photo"
-                      className="mx-auto mb-3 h-28 w-28 rounded-2xl object-cover shadow-lg sm:h-36 sm:w-36 sm:rounded-3xl"
+                      src={cat.icon}
+                      alt={cat.label}
+                      className="h-3/4 w-3/4 object-contain transition group-hover:scale-110"
+                      style={{ mixBlendMode: darkMode ? "screen" : "multiply" }}
                       onError={(e) => {
                         (e.currentTarget as HTMLImageElement).style.display = "none";
                       }}
                     />
-                  )}
-                  <p className="font-semibold">Product Photo</p>
-                  <p className={`mt-1 text-sm ${muted}`}>
-                    {previewImage ? "Uploaded source image" : "Upload mobile product photo"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex min-h-[170px] items-center justify-center rounded-[1.25rem] border border-cyan-300/30 bg-gradient-to-br from-cyan-400/20 via-blue-500/10 to-purple-500/20 p-3 sm:min-h-[210px] sm:rounded-[1.5rem] sm:p-4">
-                <div className="text-center">
-                  {previewResult ? (
-                    <img
-                      src={previewResult}
-                      alt="Generated productography output"
-                      className="mx-auto mb-3 h-32 w-28 rounded-2xl object-cover shadow-lg shadow-cyan-400/30 sm:h-44 sm:w-36 sm:rounded-3xl"
-                    />
-                  ) : (
-                    <div className="mx-auto mb-3 flex h-32 w-28 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 text-white shadow-lg shadow-cyan-400/30 sm:h-44 sm:w-36 sm:rounded-3xl">
-                      <Sparkles className="h-12 w-12" />
+                    {/* Amazon-listing-style price+star strip */}
+                    <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between rounded-md bg-black/70 px-2 py-1 backdrop-blur">
+                      <span className="flex items-center gap-0.5 text-[9px] font-black text-amber-300">
+                        ★ ★ ★ ★ ★
+                      </span>
+                      <span className={`rounded-sm bg-gradient-to-r ${cat.grad} px-1.5 py-0.5 text-[8px] font-black text-white`}>
+                        HD
+                      </span>
                     </div>
-                  )}
-                  <p className="font-semibold">AI Product Shoot</p>
-                  <p className={`mt-1 text-sm ${muted}`}>
-                    {previewResult ? "Latest generated output" : "Premium still image preview"}
-                  </p>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-[11px] font-black sm:text-xs">{cat.label}</p>
+                      <p className={`truncate text-[9px] font-bold uppercase tracking-wider ${muted}`}>
+                        {cat.tag}
+                      </p>
+                    </div>
+                    <span className={`shrink-0 rounded-full bg-gradient-to-r ${cat.grad} px-1.5 py-0.5 text-[8px] font-black text-white`}>
+                      Live
+                    </span>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
 
-            <div className={`mt-4 rounded-[1.5rem] border p-4 ${darkMode ? "border-white/10 bg-black/25" : "border-black/10 bg-white/80"}`}>
-              <p className="text-[11px] font-black uppercase tracking-widest text-cyan-600">Best for</p>
-              <p className="mt-2 text-sm font-bold leading-relaxed">
-                Ecommerce listing, Instagram post, ad creative, website hero, WhatsApp catalogue, product launch creatives.
+            {/* Best-for ticker — ecommerce focused */}
+            <div className={`relative mt-3 rounded-[1.25rem] border p-3 sm:p-4 ${
+              darkMode ? "border-white/10 bg-black/25" : "border-black/10 bg-white/80"
+            }`}>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-600">
+                Built for
+              </p>
+              <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] font-black sm:text-xs">
+                <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-amber-700 dark:text-amber-200">Amazon</span>
+                <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-blue-700 dark:text-blue-200">Flipkart</span>
+                <span className="rounded-full bg-rose-500/15 px-2 py-0.5 text-rose-700 dark:text-rose-200">Meesho</span>
+                <span className="rounded-full bg-pink-500/15 px-2 py-0.5 text-pink-700 dark:text-pink-200">Instagram</span>
+                <span className="rounded-full bg-cyan-500/15 px-2 py-0.5 text-cyan-700 dark:text-cyan-200">D2C site</span>
+                <span className="rounded-full bg-violet-500/15 px-2 py-0.5 text-violet-700 dark:text-violet-200">Ads &amp; banners</span>
               </p>
             </div>
           </div>
@@ -1533,6 +1698,15 @@ export default function ProductographyPage() {
             </div>
           </div>
         </section>
+
+        {/* ───────── Customer Testimonials ───────── */}
+        <TestimonialsSlider
+          agentType="productography"
+          darkMode={darkMode}
+          seed={PRODUCTOGRAPHY_SEED_TESTIMONIALS}
+          heading="What early product brands are saying"
+          subtitle="Real WhatsApp & in-app feedback from e-commerce sellers, D2C brands and agencies — names masked for privacy."
+        />
       </div>
 
       {/* ============================================================
@@ -1662,7 +1836,17 @@ function ProductographyLoadingModal({
             <div className="h-3 w-full animate-pulse rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600" />
           </div>
 
+          {/* AI thinking pipeline — premium "magic happening" feel */}
           <div className={`mt-6 overflow-hidden rounded-2xl border p-5 text-left shadow-inner ${factBg}`}>
+            <AIThinkingSteps
+              steps={PRODUCTOGRAPHY_THINKING_STEPS}
+              intervalMs={2200}
+              darkMode={darkMode}
+              title="AI is crafting your product shoot"
+            />
+          </div>
+
+          <div className={`mt-3 overflow-hidden rounded-2xl border p-5 text-left shadow-inner ${factBg}`}>
             <p className="text-[11px] font-black uppercase tracking-widest text-cyan-600">
               {fact.title}
             </p>

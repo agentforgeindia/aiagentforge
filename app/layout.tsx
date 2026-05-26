@@ -96,7 +96,7 @@ export default function RootLayout({
           `}
         </Script>
 
-        <div className="fixed inset-0 -z-50 bg-[#070b14]" />
+        <div className="fixed inset-0 -z-50 bg-[#fff8e8] dark:bg-[#070b14]" />
 
         <object
           type="image/svg+xml"
