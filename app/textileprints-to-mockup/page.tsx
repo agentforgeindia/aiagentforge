@@ -33,7 +33,7 @@ const TEXTILE_SEED_TESTIMONIALS: Testimonial[] = [
     id: "seed-1",
     name: "Rajesh K****",
     city: "Surat",
-    message: "Output amazing yaar 🔥 — client ko bhej diya turant, order pakka.",
+    message: "Amazing output 🔥 — sent it to the client right away, order confirmed.",
     rating: 5,
     createdAt: new Date(Date.now() - 1000 * 60 * 32).toISOString(),
     source: "whatsapp",
@@ -43,7 +43,7 @@ const TEXTILE_SEED_TESTIMONIALS: Testimonial[] = [
     name: "Priya S****",
     city: "Mumbai",
     message:
-      "Catalogue-ready images in 30 sec — time bahut bach gaya. Article code wala feature genius hai.",
+      "Catalogue-ready images in 30 sec — saved a lot of time. The article code feature is genius.",
     rating: 5,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
     source: "in-app",
@@ -53,7 +53,7 @@ const TEXTILE_SEED_TESTIMONIALS: Testimonial[] = [
     name: "Anil M****",
     city: "Erode",
     message:
-      "Pehle sample stitching mein 5 din lagte the. Ab same-day client ko preview bhej dete hain.",
+      "Sample stitching used to take 5 days. Now we send the client a preview the same day.",
     rating: 5,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
     source: "whatsapp",
@@ -63,7 +63,7 @@ const TEXTILE_SEED_TESTIMONIALS: Testimonial[] = [
     name: "Meera D****",
     city: "Jaipur",
     message:
-      "Just tried it — quality bahut achi hai. Saree mockups model par real lagte hain. Recommended!",
+      "Just tried it — quality is really good. Saree mockups look real on the model. Recommended!",
     rating: 5,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1).toISOString(),
     source: "in-app",
@@ -73,7 +73,7 @@ const TEXTILE_SEED_TESTIMONIALS: Testimonial[] = [
     name: "Vikas T****",
     city: "Ludhiana",
     message:
-      "Article number overlay game-changer hai. Wholesalers ko bhejne mein zero confusion ab.",
+      "Article number overlay is a game-changer. Zero confusion now when sending to wholesalers.",
     rating: 4,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
     source: "whatsapp",
@@ -83,7 +83,7 @@ const TEXTILE_SEED_TESTIMONIALS: Testimonial[] = [
     name: "Suresh P****",
     city: "Bhilwara",
     message:
-      "Mockups dekh ke client ne 12 designs ek baar mein order kar diye 💯 — pehle kabhi nahi hua.",
+      "After seeing the mockups, the client ordered 12 designs in one go 💯 — has never happened before.",
     rating: 5,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
     source: "whatsapp",
@@ -2203,6 +2203,34 @@ export default function Home() {
         }`}
       />
 
+      {/* Floating Doodles — textile themed */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        {/* Top band */}
+        <div className="float-slow absolute left-[6%] top-[6%] text-4xl opacity-65 sm:text-5xl">👕</div>
+        <div className="float-medium absolute right-[8%] top-[10%] text-4xl opacity-65 sm:text-5xl">🥻</div>
+        <div className="float-fast absolute left-[22%] top-[14%] text-2xl opacity-55 sm:text-3xl">✨</div>
+        <div className="float-medium absolute right-[24%] top-[6%] text-3xl opacity-60 sm:text-4xl">🧵</div>
+        <div className="float-slow absolute left-[42%] top-[3%] text-2xl opacity-50 sm:text-3xl">⭐</div>
+        <div className="float-fast absolute right-[42%] top-[18%] text-3xl opacity-60 sm:text-4xl">👗</div>
+
+        {/* Side accents */}
+        <div className="float-medium absolute left-[3%] top-[28%] text-3xl opacity-55 sm:text-4xl">🧥</div>
+        <div className="float-slow absolute right-[4%] top-[32%] text-3xl opacity-55 sm:text-4xl">🪡</div>
+        <div className="float-fast absolute left-[8%] top-[44%] text-3xl opacity-55 sm:text-4xl">⚡</div>
+        <div className="float-medium absolute right-[6%] top-[46%] text-3xl opacity-55 sm:text-4xl">👚</div>
+
+        {/* Middle band */}
+        <div className="float-slow absolute left-[35%] top-[52%] text-2xl opacity-50 sm:text-3xl">🎨</div>
+        <div className="float-medium absolute right-[30%] top-[58%] text-2xl opacity-55 sm:text-3xl">👔</div>
+        <div className="float-fast absolute left-[14%] top-[62%] text-3xl opacity-55 sm:text-4xl">🧣</div>
+        <div className="float-slow absolute right-[14%] top-[66%] text-3xl opacity-55 sm:text-4xl">🛍️</div>
+
+        {/* Lower band */}
+        <div className="float-fast absolute left-[20%] top-[78%] text-2xl opacity-55 sm:text-3xl">✦</div>
+        <div className="float-medium absolute right-[18%] top-[82%] text-3xl opacity-60 sm:text-4xl">🌟</div>
+        <div className="float-slow absolute left-[48%] top-[88%] text-2xl opacity-50 sm:text-3xl">💫</div>
+      </div>
+
       <div className="relative z-10">
         {showPhonePopup && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 px-4 backdrop-blur-md">
@@ -2373,7 +2401,7 @@ export default function Home() {
             className={`rounded-[1.25rem] border p-3 shadow-2xl backdrop-blur-xl sm:rounded-[1.75rem] sm:p-4 lg:p-6 ${card}`}
           >
             <div className="mb-5 sm:mb-6">
-              <h3 className="text-2xl font-black sm:text-3xl">Create Your Mockup</h3>
+              <h2 className="text-2xl font-black sm:text-3xl">Create Your AI Textile Mockup</h2>
               <p className={`mt-2 text-sm sm:text-base ${muted}`}>
                 Upload one textile design on normal packs. Bulk creation is
                 unlocked for Empire Pack users only.
@@ -2745,102 +2773,103 @@ export default function Home() {
                       Use logo on output
                     </label>
 
-                    <div className="space-y-3">
-                      <input
-                        value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
-                        placeholder="Company name"
-                        className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-cyan-400 ${inputClass}`}
-                      />
-
-                      <input
-                        value={companyPhone}
-                        onChange={(e) => setCompanyPhone(e.target.value)}
-                        placeholder="Phone / WhatsApp number"
-                        inputMode="tel"
-                        className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-cyan-400 ${inputClass}`}
-                      />
-
-                      <input
-                        value={companyWebsite}
-                        onChange={(e) => setCompanyWebsite(e.target.value)}
-                        placeholder="Website"
-                        className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-cyan-400 ${inputClass}`}
-                      />
-
-                      <textarea
-                        value={companyAddress}
-                        onChange={(e) => setCompanyAddress(e.target.value)}
-                        placeholder="Address"
-                        rows={2}
-                        className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:border-cyan-400 ${inputClass}`}
-                      />
-                    </div>
-
-                    <div className="mt-4 space-y-3">
+                    {/* Merged: each field has its input + inline "Show" checkbox + position select */}
+                    <div className="space-y-4">
                       {[
-                        [
-                          "Company",
-                          useCompanyName,
-                          setUseCompanyName,
-                          companyNamePosition,
-                          setCompanyNamePosition,
-                          Boolean(companyName.trim()),
-                        ],
-                        [
-                          "Phone",
-                          useCompanyPhone,
-                          setUseCompanyPhone,
-                          companyPhonePosition,
-                          setCompanyPhonePosition,
-                          Boolean(companyPhone.trim()),
-                        ],
-                        [
-                          "Website",
-                          useCompanyWebsite,
-                          setUseCompanyWebsite,
-                          companyWebsitePosition,
-                          setCompanyWebsitePosition,
-                          Boolean(companyWebsite.trim()),
-                        ],
-                        [
-                          "Address",
-                          useCompanyAddress,
-                          setUseCompanyAddress,
-                          companyAddressPosition,
-                          setCompanyAddressPosition,
-                          Boolean(companyAddress.trim()),
-                        ],
-                      ].map(
-                        ([
-                          label,
-                          checked,
-                          setChecked,
-                          position,
-                          setPosition,
-                          enabled,
-                        ]: any) => (
+                        {
+                          label: "Company",
+                          placeholder: "Company name",
+                          value: companyName,
+                          onChange: setCompanyName,
+                          checked: useCompanyName,
+                          setChecked: setUseCompanyName,
+                          position: companyNamePosition,
+                          setPosition: setCompanyNamePosition,
+                          inputMode: undefined as "tel" | undefined,
+                          multiline: false,
+                        },
+                        {
+                          label: "Phone",
+                          placeholder: "Phone / WhatsApp number",
+                          value: companyPhone,
+                          onChange: setCompanyPhone,
+                          checked: useCompanyPhone,
+                          setChecked: setUseCompanyPhone,
+                          position: companyPhonePosition,
+                          setPosition: setCompanyPhonePosition,
+                          inputMode: "tel" as const,
+                          multiline: false,
+                        },
+                        {
+                          label: "Website",
+                          placeholder: "Website",
+                          value: companyWebsite,
+                          onChange: setCompanyWebsite,
+                          checked: useCompanyWebsite,
+                          setChecked: setUseCompanyWebsite,
+                          position: companyWebsitePosition,
+                          setPosition: setCompanyWebsitePosition,
+                          inputMode: undefined as "tel" | undefined,
+                          multiline: false,
+                        },
+                        {
+                          label: "Address",
+                          placeholder: "Address",
+                          value: companyAddress,
+                          onChange: setCompanyAddress,
+                          checked: useCompanyAddress,
+                          setChecked: setUseCompanyAddress,
+                          position: companyAddressPosition,
+                          setPosition: setCompanyAddressPosition,
+                          inputMode: undefined as "tel" | undefined,
+                          multiline: true,
+                        },
+                      ].map((field) => {
+                        const enabled = Boolean(String(field.value).trim());
+                        return (
                           <div
-                            key={label}
-                            className={`rounded-2xl px-3 py-3 ${darkMode ? "bg-white/[0.035]" : "bg-white/70"}`}
+                            key={field.label}
+                            className={`rounded-2xl border p-3 ${
+                              darkMode ? "border-white/10 bg-white/[0.035]" : "border-black/10 bg-white/70"
+                            }`}
                           >
-                            <label className="flex items-center justify-between gap-3">
-                              <span className="flex items-center gap-2 text-xs font-black">
+                            {field.multiline ? (
+                              <textarea
+                                value={field.value}
+                                onChange={(e) => field.onChange(e.target.value)}
+                                placeholder={field.placeholder}
+                                rows={2}
+                                className={`w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition focus:border-cyan-400 ${inputClass}`}
+                              />
+                            ) : (
+                              <input
+                                value={field.value}
+                                onChange={(e) => field.onChange(e.target.value)}
+                                placeholder={field.placeholder}
+                                inputMode={field.inputMode}
+                                className={`w-full rounded-xl border px-3 py-2.5 text-sm outline-none transition focus:border-cyan-400 ${inputClass}`}
+                              />
+                            )}
+
+                            {/* Inline: Show <label> checkbox + position select */}
+                            <div className="mt-2.5 flex items-center justify-between gap-3">
+                              <label className="flex items-center gap-2 text-xs font-black">
                                 <input
                                   type="checkbox"
-                                  checked={checked}
+                                  checked={field.checked}
                                   disabled={!enabled}
-                                  onChange={(e) => setChecked(e.target.checked)}
+                                  onChange={(e) => field.setChecked(e.target.checked)}
                                   className="h-4 w-4 accent-cyan-500"
                                 />
-                                {label}
-                              </span>
+                                <span className={!enabled ? muted : undefined}>Show {field.label}</span>
+                              </label>
 
                               <select
-                                value={position}
-                                disabled={!checked || !enabled}
-                                onChange={(e) => setPosition(e.target.value)}
-                                className={`max-w-[150px] rounded-xl border px-2 py-2 text-[11px] font-bold outline-none ${
+                                value={field.position}
+                                disabled={!field.checked || !enabled}
+                                onChange={(e) => field.setPosition(e.target.value)}
+                                aria-label={`${field.label} position`}
+                                className={`max-w-[150px] rounded-xl border px-2 py-1.5 text-[11px] font-bold outline-none ${
                                   darkMode
                                     ? "border-white/10 bg-black/30 text-white disabled:text-white/30"
                                     : "border-black/10 bg-white text-black disabled:text-black/30"
@@ -2852,10 +2881,10 @@ export default function Home() {
                                   </option>
                                 ))}
                               </select>
-                            </label>
+                            </div>
                           </div>
-                        ),
-                      )}
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -2865,7 +2894,7 @@ export default function Home() {
                 <div
                   className={`rounded-[1.5rem] p-3 sm:rounded-[2rem] sm:p-5 ${darkMode ? "bg-white/[0.035]" : "bg-white/70"}`}
                 >
-                  <div ref={stepTopRef} className="mt-8 grid grid-cols-2 gap-3">
+                  <div ref={stepTopRef} className="mt-6 grid grid-cols-2 gap-2.5 sm:mt-8 sm:gap-3 lg:grid-cols-4">
   {[
     { step: "STEP 1", title: "Product", desc: "Category + product" },
     { step: "STEP 2", title: "Model", desc: "Usage + look" },
@@ -2937,8 +2966,8 @@ export default function Home() {
                             1. Select Category
                           </h4>
                           <p className={`mt-1 text-xs ${muted}`}>
-                            Pehle category choose karo. Product options
-                            automatically change honge.
+                            Pick the category first. Product options will
+                            update automatically.
                           </p>
                         </div>
                       </div>

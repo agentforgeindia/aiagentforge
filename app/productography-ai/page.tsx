@@ -8,6 +8,8 @@ import { useAuth } from "@/app/components/AuthProvider";
 import {
   BadgeCheck,
   Camera,
+  ChevronLeft,
+  ChevronRight,
   Crown,
   Download,
   Gem,
@@ -25,6 +27,12 @@ import {
   Wand2,
   X,
 } from "lucide-react";
+import {
+  SiFlipkart,
+  SiInstagram,
+  SiMeta,
+  SiShopify,
+} from "react-icons/si";
 import { canGenerate } from "@/lib/checkCredits";
 import { shouldDeductCredits } from "@/lib/deductCredits";
 import { hasBulkAccess } from "@/lib/plans";
@@ -53,7 +61,7 @@ const PRODUCTOGRAPHY_SEED_TESTIMONIALS: Testimonial[] = [
     name: "Tushar V****",
     city: "Bengaluru",
     message:
-      "Perfume bottle ka shot Amazon ke liye perfect aaya. Hero image swap karte hi CTR badh gaya 🚀",
+      "The perfume bottle shot turned out perfect for Amazon. Swapped the hero image and CTR jumped right away 🚀",
     rating: 5,
     createdAt: new Date(Date.now() - 1000 * 60 * 24).toISOString(),
     source: "whatsapp",
@@ -63,7 +71,7 @@ const PRODUCTOGRAPHY_SEED_TESTIMONIALS: Testimonial[] = [
     name: "Sneha B****",
     city: "Pune",
     message:
-      "Skincare brand ke liye lifestyle shots banaye. Catalogue + Instagram dono ek baar mein cover ho gaya. Time saver!",
+      "Made lifestyle shots for our skincare brand. Catalogue + Instagram both covered in one go. Huge time saver!",
     rating: 5,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
     source: "in-app",
@@ -73,7 +81,7 @@ const PRODUCTOGRAPHY_SEED_TESTIMONIALS: Testimonial[] = [
     name: "Mohit J****",
     city: "Delhi",
     message:
-      "Headphones ki packaging aur lifestyle dono ke ads banaye. Agency client ko 1 hour mein deliver kiya — pehle kabhi nahi hua.",
+      "Made both packaging and lifestyle ads for headphones. Delivered to the agency client in 1 hour — has never happened before.",
     rating: 5,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
     source: "whatsapp",
@@ -83,7 +91,7 @@ const PRODUCTOGRAPHY_SEED_TESTIMONIALS: Testimonial[] = [
     name: "Ritika P****",
     city: "Ahmedabad",
     message:
-      "D2C food brand chala rahi hoon. Festive banner 30 second mein ready. Designer pe dependency khatam.",
+      "I run a D2C food brand. Festive banner ready in 30 seconds. No more dependency on a designer.",
     rating: 5,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1).toISOString(),
     source: "in-app",
@@ -93,7 +101,7 @@ const PRODUCTOGRAPHY_SEED_TESTIMONIALS: Testimonial[] = [
     name: "Arjun S****",
     city: "Mumbai",
     message:
-      "Watch shoot Studio mein 8k lagte the. Yahan 200 credits mein 10 angles mil gaye. Quality bhi same level.",
+      "A watch shoot used to cost ₹8k at the studio. Got 10 angles here for 200 credits. Quality is at the same level.",
     rating: 4,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
     source: "whatsapp",
@@ -103,7 +111,7 @@ const PRODUCTOGRAPHY_SEED_TESTIMONIALS: Testimonial[] = [
     name: "Divya M****",
     city: "Chennai",
     message:
-      "Candles aur home decor ke moody lifestyle shots ekdam pinterest-quality. Direct catalogue upload kiya.",
+      "Moody lifestyle shots for candles and home decor are straight up Pinterest-quality. Uploaded directly to the catalogue.",
     rating: 5,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
     source: "whatsapp",
@@ -441,6 +449,38 @@ function FrameQualityGrid({
 }
 
 // ============================================================
+// HERO PRODUCT SLIDER DATA
+// ============================================================
+type HeroProduct = { label: string; tag: string; icon: string; grad: string };
+
+const HERO_PRODUCT_SLIDES: HeroProduct[][] = [
+  [
+    { label: "Cosmetics", tag: "Beauty ad", icon: "/Productography-icons/cosmatics.svg", grad: "from-rose-400 to-pink-500" },
+    { label: "Perfume", tag: "Luxury bottle", icon: "/Productography-icons/prefume.svg", grad: "from-amber-400 to-orange-500" },
+  ],
+  [
+    { label: "Watches", tag: "Hero shot", icon: "/Productography-icons/wrist watch.svg", grad: "from-slate-700 to-slate-900" },
+    { label: "Shoes", tag: "Lifestyle", icon: "/Productography-icons/shoes.svg", grad: "from-cyan-500 to-blue-600" },
+  ],
+  [
+    { label: "Mobiles", tag: "Tech hero", icon: "/Productography-icons/mobile.svg", grad: "from-blue-500 to-indigo-600" },
+    { label: "Sunglasses", tag: "Fashion shot", icon: "/Productography-icons/sunglasses.svg", grad: "from-slate-700 to-zinc-900" },
+  ],
+  [
+    { label: "Food", tag: "Hero plate", icon: "/Productography-icons/food.svg", grad: "from-amber-500 to-red-500" },
+    { label: "Electronics", tag: "Catalogue", icon: "/Productography-icons/electronics.svg", grad: "from-violet-500 to-fuchsia-600" },
+  ],
+  [
+    { label: "Bags", tag: "Lifestyle", icon: "/Productography-icons/fabric bag.svg", grad: "from-amber-500 to-orange-600" },
+    { label: "Decor", tag: "Home goods", icon: "/Productography-icons/decor & accessories.svg", grad: "from-emerald-500 to-teal-600" },
+  ],
+  [
+    { label: "Toys", tag: "Playful ad", icon: "/Productography-icons/toys.svg", grad: "from-pink-400 to-rose-500" },
+    { label: "Custom", tag: "Any product", icon: "/Productography-icons/custom look.svg", grad: "from-cyan-500 to-purple-600" },
+  ],
+];
+
+// ============================================================
 // MAIN PAGE COMPONENT
 // ============================================================
 export default function ProductographyPage() {
@@ -455,6 +495,7 @@ export default function ProductographyPage() {
   const [loading, setLoading] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
   const [builderStep, setBuilderStep] = useState(1);
+  const [heroSlide, setHeroSlide] = useState(0);
   const stepTopRef = useRef<HTMLDivElement | null>(null);
   const cancelRef = useRef(false);
 
@@ -614,6 +655,14 @@ export default function ProductographyPage() {
     }, 4200);
     return () => window.clearInterval(interval);
   }, [loading]);
+
+  // Hero product slider — auto-rotate every 4s
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setHeroSlide((current) => (current + 1) % HERO_PRODUCT_SLIDES.length);
+    }, 4000);
+    return () => window.clearInterval(interval);
+  }, []);
 
   // ============================================================
   // FILE UPLOAD HELPERS
@@ -1098,6 +1147,34 @@ export default function ProductographyPage() {
         <div className="absolute bottom-20 right-0 h-80 w-80 rounded-full bg-purple-500/15 blur-3xl" />
       </div>
 
+      {/* Floating Doodles — productography themed */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        {/* Top band */}
+        <div className="float-slow absolute left-[6%] top-[6%] text-4xl opacity-65 sm:text-5xl">📸</div>
+        <div className="float-medium absolute right-[8%] top-[10%] text-4xl opacity-65 sm:text-5xl">🛍️</div>
+        <div className="float-fast absolute left-[22%] top-[14%] text-2xl opacity-55 sm:text-3xl">✨</div>
+        <div className="float-medium absolute right-[24%] top-[6%] text-3xl opacity-60 sm:text-4xl">💄</div>
+        <div className="float-slow absolute left-[42%] top-[3%] text-2xl opacity-50 sm:text-3xl">⭐</div>
+        <div className="float-fast absolute right-[42%] top-[18%] text-3xl opacity-60 sm:text-4xl">⌚</div>
+
+        {/* Side accents */}
+        <div className="float-medium absolute left-[3%] top-[28%] text-3xl opacity-55 sm:text-4xl">🕶️</div>
+        <div className="float-slow absolute right-[4%] top-[32%] text-3xl opacity-55 sm:text-4xl">👜</div>
+        <div className="float-fast absolute left-[8%] top-[44%] text-3xl opacity-55 sm:text-4xl">⚡</div>
+        <div className="float-medium absolute right-[6%] top-[46%] text-3xl opacity-55 sm:text-4xl">🏆</div>
+
+        {/* Middle band */}
+        <div className="float-slow absolute left-[35%] top-[52%] text-2xl opacity-50 sm:text-3xl">📦</div>
+        <div className="float-medium absolute right-[30%] top-[58%] text-2xl opacity-55 sm:text-3xl">👠</div>
+        <div className="float-fast absolute left-[14%] top-[62%] text-3xl opacity-55 sm:text-4xl">📷</div>
+        <div className="float-slow absolute right-[14%] top-[66%] text-3xl opacity-55 sm:text-4xl">🎁</div>
+
+        {/* Lower band */}
+        <div className="float-fast absolute left-[20%] top-[78%] text-2xl opacity-55 sm:text-3xl">✦</div>
+        <div className="float-medium absolute right-[18%] top-[82%] text-3xl opacity-60 sm:text-4xl">💎</div>
+        <div className="float-slow absolute left-[48%] top-[88%] text-2xl opacity-50 sm:text-3xl">🎨</div>
+      </div>
+
       <div className="relative z-10">
         {/* Newly Launched announcement strip */}
         <div className="mx-auto max-w-7xl px-3 pt-4 sm:px-4">
@@ -1169,7 +1246,7 @@ export default function ProductographyPage() {
               <span className={muted}>In 30 seconds.</span>
             </p>
 
-            <p className={`mt-4 max-w-lg text-sm leading-6 lg:text-base ${muted}`}>
+            <p className={`mt-4 max-w-lg text-justify text-sm leading-6 hyphens-auto lg:text-base ${muted}`}>
               Cosmetics, watches, shoes, perfume, gadgets, packaged goods — upload
               from your phone and get DSLR-quality listing images, lifestyle ad
               creatives and premium brand campaigns ready for Amazon, Flipkart,
@@ -1177,14 +1254,26 @@ export default function ProductographyPage() {
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <a href="#try" className="group relative overflow-hidden rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-6 py-3 text-sm font-black text-white shadow-xl shadow-amber-500/30 transition hover:scale-105">
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof document !== "undefined") {
+                    document.getElementById("try")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }
+                }}
+                className="group relative cursor-pointer overflow-hidden rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-6 py-3 text-sm font-black text-white shadow-xl shadow-amber-500/30 transition hover:scale-105 active:scale-95"
+              >
                 <span className="relative inline-flex items-center gap-2">
                   <Sparkles className="h-4 w-4" />
                   Start Luxury Shoot
                 </span>
-              </a>
-              <Link href="/gallery" className={`rounded-full px-6 py-3 text-sm font-black ${darkMode ? "bg-white/10 text-white" : "bg-white text-black border border-black/5 shadow-sm"}`}>
+              </button>
+              <Link
+                href="/gallery"
+                className={`inline-flex cursor-pointer items-center gap-2 rounded-full px-6 py-3 text-sm font-black transition hover:scale-105 active:scale-95 ${darkMode ? "bg-white/10 text-white" : "bg-white text-black border border-black/5 shadow-sm"}`}
+              >
                 View Gallery
+                <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
 
@@ -1230,10 +1319,11 @@ export default function ProductographyPage() {
             <div className="pointer-events-none absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-rose-400/20 blur-3xl" />
 
             {/* Header */}
-            <div className="relative mb-3 flex items-center justify-between">
+            <div className="relative mb-3 flex items-center justify-between gap-2">
               <p className="text-[10px] font-black uppercase tracking-[0.28em] text-amber-600">
                 Premium Showcase
               </p>
+
               <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] ${
                 darkMode ? "bg-white/10 text-white/75" : "bg-black text-white"
               }`}>
@@ -1242,70 +1332,195 @@ export default function ProductographyPage() {
               </span>
             </div>
 
-            {/* 4-category mini-catalogue */}
-            <div className="relative grid grid-cols-2 gap-3">
-              {[
-                { label: "Cosmetics", tag: "Beauty ad", icon: "/Productography-icons/cosmatics.svg", grad: "from-rose-400 to-pink-500" },
-                { label: "Perfume", tag: "Luxury bottle", icon: "/Productography-icons/prefume.svg", grad: "from-amber-400 to-orange-500" },
-                { label: "Watches", tag: "Hero shot", icon: "/Productography-icons/wrist watch.svg", grad: "from-slate-700 to-slate-900" },
-                { label: "Shoes", tag: "Lifestyle", icon: "/Productography-icons/shoes.svg", grad: "from-cyan-500 to-blue-600" },
-              ].map((cat) => (
+            {/* Product slider — auto-rotating, arrows on the sides */}
+            <div className="relative">
+              {/* Prev arrow — left side */}
+              <button
+                type="button"
+                aria-label="Previous slide"
+                onClick={() =>
+                  setHeroSlide((p) => (p - 1 + HERO_PRODUCT_SLIDES.length) % HERO_PRODUCT_SLIDES.length)
+                }
+                className={`absolute left-0 top-1/2 z-10 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border shadow-lg backdrop-blur transition hover:scale-110 active:scale-95 ${
+                  darkMode ? "border-white/15 bg-slate-900/80 text-white/80" : "border-black/10 bg-white text-black/70"
+                }`}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              {/* Next arrow — right side */}
+              <button
+                type="button"
+                aria-label="Next slide"
+                onClick={() => setHeroSlide((p) => (p + 1) % HERO_PRODUCT_SLIDES.length)}
+                className={`absolute right-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 translate-x-1/2 cursor-pointer items-center justify-center rounded-full border shadow-lg backdrop-blur transition hover:scale-110 active:scale-95 ${
+                  darkMode ? "border-white/15 bg-slate-900/80 text-white/80" : "border-black/10 bg-white text-black/70"
+                }`}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+
+              <div className="relative overflow-hidden">
                 <div
-                  key={cat.label}
-                  className={`group relative flex flex-col overflow-hidden rounded-2xl border p-2.5 transition hover:-translate-y-1 ${
-                    darkMode ? "border-white/10 bg-white/[0.04]" : "border-black/10 bg-white shadow-sm"
-                  }`}
+                  className="flex transition-transform duration-500 ease-out"
+                  style={{ transform: `translateX(-${heroSlide * 100}%)` }}
                 >
-                  <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-slate-100 via-white to-slate-50 dark:from-white/[0.08] dark:via-white/[0.04] dark:to-white/[0.02]">
-                    <img
-                      src={cat.icon}
-                      alt={cat.label}
-                      className="h-3/4 w-3/4 object-contain transition group-hover:scale-110"
-                      style={{ mixBlendMode: darkMode ? "screen" : "multiply" }}
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                    {/* Amazon-listing-style price+star strip */}
-                    <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between rounded-md bg-black/70 px-2 py-1 backdrop-blur">
-                      <span className="flex items-center gap-0.5 text-[9px] font-black text-amber-300">
-                        ★ ★ ★ ★ ★
-                      </span>
-                      <span className={`rounded-sm bg-gradient-to-r ${cat.grad} px-1.5 py-0.5 text-[8px] font-black text-white`}>
-                        HD
-                      </span>
+                  {HERO_PRODUCT_SLIDES.map((slide, slideIdx) => (
+                    <div key={slideIdx} className="grid w-full shrink-0 grid-cols-2 gap-3">
+                      {slide.map((cat) => (
+                      <a
+                        key={`${slideIdx}-${cat.label}`}
+                        href="#try"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (typeof document !== "undefined") {
+                            document.getElementById("try")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                          }
+                        }}
+                        className={`group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border p-2.5 transition hover:-translate-y-1 hover:shadow-lg active:scale-95 ${
+                          darkMode ? "border-white/10 bg-white/[0.04] hover:border-amber-400/40" : "border-black/10 bg-white shadow-sm hover:border-amber-400/60"
+                        }`}
+                      >
+                        <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-slate-100 via-white to-slate-50 dark:from-white/[0.08] dark:via-white/[0.04] dark:to-white/[0.02]">
+                          <img
+                            src={cat.icon}
+                            alt={`AI ${cat.label} ${cat.tag.toLowerCase()} — ecommerce product photography example by AgentForge AI`}
+                            width={200}
+                            height={200}
+                            loading="lazy"
+                            decoding="async"
+                            className="h-3/4 w-3/4 object-contain transition group-hover:scale-110"
+                            style={{ mixBlendMode: darkMode ? "screen" : "multiply" }}
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).style.display = "none";
+                            }}
+                          />
+                          {/* Amazon-listing-style price+star strip */}
+                          <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between rounded-md bg-black/70 px-2 py-1 backdrop-blur">
+                            <span className="flex items-center gap-0.5 text-[9px] font-black text-amber-300">
+                              ★ ★ ★ ★ ★
+                            </span>
+                            <span className={`rounded-sm bg-gradient-to-r ${cat.grad} px-1.5 py-0.5 text-[8px] font-black text-white`}>
+                              HD
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-2 flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="truncate text-[11px] font-black sm:text-xs">{cat.label}</p>
+                            <p className={`truncate text-[9px] font-bold uppercase tracking-wider ${muted}`}>
+                              {cat.tag}
+                            </p>
+                          </div>
+                          <span className={`shrink-0 rounded-full bg-gradient-to-r ${cat.grad} px-1.5 py-0.5 text-[8px] font-black text-white`}>
+                            Try →
+                          </span>
+                        </div>
+                      </a>
+                      ))}
                     </div>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="truncate text-[11px] font-black sm:text-xs">{cat.label}</p>
-                      <p className={`truncate text-[9px] font-bold uppercase tracking-wider ${muted}`}>
-                        {cat.tag}
-                      </p>
-                    </div>
-                    <span className={`shrink-0 rounded-full bg-gradient-to-r ${cat.grad} px-1.5 py-0.5 text-[8px] font-black text-white`}>
-                      Live
-                    </span>
-                  </div>
+                  ))}
                 </div>
+              </div>
+            </div>
+
+            {/* Slider dots */}
+            <div className="relative mt-3 flex items-center justify-center gap-1.5">
+              {HERO_PRODUCT_SLIDES.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  aria-label={`Go to slide ${idx + 1}`}
+                  onClick={() => setHeroSlide(idx)}
+                  className={`h-1.5 cursor-pointer rounded-full transition-all duration-300 ${
+                    heroSlide === idx
+                      ? "w-6 bg-gradient-to-r from-amber-400 to-rose-500"
+                      : darkMode
+                      ? "w-1.5 bg-white/25 hover:bg-white/40"
+                      : "w-1.5 bg-black/20 hover:bg-black/40"
+                  }`}
+                />
               ))}
             </div>
 
-            {/* Best-for ticker — ecommerce focused */}
+            {/* Best-for ticker — ecommerce focused (brand logos) */}
             <div className={`relative mt-3 rounded-[1.25rem] border p-3 sm:p-4 ${
               darkMode ? "border-white/10 bg-black/25" : "border-black/10 bg-white/80"
             }`}>
               <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-600">
                 Built for
               </p>
-              <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] font-black sm:text-xs">
-                <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-amber-700 dark:text-amber-200">Amazon</span>
-                <span className="rounded-full bg-blue-500/15 px-2 py-0.5 text-blue-700 dark:text-blue-200">Flipkart</span>
-                <span className="rounded-full bg-rose-500/15 px-2 py-0.5 text-rose-700 dark:text-rose-200">Meesho</span>
-                <span className="rounded-full bg-pink-500/15 px-2 py-0.5 text-pink-700 dark:text-pink-200">Instagram</span>
-                <span className="rounded-full bg-cyan-500/15 px-2 py-0.5 text-cyan-700 dark:text-cyan-200">D2C site</span>
-                <span className="rounded-full bg-violet-500/15 px-2 py-0.5 text-violet-700 dark:text-violet-200">Ads &amp; banners</span>
-              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {/* Amazon — inline brand mark */}
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 ${
+                    darkMode ? "border-white/10 bg-white/[0.05]" : "border-black/10 bg-white"
+                  }`}
+                  title="Amazon"
+                >
+                  <span className="text-[13px] font-black leading-none tracking-tight text-[#232F3E] dark:text-white">
+                    amazon
+                  </span>
+                  <span className="block h-1 w-3 -translate-y-0.5 rounded-full bg-[#FF9900]" />
+                </span>
+
+                {/* Flipkart */}
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 ${
+                    darkMode ? "border-white/10 bg-white/[0.05]" : "border-black/10 bg-white"
+                  }`}
+                  title="Flipkart"
+                >
+                  <SiFlipkart className="h-3.5 w-3.5 text-[#2874F0]" />
+                  <span className="text-[11px] font-black text-[#2874F0]">Flipkart</span>
+                </span>
+
+                {/* Meesho — text wordmark in brand pink */}
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 ${
+                    darkMode ? "border-white/10 bg-white/[0.05]" : "border-black/10 bg-white"
+                  }`}
+                  title="Meesho"
+                >
+                  <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#F43397] text-[8px] font-black text-white">
+                    m
+                  </span>
+                  <span className="text-[11px] font-black text-[#F43397]">meesho</span>
+                </span>
+
+                {/* Instagram */}
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 ${
+                    darkMode ? "border-white/10 bg-white/[0.05]" : "border-black/10 bg-white"
+                  }`}
+                  title="Instagram"
+                >
+                  <SiInstagram className="h-3.5 w-3.5 text-[#E1306C]" />
+                  <span className="text-[11px] font-black text-[#E1306C]">Instagram</span>
+                </span>
+
+                {/* Shopify — represents D2C */}
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 ${
+                    darkMode ? "border-white/10 bg-white/[0.05]" : "border-black/10 bg-white"
+                  }`}
+                  title="Shopify · D2C sites"
+                >
+                  <SiShopify className="h-3.5 w-3.5 text-[#96BF48]" />
+                  <span className="text-[11px] font-black text-[#5E8E3E] dark:text-[#96BF48]">Shopify · D2C</span>
+                </span>
+
+                {/* Meta — Ads */}
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 ${
+                    darkMode ? "border-white/10 bg-white/[0.05]" : "border-black/10 bg-white"
+                  }`}
+                  title="Meta Ads"
+                >
+                  <SiMeta className="h-3.5 w-3.5 text-[#0866FF]" />
+                  <span className="text-[11px] font-black text-[#0866FF]">Meta Ads</span>
+                </span>
+              </div>
             </div>
           </div>
         </section>
@@ -1313,7 +1528,7 @@ export default function ProductographyPage() {
         <section id="try" className="mx-auto max-w-7xl px-3 py-5 sm:px-5 sm:py-8">
           <div className={`rounded-[1.25rem] border p-3 shadow-2xl backdrop-blur-xl sm:rounded-[1.75rem] sm:p-4 lg:p-6 ${card}`}>
             <div className="mb-5 sm:mb-6">
-              <h3 className="text-2xl font-black sm:text-3xl">Create Product Shoot</h3>
+              <h2 className="text-2xl font-black sm:text-3xl">Create Your AI Product Photoshoot</h2>
               <p className={`mt-2 text-sm sm:text-base ${muted}`}>
                 Same AgentForge structure: upload product, choose features, write custom instructions, generate professional still image.
               </p>

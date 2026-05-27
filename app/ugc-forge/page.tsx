@@ -155,17 +155,17 @@ export default function UGCForgePage() {
 
   async function handleGenerate() {
     if (!creatorImageUrl.trim()) {
-      alert("Creator/model photo URL add karo pehle.");
+      alert("Please add the creator/model photo URL first.");
       return;
     }
 
     if (!productImageUrl.trim()) {
-      alert("Product photo URL add karo pehle.");
+      alert("Please add the product photo URL first.");
       return;
     }
 
     if (!hasRights) {
-      alert("Please confirm karo ki creator image use karne ki permission aapke paas hai.");
+      alert("Please confirm that you have permission to use this creator's image.");
       return;
     }
 
@@ -266,7 +266,28 @@ export default function UGCForgePage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-950 dark:bg-[#050816] dark:text-white">
+    <main className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-950 dark:bg-[#050816] dark:text-white">
+      {/* Floating Doodles — UGC / video themed */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="float-slow absolute left-[6%] top-[6%] text-4xl opacity-65 sm:text-5xl">🎥</div>
+        <div className="float-medium absolute right-[8%] top-[10%] text-4xl opacity-65 sm:text-5xl">🎬</div>
+        <div className="float-fast absolute left-[22%] top-[14%] text-2xl opacity-55 sm:text-3xl">✨</div>
+        <div className="float-medium absolute right-[24%] top-[6%] text-3xl opacity-60 sm:text-4xl">🎤</div>
+        <div className="float-slow absolute left-[42%] top-[3%] text-2xl opacity-50 sm:text-3xl">⭐</div>
+        <div className="float-fast absolute right-[42%] top-[18%] text-3xl opacity-60 sm:text-4xl">📸</div>
+        <div className="float-medium absolute left-[3%] top-[28%] text-3xl opacity-55 sm:text-4xl">📹</div>
+        <div className="float-slow absolute right-[4%] top-[32%] text-3xl opacity-55 sm:text-4xl">🔥</div>
+        <div className="float-fast absolute left-[8%] top-[44%] text-3xl opacity-55 sm:text-4xl">⚡</div>
+        <div className="float-medium absolute right-[6%] top-[46%] text-3xl opacity-55 sm:text-4xl">🎞️</div>
+        <div className="float-slow absolute left-[35%] top-[52%] text-2xl opacity-50 sm:text-3xl">🚀</div>
+        <div className="float-medium absolute right-[30%] top-[58%] text-2xl opacity-55 sm:text-3xl">📱</div>
+        <div className="float-fast absolute left-[14%] top-[62%] text-3xl opacity-55 sm:text-4xl">🎨</div>
+        <div className="float-slow absolute right-[14%] top-[66%] text-3xl opacity-55 sm:text-4xl">🌟</div>
+        <div className="float-fast absolute left-[20%] top-[78%] text-2xl opacity-55 sm:text-3xl">✦</div>
+        <div className="float-medium absolute right-[18%] top-[82%] text-3xl opacity-60 sm:text-4xl">💫</div>
+        <div className="float-slow absolute left-[48%] top-[88%] text-2xl opacity-50 sm:text-3xl">🏆</div>
+      </div>
+
       <section className="relative overflow-hidden px-4 py-10 sm:px-6 lg:px-8">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.22),transparent_35%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.20),transparent_35%),linear-gradient(180deg,rgba(255,255,255,0),rgba(14,165,233,0.05))]" />
 
@@ -362,7 +383,7 @@ export default function UGCForgePage() {
             <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60 dark:border-white/10 dark:bg-white/[0.04] dark:shadow-none">
               <h2 className="text-2xl font-black">1. Upload Creator & Product</h2>
               <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                Creator ka face same rahega. Product ko branding scene mein naturally integrate kiya jayega.
+                The creator's face stays the same. The product is naturally integrated into the branding scene.
               </p>
 
               <div className="mt-6 space-y-5">
@@ -376,7 +397,7 @@ export default function UGCForgePage() {
                       <Upload className="h-5 w-5" />
                     </button>
                   </div>
-                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Rule: face change nahi hoga, sirf beautify + lighting upgrade.</p>
+                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Rule: the face will not change, only beautify + lighting upgrade.</p>
                 </div>
 
                 <div>
@@ -431,7 +452,7 @@ export default function UGCForgePage() {
             <div className="space-y-6">
               <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60 dark:border-white/10 dark:bg-white/[0.04] dark:shadow-none">
                 <h2 className="text-2xl font-black">2. Select Product Type</h2>
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Product ke hisaab se styling, pose and prompt better banega.</p>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Styling, pose and prompt will improve based on the product.</p>
 
                 <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {productTypes.map((item) => {
@@ -452,7 +473,7 @@ export default function UGCForgePage() {
 
               <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60 dark:border-white/10 dark:bg-white/[0.04] dark:shadow-none">
                 <h2 className="text-2xl font-black">3. Choose Pose</h2>
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Creator apni marzi se model ban sakta hai — but face identity same rahegi.</p>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">The creator can pose freely as a model — but face identity stays the same.</p>
 
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
                   {poses.map((item) => {
@@ -505,7 +526,7 @@ export default function UGCForgePage() {
 
                 <div className="mt-5">
                   <label className="mb-2 block text-sm font-bold">Custom Instruction</label>
-                  <textarea value={customInstruction} onChange={(e) => setCustomInstruction(e.target.value)} placeholder="Example: saree ko premium festive background mein showcase karo, creator ka face same rahe, soft makeup and luxury lighting..." rows={4} className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none ring-cyan-400/30 focus:ring-4 dark:border-white/10 dark:bg-white/5" />
+                  <textarea value={customInstruction} onChange={(e) => setCustomInstruction(e.target.value)} placeholder="Example: showcase the saree against a premium festive background, keep the creator's face the same, soft makeup and luxury lighting..." rows={4} className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none ring-cyan-400/30 focus:ring-4 dark:border-white/10 dark:bg-white/5" />
                 </div>
 
                 <div className="mt-5 rounded-2xl border border-cyan-400/30 bg-cyan-400/10 p-4">

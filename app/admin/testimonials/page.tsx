@@ -442,12 +442,30 @@ export default function AdminTestimonialsPage() {
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className={`rounded-2xl border p-10 text-center ${softCard}`}>
-            <MessageSquare className={`mx-auto mb-3 h-10 w-10 ${muted}`} />
-            <p className="text-sm font-black">No testimonials to show</p>
-            <p className={`mt-1 text-xs ${muted}`}>
-              Try a different agent or status filter.
-            </p>
+          <div className={`relative overflow-hidden rounded-2xl border p-10 text-center ${softCard}`}>
+            {/* Decorative glow */}
+            <div className="pointer-events-none absolute -left-10 -top-10 h-32 w-32 rounded-full bg-cyan-400/15 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-10 -right-10 h-32 w-32 rounded-full bg-blue-500/15 blur-3xl" />
+
+            <div className="relative">
+              <div className="relative mx-auto mb-4 inline-flex">
+                <span className="absolute inset-0 -m-1 animate-ping rounded-2xl bg-cyan-400/20" />
+                <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-xl shadow-cyan-500/30">
+                  <MessageSquare className="h-7 w-7" />
+                </div>
+              </div>
+
+              <p className="text-base font-black md:text-lg">
+                Your inbox is{" "}
+                <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">
+                  all caught up
+                </span>{" "}
+                🎉
+              </p>
+              <p className={`mx-auto mt-2 max-w-sm text-xs leading-5 ${muted}`}>
+                Try a different filter or wait for new submissions — the moment a user submits one, it'll show up here.
+              </p>
+            </div>
           </div>
         ) : (
           <div className="grid gap-3">

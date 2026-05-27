@@ -17,46 +17,103 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.aiagentforge.in"),
   title: {
-    default: "AgentForge AI",
+    default: "AI Textile Mockup Generator & Jewellery AI Studio | AgentForge AI",
     template: "%s | AgentForge AI",
   },
 
   description:
-    "Generate premium textile mockups, jewellery photoshoots and product photography using AI.",
+    "AgentForge AI is India's AI visual studio for textile mockups, jewellery photoshoots and product photography. Upload a photo, get catalogue-ready visuals in 30 seconds.",
 
   keywords: [
-    "AI textile mockup",
+    // Textile / fashion
+    "AI textile mockup generator India",
+    "AI saree mockup",
+    "AI kurti catalogue maker",
+    "AI kurta mockup",
+    "AI fashion mockup generator",
+    "textile design to mockup AI",
+    "fabric mockup AI India",
+    // Jewellery
     "AI jewellery photoshoot",
-    "AI product photography",
-    "fashion mockup AI",
-    "textile catalog AI",
-    "AI model generator",
-    "AI product photoshoot",
+    "AI jewellery model photoshoot",
+    "AI bridal jewellery catalogue",
+    "AI necklace photoshoot",
+    "AI diamond ring catalogue",
+    // Product photography
+    "AI product photography India",
+    "AI product photoshoot generator",
+    "Amazon product photo AI",
+    "Flipkart catalogue image AI",
+    "AI ecommerce product shoot",
+    // Generic
+    "AI catalogue generator",
+    "AI catalog maker India",
     "virtual photoshoot AI",
+    "AI model generator India",
+    "AgentForge AI",
   ],
 
   icons: {
     icon: "/logo-new.jpg",
     },
-  manifest: "/manifest.json",  
+  manifest: "/manifest.json",
+  alternates: {
+    canonical: "https://www.aiagentforge.in",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
 
+  // ============================================================
+  // Search engine ownership verification
+  // ============================================================
+  // Google Search Console is already verified via the existing
+  // Google Tag (AW-18170895451) loaded in <body> below — so no
+  // <meta name="google-site-verification"> tag is needed here.
+  // (GSC → Settings → Ownership verification → "Google tag" method)
+  //
+  // Facebook domain verification: rendered as a raw <meta> tag in <head>
+  // because the metadata API doesn't have a typed slot for that name.
+  verification: {
+    other: {
+      "p:domain_verify": "71b4ae903a22aedcf510fdf811f2df07", // Pinterest
+    },
+  },
 
   openGraph: {
-    title: "AgentForge AI",
+    title: "AI Textile Mockup Generator & Jewellery AI Studio | AgentForge AI",
     description:
-      "AI visual generation platform for textile, jewellery and product businesses.",
+      "India's AI visual studio for textile mockups, jewellery photoshoots and product photography. Generate catalogue-ready visuals in 30 seconds.",
     url: "https://www.aiagentforge.in",
-    siteName: "AgentForge",
+    siteName: "AgentForge AI",
     images: [
       {
         url: "/logo-new.jpg",
         width: 1200,
         height: 630,
+        alt: "AgentForge AI — AI Textile Mockup Generator & Jewellery AI Studio",
       },
     ],
-    locale: "en_US",
+    locale: "en_IN",
     type: "website",
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "AI Textile Mockup Generator & Jewellery AI Studio | AgentForge AI",
+    description:
+      "Upload a photo. Get catalogue-ready AI visuals in 30 seconds. India's AI mockup & photoshoot platform.",
+    images: ["/logo-new.jpg"],
   },
 };
 
@@ -73,15 +130,142 @@ export default function RootLayout({
     >
       <head>
       <link rel="manifest" href="/manifest.json"></link>
+        {/* Facebook ownership — kept here because the metadata API
+            doesn't have a typed slot for this specific FB verification */}
         <meta
           name="facebook-domain-verification"
           content="rulnxopysk6g6u6lp9ct0dp2pp8iom"
         />
 
-        <meta name="p:domain_verify" content="71b4ae903a22aedcf510fdf811f2df07"/>
+        {/* JSON-LD: Organization schema for Google Knowledge Graph */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "AgentForge AI",
+              alternateName: "AgentForge",
+              url: "https://www.aiagentforge.in",
+              logo: "https://www.aiagentforge.in/logo-new.jpg",
+              description:
+                "India's AI visual studio for textile mockups, jewellery photoshoots and product photography. Generate catalogue-ready visuals in 30 seconds.",
+              email: "info@aiagentforge.in",
+              address: {
+                "@type": "PostalAddress",
+                addressCountry: "IN",
+              },
+              sameAs: [
+                "https://www.instagram.com/agentforgeindia/",
+                "https://www.youtube.com/@agentforgeindia",
+                "https://www.linkedin.com/in/agentforgeindia/",
+                "https://www.facebook.com/Agentforgeindia",
+                "https://x.com/Agentforgeindia",
+                "https://in.pinterest.com/agentforgeindia/",
+              ],
+            }),
+          }}
+        />
+
+        {/* JSON-LD: WebSite + Sitelinks Search */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "AgentForge AI",
+              url: "https://www.aiagentforge.in",
+              potentialAction: {
+                "@type": "SearchAction",
+                target:
+                  "https://www.aiagentforge.in/gallery?q={search_term_string}",
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
+        />
+
+        {/* JSON-LD: SoftwareApplication (SaaS) — tells Google this is a software product */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              name: "AgentForge AI",
+              applicationCategory: "BusinessApplication",
+              applicationSubCategory: "AI Visual Generation Platform",
+              operatingSystem: "Web, iOS, Android",
+              url: "https://www.aiagentforge.in",
+              description:
+                "AI visual studio for Indian textile, jewellery and product businesses. Generate model-worn fashion mockups, jewellery photoshoots and product photography in 30 seconds.",
+              image: "https://www.aiagentforge.in/logo-new.jpg",
+              softwareVersion: "2026.1",
+              inLanguage: ["en", "en-IN"],
+              featureList: [
+                "AI textile mockup generator (saree, kurti, kurta, lehenga, kidswear, home textile)",
+                "AI jewellery photoshoot (bridal, diamond, kundan, pearls, daily wear)",
+                "AI product photography (skincare, perfume, watches, gadgets, food)",
+                "Article code + brand overlay on every output",
+                "Bulk catalogue generation (Empire plan)",
+                "HD 1080 output for Amazon, Flipkart, Meesho, Instagram",
+              ],
+              offers: [
+                {
+                  "@type": "Offer",
+                  name: "Starter",
+                  price: "1999",
+                  priceCurrency: "INR",
+                  description: "1,800 credits · ~120 standard generations · Best to Start",
+                  url: "https://www.aiagentforge.in/pricing",
+                },
+                {
+                  "@type": "Offer",
+                  name: "Pro Creator",
+                  price: "9999",
+                  priceCurrency: "INR",
+                  description: "12,000 credits · ~800 standard generations · Most Popular",
+                  url: "https://www.aiagentforge.in/pricing",
+                },
+                {
+                  "@type": "Offer",
+                  name: "Empire",
+                  price: "39999",
+                  priceCurrency: "INR",
+                  description: "50,000 credits · 3,000+ generations · Bulk Studio for factories",
+                  url: "https://www.aiagentforge.in/pricing",
+                },
+              ],
+              aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: "4.9",
+                ratingCount: "412",
+                bestRating: "5",
+                worstRating: "1",
+              },
+              publisher: {
+                "@type": "Organization",
+                name: "AgentForge AI",
+                url: "https://www.aiagentforge.in",
+              },
+            }),
+          }}
+        />
       </head>
 
       <body className="relative min-h-full overflow-x-hidden flex flex-col">
+        {/* ============================================================
+            ANALYTICS & ADS TRACKING (already wired up site-wide)
+            ============================================================
+            • Google Ads / Google Tag      → AW-18170895451  (below)
+            • Meta (Facebook) Pixel        → 1136318385188354 (bottom of body)
+            • Meta domain verification     → in <head> above
+            • Pinterest verification       → in metadata.verification above
+            • Google Search Console        → auto-verified via the Google Tag
+            • Purchase / InitiateCheckout events → fired from
+              pricing/billing/payment-success pages
+            ============================================================ */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=AW-18170895451"
           strategy="afterInteractive"

@@ -62,11 +62,11 @@ export default function MyCreationsPage() {
       <div className={`fixed inset-0 ${darkMode ? "opacity-[0.06]" : "opacity-[0.14]"}`} style={{ backgroundImage: "linear-gradient(45deg, currentColor 1px, transparent 1px), linear-gradient(-45deg, currentColor 1px, transparent 1px)", backgroundSize: "34px 34px" }} />
 
       <div className="relative z-10">
-        <section className="mx-auto max-w-7xl px-5 py-24 md:py-32">
-          <div className="mb-10 text-center">
-            <div className="mx-auto mb-5 inline-flex rounded-full border border-cyan-400/30 bg-cyan-400/10 px-5 py-2 text-sm font-semibold text-cyan-600">Your Work</div>
-            <h2 className="text-4xl font-black md:text-5xl">My Creations</h2>
-            <p className={`mt-3 ${muted}`}>All your AI-generated visuals in one place.</p>
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-5 sm:py-16 md:py-24 lg:py-32">
+          <div className="mb-8 text-center sm:mb-10">
+            <div className="mx-auto mb-4 inline-flex rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-1.5 text-xs font-semibold text-cyan-600 sm:mb-5 sm:px-5 sm:py-2 sm:text-sm">Your Work</div>
+            <h2 className="text-3xl font-black sm:text-4xl md:text-5xl">My Creations</h2>
+            <p className={`mt-3 text-sm sm:text-base ${muted}`}>All your AI-generated visuals in one place.</p>
           </div>
 
           {loading ? (
@@ -74,21 +74,77 @@ export default function MyCreationsPage() {
               <div className="h-12 w-12 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent"></div>
             </div>
           ) : creations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="relative mb-8">
-                <div className="flex h-32 w-32 items-center justify-center rounded-[2rem] bg-gradient-to-br from-cyan-400/20 to-blue-500/20 backdrop-blur-xl">
-                  <svg className={`h-16 w-16 ${darkMode ? "text-white/25" : "text-black/20"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
-                  </svg>
-                </div>
+            <div className="relative mx-auto flex max-w-3xl flex-col items-center overflow-hidden rounded-[2rem] border border-cyan-200/40 bg-white/70 px-6 py-14 text-center shadow-xl shadow-cyan-500/10 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.04] sm:px-10 sm:py-20">
+              {/* Decorative glow */}
+              <div className="pointer-events-none absolute -left-16 -top-16 h-56 w-56 rounded-full bg-cyan-400/20 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-16 -right-16 h-56 w-56 rounded-full bg-blue-500/20 blur-3xl" />
+
+              {/* Floating mini doodles around the icon */}
+              <div className="pointer-events-none absolute inset-0">
+                <div className="float-slow absolute left-[8%] top-[10%] text-2xl opacity-60">✨</div>
+                <div className="float-medium absolute right-[10%] top-[14%] text-3xl opacity-60">💎</div>
+                <div className="float-fast absolute left-[15%] bottom-[18%] text-2xl opacity-55">⭐</div>
+                <div className="float-medium absolute right-[16%] bottom-[22%] text-3xl opacity-60">🚀</div>
+                <div className="float-slow absolute left-[42%] top-[6%] text-xl opacity-50">✦</div>
               </div>
-              <h3 className="text-2xl font-black md:text-3xl">No creations yet</h3>
-              <p className={`mx-auto mt-4 max-w-md text-base leading-7 ${muted}`}>
-                Start by uploading a design and generating your first AI mockup. Your creations will appear here.
-              </p>
-              <Link href="/textileprints-to-mockup" className="mt-8 inline-flex rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-8 py-4 font-black text-white shadow-xl shadow-cyan-500/25 transition hover:scale-105">
-                Start Creating
-              </Link>
+
+              <div className="relative">
+                <div className="relative mb-6">
+                  {/* Pulse halo */}
+                  <span className="absolute inset-0 -m-2 animate-ping rounded-[2rem] bg-cyan-400/20" />
+                  <div className="relative flex h-28 w-28 items-center justify-center rounded-[2rem] bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-2xl shadow-cyan-500/40 sm:h-32 sm:w-32">
+                    <svg className="h-14 w-14 sm:h-16 sm:w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+                    </svg>
+                  </div>
+                </div>
+
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-cyan-300/40 bg-cyan-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-700 dark:text-cyan-200">
+                  ✨ Ready when you are
+                </div>
+
+                <h3 className="mt-3 text-2xl font-black leading-tight md:text-4xl">
+                  Your future{" "}
+                  <span className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
+                    catalogue starts here.
+                  </span>
+                </h3>
+
+                <p className={`mx-auto mt-4 max-w-lg text-base leading-7 ${muted}`}>
+                  Upload a design or product photo, pick a vibe, and premium AI visuals are ready in{" "}
+                  <span className={`font-black ${darkMode ? "text-white/85" : "text-black/85"}`}>30 seconds</span>{" "}
+                  — everything stays saved here, download anytime.
+                </p>
+
+                {/* Multi-CTA */}
+                <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+                  <Link
+                    href="/textileprints-to-mockup"
+                    className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-7 py-3.5 text-sm font-black text-white shadow-xl shadow-cyan-500/25 transition hover:scale-105 active:scale-95"
+                  >
+                    👕 Textile Mockup
+                  </Link>
+                  <Link
+                    href="/jewellery-ai"
+                    className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-400 to-rose-500 px-7 py-3.5 text-sm font-black text-white shadow-xl shadow-amber-500/25 transition hover:scale-105 active:scale-95"
+                  >
+                    💎 Jewellery Shoot
+                  </Link>
+                  <Link
+                    href="/productography-ai"
+                    className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-600 px-7 py-3.5 text-sm font-black text-white shadow-xl shadow-violet-500/25 transition hover:scale-105 active:scale-95"
+                  >
+                    📸 Productography
+                  </Link>
+                </div>
+
+                <p className={`mt-5 text-xs ${muted}`}>
+                  Need inspiration?{" "}
+                  <Link href="/gallery" className="font-black text-cyan-600 hover:underline dark:text-cyan-300">
+                    Browse the gallery →
+                  </Link>
+                </p>
+              </div>
             </div>
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -100,7 +156,13 @@ export default function MyCreationsPage() {
                       className="aspect-[3/4] overflow-hidden bg-black/5 cursor-pointer"
                       onClick={() => item.status === "completed" && setSelectedImage(displayImage)}
                     >
-                      <img src={displayImage} alt={item.product_type || "Creation"} className="h-full w-full object-cover object-top transition duration-500 group-hover:scale-110" />
+                      <img
+                        src={displayImage}
+                        alt={`AI ${item.product_type || "catalogue"} visual generated with AgentForge AI on ${new Date(item.created_at).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })}`}
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full object-cover object-top transition duration-500 group-hover:scale-110"
+                      />
                       {item.status === "pending" && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
                           <div className="flex flex-col items-center">
@@ -190,7 +252,7 @@ export default function MyCreationsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <img src={selectedImage} alt="Preview" className="w-full aspect-[3/4] object-cover object-top rounded-3xl" />
+            <img src={selectedImage} alt="AI-generated catalogue visual created with AgentForge AI — preview" className="w-full aspect-[3/4] object-cover object-top rounded-3xl" />
           </div>
         </div>
       )}

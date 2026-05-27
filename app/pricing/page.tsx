@@ -377,7 +377,7 @@ router.push("/payment-success");
             <div className="mx-auto mt-8 max-w-3xl rounded-[2rem] border border-cyan-400/30 bg-gradient-to-r from-cyan-400/15 to-blue-500/15 p-5 backdrop-blur-xl">
               <h3 className="text-2xl font-black">Start After Login</h3>
               <p className={`mt-2 ${muted}`}>
-                Login ke baad trial credits activate honge. Pricing simple monthly image volume par based hai.
+                Trial credits activate after login. Pricing is based on simple monthly image volume.
               </p>
               <Link
                 href="/login?redirect=/pricing"
@@ -416,34 +416,34 @@ router.push("/payment-success");
         </section>
 
         <section className="mx-auto max-w-7xl px-5 pb-16">
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
             {plans.map((plan) => (
               <div
                 key={plan.name}
-                className={`relative flex h-full flex-col rounded-[2rem] border p-6 shadow-2xl backdrop-blur-xl transition hover:-translate-y-1 ${card} ${
+                className={`relative flex h-full flex-col rounded-[2rem] border p-4 shadow-2xl backdrop-blur-xl transition hover:-translate-y-1 sm:p-6 ${card} ${
                   plan.popular ? "z-10 border-cyan-400 xl:scale-105" : ""
                 }`}
               >
-                <div className="absolute right-5 top-5 rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-4 py-2 text-xs font-black text-white shadow-lg shadow-cyan-500/25">
+                <div className="absolute right-3 top-3 rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-3 py-1.5 text-[10px] font-black text-white shadow-lg shadow-cyan-500/25 sm:right-5 sm:top-5 sm:px-4 sm:py-2 sm:text-xs">
                   {plan.badge}
                 </div>
 
-                <div className="mb-5 flex items-start justify-between gap-4 pr-24">
-                  <div>
-                    <p className="text-sm font-semibold text-cyan-600">{plan.audience}</p>
-                    <h3 className="mt-2 text-3xl font-black tracking-tight">{plan.name}</h3>
-                    <p className={`mt-3 text-sm leading-6 ${muted}`}>{plan.desc}</p>
+                <div className="mb-5 flex items-start justify-between gap-3 pr-20 sm:gap-4 sm:pr-24">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-cyan-600 sm:text-sm">{plan.audience}</p>
+                    <h3 className="mt-1.5 text-2xl font-black tracking-tight sm:mt-2 sm:text-3xl">{plan.name}</h3>
+                    <p className={`mt-2 text-xs leading-5 sm:mt-3 sm:text-sm sm:leading-6 ${muted}`}>{plan.desc}</p>
                   </div>
 
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-cyan-100 bg-white shadow-inner">
-                    <img src="/logo-new.jpg" alt="AgentForge Logo" className="h-full w-full object-cover" />
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-cyan-100 bg-white shadow-inner sm:h-14 sm:w-14">
+                    <img src="/logo-new.jpg" alt="AgentForge AI plan badge" width={56} height={56} loading="lazy" className="h-full w-full object-cover" />
                   </div>
                 </div>
 
-                <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/10 p-5">
-                  <div className="flex items-end gap-2">
-                    <p className="text-5xl font-black tracking-tight">{plan.price}</p>
-                    <p className={`pb-2 text-sm ${muted}`}>/ month</p>
+                <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/10 p-4 sm:p-5">
+                  <div className="flex flex-wrap items-end gap-2">
+                    <p className="text-4xl font-black tracking-tight sm:text-5xl">{plan.price}</p>
+                    <p className={`pb-1.5 text-sm sm:pb-2 ${muted}`}>/ month</p>
                   </div>
                   <p className="mt-4 rounded-full bg-white px-4 py-2 text-center text-sm font-black text-black">
                     {plan.creditsLabel}
@@ -499,8 +499,8 @@ router.push("/payment-success");
               </span>
             </h3>
             <p className={`mx-auto mt-3 max-w-2xl text-sm leading-7 sm:text-base ${muted}`}>
-              Ek traditional product shoot mein hi ₹15,000 – ₹50,000 lag jaate hain.
-              AgentForge mein utne paisey mein hazaaron visuals banao — bina kisi studio, model ya wait ke.
+              A single traditional product shoot costs ₹15,000 – ₹50,000.
+              With AgentForge, create thousands of visuals for the same budget — no studio, no model, no wait.
             </p>
           </div>
 
@@ -596,10 +596,10 @@ router.push("/payment-success");
                 </span>
               </h4>
               <p className={`mx-auto mt-3 max-w-3xl text-sm leading-7 sm:text-base ${muted}`}>
-                Agar aap mahine mein sirf 2 product shoots karte ho (≈₹40,000), us paise mein
-                AgentForge ki <span className="font-black text-cyan-600">Empire plan</span>{" "}
-                aaegi — yaani <span className="font-black">3,000+ AI visuals</span> har mahine,
-                aur saath mein bulk catalogue workflow.
+                If you do just 2 product shoots a month (≈₹40,000), that same budget gets you
+                AgentForge's <span className="font-black text-cyan-600">Empire plan</span>{" "}
+                — meaning <span className="font-black">3,000+ AI visuals</span> every month,
+                plus the bulk catalogue workflow.
               </p>
             </div>
           </div>
@@ -613,7 +613,7 @@ router.push("/payment-success");
             </p>
             <h3 className="mt-2 text-2xl font-black leading-tight sm:text-3xl md:text-4xl">
               <span className="bg-gradient-to-r from-cyan-400 via-cyan-500 to-blue-600 bg-clip-text text-transparent">
-                Sab kharcha skip — sirf result rakho
+                Skip every expense — keep only the results
               </span>
             </h3>
           </div>
@@ -628,7 +628,7 @@ router.push("/payment-success");
               {
                 Icon: Sparkles,
                 title: "Models & MUA",
-                desc: "AI ke andar built-in model looks aur poses available.",
+                desc: "Built-in model looks and poses available inside the AI.",
               },
               {
                 Icon: Clock,

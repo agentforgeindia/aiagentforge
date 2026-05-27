@@ -106,11 +106,16 @@ function CtaCard({ isLoggedIn }: { isLoggedIn: boolean }) {
 
 function ImageCard({
   item,
+  index,
   onOpen,
 }: {
   item: GalleryItem;
+  index: number;
   onOpen: (item: GalleryItem) => void;
 }) {
+  // First few cards are above-the-fold → load eagerly with high priority for LCP
+  // (everything else lazy-loads as the user scrolls — saves bandwidth + CWV win)
+  const aboveFold = index < 5;
   return (
     <button
       onClick={() => onOpen(item)}
@@ -118,7 +123,12 @@ function ImageCard({
     >
       <img
         src={item.url}
-        alt={`${item.title} created using AgentForge AI`}
+        alt={`${item.title} — AI-generated ${item.category.toLowerCase()} visual created with AgentForge AI`}
+        width={400}
+        height={500}
+        loading={aboveFold ? "eager" : "lazy"}
+        decoding="async"
+        fetchPriority={aboveFold ? "high" : "auto"}
         className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
       />
 
@@ -133,7 +143,7 @@ function ImageCard({
 export default function GalleryPage() {
   const { darkMode } = useTheme();
   const [selected, setSelected] = useState<GalleryItem | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>("Textile");
+  const [activeTab, setActiveTab] = useState<Tab>("All");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
@@ -158,13 +168,13 @@ export default function GalleryPage() {
   }, []);
 
   const items = useMemo(() => {
-    // ALL tab = fixed mix preview (no shuffle)
+    // ALL tab = mixed + daily shuffled across all categories
     if (activeTab === "All") {
-      return [
-        ...textileItems.slice(0, 9),
-        ...jewelleryItems.slice(0, 9),
-        ...productItems.slice(0, 9),
-      ];
+      return dailyShuffle([
+        ...textileItems,
+        ...jewelleryItems,
+        ...productItems,
+      ]);
     }
 
     // Individual tabs = daily shuffle
@@ -234,7 +244,7 @@ export default function GalleryPage() {
           />
 
           <div className="relative grid gap-0 lg:grid-cols-[1fr_1fr]">
-            <div className="p-8 md:p-12">
+            <div className="p-5 sm:p-8 md:p-12">
               {/* Eyebrow */}
               <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-300/60 bg-white/80 px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.32em] text-cyan-700 shadow-md shadow-cyan-300/30 backdrop-blur sm:text-[11px] dark:border-cyan-400/30 dark:bg-white/10 dark:text-cyan-200">
                 <Sparkles className="h-3.5 w-3.5 animate-pulse text-cyan-500" />
@@ -253,7 +263,7 @@ export default function GalleryPage() {
               <p className={`mt-5 max-w-2xl text-sm leading-7 sm:text-base sm:leading-8 ${darkMode ? "text-white/65" : "text-black/60"}`}>
                 Explore AI-generated textile mockups, jewellery photoshoots,
                 fashion visuals, and catalogue-ready product photography —
-                sab AgentForge AI ke andar bani hui live examples.
+                all live examples built inside AgentForge AI.
               </p>
 
               <div className="mt-6 flex flex-wrap gap-3">
@@ -365,6 +375,11 @@ export default function GalleryPage() {
                   <img
                     src="/gallery/textile/design-1.png"
                     alt="AI textile mockup example created with AgentForge AI"
+                    width={600}
+                    height={750}
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
                     className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                   />
                   <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/65 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white backdrop-blur">
@@ -377,6 +392,10 @@ export default function GalleryPage() {
                   <img
                     src="/gallery/jewellery/design-1.png"
                     alt="AI jewellery photoshoot example created with AgentForge AI"
+                    width={400}
+                    height={400}
+                    loading="eager"
+                    decoding="async"
                     className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                   />
                   <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/65 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white backdrop-blur">
@@ -389,6 +408,10 @@ export default function GalleryPage() {
                   <img
                     src="/gallery/productography/design-1.png"
                     alt="AI product photography example created with AgentForge AI"
+                    width={400}
+                    height={400}
+                    loading="lazy"
+                    decoding="async"
                     className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                   />
                   <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/65 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white backdrop-blur">
@@ -426,17 +449,17 @@ export default function GalleryPage() {
           `}</style>
         </div>
 
-        <div className="mt-8 rounded-[1.5rem] bg-white/90 p-2 shadow-lg">
-  <div className="flex items-center justify-between gap-1">
+        <div className="mt-6 rounded-[1.5rem] bg-white/90 p-2 shadow-lg sm:mt-8">
+          <div className="-mx-1 flex items-center gap-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:justify-between">
             {tabs.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`rounded-full px-3 py-2 text-[13px] font-black transition whitespace-nowrap ${
-  activeTab === tab
-    ? "bg-black text-white"
-    : "text-black/60 hover:bg-black/5"
-}`}
+                className={`shrink-0 rounded-full px-3 py-2 text-xs font-black transition whitespace-nowrap sm:flex-1 sm:text-[13px] ${
+                  activeTab === tab
+                    ? "bg-black text-white"
+                    : "text-black/60 hover:bg-black/5"
+                }`}
               >
                 {tab}
               </button>
@@ -444,15 +467,15 @@ export default function GalleryPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
+        <div className="mt-3 grid grid-cols-2 gap-2.5 sm:mt-4 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 xl:grid-cols-5">
           {items.slice(0, 8).map((item, index) => (
-            <ImageCard key={`${item.url}-${index}`} item={item} onOpen={setSelected} />
+            <ImageCard key={`${item.url}-${index}`} item={item} index={index} onOpen={setSelected} />
           ))}
 
           <CtaCard isLoggedIn={isLoggedIn} />
 
           {items.slice(8, 28).map((item, index) => (
-            <ImageCard key={`${item.url}-${index + 8}`} item={item} onOpen={setSelected} />
+            <ImageCard key={`${item.url}-${index + 8}`} item={item} index={index + 8} onOpen={setSelected} />
           ))}
 
           <CtaCard isLoggedIn={isLoggedIn} />
@@ -484,8 +507,8 @@ export default function GalleryPage() {
               >
                 AgentForge helps textile manufacturers, jewellery brands,
                 wholesalers, fashion sellers, and ecommerce businesses generate
-                catalogue-ready visuals using AI. Har category ke liye ek
-                dedicated agent — neeche dekho kya kya bana sakte ho.
+                catalogue-ready visuals using AI. A dedicated agent for every
+                category — see below what you can create.
               </p>
             </div>
 
@@ -501,7 +524,7 @@ export default function GalleryPage() {
                   shadow: "shadow-cyan-500/30",
                   ring: "ring-cyan-400/40",
                   glow: "bg-cyan-400/15",
-                  desc: "Apne motif ya design ko model-worn premium mockups mein turn karo — article code overlay ke saath, catalogue ready.",
+                  desc: "Turn your motif or design into premium model-worn mockups — with article code overlay, catalogue ready.",
                   bullets: [
                     "Kurta, saree, suit, kidswear",
                     "Men & women fashion mockups",
@@ -518,7 +541,7 @@ export default function GalleryPage() {
                   shadow: "shadow-amber-500/30",
                   ring: "ring-amber-400/40",
                   glow: "bg-amber-400/15",
-                  desc: "Luxury jewellery photoshoots — model ke saath bhi aur sirf product ke bhi. Bridal se daily-wear tak sab covered.",
+                  desc: "Luxury jewellery photoshoots — with model and product-only versions. Bridal to daily-wear, all covered.",
                   bullets: [
                     "Necklace · ring · earring · bangle",
                     "Bridal & festive shoots",
@@ -535,7 +558,7 @@ export default function GalleryPage() {
                   shadow: "shadow-violet-500/30",
                   ring: "ring-violet-400/40",
                   glow: "bg-violet-400/15",
-                  desc: "Product photos ko catalogue-ready hero shots aur Instagram ad creatives mein convert karo — bina shoot ke.",
+                  desc: "Convert your product photos into catalogue-ready hero shots and Instagram ad creatives — without a shoot.",
                   bullets: [
                     "Skincare · perfume · cosmetics",
                     "Gadgets · electronics · packaging",
@@ -629,10 +652,10 @@ export default function GalleryPage() {
             }`}>
               <div className="min-w-0">
                 <p className="text-sm font-black sm:text-base">
-                  Apne products pe bhi try karna chahte ho?
+                  Want to try this on your own products?
                 </p>
                 <p className={`mt-1 text-xs sm:text-sm ${darkMode ? "text-white/55" : "text-black/55"}`}>
-                  Signup karke 100 free credits le lo · No card required
+                  Sign up and get 100 free credits · No card required
                 </p>
               </div>
               <Link

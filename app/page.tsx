@@ -635,7 +635,7 @@ export default function Home() {
 
         <section className="mx-auto max-w-7xl px-4 py-8 sm:px-5 sm:py-12">
           <div className="mb-6 text-center sm:mb-8">
-            <h3 className="text-2xl font-black sm:text-3xl md:text-4xl">Our AI Agents</h3>
+            <h2 className="text-2xl font-black sm:text-3xl md:text-4xl">Our AI Agents</h2>
             <p className={`mx-auto mt-3 max-w-2xl text-sm leading-6 sm:text-base sm:leading-7 ${muted}`}>
               Three powerful AI agents built to make product visuals faster,
               smarter, and more premium.
@@ -703,11 +703,11 @@ export default function Home() {
               <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-600">
                 The Flow
               </p>
-              <h3 className="mt-2 text-3xl font-black leading-tight sm:text-4xl md:text-5xl">
+              <h2 className="mt-2 text-3xl font-black leading-tight sm:text-4xl md:text-5xl">
                 <span className="bg-gradient-to-r from-cyan-400 via-cyan-500 to-blue-600 bg-clip-text text-transparent">
                   How AgentForge Works
                 </span>
-              </h3>
+              </h2>
               <p className={`mx-auto mt-3 max-w-xl text-sm sm:text-base ${muted}`}>
                 Four steps. Zero setup. Business-grade output every time.
               </p>
@@ -823,14 +823,14 @@ export default function Home() {
             <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-600">
               Who it&apos;s for
             </p>
-            <h3 className="mt-2 text-3xl font-black leading-tight sm:text-4xl md:text-5xl">
+            <h2 className="mt-2 text-3xl font-black leading-tight sm:text-4xl md:text-5xl">
               <span className="bg-gradient-to-r from-cyan-400 via-cyan-500 to-blue-600 bg-clip-text text-transparent">
                 Built for sellers, brands & creative teams
               </span>
-            </h3>
+            </h2>
             <p className={`mx-auto mt-3 max-w-2xl text-sm leading-7 sm:text-base ${muted}`}>
-              Har category ke liye ek dedicated AI agent. Apni industry choose karo
-              — seedha agent ke andar jao aur generate karna shuru karo.
+              A dedicated AI agent for every category. Pick your industry —
+              jump straight into the agent and start generating.
             </p>
           </div>
 
@@ -851,11 +851,11 @@ export default function Home() {
                 },
                 {
                   title: "Fashion Designers",
-                  desc: "Apne motifs ko model-worn collection visuals mein turn karo.",
+                  desc: "Turn your motifs into model-worn collection visuals.",
                 },
                 {
                   title: "Garment Manufacturers",
-                  desc: "Saree, kurta, suit, kidswear — sab pe instant model shoots.",
+                  desc: "Saree, kurta, suit, kidswear — instant model shoots on every product.",
                 },
               ],
             },
@@ -1004,15 +1004,102 @@ export default function Home() {
           `}</style>
         </section>
 
+        {/* ───────── Popular AI tools (SEO internal-link hub) ───────── */}
+        <section className="mx-auto max-w-7xl px-4 py-8 sm:px-5 sm:py-12">
+          <div className="mb-6 text-center sm:mb-8">
+            <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-600">
+              Popular AI tools
+            </p>
+            <h2 className="mt-2 text-2xl font-black leading-tight sm:text-3xl md:text-4xl">
+              Explore by what you sell
+            </h2>
+            <p className={`mx-auto mt-2 max-w-2xl text-sm leading-6 sm:text-base ${muted}`}>
+              Jump directly to the AI tool built for your industry — already used by businesses across India.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
+            {[
+              {
+                href: "/ai-textile-mockup-generator-india",
+                title: "AI Textile Mockup Generator India",
+                desc: "Saree, kurti, kurta, lehenga, kidswear & home textile mockups.",
+                emoji: "👕",
+                grad: "from-cyan-400 to-blue-500",
+              },
+              {
+                href: "/ai-jewellery-photoshoot",
+                title: "AI Jewellery Photoshoot",
+                desc: "Bridal, diamond, kundan, daily-wear catalogue images.",
+                emoji: "💎",
+                grad: "from-amber-400 to-rose-500",
+              },
+              {
+                href: "/ai-saree-mockup",
+                title: "AI Saree Mockup",
+                desc: "Flat saree to model-worn catalogue image in 30 seconds.",
+                emoji: "🥻",
+                grad: "from-rose-400 to-pink-500",
+              },
+              {
+                href: "/ai-kurti-catalogue-maker",
+                title: "AI Kurti Catalogue Maker",
+                desc: "Daily WhatsApp & Instagram kurti drops, ready in minutes.",
+                emoji: "👚",
+                grad: "from-violet-500 to-fuchsia-500",
+              },
+              {
+                href: "/ai-product-photography-india",
+                title: "AI Product Photography India",
+                desc: "Amazon-ready hero shots for D2C brands and ecommerce.",
+                emoji: "📸",
+                grad: "from-emerald-400 to-cyan-500",
+              },
+            ].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`group relative flex flex-col overflow-hidden rounded-[1.5rem] border p-5 shadow-lg backdrop-blur transition hover:-translate-y-1 hover:shadow-xl ${
+                  darkMode
+                    ? "border-white/10 bg-white/[0.05] hover:border-cyan-300/50"
+                    : "border-black/10 bg-white/85 hover:border-cyan-300"
+                }`}
+              >
+                <div
+                  className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${item.grad} text-2xl shadow-md`}
+                >
+                  {item.emoji}
+                </div>
+                <h4 className="mt-4 text-base font-black leading-snug sm:text-lg">{item.title}</h4>
+                <p className={`mt-2 line-clamp-2 text-xs leading-5 sm:text-sm sm:leading-6 ${muted}`}>
+                  {item.desc}
+                </p>
+                <span className="mt-4 inline-flex items-center gap-1 text-[11px] font-black text-cyan-600 dark:text-cyan-300">
+                  Open →
+                </span>
+              </Link>
+            ))}
+          </div>
+
+          <div className="mt-6 text-center">
+            <Link
+              href="/blog"
+              className="inline-flex items-center gap-2 rounded-full border border-cyan-300/40 bg-cyan-400/10 px-5 py-2.5 text-sm font-black text-cyan-700 transition hover:scale-105 dark:text-cyan-300"
+            >
+              📝 Read our AI guides on the blog →
+            </Link>
+          </div>
+        </section>
+
         <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-5">
           <div className="mb-5 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-600">
                 Live on socials
               </p>
-              <h3 className="mt-1 text-2xl font-black sm:text-3xl">
+              <h2 className="mt-1 text-2xl font-black sm:text-3xl">
                 Follow AgentForge across the web
-              </h3>
+              </h2>
               <p className={`mt-1 text-sm ${muted}`}>
                 Tap any dashboard to open our profile in a new tab.
               </p>

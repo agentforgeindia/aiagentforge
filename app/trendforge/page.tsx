@@ -193,6 +193,27 @@ export default function TrendForgePage() {
         }}
       />
 
+      {/* Floating Doodles — trends themed */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="float-slow absolute left-[6%] top-[6%] text-4xl opacity-65 sm:text-5xl">🔥</div>
+        <div className="float-medium absolute right-[8%] top-[10%] text-4xl opacity-65 sm:text-5xl">📈</div>
+        <div className="float-fast absolute left-[22%] top-[14%] text-2xl opacity-55 sm:text-3xl">✨</div>
+        <div className="float-medium absolute right-[24%] top-[6%] text-3xl opacity-60 sm:text-4xl">🎯</div>
+        <div className="float-slow absolute left-[42%] top-[3%] text-2xl opacity-50 sm:text-3xl">⭐</div>
+        <div className="float-fast absolute right-[42%] top-[18%] text-3xl opacity-60 sm:text-4xl">🚀</div>
+        <div className="float-medium absolute left-[3%] top-[28%] text-3xl opacity-55 sm:text-4xl">💡</div>
+        <div className="float-slow absolute right-[4%] top-[32%] text-3xl opacity-55 sm:text-4xl">📊</div>
+        <div className="float-fast absolute left-[8%] top-[44%] text-3xl opacity-55 sm:text-4xl">⚡</div>
+        <div className="float-medium absolute right-[6%] top-[46%] text-3xl opacity-55 sm:text-4xl">🏆</div>
+        <div className="float-slow absolute left-[35%] top-[52%] text-2xl opacity-50 sm:text-3xl">📱</div>
+        <div className="float-medium absolute right-[30%] top-[58%] text-2xl opacity-55 sm:text-3xl">💬</div>
+        <div className="float-fast absolute left-[14%] top-[62%] text-3xl opacity-55 sm:text-4xl">🌟</div>
+        <div className="float-slow absolute right-[14%] top-[66%] text-3xl opacity-55 sm:text-4xl">🎨</div>
+        <div className="float-fast absolute left-[20%] top-[78%] text-2xl opacity-55 sm:text-3xl">✦</div>
+        <div className="float-medium absolute right-[18%] top-[82%] text-3xl opacity-60 sm:text-4xl">📣</div>
+        <div className="float-slow absolute left-[48%] top-[88%] text-2xl opacity-50 sm:text-3xl">💫</div>
+      </div>
+
       <div className="relative z-10 mx-auto max-w-7xl px-5 py-12 md:py-16">
         <section className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
           <div>
@@ -200,7 +221,7 @@ export default function TrendForgePage() {
               🔥 AgentForge Special Agent
             </div>
 
-            <h1 className="text-5xl font-black leading-tight tracking-tight md:text-7xl">
+            <h1 className="text-3xl font-black leading-tight tracking-tight sm:text-5xl md:text-7xl">
               TrendForge AI
               <span className="block bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent">
                 Select Trend. Upload Photo. Generate.

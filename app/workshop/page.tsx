@@ -270,7 +270,7 @@ export default function WebinarLandingPage() {
             India’s First Complete AI Textile Workshop
           </div>
 
-          <h1 className="max-w-4xl text-5xl font-black leading-[0.96] tracking-tight md:text-7xl">
+          <h1 className="max-w-4xl text-3xl font-black leading-[0.96] tracking-tight sm:text-5xl md:text-7xl">
             TextilePrints to{" "}
             <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-600 bg-clip-text text-transparent">
               Mockup AI

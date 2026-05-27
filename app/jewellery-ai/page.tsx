@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/components/AuthProvider";
 import {
@@ -8,6 +9,8 @@ import {
   BadgeCheck,
   Camera,
   Check,
+  ChevronLeft,
+  ChevronRight,
   Crown,
   Diamond,
   Gem,
@@ -25,6 +28,12 @@ import {
   Wand2,
   X,
 } from "lucide-react";
+import {
+  SiFlipkart,
+  SiInstagram,
+  SiMeta,
+  SiShopify,
+} from "react-icons/si";
 import SignupPromptPopup from "@/app/components/SignupPromptPopup";
 import AIThinkingSteps from "@/app/components/AIThinkingSteps";
 import TestimonialsSlider, {
@@ -50,7 +59,7 @@ const JEWELLERY_SEED_TESTIMONIALS: Testimonial[] = [
     name: "Neha A****",
     city: "Jaipur",
     message:
-      "Necklace shots ekdam DSLR jaisi 😍 Model bhi hire nahi karna pada. Festive collection ready in 2 hours!",
+      "Necklace shots look exactly like DSLR work 😍 Didn't even need to hire a model. Festive collection ready in 2 hours!",
     rating: 5,
     createdAt: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
     source: "whatsapp",
@@ -60,7 +69,7 @@ const JEWELLERY_SEED_TESTIMONIALS: Testimonial[] = [
     name: "Rohan G****",
     city: "Surat",
     message:
-      "Diamond rings ke reflections kamaal aate hain. Catalogue ke liye perfect, sabhi designs ek hi din mein cover ho gaye.",
+      "Diamond ring reflections look stunning. Perfect for the catalogue — covered all designs in a single day.",
     rating: 5,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
     source: "in-app",
@@ -70,7 +79,7 @@ const JEWELLERY_SEED_TESTIMONIALS: Testimonial[] = [
     name: "Priyanka M****",
     city: "Hyderabad",
     message:
-      "Bridal jewellery ke liye model shoot bahut mehnga padta tha. Ab AgentForge se same look — fraction of cost.",
+      "Bridal jewellery model shoots used to be very expensive. Now I get the same look with AgentForge — at a fraction of the cost.",
     rating: 5,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 10).toISOString(),
     source: "whatsapp",
@@ -80,7 +89,7 @@ const JEWELLERY_SEED_TESTIMONIALS: Testimonial[] = [
     name: "Aman T****",
     city: "Delhi",
     message:
-      "Kundan set ke colors aur stones original jaise dikhe. Instagram pe post karte hi 4 enquiries aa gayi!",
+      "Kundan set colors and stones looked exactly like the originals. As soon as I posted on Instagram, 4 enquiries came in!",
     rating: 5,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1).toISOString(),
     source: "in-app",
@@ -90,7 +99,7 @@ const JEWELLERY_SEED_TESTIMONIALS: Testimonial[] = [
     name: "Kavita R****",
     city: "Mumbai",
     message:
-      "Earrings ke close-up shots premium catalogue-quality hain. Client ne tax-invoice maang li 😅",
+      "Earring close-up shots are premium catalogue-quality. The client even asked for a tax invoice 😅",
     rating: 4,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
     source: "whatsapp",
@@ -100,7 +109,7 @@ const JEWELLERY_SEED_TESTIMONIALS: Testimonial[] = [
     name: "Sanjay K****",
     city: "Coimbatore",
     message:
-      "Temple jewellery ke liye Indian model look perfect aata hai. Wedding season campaign 2 din mein ready ho gaya.",
+      "The Indian model look comes out perfect for temple jewellery. Wedding season campaign was ready in 2 days.",
     rating: 5,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
     source: "whatsapp",
@@ -577,6 +586,30 @@ const isFreeAccountFromProfile = (profile: any): boolean => {
   return !paid;
 };
 
+// ============================================================
+// HERO PRODUCT SLIDER DATA — Jewellery showcase
+// ============================================================
+type HeroJewel = { label: string; tag: string; icon: string; grad: string };
+
+const HERO_JEWEL_SLIDES: HeroJewel[][] = [
+  [
+    { label: "Rings", tag: "Hero shot", icon: "/jewellery-icon/ring.svg", grad: "from-amber-400 to-orange-500" },
+    { label: "Necklaces", tag: "Catalogue", icon: "/jewellery-icon/necklace.svg", grad: "from-rose-400 to-pink-500" },
+  ],
+  [
+    { label: "Earrings", tag: "Close-up", icon: "/jewellery-icon/earrings.svg", grad: "from-violet-500 to-fuchsia-500" },
+    { label: "Bracelets", tag: "Wrist shot", icon: "/jewellery-icon/bracelet.svg", grad: "from-cyan-500 to-blue-600" },
+  ],
+  [
+    { label: "Bridal Sets", tag: "Editorial", icon: "/jewellery-icon/bridal-look.svg", grad: "from-rose-500 to-red-600" },
+    { label: "Pearls", tag: "Luxury", icon: "/jewellery-icon/pearls.svg", grad: "from-slate-300 to-slate-500" },
+  ],
+  [
+    { label: "Bridal Campaign", tag: "Premium ad", icon: "/jewellery-icon/bridal-campaign.svg", grad: "from-amber-500 to-rose-500" },
+    { label: "Custom", tag: "Any piece", icon: "/jewellery-icon/more-options.svg", grad: "from-cyan-500 to-purple-600" },
+  ],
+];
+
 export default function JewelleryAIPage() {
   const { user: authUser, credits: userCredits, refreshProfile, profile } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -590,6 +623,15 @@ export default function JewelleryAIPage() {
   const [loadingFactIndex, setLoadingFactIndex] = useState(0);
   const [generationProgress, setGenerationProgress] = useState(8);
   const [generatedOutputUrl, setGeneratedOutputUrl] = useState("");
+  const [heroSlide, setHeroSlide] = useState(0);
+
+  // Hero jewellery slider — auto-rotate every 4s
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setHeroSlide((current) => (current + 1) % HERO_JEWEL_SLIDES.length);
+    }, 4000);
+    return () => window.clearInterval(interval);
+  }, []);
 
   const [jewelleryType, setJewelleryType] = useState("Ring");
   const [moreJewellery, setMoreJewellery] = useState<string[]>([]);
@@ -1436,6 +1478,34 @@ if (!response.ok) {
         }}
       />
 
+      {/* Floating Doodles — jewellery themed */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        {/* Top band */}
+        <div className="float-slow absolute left-[6%] top-[6%] text-4xl opacity-65 sm:text-5xl">💎</div>
+        <div className="float-medium absolute right-[8%] top-[10%] text-4xl opacity-65 sm:text-5xl">💍</div>
+        <div className="float-fast absolute left-[22%] top-[14%] text-2xl opacity-55 sm:text-3xl">✨</div>
+        <div className="float-medium absolute right-[24%] top-[6%] text-3xl opacity-60 sm:text-4xl">👑</div>
+        <div className="float-slow absolute left-[42%] top-[3%] text-2xl opacity-50 sm:text-3xl">⭐</div>
+        <div className="float-fast absolute right-[42%] top-[18%] text-3xl opacity-60 sm:text-4xl">📿</div>
+
+        {/* Side accents */}
+        <div className="float-medium absolute left-[3%] top-[28%] text-3xl opacity-55 sm:text-4xl">🪙</div>
+        <div className="float-slow absolute right-[4%] top-[32%] text-3xl opacity-55 sm:text-4xl">🥇</div>
+        <div className="float-fast absolute left-[8%] top-[44%] text-3xl opacity-55 sm:text-4xl">⚡</div>
+        <div className="float-medium absolute right-[6%] top-[46%] text-3xl opacity-55 sm:text-4xl">🏆</div>
+
+        {/* Middle band */}
+        <div className="float-slow absolute left-[35%] top-[52%] text-2xl opacity-50 sm:text-3xl">💍</div>
+        <div className="float-medium absolute right-[30%] top-[58%] text-2xl opacity-55 sm:text-3xl">💎</div>
+        <div className="float-fast absolute left-[14%] top-[62%] text-3xl opacity-55 sm:text-4xl">✦</div>
+        <div className="float-slow absolute right-[14%] top-[66%] text-3xl opacity-55 sm:text-4xl">🌟</div>
+
+        {/* Lower band */}
+        <div className="float-fast absolute left-[20%] top-[78%] text-2xl opacity-55 sm:text-3xl">✧</div>
+        <div className="float-medium absolute right-[18%] top-[82%] text-3xl opacity-60 sm:text-4xl">💫</div>
+        <div className="float-slow absolute left-[48%] top-[88%] text-2xl opacity-50 sm:text-3xl">✨</div>
+      </div>
+
       <div className="relative z-10">
         {/* Newly Launched announcement strip */}
         <div className="mx-auto max-w-7xl px-3 pt-4 sm:px-4">
@@ -1480,78 +1550,260 @@ if (!response.ok) {
           `}</style>
         </div>
 
-        <section className="mx-auto grid w-full max-w-7xl items-start gap-5 px-3 py-5 sm:px-4 lg:grid-cols-[0.9fr_1.1fr] lg:py-8">
+        <section className="mx-auto grid w-full max-w-7xl items-start gap-5 px-3 py-5 sm:px-4 lg:grid-cols-[0.95fr_1.05fr] lg:py-8">
+          {/* ───────── Left: jewellery hero text ───────── */}
           <div>
-            <div className="mb-5 inline-flex rounded-full border border-cyan-700/20 bg-cyan-500/15 px-4 py-2 text-sm font-semibold text-cyan-900 dark:border-cyan-400/30 dark:bg-cyan-400/10 dark:text-cyan-200">
-              Jewellery product to premium AI visual
+            {/* Category eyebrow pill */}
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-gradient-to-r from-amber-50 via-white to-rose-50 px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-amber-700 shadow-md shadow-amber-200/40 dark:border-amber-400/30 dark:bg-gradient-to-r dark:from-amber-500/10 dark:via-white/5 dark:to-rose-500/10 dark:text-amber-200">
+              <Sparkles className="h-3 w-3" />
+              Rings · Necklaces · Earrings · Bridal · Luxury Shoots
             </div>
 
-            <h1 className="max-w-xl text-3xl font-black leading-[1.02] tracking-[-0.04em] lg:text-5xl">
-              AI Jewellery Studio
-              <span className="block bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
-                Upload. Generate. Done.
+            <h1 className="max-w-xl text-3xl font-black leading-[1.02] tracking-[-0.03em] lg:text-5xl">
+              <span className="block">Luxury Jewellery Shoots.</span>
+              <span className="bg-gradient-to-r from-amber-500 via-rose-500 to-pink-500 bg-clip-text text-transparent">
+                Without the Studio.
               </span>
-              Sell Like Luxury.
             </h1>
 
-            <p className="mt-4 max-w-lg text-sm leading-6 text-slate-600 dark:text-white/60 lg:text-base">
-              Generate luxury studio shots, bridal campaign creatives, jewellery catalogue images, and Instagram-ready visuals from one product photo.
+            <p className="mt-3 max-w-xl text-base font-bold leading-6 lg:text-lg lg:leading-7">
+              <span className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
+                Mobile photo → Catalogue-ready jewellery shot.
+              </span>{" "}
+              <span className="text-slate-600 dark:text-white/60">In 30 seconds.</span>
+            </p>
+
+            <p className="mt-4 max-w-lg text-justify text-sm leading-6 text-slate-600 hyphens-auto dark:text-white/60 lg:text-base">
+              Rings, necklaces, earrings, bangles, bridal sets, pearls — upload from
+              your phone and get DSLR-quality studio shots, bridal campaign creatives,
+              luxury catalogue images and Instagram-ready visuals for Amazon, Flipkart,
+              Tanishq-style D2C sites and Meta Ads.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <a href="#try" className="rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-6 py-3 text-sm font-black text-black shadow-xl shadow-cyan-500/25 transition hover:scale-105">
-                Start Generating
-              </a>
-              <button type="button" onClick={() => setGenerationMode(generationMode === "single" ? "bulk" : "single")} className="rounded-full bg-white px-6 py-3 text-sm font-black text-black shadow-lg dark:bg-white/10 dark:text-white">
-                {generationMode === "single" ? "Single Creation" : "Bulk Creation"}
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof document !== "undefined") {
+                    document.getElementById("try")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }
+                }}
+                className="group relative cursor-pointer overflow-hidden rounded-full bg-gradient-to-r from-amber-400 via-rose-500 to-pink-500 px-6 py-3 text-sm font-black text-white shadow-xl shadow-rose-500/30 transition hover:scale-105 active:scale-95"
+              >
+                <span className="relative inline-flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  Start Jewellery Shoot
+                </span>
               </button>
+              <button
+                type="button"
+                onClick={() => setGenerationMode(generationMode === "single" ? "bulk" : "single")}
+                className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-black text-black shadow-lg transition hover:scale-105 active:scale-95 dark:bg-white/10 dark:text-white"
+              >
+                {generationMode === "single" ? "Switch to Bulk" : "Switch to Single"}
+                <ChevronRight className="h-4 w-4" />
+              </button>
+              <Link
+                href="/gallery"
+                className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-black/5 bg-white px-6 py-3 text-sm font-black text-black shadow-sm transition hover:scale-105 active:scale-95 dark:border-white/10 dark:bg-white/10 dark:text-white"
+              >
+                View Gallery
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {/* Trust strip — jewellery focused */}
+            <div className="mt-6 grid max-w-xl grid-cols-3 gap-2 rounded-2xl border border-black/10 bg-white/80 p-2.5 text-center backdrop-blur dark:border-white/10 dark:bg-white/[0.04]">
+              <div>
+                <p className="bg-gradient-to-r from-amber-500 to-rose-500 bg-clip-text text-sm font-black text-transparent sm:text-base">
+                  Bridal Ready
+                </p>
+                <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/50">
+                  Editorial-grade
+                </p>
+              </div>
+              <div className="border-x border-black/10 dark:border-white/10">
+                <p className="bg-gradient-to-r from-amber-500 to-rose-500 bg-clip-text text-sm font-black text-transparent sm:text-base">
+                  DSLR Quality
+                </p>
+                <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/50">
+                  Diamond &amp; gold detail
+                </p>
+              </div>
+              <div>
+                <p className="bg-gradient-to-r from-amber-500 to-rose-500 bg-clip-text text-sm font-black text-transparent sm:text-base">
+                  ~30 sec
+                </p>
+                <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/50">
+                  Per shoot
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="flex h-fit flex-col rounded-[1.5rem] border border-black/10 bg-white/80 p-3 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06] sm:rounded-[2rem] sm:p-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex min-h-[170px] items-center justify-center rounded-[1.25rem] border border-black/10 bg-[#fffaf0] p-3 dark:border-white/10 dark:bg-black/25 sm:min-h-[210px] sm:rounded-[1.5rem] sm:p-4">
-                <div className="text-center">
-                  {previewImage ? (
-                    <img src={previewImage} alt="Uploaded jewellery preview" className="mx-auto mb-3 h-28 w-28 rounded-2xl object-cover shadow-lg sm:h-36 sm:w-36 sm:rounded-3xl" />
-                  ) : (
-                    <div className="mx-auto mb-3 flex h-28 w-28 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-100 to-blue-100 text-cyan-700 shadow-lg dark:from-cyan-500/20 dark:to-blue-500/20 dark:text-cyan-200 sm:h-36 sm:w-36 sm:rounded-3xl">
-                      <Gem className="h-14 w-14" />
-                    </div>
-                  )}
-                  <p className="font-semibold">Jewellery Image</p>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-white/50">{previewImage ? "Uploaded preview" : "Upload product photo"}</p>
-                </div>
-              </div>
+          {/* ───────── Right: jewellery showcase + slider ───────── */}
+          <div className="relative flex h-fit flex-col overflow-hidden rounded-[1.5rem] border border-amber-200/40 bg-gradient-to-br from-amber-50/60 via-white to-rose-50/40 p-3 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-gradient-to-br dark:from-slate-900/70 dark:via-slate-900/50 dark:to-slate-950/70 sm:rounded-[2rem] sm:p-5">
+            {/* Decorative blurs */}
+            <div className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 rounded-full bg-amber-400/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-rose-400/20 blur-3xl" />
 
-              <div className="relative flex min-h-[170px] items-center justify-center overflow-hidden rounded-[1.25rem] border border-cyan-300/30 bg-gradient-to-br from-cyan-400/20 via-blue-500/10 to-purple-500/20 p-3 sm:min-h-[210px] sm:rounded-[1.5rem] sm:p-4">
-                {isFreeAccount && (
-                  <div className="pointer-events-none absolute inset-0 z-10 flex rotate-[-22deg] items-center justify-center text-6xl font-black text-slate-900/10 dark:text-white/10 sm:text-7xl">
-                    AF
-                  </div>
-                )}
-                <div className="text-center">
-                  <div className="mx-auto mb-3 flex h-32 w-28 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950 text-white shadow-lg shadow-cyan-400/30 sm:h-44 sm:w-36 sm:rounded-3xl">
-                    <Crown className="h-14 w-14" />
-                  </div>
-                  <p className="font-semibold">AI Luxury Output</p>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-white/50">Premium campaign preview</p>
+            {/* Header */}
+            <div className="relative mb-3 flex items-center justify-between gap-2">
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-amber-600">
+                Premium Showcase
+              </p>
+              <span className="inline-flex items-center gap-1 rounded-full bg-black px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.18em] text-white dark:bg-white/10 dark:text-white/75">
+                <span className="h-1 w-1 rounded-full bg-amber-400" />
+                Luxury Shoots
+              </span>
+            </div>
+
+            {/* Product slider — auto-rotating, arrows on the sides */}
+            <div className="relative">
+              {/* Prev arrow */}
+              <button
+                type="button"
+                aria-label="Previous slide"
+                onClick={() =>
+                  setHeroSlide((p) => (p - 1 + HERO_JEWEL_SLIDES.length) % HERO_JEWEL_SLIDES.length)
+                }
+                className="absolute left-0 top-1/2 z-10 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white text-black/70 shadow-lg backdrop-blur transition hover:scale-110 active:scale-95 dark:border-white/15 dark:bg-slate-900/80 dark:text-white/80"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              {/* Next arrow */}
+              <button
+                type="button"
+                aria-label="Next slide"
+                onClick={() => setHeroSlide((p) => (p + 1) % HERO_JEWEL_SLIDES.length)}
+                className="absolute right-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 translate-x-1/2 cursor-pointer items-center justify-center rounded-full border border-black/10 bg-white text-black/70 shadow-lg backdrop-blur transition hover:scale-110 active:scale-95 dark:border-white/15 dark:bg-slate-900/80 dark:text-white/80"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+
+              <div className="relative overflow-hidden">
+                <div
+                  className="flex transition-transform duration-500 ease-out"
+                  style={{ transform: `translateX(-${heroSlide * 100}%)` }}
+                >
+                  {HERO_JEWEL_SLIDES.map((slide, slideIdx) => (
+                    <div key={slideIdx} className="grid w-full shrink-0 grid-cols-2 gap-3">
+                      {slide.map((cat) => (
+                        <a
+                          key={`${slideIdx}-${cat.label}`}
+                          href="#try"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (typeof document !== "undefined") {
+                              document.getElementById("try")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                            }
+                          }}
+                          className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-black/10 bg-white p-2.5 shadow-sm transition hover:-translate-y-1 hover:border-amber-400/60 hover:shadow-lg active:scale-95 dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-amber-400/40"
+                        >
+                          <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-amber-50 via-white to-rose-50 dark:from-white/[0.08] dark:via-white/[0.04] dark:to-white/[0.02]">
+                            <img
+                              src={cat.icon}
+                              alt={`AI ${cat.label} ${cat.tag.toLowerCase()} — generated jewellery catalogue example by AgentForge AI`}
+                              width={200}
+                              height={200}
+                              loading="lazy"
+                              decoding="async"
+                              className="h-3/4 w-3/4 object-contain transition group-hover:scale-110"
+                              style={{ mixBlendMode: "multiply" }}
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = "none";
+                              }}
+                            />
+                            {/* Luxury rating strip */}
+                            <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between rounded-md bg-black/70 px-2 py-1 backdrop-blur">
+                              <span className="flex items-center gap-0.5 text-[9px] font-black text-amber-300">
+                                ★ ★ ★ ★ ★
+                              </span>
+                              <span className={`rounded-sm bg-gradient-to-r ${cat.grad} px-1.5 py-0.5 text-[8px] font-black text-white`}>
+                                HD
+                              </span>
+                            </div>
+                          </div>
+                          <div className="mt-2 flex items-center justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="truncate text-[11px] font-black sm:text-xs">{cat.label}</p>
+                              <p className="truncate text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/50">
+                                {cat.tag}
+                              </p>
+                            </div>
+                            <span className={`shrink-0 rounded-full bg-gradient-to-r ${cat.grad} px-1.5 py-0.5 text-[8px] font-black text-white`}>
+                              Try →
+                            </span>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-3 rounded-[1.5rem] border border-black/10 bg-white/80 p-3 dark:border-white/10 dark:bg-black/25">
-              <div className="rounded-2xl bg-cyan-50 p-3 text-center dark:bg-white/[0.05]">
-                <p className="text-xs text-slate-500 dark:text-white/50">Product</p>
-                <p className="mt-1 truncate text-sm font-black">{selectedJewelleryLabel}</p>
-              </div>
-              <div className="rounded-2xl bg-cyan-50 p-3 text-center dark:bg-white/[0.05]">
-                <p className="text-xs text-slate-500 dark:text-white/50">Shoot</p>
-                <p className="mt-1 truncate text-sm font-black">{customShootStyle || shootStyle}</p>
-              </div>
-              <div className="rounded-2xl bg-cyan-50 p-3 text-center dark:bg-white/[0.05]">
-                <p className="text-xs text-slate-500 dark:text-white/50">Credits</p>
-                <p className="mt-1 truncate text-sm font-black">{credits}</p>
+            {/* Slider dots */}
+            <div className="relative mt-3 flex items-center justify-center gap-1.5">
+              {HERO_JEWEL_SLIDES.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  aria-label={`Go to slide ${idx + 1}`}
+                  onClick={() => setHeroSlide(idx)}
+                  className={`h-1.5 cursor-pointer rounded-full transition-all duration-300 ${
+                    heroSlide === idx
+                      ? "w-6 bg-gradient-to-r from-amber-400 to-rose-500"
+                      : "w-1.5 bg-black/20 hover:bg-black/40 dark:bg-white/25 dark:hover:bg-white/40"
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Built for — brand logos */}
+            <div className="relative mt-3 rounded-[1.25rem] border border-black/10 bg-white/80 p-3 dark:border-white/10 dark:bg-black/25 sm:p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-600">
+                Built for
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {/* Amazon */}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-2.5 py-1 dark:border-white/10 dark:bg-white/[0.05]" title="Amazon">
+                  <span className="text-[13px] font-black leading-none tracking-tight text-[#232F3E] dark:text-white">
+                    amazon
+                  </span>
+                  <span className="block h-1 w-3 -translate-y-0.5 rounded-full bg-[#FF9900]" />
+                </span>
+
+                {/* Flipkart */}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-2.5 py-1 dark:border-white/10 dark:bg-white/[0.05]" title="Flipkart">
+                  <SiFlipkart className="h-3.5 w-3.5 text-[#2874F0]" />
+                  <span className="text-[11px] font-black text-[#2874F0]">Flipkart</span>
+                </span>
+
+                {/* Tanishq-style D2C — gold pill */}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-2.5 py-1 dark:border-white/10 dark:bg-white/[0.05]" title="Tanishq / Jewellery D2C">
+                  <Crown className="h-3.5 w-3.5 text-[#B8860B]" />
+                  <span className="text-[11px] font-black text-[#B8860B]">Jewellery D2C</span>
+                </span>
+
+                {/* Instagram */}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-2.5 py-1 dark:border-white/10 dark:bg-white/[0.05]" title="Instagram">
+                  <SiInstagram className="h-3.5 w-3.5 text-[#E1306C]" />
+                  <span className="text-[11px] font-black text-[#E1306C]">Instagram</span>
+                </span>
+
+                {/* Shopify */}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-2.5 py-1 dark:border-white/10 dark:bg-white/[0.05]" title="Shopify · D2C">
+                  <SiShopify className="h-3.5 w-3.5 text-[#96BF48]" />
+                  <span className="text-[11px] font-black text-[#5E8E3E] dark:text-[#96BF48]">Shopify</span>
+                </span>
+
+                {/* Meta Ads */}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-2.5 py-1 dark:border-white/10 dark:bg-white/[0.05]" title="Meta Ads">
+                  <SiMeta className="h-3.5 w-3.5 text-[#0866FF]" />
+                  <span className="text-[11px] font-black text-[#0866FF]">Meta Ads</span>
+                </span>
               </div>
             </div>
           </div>
@@ -1560,9 +1812,9 @@ if (!response.ok) {
         <section id="try" className="mx-auto max-w-7xl px-3 py-5 sm:px-5 sm:py-8">
           <div className="rounded-[1.25rem] border border-black/10 bg-white/80 p-3 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06] sm:rounded-[1.75rem] sm:p-4 lg:p-6">
             <div className="mb-5 sm:mb-6">
-              <h3 className="text-2xl font-black sm:text-3xl">Create Your Jewellery Visual</h3>
+              <h2 className="text-2xl font-black sm:text-3xl">Create Your AI Jewellery Photoshoot</h2>
               <p className="mt-2 text-sm text-slate-600 dark:text-white/60 sm:text-base">
-                Textile page jaisa same practical flow — left upload, right step-wise controls, and final summary.
+                Same practical flow as the Textile page — upload on the left, step-wise controls on the right, and final summary.
               </p>
               <div className="mt-4 inline-flex rounded-full border border-amber-400/30 bg-amber-400/10 px-4 py-2 text-xs font-black text-amber-600">
                 Bulk Locked — Upgrade to Empire Pack
@@ -1701,17 +1953,6 @@ if (!response.ok) {
                   </div>
                 </div>
 
-                <div className="mt-4 rounded-[1.35rem] border border-black/10 bg-white/80 p-4 dark:border-white/10 dark:bg-white/[0.045]">
-                  <p className="text-xs font-black uppercase tracking-widest text-cyan-600">Live Summary</p>
-                  <div className="mt-3 space-y-2">
-                    <SummaryRow label="Mode" value={generationMode === "single" ? "Single" : "Bulk"} />
-                    <SummaryRow label="Jewellery" value={selectedJewelleryLabel} />
-                    <SummaryRow label="Shoot" value={customShootStyle || shootStyle} />
-                    <SummaryRow label="Model" value={modelType} />
-                    <SummaryRow label="Frame" value={`${outputSize} / ${quality}`} />
-                    <SummaryRow label="Credits" value={String(credits)} />
-                  </div>
-                </div>
               </div>
 
               <div>

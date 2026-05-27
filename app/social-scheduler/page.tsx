@@ -231,14 +231,48 @@ export default function SocialSchedulerPage() {
           </div>
 
           {items.length === 0 ? (
-            <div className="flex min-h-[400px] items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white dark:border-white/10 dark:bg-white/5">
-              <div className="text-center">
-                <UploadCloud className="mx-auto h-14 w-14 text-slate-400" />
-                <h3 className="mt-4 text-xl font-black">
-                  No Designs Uploaded
+            <div className="relative flex min-h-[420px] items-center justify-center overflow-hidden rounded-3xl border border-dashed border-cyan-300/60 bg-gradient-to-br from-cyan-50/60 via-white to-blue-50/40 dark:border-white/15 dark:bg-gradient-to-br dark:from-white/[0.06] dark:via-white/[0.03] dark:to-white/[0.05]">
+              {/* Decorative glow */}
+              <div className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-cyan-400/20 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-12 -right-12 h-44 w-44 rounded-full bg-blue-500/15 blur-3xl" />
+
+              {/* Floating doodles */}
+              <div className="pointer-events-none absolute inset-0">
+                <div className="float-slow absolute left-[10%] top-[15%] text-2xl opacity-60">📅</div>
+                <div className="float-medium absolute right-[12%] top-[18%] text-3xl opacity-60">📱</div>
+                <div className="float-fast absolute left-[18%] bottom-[20%] text-2xl opacity-55">⏰</div>
+                <div className="float-medium absolute right-[16%] bottom-[24%] text-2xl opacity-55">✨</div>
+                <div className="float-slow absolute left-[44%] top-[8%] text-xl opacity-50">✦</div>
+              </div>
+
+              <div className="relative text-center">
+                <div className="relative mx-auto mb-5 inline-flex">
+                  <span className="absolute inset-0 -m-1.5 animate-ping rounded-2xl bg-cyan-400/25" />
+                  <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-2xl shadow-cyan-500/40">
+                    <UploadCloud className="h-10 w-10" />
+                  </div>
+                </div>
+
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-cyan-300/40 bg-cyan-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-700 dark:text-cyan-200">
+                  📤 Drop something to get started
+                </div>
+
+                <h3 className="mt-3 text-2xl font-black leading-tight md:text-3xl">
+                  Your{" "}
+                  <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">
+                    content calendar
+                  </span>{" "}
+                  is waiting.
                 </h3>
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                  Upload creatives from the left panel
+
+                <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-600 dark:text-slate-400">
+                  Upload your mockups, banners or catalog visuals — schedule them on{" "}
+                  <span className="font-black text-slate-900 dark:text-white">Instagram &amp; Facebook</span>{" "}
+                  with a single click.
+                </p>
+
+                <p className="mt-4 text-xs font-bold text-slate-500 dark:text-slate-400">
+                  ← Drop your files into the &quot;Upload Designs&quot; panel on the left
                 </p>
               </div>
             </div>

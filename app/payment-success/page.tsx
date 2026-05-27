@@ -37,8 +37,29 @@ if (typeof window !== "undefined") {
   }, [router]);
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-6 bg-white dark:bg-slate-950">
-      <div className="max-w-md w-full rounded-3xl border border-cyan-200/60 dark:border-cyan-500/20 bg-white dark:bg-slate-900 p-8 text-center shadow-xl">
+    <main className="relative min-h-screen overflow-hidden flex items-center justify-center px-6 bg-white dark:bg-slate-950">
+      {/* Floating Doodles — celebration themed */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="float-slow absolute left-[6%] top-[6%] text-4xl opacity-65 sm:text-5xl">🎉</div>
+        <div className="float-medium absolute right-[8%] top-[10%] text-4xl opacity-65 sm:text-5xl">🥳</div>
+        <div className="float-fast absolute left-[22%] top-[14%] text-2xl opacity-55 sm:text-3xl">✨</div>
+        <div className="float-medium absolute right-[24%] top-[6%] text-3xl opacity-60 sm:text-4xl">🎊</div>
+        <div className="float-slow absolute left-[42%] top-[3%] text-2xl opacity-50 sm:text-3xl">⭐</div>
+        <div className="float-fast absolute right-[42%] top-[18%] text-3xl opacity-60 sm:text-4xl">🚀</div>
+        <div className="float-medium absolute left-[3%] top-[28%] text-3xl opacity-55 sm:text-4xl">🪙</div>
+        <div className="float-slow absolute right-[4%] top-[32%] text-3xl opacity-55 sm:text-4xl">💰</div>
+        <div className="float-fast absolute left-[8%] top-[44%] text-3xl opacity-55 sm:text-4xl">⚡</div>
+        <div className="float-medium absolute right-[6%] top-[46%] text-3xl opacity-55 sm:text-4xl">🏆</div>
+        <div className="float-slow absolute left-[35%] top-[58%] text-2xl opacity-50 sm:text-3xl">💎</div>
+        <div className="float-medium absolute right-[30%] top-[62%] text-2xl opacity-55 sm:text-3xl">🎁</div>
+        <div className="float-fast absolute left-[14%] top-[70%] text-3xl opacity-55 sm:text-4xl">🌟</div>
+        <div className="float-slow absolute right-[14%] top-[74%] text-3xl opacity-55 sm:text-4xl">✅</div>
+        <div className="float-fast absolute left-[20%] top-[84%] text-2xl opacity-55 sm:text-3xl">✦</div>
+        <div className="float-medium absolute right-[18%] top-[88%] text-3xl opacity-60 sm:text-4xl">✨</div>
+        <div className="float-slow absolute left-[48%] top-[92%] text-2xl opacity-50 sm:text-3xl">💫</div>
+      </div>
+
+      <div className="relative z-10 max-w-md w-full rounded-3xl border border-cyan-200/60 dark:border-cyan-500/20 bg-white dark:bg-slate-900 p-8 text-center shadow-xl">
         <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-cyan-100 dark:bg-cyan-500/10 text-3xl">
           ✅
         </div>

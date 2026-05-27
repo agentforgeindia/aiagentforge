@@ -100,7 +100,7 @@ const parties = [
     color: "from-slate-600 to-cyan-500",
     primaryColor: "#475569",
     secondaryColor: "#06b6d4",
-    themeNote: "Apni party, symbol aur colors add karo",
+    themeNote: "Add your own party, symbol and colors",
   },
 ];
 
@@ -272,12 +272,12 @@ export default function ElectionCampaignAIPage() {
               <p className="mb-3 inline-flex rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-400">
                 AgentForge AI Agent
               </p>
-              <h1 className="max-w-4xl text-4xl font-black tracking-tight md:text-6xl">
+              <h1 className="max-w-4xl text-3xl font-black tracking-tight sm:text-4xl md:text-6xl">
                 Election Campaign AI
               </h1>
               <p className={`mt-4 max-w-3xl text-lg ${muted}`}>
-                Candidate details ek baar save karo, party select karo, symbol/theme auto-fill hoga —
-                Punjabi, Hindi, English posters, festival wishes aur campaign creatives instantly ready.
+                Save candidate details once, select the party, and symbol/theme auto-fills —
+                Punjabi, Hindi and English posters, festival wishes and campaign creatives instantly ready.
               </p>
             </div>
 
@@ -316,8 +316,8 @@ export default function ElectionCampaignAIPage() {
               <div className="mt-6 rounded-[1.5rem] border border-cyan-400/20 bg-cyan-400/10 p-4">
                 <p className="font-black text-cyan-300">Candidate Image Safety Rule</p>
                 <p className={`mt-1 text-sm ${muted}`}>
-                  Default mode candidate ki original image/cutout preserve karega. Face, identity,
-                  skin tone, turban, beard, body shape aur expression change nahi karna.
+                  Default mode preserves the candidate's original image/cutout. Face, identity,
+                  skin tone, turban, beard, body shape and expression must not be changed.
                 </p>
               </div>
 
@@ -378,7 +378,7 @@ export default function ElectionCampaignAIPage() {
               </div>
 
               <h3 className="mt-7 text-lg font-black">Candidate Profile</h3>
-              <p className={`mt-1 text-sm ${muted}`}>Ye details auto-save rahengi jab tak user khud change na kare.</p>
+              <p className={`mt-1 text-sm ${muted}`}>These details auto-save until you change them yourself.</p>
 
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <input
@@ -441,7 +441,7 @@ export default function ElectionCampaignAIPage() {
 
               <h3 className="mt-7 text-lg font-black">Select Party Theme</h3>
               <p className={`mt-1 text-sm ${muted}`}>
-                Party select karte hi symbol, theme color aur party name auto-fill ho jayega.
+                As soon as you select a party, the symbol, theme color and party name will auto-fill.
               </p>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -579,7 +579,7 @@ export default function ElectionCampaignAIPage() {
 
             <div className={`sticky top-6 h-fit rounded-[2rem] border p-5 shadow-2xl md:p-7 ${card}`}>
               <h2 className="text-2xl font-black">Live Poster Preview</h2>
-              <p className={`mt-1 text-sm ${muted}`}>Final output yahin show hoga after generation.</p>
+              <p className={`mt-1 text-sm ${muted}`}>Your final output will appear here after generation.</p>
 
               <div className="mt-6 overflow-hidden rounded-[1.7rem] border border-cyan-400/20 bg-gradient-to-br from-orange-500/10 via-cyan-500/10 to-blue-700/20 p-4">
                 <div className="relative mx-auto flex min-h-[560px] max-w-md flex-col justify-between overflow-hidden rounded-[1.4rem] border border-white/10 bg-[#07111f] p-5 text-white shadow-2xl">

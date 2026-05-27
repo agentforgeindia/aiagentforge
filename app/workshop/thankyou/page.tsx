@@ -92,11 +92,11 @@ export default function WorkshopThankYouPage() {
 
         {/* Heading */}
 
-        <h1 className="bg-gradient-to-r from-cyan-500 via-blue-600 to-violet-700 bg-clip-text text-6xl font-black tracking-tight text-transparent md:text-7xl">
+        <h1 className="bg-gradient-to-r from-cyan-500 via-blue-600 to-violet-700 bg-clip-text text-4xl font-black tracking-tight text-transparent sm:text-6xl md:text-7xl">
           Thank You 🎉
         </h1>
 
-        <p className="mx-auto mt-6 max-w-3xl text-xl font-medium leading-9 text-slate-600">
+        <p className="mx-auto mt-5 max-w-3xl text-base font-medium leading-7 text-slate-600 sm:mt-6 sm:text-xl sm:leading-9">
           Your seat for India’s First TextilePrints to Mockup AI Workshop
           has been successfully reserved.
         </p>

@@ -41,7 +41,17 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="relative z-10 mx-auto max-w-7xl px-4 pb-8 pt-12 sm:px-5">
+    <footer className="relative">
+      {/* Solid mask — hides ONLY the layout bg.svg (z=-40) behind the footer.
+          Sits at z=-35 in the root stacking context, so it stays BELOW the
+          page-level doodles (z=auto/0) — those still show through. */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-[#fff8e8] dark:bg-[#070b14]"
+        style={{ zIndex: -35 }}
+      />
+
+      <div className="relative z-10 mx-auto max-w-7xl px-4 pb-8 pt-12 sm:px-5">
       <div
         className={`relative overflow-hidden rounded-[2rem] border p-6 shadow-2xl backdrop-blur-xl sm:p-10 ${card}`}
       >
@@ -84,7 +94,7 @@ export default function Footer() {
         </div>
 
         {/* ───────── Link columns ───────── */}
-        <div className={`relative mt-8 grid gap-8 border-t pt-8 md:grid-cols-[1.4fr_1fr_1fr_1fr] dark:border-white/10 border-black/10`}>
+        <div className={`relative mt-8 grid gap-8 border-t pt-8 md:grid-cols-[1.4fr_1fr_1fr_1fr_1fr] dark:border-white/10 border-black/10`}>
           <div>
             <p className={`mb-3 text-[10px] font-black uppercase tracking-[0.22em] ${muted}`}>
               About AgentForge
@@ -126,6 +136,9 @@ export default function Footer() {
               <Link href="/gallery" className="block transition hover:text-cyan-500">
                 Gallery
               </Link>
+              <Link href="/blog" className="block transition hover:text-cyan-500">
+                Blog
+              </Link>
               <Link href="/profile" className="block transition hover:text-cyan-500">
                 Profile
               </Link>
@@ -134,6 +147,27 @@ export default function Footer() {
               </Link>
               <Link href="/support" className="block transition hover:text-cyan-500">
                 Support &amp; Tutorials
+              </Link>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="mb-3 text-sm font-black">Popular AI Tools</h4>
+            <div className={`space-y-2 text-sm ${muted}`}>
+              <Link href="/ai-textile-mockup-generator-india" className="block transition hover:text-cyan-500">
+                AI Textile Mockup India
+              </Link>
+              <Link href="/ai-jewellery-photoshoot" className="block transition hover:text-cyan-500">
+                AI Jewellery Photoshoot
+              </Link>
+              <Link href="/ai-saree-mockup" className="block transition hover:text-cyan-500">
+                AI Saree Mockup
+              </Link>
+              <Link href="/ai-kurti-catalogue-maker" className="block transition hover:text-cyan-500">
+                AI Kurti Catalogue Maker
+              </Link>
+              <Link href="/ai-product-photography-india" className="block transition hover:text-cyan-500">
+                AI Product Photography
               </Link>
             </div>
           </div>
@@ -155,26 +189,24 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* ───────── Social + Email row ───────── */}
-        <div className={`relative mt-8 flex flex-wrap items-center justify-between gap-4 border-t pt-6 dark:border-white/10 border-black/10`}>
-          <div className="flex flex-wrap items-center gap-3">
-            <p className={`text-[10px] font-black uppercase tracking-[0.22em] ${muted}`}>
-              Reach AgentForge
-            </p>
+        {/* ───────── Reach + Social + Copyright (centered, merged) ───────── */}
+        <div className={`relative mt-8 flex flex-col items-center justify-center gap-5 border-t pt-6 text-center dark:border-white/10 border-black/10`}>
+          <p className={`text-[10px] font-black uppercase tracking-[0.22em] ${muted}`}>
+            Reach AgentForge
+          </p>
 
-            <a
-              href="mailto:info@aiagentforge.in"
-              className={`group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-black transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-cyan-500/20 ${contactPill}`}
-            >
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-cyan-400 to-blue-600 text-white">
-                <Mail className="h-3.5 w-3.5" />
-              </span>
-              <span>info@aiagentforge.in</span>
-              <ArrowUpRight className={`h-3.5 w-3.5 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${muted}`} />
-            </a>
-          </div>
+          <a
+            href="mailto:info@aiagentforge.in"
+            className={`group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-black transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-cyan-500/20 ${contactPill}`}
+          >
+            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-cyan-400 to-blue-600 text-white">
+              <Mail className="h-3.5 w-3.5" />
+            </span>
+            <span>info@aiagentforge.in</span>
+            <ArrowUpRight className={`h-3.5 w-3.5 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${muted}`} />
+          </a>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             {socials.map(({ Icon, href, label, hover }) => (
               <a
                 key={label}
@@ -190,30 +222,27 @@ export default function Footer() {
               </a>
             ))}
           </div>
-        </div>
 
-        {/* ───────── Bottom bar ───────── */}
-        <div className={`relative mt-6 flex flex-col items-start justify-between gap-3 border-t pt-5 text-xs sm:flex-row sm:items-center ${
-          darkMode ? "border-white/10" : "border-black/10"
-        } ${subtle}`}>
-          <div className="flex flex-wrap items-center gap-2">
-            <BadgeCheck className="h-3.5 w-3.5 text-cyan-500" />
-            <p>
-              &copy; {new Date().getFullYear()} <span className={`font-black ${darkMode ? "text-white/75" : "text-black/75"}`}>AgentForge AI</span>. All rights reserved.
+          <div className={`flex flex-col items-center justify-center gap-2 pt-4 text-xs ${subtle}`}>
+            <p className="flex flex-wrap items-center justify-center gap-1.5">
+              <BadgeCheck className="h-3.5 w-3.5 text-cyan-500" />
+              &copy; {new Date().getFullYear()}{" "}
+              <span className={`font-black ${darkMode ? "text-white/75" : "text-black/75"}`}>AgentForge AI</span>. All rights reserved.
+            </p>
+
+            <p className="flex flex-wrap items-center justify-center gap-1.5">
+              <span>Crafted with care</span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-orange-100 via-white to-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-orange-700 dark:from-orange-500/10 dark:via-white/5 dark:to-emerald-500/10 dark:text-orange-200">
+                <span className="h-1 w-1 rounded-full bg-orange-500" />
+                Made in India
+                <span className="h-1 w-1 rounded-full bg-emerald-500" />
+              </span>
+              <span>·</span>
+              <span>By the AgentForge team</span>
             </p>
           </div>
-
-          <p className="flex flex-wrap items-center gap-1.5">
-            <span>Crafted with care</span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-orange-100 via-white to-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-orange-700 dark:from-orange-500/10 dark:via-white/5 dark:to-emerald-500/10 dark:text-orange-200">
-              <span className="h-1 w-1 rounded-full bg-orange-500" />
-              Made in India
-              <span className="h-1 w-1 rounded-full bg-emerald-500" />
-            </span>
-            <span>·</span>
-            <span>By the AgentForge team</span>
-          </p>
         </div>
+      </div>
       </div>
     </footer>
   );
