@@ -278,7 +278,7 @@ export default function LandingPage(props: LandingPageProps) {
               Start creating in the next 30 seconds
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-black/65 dark:text-white/65 sm:text-base">
-              Sign up to AgentForge AI and get 200 free credits. No card required.
+              Sign up to AgentForge AI and get 100 free credits. No card required.
             </p>
             <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
               <Link

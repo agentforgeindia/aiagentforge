@@ -229,7 +229,7 @@ export default function SignupPage() {
           <div className="relative">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-white/80 px-3.5 py-1.5 text-[11px] font-black uppercase tracking-[0.32em] text-amber-700 shadow-md shadow-amber-300/30 backdrop-blur sm:text-xs dark:border-amber-400/30 dark:bg-white/10 dark:text-amber-200">
               <Gift className="h-3.5 w-3.5 animate-pulse text-amber-500" />
-              200 Free Credits
+              100 Free Credits
               <Sparkles className="h-3.5 w-3.5 animate-pulse text-cyan-500" />
             </div>
 
@@ -239,7 +239,7 @@ export default function SignupPage() {
             </h1>
 
             <p className={`mt-5 max-w-xl text-base leading-7 sm:text-lg sm:leading-8 ${muted}`}>
-              Sign up to access TextilePrints to Mockup AI, Jewellery AI Studio, and premium product visuals — start with 200 free credits.
+              Sign up to access TextilePrints to Mockup AI, Jewellery AI Studio, and premium product visuals — start with 100 free credits.
             </p>
 
             {/* Feature chips */}
@@ -328,7 +328,7 @@ export default function SignupPage() {
               <div>
                 <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-400/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-amber-700 dark:text-amber-200">
                   <Coins className="h-3 w-3" />
-                  200 Free Credits
+                  100 Free Credits
                 </div>
                 <h2 className="text-2xl font-black leading-tight sm:text-3xl">Sign Up</h2>
                 <p className={`mt-2 text-sm ${muted}`}>

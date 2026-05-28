@@ -345,7 +345,7 @@ export default function CaseStudiesPage() {
               href="/signup"
               className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-7 py-3.5 text-sm font-black text-white shadow-xl shadow-cyan-500/30 transition hover:scale-105"
             >
-              ✨ Get 200 Free Credits
+              ✨ Get 100 Free Credits
             </Link>
             <Link
               href="/gallery"

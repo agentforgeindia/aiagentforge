@@ -1,0 +1,724 @@
+{
+  "name": "Jewellery Ai Studio Final 2.1 (fixed)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-jewellery",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-480, 160],
+      "webhookId": "9881c4cd-5e90-46c9-82eb-b960b2d19dfb"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// VALIDATE & NORMALIZE — supports the current /jewellery-ai page payload\n// Frontend bhejta hai (via app/api/jewellery/generate/route.ts):\n//   { generation_mode, generation_id, user_id, required_credits,\n//     source_image_url, batch_id, items[], shared_settings }\n// ============================================================\n\nconst incoming = $json.body ?? $json;\nconst nestedPayload = incoming.payload || {};\nconst nestedShared  = incoming.shared_settings || nestedPayload.shared_settings || {};\n\nconst body = {\n  ...incoming,\n  ...nestedPayload,\n  ...nestedShared,\n  items: incoming.items || nestedPayload.items || [],\n  shared_settings: nestedShared,\n};\n\nconst clean = (v, fallback = \"\") =>\n  v === undefined || v === null || String(v).trim() === \"\" ? fallback : String(v).trim();\nconst asBool  = (v) => v === true || v === \"true\" || v === 1 || v === \"1\";\nconst asArray = (v) => Array.isArray(v) ? v : (v ? [v] : []);\n\n// ---- MODE ----\nlet mode = clean(body.mode || body.generation_mode).toLowerCase();\nif (!mode) mode = (Array.isArray(body.items) && body.items.length > 1) ? \"bulk\" : \"single\";\nif (mode !== \"single\" && mode !== \"bulk\") throw new Error(\"invalid mode: \" + mode);\n\n// ---- IDs ----\nif (!body.user_id) throw new Error(\"user_id missing\");\nconst generationId = clean(body.generation_id || nestedPayload.generation_id);\nif (!generationId) throw new Error(\"generation_id missing\");\n\n// ---- SOURCE IMAGE ----\nconst sourceUrl = clean(\n  body.source_image_url ||\n  body.product_image_url ||\n  body.jewellery_image_url ||\n  body.image_url ||\n  body.design_url\n);\n\n// ---- BRAND (only fields user has toggled ON come pre-filtered from frontend) ----\nconst brand = body.company_details || body.brand_details || {};\nconst brandDetails = {\n  logo_url:     clean(brand.logo_url     || body.company_logo_url || body.logo_url),\n  company_name: clean(brand.company_name || body.company_name     || body.brand_name),\n  website:      clean(brand.website      || body.company_website  || body.website),\n  phone:        clean(brand.phone        || body.company_phone    || body.phone || body.whatsapp),\n  address:      clean(brand.address      || body.company_address  || body.address),\n};\nconst hasAnyBrandText = Boolean(brandDetails.company_name || brandDetails.website || brandDetails.phone || brandDetails.address);\n\n// ---- MORE JEWELLERY ----\nconst moreJewellery = asArray(body.more_jewellery || body.moreJewellery)\n  .map(String).map(s => s.trim()).filter(Boolean);\n\n// ---- NORMALIZED SHARED SETTINGS ----\nconst normalized = {\n  source_image_url:   sourceUrl,\n  model_image_url:    clean(body.model_image_url),\n  has_uploaded_model: asBool(body.has_uploaded_model) || Boolean(body.model_image_url),\n\n  jewellery_type:    clean(body.jewellery_type, \"Ring\"),\n  more_jewellery:    moreJewellery,\n  custom_jewellery:  clean(body.custom_jewellery),\n\n  output_type:       clean(body.output_type, \"Luxury Studio\"),\n  shoot_style:       clean(body.shoot_style, \"Luxury Studio\"),\n\n  model_type:        clean(body.model_type, \"No Model\"),\n  pose:              clean(body.pose, \"Auto Pose\"),\n  model_look:        clean(body.model_look, \"Indian Model\"),\n  face_expression:   clean(body.face_expression, \"Soft Smile\"),\n\n  accessories:       clean(body.accessories, \"No Accessories\"),\n  camera_angle:      clean(body.camera_angle, \"Auto Angle\"),\n  output_size:       clean(body.output_size, \"Square 1080x1080\"),\n  output_quality:    clean(body.output_quality || body.quality, \"Premium\"),\n\n  jewellery_notes:   clean(body.jewellery_notes || body.jewellery_details),\n  model_notes:       clean(body.model_notes),\n  custom_instruction: clean(body.custom_instruction),\n\n  brand_details:     brandDetails,\n  has_brand_text:    hasAnyBrandText,\n  af_watermark:      asBool(body.af_watermark ?? body.watermark_required ?? body.is_free_account ?? body.free_account),\n  reserve_second_corner: asBool(body.af_watermark ?? body.watermark_required ?? body.is_free_account ?? body.free_account),\n  // bottom strip reserve only when frontend ne kuch brand text toggle ON kiya hai\n  reserve_bottom_strip: hasAnyBrandText,\n\n  plan:              clean(body.plan, \"starter\").toLowerCase(),\n  required_credits:  Number(body.required_credits || 0),\n  outputs_per_product: Number(body.outputs_per_product || 1),\n};\n\nif (mode === \"single\") {\n  if (!sourceUrl) throw new Error(\"source_image_url missing for single mode\");\n  return [{\n    json: {\n      mode: \"single\",\n      ack: {\n        success: true,\n        mode: \"single\",\n        generation_id: generationId,\n        message: \"Jewellery generation accepted\"\n      },\n      payload: {\n        generation_id: generationId,\n        user_id: clean(body.user_id),\n        batch_id: clean(body.batch_id) || `jewellery-${Date.now()}`,\n        ...normalized\n      }\n    }\n  }];\n}\n\n// mode === \"bulk\"\nlet items = Array.isArray(body.items) ? body.items : [];\nif (!items.length) {\n  if (!sourceUrl) throw new Error(\"bulk items missing\");\n  items = [{ generation_id: generationId, source_image_url: sourceUrl, original_name: clean(body.original_name || \"jewellery-image\") }];\n}\nitems = items.map((item, index) => ({\n  generation_id: clean(item.generation_id || item.id) || (index === 0 ? generationId : \"\"),\n  source_image_url: clean(item.source_image_url || item.product_image_url || item.image_url || sourceUrl),\n  original_name: clean(item.original_name || item.name || `jewellery-${index + 1}`),\n})).filter(it => it.generation_id && it.source_image_url);\n\nif (!items.length) throw new Error(\"bulk items invalid — no generation_id or source_image_url\");\n\nreturn [{\n  json: {\n    mode: \"bulk\",\n    ack: {\n      success: true,\n      mode: \"bulk\",\n      batch_id: clean(body.batch_id) || null,\n      generation_ids: items.map(it => it.generation_id),\n      message: \"Bulk jewellery generation accepted\"\n    },\n    payload: {\n      generation_id: generationId,\n      user_id: clean(body.user_id),\n      batch_id: clean(body.batch_id) || null,\n      items,\n      shared_settings: normalized\n    }\n  }\n}];"
+      },
+      "id": "node-validate",
+      "name": "Validate And Normalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-240, 160]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json.ack}}",
+        "options": {}
+      },
+      "id": "node-respond",
+      "name": "Respond Immediately",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "leftValue": "={{$json.mode}}",
+              "rightValue": "single",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-if-mode",
+      "name": "If Single Or Bulk",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [32, 272]
+    },
+
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=={{ $env.SUPABASE_URL }}/rest/v1/generations?id=eq.{{$json.payload.generation_id}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"status\":\"processing\",\"updated_at\":{{JSON.stringify($now.toISO())}}}",
+        "options": {}
+      },
+      "id": "node-single-processing",
+      "name": "Single Set Processing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [272, 112]
+    },
+    {
+      "parameters": {
+        "jsCode": "const p = $json.payload || $('Validate And Normalize').first().json.payload;\nconst brand = p.brand_details || {};\nconst brandLine = [\n  brand.company_name ? `Company: ${brand.company_name}`    : \"\",\n  brand.website      ? `Website: ${brand.website}`         : \"\",\n  brand.phone        ? `Phone/WhatsApp: ${brand.phone}`    : \"\",\n  brand.address      ? `Address: ${brand.address}`         : \"\",\n].filter(Boolean).join(\" | \");\nconst moreJewellery = Array.isArray(p.more_jewellery) && p.more_jewellery.length ? p.more_jewellery.join(\", \") : \"\";\nconst jewelleryLabel = p.custom_jewellery ? p.custom_jewellery : (moreJewellery ? `${p.jewellery_type} (${moreJewellery})` : p.jewellery_type);\nreturn [{\n  json: {\n    ...p,\n    prompt_context: {\n      source_image_url:   p.source_image_url,\n      model_image_url:    p.model_image_url || \"\",\n      has_uploaded_model: Boolean(p.has_uploaded_model),\n      jewellery_type:     jewelleryLabel,\n      jewellery_notes:    p.jewellery_notes || \"\",\n      output_type:        p.output_type   || \"Luxury Studio\",\n      shoot_style:        p.shoot_style   || \"Luxury Studio\",\n      model_type:         p.model_type    || \"No Model\",\n      pose:               p.pose          || \"Auto Pose\",\n      model_look:         p.model_look    || \"Indian Model\",\n      face_expression:    p.face_expression || \"Soft Smile\",\n      model_notes:        p.model_notes   || \"\",\n      accessories:        p.accessories   || \"No Accessories\",\n      camera_angle:       p.camera_angle  || \"Auto Angle\",\n      output_size:        p.output_size   || \"Square 1080x1080\",\n      output_quality:     p.output_quality|| \"Premium\",\n      brand_details:      brandLine,\n      brand_logo_url:     brand.logo_url || \"\",\n      has_brand_text:     Boolean(p.has_brand_text),\n      reserve_bottom_strip: Boolean(p.reserve_bottom_strip),\n      af_watermark:       Boolean(p.af_watermark),\n      reserve_second_corner: Boolean(p.reserve_second_corner ?? p.af_watermark),\n      custom_instruction: p.custom_instruction || \"\"\n    }\n  }\n}];"
+      },
+      "id": "node-single-context",
+      "name": "Single Build Prompt Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [512, 112]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.OPENAI_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4.1-mini\",\n  \"max_tokens\": 1800,\n  \"temperature\": 0.4,\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are AgentForge Jewellery AI Studio prompt director. Create a premium FAL Nano-Banana image-edit prompt strictly from the user's selected frontend options. JEWELLERY PRESERVATION IS HIGHEST PRIORITY: keep the source jewellery exactly the same — shape, stones, metal tone, engraving, size, pattern, gemstone layout, prongs, chain, polish, finish, every detail. Never redesign or recolor the jewellery. Style the SCENE around it. If model_image_url provided, preserve the person's identity. If model_type says No Model / Product Only / Flat Lay / Macro Detail, do NOT include any human body parts. Follow selected shoot_style, output_type, model_type, pose, camera_angle, accessories, face_expression, output_size, output_quality, jewellery_notes and custom_instruction precisely. Premium, realistic, luxury campaign quality. Indian jewellery market default: realistic Indian skin tones, natural anatomy, correct hand/ear/neck/wrist placement. Props/accessories must appear visibly but jewellery remains hero. STRICT NO-TEXT RULE: image must be 100% free of typography — NEVER render SKU codes, product numbers, serial numbers, barcodes, labels, prices, tags, letters, alphabets, monograms, brand initials, signatures, watermarks, badges, or any text-like marks anywhere in the image. NO LOGOS baked in — the AgentForge logo and the client's company logo are overlaid post-process via canvas; reserve top-right corner (approx 18% width × 18% height) visually calm — no faces, no bright reflections, no critical jewellery detail there. If reserve_second_corner is true (free account), also keep bottom-right corner calm for AgentForge watermark. If reserve_bottom_strip is true (user has brand text toggled ON), reserve the BOTTOM 14% of the canvas as a clean, gently blurred, neutral surface — no jewellery, no model face, no busy props in that strip — a branding text strip is overlaid post-process. Do NOT attempt to render brand text yourself. Return ONLY valid minified JSON with keys: final_prompt, negative_prompt, title_hint. No markdown, no code block.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Create final FAL image-edit prompt using exactly these selected settings:\\n\\nSOURCE JEWELLERY IMAGE: {{$json.prompt_context.source_image_url}}\\nJEWELLERY TYPE: {{$json.prompt_context.jewellery_type}}\\nJEWELLERY PROTECTION NOTES: {{$json.prompt_context.jewellery_notes}}\\nOUTPUT TYPE: {{$json.prompt_context.output_type}}\\nSHOOT STYLE: {{$json.prompt_context.shoot_style}}\\nMODEL REFERENCE IMAGE: {{$json.prompt_context.model_image_url}}\\nHAS UPLOADED MODEL: {{$json.prompt_context.has_uploaded_model}}\\nMODEL TYPE: {{$json.prompt_context.model_type}}\\nPOSE: {{$json.prompt_context.pose}}\\nCAMERA ANGLE: {{$json.prompt_context.camera_angle}}\\nMODEL LOOK: {{$json.prompt_context.model_look}}\\nFACE EXPRESSION: {{$json.prompt_context.face_expression}}\\nMODEL NOTES: {{$json.prompt_context.model_notes}}\\nACCESSORIES: {{$json.prompt_context.accessories}}\\nOUTPUT SIZE: {{$json.prompt_context.output_size}}\\nOUTPUT QUALITY: {{$json.prompt_context.output_quality}}\\nHAS BRAND TEXT (canvas overlay): {{$json.prompt_context.has_brand_text}}\\nRESERVE BOTTOM 14% STRIP CLEAN: {{$json.prompt_context.reserve_bottom_strip}}\\nRESERVE BOTTOM-RIGHT CORNER (AF watermark): {{$json.prompt_context.reserve_second_corner}}\\nCUSTOM INSTRUCTION: {{$json.prompt_context.custom_instruction}}\\n\\nRules:\\n1. final_prompt must reflect every selected frontend option (non-empty ones).\\n2. Never include any text, letters, numbers, SKU, code, label, watermark or logo in the image — strict NO TEXT rule.\\n3. If RESERVE_BOTTOM_STRIP is true, explicitly instruct: 'keep the bottom 14% of the frame as a clean blurred neutral surface, no subject in that strip'.\\n4. Always instruct: 'keep top-right corner visually calm for post-process logo overlay'.\\n5. If RESERVE_SECOND_CORNER is true, also instruct: 'keep bottom-right corner visually calm'.\\n6. If model_type says No Model/Product Only/Flat Lay/Macro Detail, do NOT include human body parts.\\n7. Preserve jewellery design EXACTLY from source — same shape, stones, metal tone, engraving.\\n8. final_prompt should be 220-420 words, premium FAL-ready.\\n9. negative_prompt comma-separated, must include: SKU code, product number, serial number, barcode, label, price tag, letters in image, alphabet, numbers, random text, monogram, brand initials, watermark, logo, signature, typography, fake text, changed jewellery design, altered gemstone layout, changed metal tone, extra jewellery pieces, distorted jewellery, blurry, low detail, melted metal, fake gemstones, plastic skin, deformed face, warped fingers, extra hands, broken anatomy, cropped jewellery, hidden jewellery, cluttered frame, AI stock photo look.\\n10. Return ONLY valid JSON.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "node-single-openai",
+      "name": "Single OpenAI Prompt Builder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [752, 112],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const root = $('Single Build Prompt Context').first().json;\nconst raw = $json.choices?.[0]?.message?.content ?? \"{}\";\nlet parsed = {};\ntry { parsed = JSON.parse(raw); } catch (e) {\n  parsed = { final_prompt: raw, negative_prompt: \"\", title_hint: \"Jewellery AI Output\" };\n}\nconst fallbackNegative = [\n  \"SKU code\",\"product number\",\"serial number\",\"barcode\",\"label\",\"price tag\",\n  \"letters in image\",\"alphabet in frame\",\"numbers\",\"random text\",\"text covering jewellery\",\n  \"monogram\",\"two-letter monogram\",\"single letter graphic\",\"brand initials\",\"signature mark\",\n  \"AI watermark\",\"corner watermark text\",\"typography badge\",\"decorative letters\",\"embedded text logo\",\n  \"wrong logo placement\",\"logo on jewellery\",\"blurry\",\"low detail\",\"distorted jewellery\",\n  \"changed jewellery design\",\"altered gemstone layout\",\"changed metal tone\",\"extra jewellery pieces\",\n  \"duplicate accessories\",\"warped fingers\",\"broken anatomy\",\"unrealistic gemstones\",\n  \"altered product shape\",\"low-resolution\",\"cropped product\",\"hidden jewellery\",\"cluttered frame\",\n  \"cheap look\",\"overexposed metal\",\"fake reflections\",\"extra hands\",\"deformed face\",\n  \"AI face glitch\",\"uncanny valley face\",\"deformed stones\",\"asymmetric prongs\",\"fused gold links\",\n  \"melted metal\",\"plasticky finish\",\"cheap toy look\",\"painted-on gemstones\",\n  \"flat lighting on gold\",\"dull metal sheen\",\"dirty marks\",\"smudges\",\"fingerprints\",\n  \"monochromatic Bollywood fair skin\",\"over-smoothed plastic skin\",\"AI stock photo look\",\n  \"generic AI styling\",\"glass-like pearls\",\"chrome-like pearls\",\"flat white circle diamond\",\n  \"painted enamel\",\"smudged kundan\"\n].join(\", \");\nreturn [{\n  json: {\n    ...root,\n    final_prompt:    parsed.final_prompt    || raw,\n    negative_prompt: parsed.negative_prompt || fallbackNegative,\n    title_hint:      parsed.title_hint      || \"Jewellery AI Output\"\n  }\n}];"
+      },
+      "id": "node-single-parse",
+      "name": "Single Parse Prompt JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [992, 112]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawSize = String($json.output_size || \"\").toLowerCase().replace(/\\s+/g, \"\");\nlet falSize = \"square_hd\";\nif (rawSize.includes(\"1080x1920\") || rawSize.includes(\"9:16\") || rawSize.includes(\"mobile\") || rawSize.includes(\"story\") || rawSize.includes(\"reel\")) falSize = \"portrait_9_16\";\nelse if (rawSize.includes(\"1080x1350\") || rawSize.includes(\"4:5\") || rawSize.includes(\"portrait\")) falSize = \"portrait_4_5\";\nelse if (rawSize.includes(\"1080x1080\") || rawSize.includes(\"square\") || rawSize.includes(\"1:1\")) falSize = \"square_hd\";\nreturn [{ json: { ...$json, fal_size: falSize } }];"
+      },
+      "id": "node-single-mapsize",
+      "name": "Single Map Size",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1232, 112]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://queue.fal.run/fal-ai/nano-banana/edit",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Key {{ $env.FAL_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"image_urls\": {{JSON.stringify($json.model_image_url ? [$json.source_image_url, $json.model_image_url] : [$json.source_image_url])}},\n  \"prompt\": {{JSON.stringify($json.final_prompt || \"\")}},\n  \"negative_prompt\": {{JSON.stringify($json.negative_prompt || \"\")}},\n  \"num_images\": {{$json.outputs_per_product || 1}},\n  \"image_size\": {{JSON.stringify($json.fal_size || \"square_hd\")}}\n}",
+        "options": {}
+      },
+      "id": "node-single-fal-submit",
+      "name": "Single FAL Submit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1472, 112],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": { "amount": 30 },
+      "id": "node-single-wait",
+      "name": "Single Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1712, 112],
+      "webhookId": "17bccc3f-196b-4fa1-a506-f3d19b6141c6"
+    },
+    {
+      "parameters": {
+        "url": "={{$('Single FAL Submit').first().json.status_url}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Key {{ $env.FAL_KEY }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-single-fal-status",
+      "name": "Single FAL Get Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1952, 112]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            { "leftValue": "={{$json.status}}", "rightValue": "COMPLETED", "operator": { "type": "string", "operation": "equals" } }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-single-if-ready",
+      "name": "Single If Ready",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2192, 112]
+    },
+    {
+      "parameters": {
+        "url": "={{$('Single FAL Submit').first().json.response_url}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Key {{ $env.FAL_KEY }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-single-fal-final",
+      "name": "Single FAL Get Final",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2432, 48]
+    },
+    {
+      "parameters": {
+        "jsCode": "const root = $('Single Map Size').first().json;\nconst images = $json.images || $json.data?.images || [];\nconst output_urls = images.map(it => it.url || it.image?.url || it.image_url).filter(Boolean);\nif (!output_urls.length) throw new Error(\"No output URLs returned from FAL\");\nconst firstUrl = output_urls[0];\nconst ext = firstUrl.match(/\\.(\\w+)(?:\\?|$)/)?.[1]?.toLowerCase() || 'png';\nconst objectPath = `jewellery-outputs/${root.user_id || 'guest'}/${Date.now()}-${root.generation_id}.${ext}`;\nreturn [{ json: { ...root, fal_output_urls: output_urls, fal_output_url: firstUrl, object_path: objectPath, output_mime: ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/png' } }];"
+      },
+      "id": "node-single-normalize",
+      "name": "Single Normalize Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2672, 48]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.fal_output_url }}",
+        "options": {
+          "response": { "response": { "responseFormat": "file" } },
+          "timeout": 60000
+        }
+      },
+      "id": "node-single-download-fal",
+      "name": "Single Download FAL Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2912, 48]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=={{ $env.SUPABASE_URL }}/storage/v1/object/designs/{{ $json.object_path }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "={{ $json.output_mime }}" },
+            { "name": "x-upsert", "value": "true" },
+            { "name": "Cache-Control", "value": "3600" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": { "timeout": 60000 }
+      },
+      "id": "node-single-upload-supabase",
+      "name": "Single Upload To Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3152, 48]
+    },
+    {
+      "parameters": {
+        "jsCode": "const meta = $('Single Normalize Results').first().json;\nconst publicUrl = `${$env.SUPABASE_URL}/storage/v1/object/public/designs/${meta.object_path}`;\nreturn [{ json: { ...meta, output_url: publicUrl } }];"
+      },
+      "id": "node-single-build-url",
+      "name": "Single Build Public URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3392, 48]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=={{ $env.SUPABASE_URL }}/rest/v1/generations?id=eq.{{$json.generation_id}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"status\":\"completed\",\"output_url\":{{JSON.stringify($json.output_url || \"\")}},\"updated_at\":{{JSON.stringify($now.toISO())}}}",
+        "options": {}
+      },
+      "id": "node-single-update",
+      "name": "Single Update Completed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3632, 48]
+    },
+
+    {
+      "parameters": {
+        "jsCode": "const p = $json.payload;\nconst shared = p.shared_settings || {};\nreturn (p.items || []).map((item) => ({\n  json: {\n    generation_id: item.generation_id,\n    user_id: p.user_id,\n    batch_id: p.batch_id || null,\n    generation_mode: \"bulk\",\n    source_image_url: item.source_image_url || shared.source_image_url,\n    original_name: item.original_name || \"\",\n    ...shared,\n    source_image_url_shared: shared.source_image_url,\n  }\n}));"
+      },
+      "id": "node-bulk-explode",
+      "name": "Bulk Explode Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [272, 432]
+    },
+    {
+      "parameters": { "options": {} },
+      "id": "node-bulk-split",
+      "name": "Bulk Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [512, 432]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=={{ $env.SUPABASE_URL }}/rest/v1/generations?id=eq.{{$json.generation_id}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"status\":\"processing\",\"updated_at\":{{JSON.stringify($now.toISO())}}}",
+        "options": {}
+      },
+      "id": "node-bulk-processing",
+      "name": "Bulk Set Processing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [752, 432]
+    },
+    {
+      "parameters": {
+        "jsCode": "const p = $json;\nconst brand = p.brand_details || {};\nconst brandLine = [\n  brand.company_name ? `Company: ${brand.company_name}` : \"\",\n  brand.website      ? `Website: ${brand.website}`      : \"\",\n  brand.phone        ? `Phone/WhatsApp: ${brand.phone}` : \"\",\n  brand.address      ? `Address: ${brand.address}`      : \"\"\n].filter(Boolean).join(\" | \");\nconst moreJewellery = Array.isArray(p.more_jewellery) && p.more_jewellery.length ? p.more_jewellery.join(\", \") : \"\";\nconst jewelleryLabel = p.custom_jewellery ? p.custom_jewellery : (moreJewellery ? `${p.jewellery_type} (${moreJewellery})` : p.jewellery_type);\nreturn [{\n  json: {\n    ...p,\n    prompt_context: {\n      source_image_url:   p.source_image_url,\n      model_image_url:    p.model_image_url || \"\",\n      has_uploaded_model: Boolean(p.has_uploaded_model),\n      jewellery_type:     jewelleryLabel,\n      jewellery_notes:    p.jewellery_notes || \"\",\n      output_type:        p.output_type   || \"Luxury Studio\",\n      shoot_style:        p.shoot_style   || \"Luxury Studio\",\n      model_type:         p.model_type    || \"No Model\",\n      pose:               p.pose          || \"Auto Pose\",\n      model_look:         p.model_look    || \"Indian Model\",\n      face_expression:    p.face_expression || \"Soft Smile\",\n      model_notes:        p.model_notes   || \"\",\n      accessories:        p.accessories   || \"No Accessories\",\n      camera_angle:       p.camera_angle  || \"Auto Angle\",\n      output_size:        p.output_size   || \"Square 1080x1080\",\n      output_quality:     p.output_quality|| \"Premium\",\n      brand_details:      brandLine,\n      brand_logo_url:     brand.logo_url || \"\",\n      has_brand_text:     Boolean(p.has_brand_text),\n      reserve_bottom_strip: Boolean(p.reserve_bottom_strip),\n      af_watermark:       Boolean(p.af_watermark),\n      reserve_second_corner: Boolean(p.reserve_second_corner ?? p.af_watermark),\n      custom_instruction: p.custom_instruction || \"\"\n    }\n  }\n}];"
+      },
+      "id": "node-bulk-context",
+      "name": "Bulk Build Prompt Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [992, 432]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.OPENAI_API_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4.1-mini\",\n  \"max_tokens\": 1800,\n  \"temperature\": 0.4,\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are AgentForge Jewellery AI Studio prompt director for BULK jewellery generation. Create one premium FAL Nano-Banana image-edit prompt for the CURRENT BULK ITEM only, strictly from the selected shared settings and this item's source image. JEWELLERY PRESERVATION IS HIGHEST PRIORITY: keep the current source jewellery exactly the same — shape, stones, metal tone, engraving, size, pattern, gemstone layout, prongs, chain, polish, finish, every detail. Never redesign or recolor. If model_image_url provided, preserve the person's identity. If model_type says No Model / Product Only / Flat Lay / Macro Detail, do NOT include human body parts. Follow selected shoot_style, output_type, model_type, pose, camera_angle, accessories, face_expression, output_size, output_quality, jewellery_notes and custom_instruction precisely. Premium, realistic, luxury campaign quality. Indian jewellery market default: realistic Indian skin tones, natural anatomy. Props/accessories visible but jewellery remains hero. STRICT NO-TEXT RULE: image must be 100% free of typography — NEVER render SKU codes, product numbers, serial numbers, barcodes, labels, prices, tags, letters, alphabets, monograms, brand initials, signatures, watermarks, badges. NO LOGOS baked in — logo overlay is applied post-process via canvas. Reserve top-right corner visually calm. If reserve_second_corner is true (free account), reserve bottom-right too. If reserve_bottom_strip is true (user has brand text toggled ON), reserve BOTTOM 14% as a clean blurred neutral surface — branding text strip is overlaid post-process. Do NOT attempt to render brand text yourself. Return ONLY valid minified JSON with keys: final_prompt, negative_prompt, title_hint. No markdown.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Create final FAL image-edit prompt for THIS BULK ITEM using exactly these selected settings:\\n\\nCURRENT BULK ITEM SOURCE: {{$json.prompt_context.source_image_url}}\\nGENERATION ID: {{$json.generation_id}}\\nFILE: {{$json.original_name}}\\nJEWELLERY TYPE: {{$json.prompt_context.jewellery_type}}\\nJEWELLERY NOTES: {{$json.prompt_context.jewellery_notes}}\\nOUTPUT TYPE: {{$json.prompt_context.output_type}}\\nSHOOT STYLE: {{$json.prompt_context.shoot_style}}\\nMODEL IMAGE: {{$json.prompt_context.model_image_url}}\\nHAS UPLOADED MODEL: {{$json.prompt_context.has_uploaded_model}}\\nMODEL TYPE: {{$json.prompt_context.model_type}}\\nPOSE: {{$json.prompt_context.pose}}\\nCAMERA ANGLE: {{$json.prompt_context.camera_angle}}\\nMODEL LOOK: {{$json.prompt_context.model_look}}\\nFACE EXPRESSION: {{$json.prompt_context.face_expression}}\\nMODEL NOTES: {{$json.prompt_context.model_notes}}\\nACCESSORIES: {{$json.prompt_context.accessories}}\\nOUTPUT SIZE: {{$json.prompt_context.output_size}}\\nOUTPUT QUALITY: {{$json.prompt_context.output_quality}}\\nHAS BRAND TEXT (canvas overlay): {{$json.prompt_context.has_brand_text}}\\nRESERVE BOTTOM 14% STRIP: {{$json.prompt_context.reserve_bottom_strip}}\\nRESERVE BOTTOM-RIGHT CORNER: {{$json.prompt_context.reserve_second_corner}}\\nCUSTOM INSTRUCTION: {{$json.prompt_context.custom_instruction}}\\n\\nRules:\\n1. Reflect every selected non-empty option in final_prompt.\\n2. STRICT NO TEXT — never include SKU, code, number, label, letter, watermark, logo, signature.\\n3. If RESERVE_BOTTOM_STRIP true, instruct 'keep bottom 14% clean blurred neutral'.\\n4. Always instruct 'keep top-right corner visually calm for logo overlay'.\\n5. If RESERVE_SECOND_CORNER true, also 'keep bottom-right corner calm'.\\n6. If model_type says No Model/Product Only/Flat Lay/Macro Detail, no body parts.\\n7. Preserve jewellery design EXACTLY from the current bulk item source, not from any other item.\\n8. final_prompt 220-420 words, premium FAL-ready.\\n9. negative_prompt comma-separated, include: SKU code, product number, serial number, barcode, label, letters, alphabet, numbers, monogram, brand initials, watermark, logo, signature, typography, changed jewellery design, altered gemstone layout, changed metal tone, extra jewellery pieces, distorted jewellery, blurry, low detail, melted metal, fake gemstones, plastic skin, deformed face, warped fingers, extra hands, broken anatomy, cropped jewellery, hidden jewellery, cluttered frame, AI stock photo look.\\n10. Return ONLY valid JSON.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "node-bulk-openai",
+      "name": "Bulk OpenAI Prompt Builder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1232, 432],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const root = $('Bulk Build Prompt Context').first().json;\nconst raw = $json.choices?.[0]?.message?.content ?? \"{}\";\nlet parsed = {};\ntry { parsed = JSON.parse(raw); } catch (e) {\n  parsed = { final_prompt: raw, negative_prompt: \"\", title_hint: \"Jewellery AI Output\" };\n}\nconst fallbackNegative = [\n  \"SKU code\",\"product number\",\"serial number\",\"barcode\",\"label\",\"price tag\",\n  \"letters in image\",\"alphabet in frame\",\"numbers\",\"random text\",\"text covering jewellery\",\n  \"monogram\",\"two-letter monogram\",\"single letter graphic\",\"brand initials\",\"signature mark\",\n  \"AI watermark\",\"corner watermark text\",\"typography badge\",\"decorative letters\",\"embedded text logo\",\n  \"wrong logo placement\",\"logo on jewellery\",\"blurry\",\"low detail\",\"distorted jewellery\",\n  \"changed jewellery design\",\"altered gemstone layout\",\"changed metal tone\",\"extra jewellery pieces\",\n  \"duplicate accessories\",\"warped fingers\",\"broken anatomy\",\"unrealistic gemstones\",\n  \"altered product shape\",\"low-resolution\",\"cropped product\",\"hidden jewellery\",\"cluttered frame\",\n  \"cheap look\",\"overexposed metal\",\"fake reflections\",\"extra hands\",\"deformed face\",\n  \"AI face glitch\",\"uncanny valley face\",\"deformed stones\",\"asymmetric prongs\",\"fused gold links\",\n  \"melted metal\",\"plasticky finish\",\"cheap toy look\",\"painted-on gemstones\",\n  \"flat lighting on gold\",\"dull metal sheen\",\"dirty marks\",\"smudges\",\"fingerprints\",\n  \"monochromatic Bollywood fair skin\",\"over-smoothed plastic skin\",\"AI stock photo look\",\n  \"generic AI styling\",\"glass-like pearls\",\"chrome-like pearls\",\"flat white circle diamond\",\n  \"painted enamel\",\"smudged kundan\"\n].join(\", \");\nreturn [{\n  json: {\n    ...root,\n    final_prompt:    parsed.final_prompt    || raw,\n    negative_prompt: parsed.negative_prompt || fallbackNegative,\n    title_hint:      parsed.title_hint      || \"Jewellery AI Output\"\n  }\n}];"
+      },
+      "id": "node-bulk-parse",
+      "name": "Bulk Parse Prompt JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1472, 432]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawSize = String($json.output_size || \"\").toLowerCase().replace(/\\s+/g, \"\");\nlet falSize = \"square_hd\";\nif (rawSize.includes(\"1080x1920\") || rawSize.includes(\"9:16\") || rawSize.includes(\"mobile\") || rawSize.includes(\"story\") || rawSize.includes(\"reel\")) falSize = \"portrait_9_16\";\nelse if (rawSize.includes(\"1080x1350\") || rawSize.includes(\"4:5\") || rawSize.includes(\"portrait\")) falSize = \"portrait_4_5\";\nelse if (rawSize.includes(\"1080x1080\") || rawSize.includes(\"square\") || rawSize.includes(\"1:1\")) falSize = \"square_hd\";\nreturn [{ json: { ...$json, fal_size: falSize } }];"
+      },
+      "id": "node-bulk-mapsize",
+      "name": "Bulk Map Size",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1712, 432]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://queue.fal.run/fal-ai/nano-banana/edit",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Key {{ $env.FAL_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"image_urls\": {{JSON.stringify($json.model_image_url ? [$json.source_image_url, $json.model_image_url] : [$json.source_image_url])}},\n  \"prompt\": {{JSON.stringify($json.final_prompt || \"\")}},\n  \"negative_prompt\": {{JSON.stringify($json.negative_prompt || \"\")}},\n  \"num_images\": {{$json.outputs_per_product || 1}},\n  \"image_size\": {{JSON.stringify($json.fal_size || \"square_hd\")}}\n}",
+        "options": {}
+      },
+      "id": "node-bulk-fal-submit",
+      "name": "Bulk FAL Submit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1952, 432],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": { "amount": 10 },
+      "id": "node-bulk-wait",
+      "name": "Bulk Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [2192, 432],
+      "webhookId": "7c20e052-2e76-4c0d-ad66-feb8fe9c397f"
+    },
+    {
+      "parameters": {
+        "url": "={{$('Bulk FAL Submit').first().json.status_url}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Key {{ $env.FAL_KEY }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-bulk-fal-status",
+      "name": "Bulk FAL Get Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2432, 432]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            { "leftValue": "={{$json.status}}", "rightValue": "COMPLETED", "operator": { "type": "string", "operation": "equals" } }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-bulk-if-ready",
+      "name": "Bulk If Ready",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2672, 432]
+    },
+    {
+      "parameters": {
+        "url": "={{$('Bulk FAL Submit').first().json.response_url}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Key {{ $env.FAL_KEY }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-bulk-fal-final",
+      "name": "Bulk FAL Get Final",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2912, 368]
+    },
+    {
+      "parameters": {
+        "jsCode": "const root = $('Bulk Map Size').first().json;\nconst images = $json.images || $json.data?.images || [];\nconst output_urls = images.map(it => it.url || it.image?.url || it.image_url).filter(Boolean);\nif (!output_urls.length) throw new Error(\"No output URLs returned from FAL\");\nconst firstUrl = output_urls[0];\nconst ext = firstUrl.match(/\\.(\\w+)(?:\\?|$)/)?.[1]?.toLowerCase() || 'png';\nconst objectPath = `jewellery-outputs/${root.user_id || 'guest'}/${Date.now()}-${root.generation_id}.${ext}`;\nreturn [{ json: { ...root, fal_output_urls: output_urls, fal_output_url: firstUrl, object_path: objectPath, output_mime: ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/png' } }];"
+      },
+      "id": "node-bulk-normalize",
+      "name": "Bulk Normalize Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3152, 368]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.fal_output_url }}",
+        "options": {
+          "response": { "response": { "responseFormat": "file" } },
+          "timeout": 60000
+        }
+      },
+      "id": "node-bulk-download-fal",
+      "name": "Bulk Download FAL Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3392, 368]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=={{ $env.SUPABASE_URL }}/storage/v1/object/designs/{{ $json.object_path }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "={{ $json.output_mime }}" },
+            { "name": "x-upsert", "value": "true" },
+            { "name": "Cache-Control", "value": "3600" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": { "timeout": 60000 }
+      },
+      "id": "node-bulk-upload-supabase",
+      "name": "Bulk Upload To Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3632, 368]
+    },
+    {
+      "parameters": {
+        "jsCode": "const meta = $('Bulk Normalize Results').first().json;\nconst publicUrl = `${$env.SUPABASE_URL}/storage/v1/object/public/designs/${meta.object_path}`;\nreturn [{ json: { ...meta, output_url: publicUrl } }];"
+      },
+      "id": "node-bulk-build-url",
+      "name": "Bulk Build Public URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3872, 368]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=={{ $env.SUPABASE_URL }}/rest/v1/generations?id=eq.{{$json.generation_id}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"status\":\"completed\",\"output_url\":{{JSON.stringify($json.output_url || \"\")}},\"updated_at\":{{JSON.stringify($now.toISO())}}}",
+        "options": {}
+      },
+      "id": "node-bulk-update",
+      "name": "Bulk Update Completed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [4112, 368]
+    },
+    {
+      "parameters": {
+        "jsCode": "return items;"
+      },
+      "id": "node-bulk-continue",
+      "name": "Bulk Continue Next Item",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [4352, 368]
+    },
+
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=={{ $env.SUPABASE_URL }}/rest/v1/generations?id=eq.{{$json.generation_id || $json.payload?.generation_id || ''}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"status\":\"failed\",\"error_message\":{{JSON.stringify($json.message || $json.error?.message || 'Unknown error')}},\"updated_at\":{{JSON.stringify($now.toISO())}}}",
+        "options": {}
+      },
+      "id": "node-mark-single-failed",
+      "name": "Mark Single Failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2432, 240]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=={{ $env.SUPABASE_URL }}/rest/v1/generations?id=eq.{{$json.generation_id || ''}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"status\":\"failed\",\"error_message\":{{JSON.stringify($json.message || $json.error?.message || 'Unknown error')}},\"updated_at\":{{JSON.stringify($now.toISO())}}}",
+        "options": {}
+      },
+      "id": "node-mark-bulk-failed",
+      "name": "Mark Bulk Failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2192, 600]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": { "main": [[{ "node": "Validate And Normalize", "type": "main", "index": 0 }]] },
+    "Validate And Normalize": {
+      "main": [[
+        { "node": "Respond Immediately", "type": "main", "index": 0 },
+        { "node": "If Single Or Bulk", "type": "main", "index": 0 }
+      ]]
+    },
+    "If Single Or Bulk": {
+      "main": [
+        [{ "node": "Single Set Processing", "type": "main", "index": 0 }],
+        [{ "node": "Bulk Explode Items", "type": "main", "index": 0 }]
+      ]
+    },
+
+    "Single Set Processing":        { "main": [[{ "node": "Single Build Prompt Context", "type": "main", "index": 0 }]] },
+    "Single Build Prompt Context":  { "main": [[{ "node": "Single OpenAI Prompt Builder", "type": "main", "index": 0 }]] },
+    "Single OpenAI Prompt Builder": {
+      "main": [
+        [{ "node": "Single Parse Prompt JSON", "type": "main", "index": 0 }],
+        [{ "node": "Mark Single Failed", "type": "main", "index": 0 }]
+      ]
+    },
+    "Single Parse Prompt JSON":     { "main": [[{ "node": "Single Map Size", "type": "main", "index": 0 }]] },
+    "Single Map Size":              { "main": [[{ "node": "Single FAL Submit", "type": "main", "index": 0 }]] },
+    "Single FAL Submit": {
+      "main": [
+        [{ "node": "Single Wait", "type": "main", "index": 0 }],
+        [{ "node": "Mark Single Failed", "type": "main", "index": 0 }]
+      ]
+    },
+    "Single Wait":           { "main": [[{ "node": "Single FAL Get Result", "type": "main", "index": 0 }]] },
+    "Single FAL Get Result": { "main": [[{ "node": "Single If Ready", "type": "main", "index": 0 }]] },
+    "Single If Ready": {
+      "main": [
+        [{ "node": "Single FAL Get Final", "type": "main", "index": 0 }],
+        [{ "node": "Single Wait", "type": "main", "index": 0 }]
+      ]
+    },
+    "Single FAL Get Final":      { "main": [[{ "node": "Single Normalize Results", "type": "main", "index": 0 }]] },
+    "Single Normalize Results":  { "main": [[{ "node": "Single Download FAL Image", "type": "main", "index": 0 }]] },
+    "Single Download FAL Image": { "main": [[{ "node": "Single Upload To Supabase", "type": "main", "index": 0 }]] },
+    "Single Upload To Supabase": { "main": [[{ "node": "Single Build Public URL", "type": "main", "index": 0 }]] },
+    "Single Build Public URL":   { "main": [[{ "node": "Single Update Completed", "type": "main", "index": 0 }]] },
+
+    "Bulk Explode Items":   { "main": [[{ "node": "Bulk Split In Batches", "type": "main", "index": 0 }]] },
+    "Bulk Split In Batches": {
+      "main": [
+        [],
+        [{ "node": "Bulk Set Processing", "type": "main", "index": 0 }]
+      ]
+    },
+    "Bulk Set Processing":       { "main": [[{ "node": "Bulk Build Prompt Context", "type": "main", "index": 0 }]] },
+    "Bulk Build Prompt Context": { "main": [[{ "node": "Bulk OpenAI Prompt Builder", "type": "main", "index": 0 }]] },
+    "Bulk OpenAI Prompt Builder": {
+      "main": [
+        [{ "node": "Bulk Parse Prompt JSON", "type": "main", "index": 0 }],
+        [{ "node": "Mark Bulk Failed", "type": "main", "index": 0 }]
+      ]
+    },
+    "Bulk Parse Prompt JSON": { "main": [[{ "node": "Bulk Map Size", "type": "main", "index": 0 }]] },
+    "Bulk Map Size":          { "main": [[{ "node": "Bulk FAL Submit", "type": "main", "index": 0 }]] },
+    "Bulk FAL Submit": {
+      "main": [
+        [{ "node": "Bulk Wait", "type": "main", "index": 0 }],
+        [{ "node": "Mark Bulk Failed", "type": "main", "index": 0 }]
+      ]
+    },
+    "Bulk Wait":           { "main": [[{ "node": "Bulk FAL Get Result", "type": "main", "index": 0 }]] },
+    "Bulk FAL Get Result": { "main": [[{ "node": "Bulk If Ready", "type": "main", "index": 0 }]] },
+    "Bulk If Ready": {
+      "main": [
+        [{ "node": "Bulk FAL Get Final", "type": "main", "index": 0 }],
+        [{ "node": "Bulk Wait", "type": "main", "index": 0 }]
+      ]
+    },
+    "Bulk FAL Get Final":      { "main": [[{ "node": "Bulk Normalize Results", "type": "main", "index": 0 }]] },
+    "Bulk Normalize Results":  { "main": [[{ "node": "Bulk Download FAL Image", "type": "main", "index": 0 }]] },
+    "Bulk Download FAL Image": { "main": [[{ "node": "Bulk Upload To Supabase", "type": "main", "index": 0 }]] },
+    "Bulk Upload To Supabase": { "main": [[{ "node": "Bulk Build Public URL", "type": "main", "index": 0 }]] },
+    "Bulk Build Public URL":   { "main": [[{ "node": "Bulk Update Completed", "type": "main", "index": 0 }]] },
+    "Bulk Update Completed":   { "main": [[{ "node": "Bulk Continue Next Item", "type": "main", "index": 0 }]] },
+    "Bulk Continue Next Item": { "main": [[{ "node": "Bulk Split In Batches", "type": "main", "index": 0 }]] },
+    "Mark Bulk Failed":        { "main": [[{ "node": "Bulk Split In Batches", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "fixed-2.1",
+  "meta": {
+    "instanceId": "agentforge"
+  },
+  "tags": []
+}

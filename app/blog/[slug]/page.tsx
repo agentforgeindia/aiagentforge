@@ -209,7 +209,7 @@ export default async function BlogPostPage({
           <div className="min-w-0">
             <p className="text-base font-black sm:text-lg">Ready to try it on your own products?</p>
             <p className="mt-1 text-sm text-black/60 dark:text-white/60">
-              Sign up and get 200 free credits — no card required.
+              Sign up and get 100 free credits — no card required.
             </p>
           </div>
           <Link

@@ -55,6 +55,9 @@ export default function Navbar() {
   const [showBlog, setShowBlog] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  // Mobile-only accordion state (separate from desktop dropdowns above)
+  const [mobileAgentsOpen, setMobileAgentsOpen] = useState(false);
+  const [mobileBlogOpen, setMobileBlogOpen] = useState(false);
   const agentRef = useRef<HTMLDivElement>(null);
   const blogRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -84,7 +87,21 @@ export default function Navbar() {
     setShowAgents(false);
     setShowBlog(false);
     setShowProfile(false);
+    setMobileAgentsOpen(false);
+    setMobileBlogOpen(false);
   }, [pathname]);
+
+  // Lock body scroll when the mobile menu is open so the background page
+  // doesn't slide under it.
+  useEffect(() => {
+    if (showMobileMenu) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [showMobileMenu]);
 
   const handleLogout = async () => {
     setShowProfile(false);
@@ -452,123 +469,185 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile menu — backdrop + scrollable panel with collapsible accordions */}
       {showMobileMenu && (
-        <div
-          className={`mx-5 mb-4 rounded-3xl border p-4 lg:hidden ${
-            darkMode ? "border-white/10 bg-[#0b1220]/95" : "border-black/10 bg-white/95"
-          }`}
-        >
-          <div className="grid gap-1 text-sm font-semibold">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`rounded-2xl px-4 py-3 transition-colors ${
-                  isActive(link.href) ? "bg-cyan-500/10 text-cyan-600" : "hover:bg-cyan-400/10"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-            {agents.map((agent) => (
-              <Link
-                key={agent.title}
-                href={agent.link}
-                className="flex items-center justify-between gap-2 rounded-2xl px-4 py-3 hover:bg-cyan-400/10"
-              >
-                <span className="truncate">{agent.title}</span>
-                {agent.isNew && (
-                  <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-amber-400 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-white shadow shadow-rose-500/30">
-                    <span className="h-1 w-1 rounded-full bg-white" />
-                    New
-                  </span>
-                )}
-              </Link>
-            ))}
+        <>
+          {/* Backdrop — taps close the menu, also prevents scroll bleeding */}
+          <div
+            className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm lg:hidden"
+            onClick={() => setShowMobileMenu(false)}
+            aria-hidden="true"
+          />
 
-            {/* Mobile: Blog section */}
-            <div className={`mt-2 border-t pt-2 ${darkMode ? "border-white/10" : "border-black/10"}`}>
-              <Link
-                href="/blog"
-                className={`flex items-center justify-between gap-2 rounded-2xl px-4 py-3 ${
-                  isBlogActive ? "bg-cyan-500/10 text-cyan-600" : "hover:bg-cyan-400/10"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <span className="text-base">📝</span>
-                  Blog
-                </span>
-                <span className={`text-[10px] font-bold uppercase tracking-wider ${muted}`}>
-                  All articles →
-                </span>
-              </Link>
-              {recentBlogPosts.slice(0, 3).map((post) => (
+          <div
+            className={`fixed left-0 right-0 top-[72px] z-40 mx-5 max-h-[calc(100vh-92px)] overflow-y-auto rounded-3xl border p-4 shadow-2xl lg:hidden ${
+              darkMode ? "border-white/10 bg-[#0b1220]/98" : "border-black/10 bg-white/98"
+            }`}
+          >
+            <div className="grid gap-1 text-sm font-semibold">
+              {/* Top-level links */}
+              {navLinks.map((link) => (
                 <Link
-                  key={post.slug}
-                  href={`/blog/${post.slug}`}
-                  className="flex items-start gap-3 rounded-2xl px-4 py-2.5 hover:bg-cyan-400/10"
+                  key={link.href}
+                  href={link.href}
+                  className={`rounded-2xl px-4 py-3 transition-colors ${
+                    isActive(link.href) ? "bg-cyan-500/10 text-cyan-600" : "hover:bg-cyan-400/10"
+                  }`}
                 >
-                  <span className="text-lg">{post.heroEmoji}</span>
-                  <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-xs font-bold leading-snug">{post.title}</p>
-                    <p className={`mt-0.5 text-[10px] ${muted}`}>
-                      {post.category} · {post.readMinutes} min
-                    </p>
-                  </div>
+                  {link.label}
                 </Link>
               ))}
-            </div>
 
-            <div className={`mt-2 border-t pt-3 ${darkMode ? "border-white/10" : "border-black/10"}`}>
-              {isLoggedIn ? (
-                <>
-                  {/* Mobile: user info + credits */}
-                 <div className="flex min-w-0 items-center gap-2">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full">
-                      {user?.avatarUrl ? (
-                        <img src={user.avatarUrl} alt={`${user.name || "User"} profile photo`} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-cyan-400 to-blue-600 text-xs font-black text-white">
-                          {initials}
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate font-black">{user?.name || "User"}</p>
-                      <p className="text-xs text-cyan-600">🪙 {credits} credits</p>
-                    </div>
-                  </div>
-
-                  {/* Mobile: menu links */}
-                  <Link href="/profile" className="block rounded-2xl px-4 py-3 hover:bg-cyan-400/10">
-                    My Profile
-                  </Link>
-                  <Link href="/my-creations" className="block rounded-2xl px-4 py-3 hover:bg-cyan-400/10">
-                    My Creations
-                  </Link>
-                  <Link href="/settings" className="block rounded-2xl px-4 py-3 hover:bg-cyan-400/10">
-                    Settings
-                  </Link>
-                  <Link href="/billing" className="block rounded-2xl px-4 py-3 hover:bg-cyan-400/10">
-                    Billing &amp; Credits
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="w-full rounded-2xl px-4 py-3 text-left text-red-500 hover:bg-red-500/10"
+              {/* Agents accordion (collapsed by default) */}
+              <div className={`mt-1 border-t pt-1 ${darkMode ? "border-white/10" : "border-black/10"}`}>
+                <button
+                  type="button"
+                  onClick={() => setMobileAgentsOpen((v) => !v)}
+                  className={`flex w-full items-center justify-between gap-2 rounded-2xl px-4 py-3 text-left transition-colors ${
+                    isAgentActive ? "bg-cyan-500/10 text-cyan-600" : "hover:bg-cyan-400/10"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="text-base">🤖</span>
+                    Agents
+                    <span className="rounded-full bg-cyan-500/15 px-2 py-0.5 text-[10px] font-black text-cyan-600 dark:text-cyan-300">
+                      {agents.length}
+                    </span>
+                  </span>
+                  <svg
+                    className={`h-4 w-4 transition-transform ${mobileAgentsOpen ? "rotate-180" : ""}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
                   >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <Link href="/login" className="block rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 px-4 py-3 text-center font-black text-white">
-                  Login
-                </Link>
-              )}
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </button>
+                {mobileAgentsOpen && (
+                  <div className="mt-1 grid gap-0.5 pl-2">
+                    {agents.map((agent) => (
+                      <Link
+                        key={agent.title}
+                        href={agent.link}
+                        className="flex items-center justify-between gap-2 rounded-2xl px-4 py-2.5 hover:bg-cyan-400/10"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold">{agent.title}</p>
+                          <p className={`mt-0.5 truncate text-[11px] ${muted}`}>{agent.desc}</p>
+                        </div>
+                        {agent.isNew && (
+                          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-amber-400 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-white shadow shadow-rose-500/30">
+                            <span className="h-1 w-1 rounded-full bg-white" />
+                            New
+                          </span>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Blog accordion (collapsed by default) */}
+              <div className={`mt-1 border-t pt-1 ${darkMode ? "border-white/10" : "border-black/10"}`}>
+                <button
+                  type="button"
+                  onClick={() => setMobileBlogOpen((v) => !v)}
+                  className={`flex w-full items-center justify-between gap-2 rounded-2xl px-4 py-3 text-left transition-colors ${
+                    isBlogActive ? "bg-cyan-500/10 text-cyan-600" : "hover:bg-cyan-400/10"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="text-base">📝</span>
+                    Blog
+                  </span>
+                  <svg
+                    className={`h-4 w-4 transition-transform ${mobileBlogOpen ? "rotate-180" : ""}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </button>
+                {mobileBlogOpen && (
+                  <div className="mt-1 grid gap-0.5 pl-2">
+                    {recentBlogPosts.slice(0, 3).map((post) => (
+                      <Link
+                        key={post.slug}
+                        href={`/blog/${post.slug}`}
+                        className="flex items-start gap-3 rounded-2xl px-4 py-2.5 hover:bg-cyan-400/10"
+                      >
+                        <span className="text-lg">{post.heroEmoji}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="line-clamp-2 text-xs font-bold leading-snug">{post.title}</p>
+                          <p className={`mt-0.5 text-[10px] ${muted}`}>
+                            {post.category} · {post.readMinutes} min
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                    <Link
+                      href="/blog"
+                      className="rounded-2xl px-4 py-2 text-[11px] font-black text-cyan-600 dark:text-cyan-300"
+                    >
+                      Browse all articles →
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* User section / Login */}
+              <div className={`mt-2 border-t pt-3 ${darkMode ? "border-white/10" : "border-black/10"}`}>
+                {isLoggedIn ? (
+                  <>
+                    {/* User info + credits */}
+                    <div className="mb-2 flex min-w-0 items-center gap-2 px-2">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full">
+                        {user?.avatarUrl ? (
+                          <img src={user.avatarUrl} alt={`${user.name || "User"} profile photo`} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-cyan-400 to-blue-600 text-xs font-black text-white">
+                            {initials}
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate font-black">{user?.name || "User"}</p>
+                        <p className="text-xs text-cyan-600">🪙 {credits} credits</p>
+                      </div>
+                    </div>
+
+                    <Link href="/profile" className="block rounded-2xl px-4 py-3 hover:bg-cyan-400/10">
+                      My Profile
+                    </Link>
+                    <Link href="/my-creations" className="block rounded-2xl px-4 py-3 hover:bg-cyan-400/10">
+                      My Creations
+                    </Link>
+                    <Link href="/settings" className="block rounded-2xl px-4 py-3 hover:bg-cyan-400/10">
+                      Settings
+                    </Link>
+                    <Link href="/billing" className="block rounded-2xl px-4 py-3 hover:bg-cyan-400/10">
+                      Billing &amp; Credits
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="w-full rounded-2xl px-4 py-3 text-left text-red-500 hover:bg-red-500/10"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <Link href="/login" className="block rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 px-4 py-3 text-center font-black text-white">
+                    Login
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </header>
   );

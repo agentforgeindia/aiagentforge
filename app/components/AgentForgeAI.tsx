@@ -120,13 +120,53 @@ export default function AgentForgeAI() {
   return (
     <>
       {!open && (
-        <button
-          onClick={() => setOpen(true)}
-          className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-4 text-sm font-bold text-white shadow-2xl shadow-cyan-500/30 transition hover:scale-105"
-        >
-          <Sparkles className="h-5 w-5" />
-          Ask AgentForge AI
-        </button>
+        <>
+          {/* ───────── Mobile: compact glowing round button ───────── */}
+          <button
+            onClick={() => setOpen(true)}
+            aria-label="Ask AgentForge AI"
+            className="group fixed bottom-5 right-5 z-50 flex h-16 w-16 items-center justify-center sm:hidden"
+          >
+            {/* Outer pulsing glow ring */}
+            <span className="absolute inset-0 animate-ping rounded-full bg-cyan-400/40" />
+            {/* Soft halo */}
+            <span className="absolute -inset-1 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 opacity-50 blur-md" />
+
+            {/* The round button itself */}
+            <span className="relative flex h-16 w-16 flex-col items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-2xl shadow-cyan-500/50 ring-2 ring-white/80 transition group-hover:scale-110 group-active:scale-95 dark:ring-slate-950/80">
+              {/* Robot icon — slight wave / pointing animation */}
+              <Bot className="h-6 w-6" style={{ animation: "afBotWave 1.8s ease-in-out infinite" }} />
+              {/* Tiny "Ask Me" label inside the circle */}
+              <span className="mt-0.5 text-[8px] font-black uppercase tracking-[0.12em]">
+                Ask Me
+              </span>
+            </span>
+
+            {/* Notification-style attention dot */}
+            <span className="absolute right-0 top-0 flex h-3.5 w-3.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-80" />
+              <span className="relative inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-400 ring-2 ring-white text-[7px] font-black text-amber-900">
+                ✦
+              </span>
+            </span>
+
+            <style>{`
+              @keyframes afBotWave {
+                0%, 100% { transform: rotate(-6deg) translateY(0); }
+                50%      { transform: rotate(6deg) translateY(-2px); }
+              }
+            `}</style>
+          </button>
+
+          {/* ───────── Desktop / tablet: full pill button (unchanged) ───────── */}
+          <button
+            onClick={() => setOpen(true)}
+            className="fixed bottom-5 right-5 z-50 hidden items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-4 text-sm font-bold text-white shadow-2xl shadow-cyan-500/30 transition hover:scale-105 sm:flex"
+          >
+            <Sparkles className="h-5 w-5" />
+            Ask AgentForge AI
+          </button>
+        </>
       )}
 
       {open && (

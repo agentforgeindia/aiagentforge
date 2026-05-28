@@ -330,6 +330,8 @@ const newId = () =>
 
 const JEWELLERY_SETTINGS_KEY = "agentforge-jewellery-ai-settings-v1";
 const JEWELLERY_COMPANY_KEY = "agentforge-jewellery-ai-company-v1";
+const JEWELLERY_GUIDANCE_KEY = "agentforge-jewellery-guidance-v1"; // { gens: number, hiddenManually: boolean }
+const JEWELLERY_GUIDANCE_AUTO_OFF_AFTER = 3; // smart: ON for first N generations
 
 function fileToDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -714,6 +716,25 @@ export default function JewelleryAIPage() {
   const [showPromptBox, setShowPromptBox] = useState(false);
 
   const [showSignupPopup, setShowSignupPopup] = useState(false);
+
+  // ----- AI Guidance (Vision-based auto-fill + suggestion card) -----
+  type JewellerySuggestion = {
+    detected_piece: string;
+    jewellery_type: string;
+    more_jewellery: string[];
+    shoot_style: string;
+    accessories: string;
+    model_type: string;
+    pose: string;
+    face_expression: string;
+    camera_angle: string;
+    reason: string;
+  };
+  const [aiSuggestion, setAiSuggestion] = useState<JewellerySuggestion | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  // Smart default: ON for first 3 generations, then OFF (user can re-enable)
+  const [showGuidance, setShowGuidance] = useState(true);
+
   const [companyLogoPreview, setCompanyLogoPreview] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [companyWebsite, setCompanyWebsite] = useState("");
@@ -725,6 +746,38 @@ export default function JewelleryAIPage() {
   const [useCompanyPhone, setUseCompanyPhone] = useState(true);
   const [useCompanyAddress, setUseCompanyAddress] = useState(false);
   const isFreeAccount = useMemo(() => isFreeAccountFromProfile(profile), [profile]);
+
+  // Smart guidance default: read counter on mount. Show if (gens < 3 && !hiddenManually).
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(JEWELLERY_GUIDANCE_KEY);
+      const parsed = raw ? JSON.parse(raw) : { gens: 0, hiddenManually: false };
+      const shouldShow =
+        !parsed.hiddenManually && (parsed.gens || 0) < JEWELLERY_GUIDANCE_AUTO_OFF_AFTER;
+      setShowGuidance(shouldShow);
+    } catch {
+      setShowGuidance(true);
+    }
+  }, []);
+
+  // Bump generation counter once per successful output. After N gens, guidance
+  // auto-disables on future sessions (until user manually re-enables).
+  useEffect(() => {
+    if (!generatedOutputUrl) return;
+    try {
+      const raw = window.localStorage.getItem(JEWELLERY_GUIDANCE_KEY);
+      const parsed = raw ? JSON.parse(raw) : { gens: 0, hiddenManually: false };
+      const next = { ...parsed, gens: (parsed.gens || 0) + 1 };
+      window.localStorage.setItem(JEWELLERY_GUIDANCE_KEY, JSON.stringify(next));
+    } catch {}
+  }, [generatedOutputUrl]);
+
+  // Always start at Step 1 when the user lands on the page (per requirement:
+  // "first step se hi start ho" — fresh visit ko bhi reset karo, na sirf re-upload).
+  useEffect(() => {
+    setBuilderStep(1);
+    setGeneratedOutputUrl("");
+  }, []);
 
   useEffect(() => {
     try {
@@ -936,6 +989,72 @@ export default function JewelleryAIPage() {
     }
   };
 
+  const applySuggestion = (s: JewellerySuggestion) => {
+    // Auto-fill best 3+ recommendations. User can still change anything.
+    setJewelleryType(s.jewellery_type);
+    if (s.jewellery_type === "More Options" && Array.isArray(s.more_jewellery)) {
+      setMoreJewellery(s.more_jewellery);
+    }
+    setShootStyle(s.shoot_style);
+    setAccessory(s.accessories);
+    setModelType(s.model_type);
+    setPose(s.pose);
+    setFaceExpression(s.face_expression);
+    setCameraAngle(s.camera_angle);
+  };
+
+  const runGuidanceAnalysis = async (file: File) => {
+    setIsAnalyzing(true);
+    setAiSuggestion(null);
+    try {
+      // Pre-upload to Supabase so the analyze endpoint can fetch by URL.
+      // (Speeds up the eventual Generate too — same URL is reused.)
+      const publicUrl = await uploadFileToSupabase(file, "jewellery-products");
+
+      const resp = await fetch("/api/jewellery/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image_url: publicUrl }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (data?.suggestion) {
+        setAiSuggestion(data.suggestion);
+        applySuggestion(data.suggestion);
+      }
+    } catch (err) {
+      console.warn("Guidance analysis failed (silent):", err);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const dismissGuidance = () => {
+    setShowGuidance(false);
+    setAiSuggestion(null);
+    try {
+      const raw = window.localStorage.getItem(JEWELLERY_GUIDANCE_KEY);
+      const parsed = raw ? JSON.parse(raw) : { gens: 0, hiddenManually: false };
+      window.localStorage.setItem(
+        JEWELLERY_GUIDANCE_KEY,
+        JSON.stringify({ ...parsed, hiddenManually: true }),
+      );
+    } catch {}
+  };
+
+  const enableGuidance = () => {
+    setShowGuidance(true);
+    try {
+      const raw = window.localStorage.getItem(JEWELLERY_GUIDANCE_KEY);
+      const parsed = raw ? JSON.parse(raw) : { gens: 0, hiddenManually: false };
+      window.localStorage.setItem(
+        JEWELLERY_GUIDANCE_KEY,
+        JSON.stringify({ gens: 0, hiddenManually: false }),
+      );
+    } catch {}
+    // If an upload already exists, re-run analysis
+    if (uploads[0]?.file) runGuidanceAnalysis(uploads[0].file);
+  };
+
   const handleFiles = (files: FileList | null) => {
     if (!files?.length) return;
 
@@ -949,8 +1068,26 @@ export default function JewelleryAIPage() {
         file,
       }));
 
-    setUploads(generationMode === "single" ? nextUploads.slice(0, 1) : nextUploads);
-    if (nextUploads.length) setBuilderStep(4);
+    const finalUploads = generationMode === "single" ? nextUploads.slice(0, 1) : nextUploads;
+    setUploads(finalUploads);
+
+    // After a new image upload: always send the user back to Step 1
+    // (clears any leftover step/output from a previous generation so they
+    // start fresh — jewellery type → shoot → pose → final).
+    if (finalUploads.length) {
+      setBuilderStep(1);
+      setGeneratedOutputUrl("");
+      setAiSuggestion(null);
+      // smooth scroll back to the step strip
+      setTimeout(() => {
+        stepTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+
+      // Kick off vision guidance only if user hasn't disabled it
+      if (showGuidance && finalUploads[0]?.file) {
+        runGuidanceAnalysis(finalUploads[0].file);
+      }
+    }
   };
 
   const removeUpload = (id: string) => setUploads((prev) => prev.filter((item) => item.id !== id));
@@ -1906,6 +2043,94 @@ if (!response.ok) {
                   </div>
                 </label>
 
+                {/* ───────── AI Guidance card ─────────
+                    Appears after upload when guidance is enabled. Shows what the AI
+                    detected + which Step 1–3 options it auto-filled, with a reason
+                    line. User can ✕ to dismiss (persists in localStorage). When
+                    disabled, a small "Enable AI guide" link replaces it. */}
+                {uploads.length > 0 && showGuidance && (
+                  <div className="mt-4 rounded-[1.35rem] border border-amber-300/60 bg-gradient-to-br from-amber-50 via-white to-rose-50 p-4 shadow-md shadow-amber-200/30 dark:border-amber-400/30 dark:from-amber-500/10 dark:via-white/5 dark:to-rose-500/10">
+                    <div className="mb-2 flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-rose-500 text-white shadow-md"
+                          style={{ animation: isAnalyzing ? "pulse 1.4s ease-in-out infinite" : undefined }}
+                        >
+                          <Sparkles className="h-3.5 w-3.5" />
+                        </span>
+                        <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-700 dark:text-amber-200">
+                          AI Suggests
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={dismissGuidance}
+                        title="Hide guidance (you can re-enable below)"
+                        className="rounded-full p-1 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+
+                    {isAnalyzing ? (
+                      <div className="space-y-2">
+                        <p className="text-sm font-bold text-slate-700 dark:text-white/80">
+                          Analyzing your jewellery…
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-white/50">
+                          Best shoot style, model and props pick kar raha hoon.
+                        </p>
+                      </div>
+                    ) : aiSuggestion ? (
+                      <>
+                        <p className="text-sm font-black text-slate-900 dark:text-white">
+                          Detected: <span className="text-amber-700 dark:text-amber-200">{aiSuggestion.detected_piece}</span>
+                        </p>
+                        <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-white/65">
+                          {aiSuggestion.reason}
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                          {[
+                            { label: "Type", value: aiSuggestion.jewellery_type },
+                            { label: "Style", value: aiSuggestion.shoot_style },
+                            { label: "Model", value: aiSuggestion.model_type },
+                            { label: "Pose", value: aiSuggestion.pose },
+                            { label: "Props", value: aiSuggestion.accessories },
+                            { label: "Camera", value: aiSuggestion.camera_angle },
+                          ].map((chip) => (
+                            <span
+                              key={chip.label}
+                              className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-black text-slate-700 ring-1 ring-amber-200 dark:bg-white/10 dark:text-white/80 dark:ring-amber-400/30"
+                            >
+                              <span className="text-amber-600 dark:text-amber-300">{chip.label}:</span>
+                              {chip.value}
+                            </span>
+                          ))}
+                        </div>
+                        <p className="mt-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/40">
+                          Auto-filled — change anything you want in steps below.
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-xs text-slate-500 dark:text-white/50">
+                        Guidance ready. Upload kro to suggestions aa jaayengi.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Enable-guidance link when off */}
+                {uploads.length > 0 && !showGuidance && (
+                  <button
+                    type="button"
+                    onClick={enableGuidance}
+                    className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-black text-amber-700 transition hover:bg-amber-100 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-200"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Need help? Enable AI guide
+                  </button>
+                )}
+
                 {uploads.length > 0 && (
                   <div className="mt-4 rounded-[1.35rem] border border-black/10 bg-white/80 p-3 dark:border-white/10 dark:bg-white/[0.045]">
                     <div className="mb-3 flex items-center justify-between">
@@ -2234,12 +2459,17 @@ if (!response.ok) {
         />
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-white/90 px-3 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90 sm:hidden">
-        <button type="button" onClick={handleGenerate} disabled={isGenerating || !uploads.length} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 px-5 py-4 text-sm font-black text-white shadow-lg shadow-cyan-500/25 disabled:cursor-not-allowed disabled:opacity-50">
-          {isGenerating ? "Generating..." : `Generate • ${credits} Credits`}
-          <Wand2 className="h-4 w-4" />
-        </button>
-      </div>
+      {/* Mobile floating Generate bar — only appears on Step 4 (after all
+          settings done). Hidden on Steps 1-3 to keep the screen clean and
+          avoid users tapping Generate before configuring. */}
+      {builderStep === 4 && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-white/90 px-3 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90 sm:hidden">
+          <button type="button" onClick={handleGenerate} disabled={isGenerating || !uploads.length} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 px-5 py-4 text-sm font-black text-white shadow-lg shadow-cyan-500/25 disabled:cursor-not-allowed disabled:opacity-50">
+            {isGenerating ? "Generating..." : `Generate • ${credits} Credits`}
+            <Wand2 className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </main>
   );
 }

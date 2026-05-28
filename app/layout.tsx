@@ -282,13 +282,6 @@ export default function RootLayout({
 
         <div className="fixed inset-0 -z-50 bg-[#fff8e8] dark:bg-[#070b14]" />
 
-        <object
-          type="image/svg+xml"
-          data="/bg.svg"
-          className="fixed inset-0 -z-40 h-full w-full object-cover opacity-20"
-          aria-label="AgentForge Animated Background"
-        />
-
         <div className="fixed inset-0 -z-30 bg-[radial-gradient(circle_at_top_left,#22d3ee55,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf644,transparent_35%),radial-gradient(circle_at_bottom,#0ea5e944,transparent_30%),linear-gradient(to_bottom,transparent,rgba(0,0,0,0.08))]" />
 
         <ThemeProvider>

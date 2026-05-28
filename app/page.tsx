@@ -715,8 +715,11 @@ export default function Home() {
 
             {/* Flow graph */}
             <div className="relative">
-              {/* Horizontal animated dashed line (desktop only) */}
-              <div className="pointer-events-none absolute left-[12%] right-[12%] top-[58px] hidden lg:block">
+              {/* Horizontal animated dashed line (desktop only)
+                  Positioned to pass through the centre of the icon nodes.
+                  Icon container = mt-3 (12px) + STEP chip area; icon h-24 = 96px;
+                  vertical centre ≈ 76px from the top of each step div. */}
+              <div className="pointer-events-none absolute left-[12%] right-[12%] top-[76px] hidden -translate-y-1/2 lg:block">
                 <div
                   className="h-0.5 w-full rounded-full opacity-60"
                   style={{
@@ -794,9 +797,9 @@ export default function Home() {
                         </div>
                       </div>
 
-                      {/* Inline arrow (desktop, between nodes) */}
+                      {/* Inline arrow (desktop, between nodes) — centered on the dashed line */}
                       {!isLast && (
-                        <ChevronRight className="pointer-events-none absolute right-[-14px] top-[54px] hidden h-6 w-6 text-cyan-500 lg:block" />
+                        <ChevronRight className="pointer-events-none absolute right-[-14px] top-[76px] hidden h-6 w-6 -translate-y-1/2 text-cyan-500 lg:block" />
                       )}
 
                       <h4 className="text-lg font-black sm:text-xl">{step.title}</h4>
@@ -844,6 +847,9 @@ export default function Home() {
               ringColor: "ring-cyan-400/40",
               shadowColor: "shadow-cyan-500/30",
               bgGlow: "bg-cyan-400/15",
+              // Muted tint for use-case card icons (less colorful overall)
+              softBg: "bg-cyan-50 dark:bg-cyan-500/10",
+              softText: "text-cyan-600 dark:text-cyan-300",
               uses: [
                 {
                   title: "Textile Sellers & Wholesalers",
@@ -868,6 +874,8 @@ export default function Home() {
               ringColor: "ring-amber-400/40",
               shadowColor: "shadow-amber-500/30",
               bgGlow: "bg-amber-400/15",
+              softBg: "bg-amber-50 dark:bg-amber-500/10",
+              softText: "text-amber-600 dark:text-amber-300",
               uses: [
                 {
                   title: "Jewellery Brands & Showrooms",
@@ -892,6 +900,8 @@ export default function Home() {
               ringColor: "ring-violet-400/40",
               shadowColor: "shadow-violet-500/30",
               bgGlow: "bg-violet-400/15",
+              softBg: "bg-violet-50 dark:bg-violet-500/10",
+              softText: "text-violet-600 dark:text-violet-300",
               uses: [
                 {
                   title: "E-commerce Sellers",
@@ -929,34 +939,30 @@ export default function Home() {
                   </div>
                   <Link
                     href={group.link}
-                    className={`hidden shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r ${group.accent} px-4 py-2 text-xs font-black text-white shadow-lg ${group.shadowColor} transition hover:-translate-y-0.5 sm:inline-flex`}
+                    className={`hidden shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-xs font-black transition hover:-translate-y-0.5 sm:inline-flex ${group.softBg} ${group.softText}`}
                   >
                     Open agent
                     <ChevronRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>
 
-                {/* Use-case cards */}
+                {/* Use-case cards — muted styling for less colorful overall feel */}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {group.uses.map((u) => (
                     <Link
                       key={u.title}
                       href={group.link}
                       className={`group relative overflow-hidden rounded-3xl border p-5 backdrop-blur-xl transition hover:-translate-y-1 ${card}`}
-                      style={{ animation: "afCardFloat 6s ease-in-out infinite" }}
                     >
-                      {/* Animated gradient border on hover */}
+                      {/* Subtle ring on hover only (no constant float animation) */}
                       <span
                         className={`pointer-events-none absolute -inset-px rounded-3xl opacity-0 ring-2 transition group-hover:opacity-100 ${group.ringColor}`}
                       />
-                      {/* Corner glow */}
-                      <span
-                        className={`pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full ${group.bgGlow} blur-2xl transition group-hover:scale-125`}
-                      />
 
                       <div className="relative flex items-start gap-3">
+                        {/* Muted icon tile — soft tinted bg + colored icon (was full gradient) */}
                         <div
-                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${group.accent} text-white shadow-md ${group.shadowColor}`}
+                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${group.softBg} ${group.softText}`}
                         >
                           <Icon className="h-5 w-5" />
                         </div>
@@ -968,17 +974,12 @@ export default function Home() {
                         </div>
                       </div>
 
+                      {/* Subtle CTA — plain text + small chevron (was gradient text + gradient circle) */}
                       <div className="relative mt-4 flex items-center justify-between">
-                        <span
-                          className={`text-[10px] font-black uppercase tracking-[0.2em] bg-gradient-to-r ${group.accent} bg-clip-text text-transparent`}
-                        >
+                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${group.softText}`}>
                           Open {group.tag}
                         </span>
-                        <span
-                          className={`flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-r ${group.accent} text-white shadow-md ${group.shadowColor} transition group-hover:translate-x-1`}
-                        >
-                          <ChevronRight className="h-3.5 w-3.5" />
-                        </span>
+                        <ChevronRight className={`h-4 w-4 ${group.softText} transition group-hover:translate-x-1`} />
                       </div>
                     </Link>
                   ))}
@@ -1024,36 +1025,36 @@ export default function Home() {
                 href: "/ai-textile-mockup-generator-india",
                 title: "AI Textile Mockup Generator India",
                 desc: "Saree, kurti, kurta, lehenga, kidswear & home textile mockups.",
-                emoji: "👕",
-                grad: "from-cyan-400 to-blue-500",
+                icon: "/icons/tshirt.svg",
+                tintBg: darkMode ? "bg-cyan-500/10" : "bg-cyan-50",
               },
               {
                 href: "/ai-jewellery-photoshoot",
                 title: "AI Jewellery Photoshoot",
                 desc: "Bridal, diamond, kundan, daily-wear catalogue images.",
-                emoji: "💎",
-                grad: "from-amber-400 to-rose-500",
+                icon: "/jewellery-icon/necklace.svg",
+                tintBg: darkMode ? "bg-amber-500/10" : "bg-amber-50",
               },
               {
                 href: "/ai-saree-mockup",
                 title: "AI Saree Mockup",
                 desc: "Flat saree to model-worn catalogue image in 30 seconds.",
-                emoji: "🥻",
-                grad: "from-rose-400 to-pink-500",
+                icon: "/icons/saree.svg",
+                tintBg: darkMode ? "bg-rose-500/10" : "bg-rose-50",
               },
               {
                 href: "/ai-kurti-catalogue-maker",
                 title: "AI Kurti Catalogue Maker",
                 desc: "Daily WhatsApp & Instagram kurti drops, ready in minutes.",
-                emoji: "👚",
-                grad: "from-violet-500 to-fuchsia-500",
+                icon: "/icons/kurti.svg",
+                tintBg: darkMode ? "bg-violet-500/10" : "bg-violet-50",
               },
               {
                 href: "/ai-product-photography-india",
                 title: "AI Product Photography India",
                 desc: "Amazon-ready hero shots for D2C brands and ecommerce.",
-                emoji: "📸",
-                grad: "from-emerald-400 to-cyan-500",
+                icon: "/Productography-icons/cosmatics.svg",
+                tintBg: darkMode ? "bg-emerald-500/10" : "bg-emerald-50",
               },
             ].map((item) => (
               <Link
@@ -1066,9 +1067,20 @@ export default function Home() {
                 }`}
               >
                 <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${item.grad} text-2xl shadow-md`}
+                  className={`flex aspect-[16/10] w-full items-center justify-center rounded-2xl ${item.tintBg}`}
                 >
-                  {item.emoji}
+                  <img
+                    src={item.icon}
+                    alt={`${item.title} icon`}
+                    width={160}
+                    height={160}
+                    loading="lazy"
+                    className="h-20 w-20 object-contain transition group-hover:scale-110 sm:h-24 sm:w-24"
+                    style={{ mixBlendMode: darkMode ? "screen" : "multiply" }}
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                    }}
+                  />
                 </div>
                 <h4 className="mt-4 text-base font-black leading-snug sm:text-lg">{item.title}</h4>
                 <p className={`mt-2 line-clamp-2 text-xs leading-5 sm:text-sm sm:leading-6 ${muted}`}>

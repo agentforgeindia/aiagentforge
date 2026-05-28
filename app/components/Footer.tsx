@@ -42,15 +42,6 @@ export default function Footer() {
 
   return (
     <footer className="relative">
-      {/* Solid mask — hides ONLY the layout bg.svg (z=-40) behind the footer.
-          Sits at z=-35 in the root stacking context, so it stays BELOW the
-          page-level doodles (z=auto/0) — those still show through. */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-[#fff8e8] dark:bg-[#070b14]"
-        style={{ zIndex: -35 }}
-      />
-
       <div className="relative z-10 mx-auto max-w-7xl px-4 pb-8 pt-12 sm:px-5">
       <div
         className={`relative overflow-hidden rounded-[2rem] border p-6 shadow-2xl backdrop-blur-xl sm:p-10 ${card}`}

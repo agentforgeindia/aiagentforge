@@ -1574,6 +1574,13 @@ export default function Home() {
 
     if (!files.length) return;
 
+    // Fresh upload → send the user back to Step 1 so they configure
+    // category, model, shoot etc. for the NEW design from scratch.
+    setBuilderStep(1);
+    setTimeout(() => {
+      stepTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+
     const planText = String(
       profile?.plan ||
         profile?.package ||

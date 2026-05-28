@@ -1,0 +1,307 @@
+{
+  "name": "AgentForge — Jewellery AI Agent (FAL Nano Banana Edit) · single + bulk",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-jewellery",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-jewellery",
+      "name": "Webhook · /generate-jewellery",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [220, 360],
+      "webhookId": "generate-jewellery"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// AGENTFORGE JEWELLERY AGENT — Normalize + Master prompt builder\n// Handles BOTH single and bulk modes.\n// Input  : webhook body from app/api/jewellery/generate/route.ts\n// Output : N items (1 per image), each with master_prompt + source URL\n// ============================================================\n\nconst body = $json.body || $json;\nconst s = body.shared_settings || {};\nconst mode = body.generation_mode || 'single';\nconst batchId = body.batch_id || null;\n\nconst rawItems = Array.isArray(body.items) && body.items.length\n  ? body.items\n  : [{\n      generation_id: body.generation_id,\n      source_image_url: body.source_image_url || s.source_image_url,\n      original_name: 'image-1'\n    }];\n\nif (!rawItems.length) throw new Error('No items to process — payload has no images.');\n\n// ---------- Aspect / quality ----------\nconst sizeStr = String(s.output_size || 'Square 1080x1080');\nconst isMobile = /Mobile|1920|9:16/i.test(sizeStr);\nconst aspect = isMobile ? '9:16 vertical (1080x1920)' : '1:1 square (1080x1080)';\nconst quality = String(s.output_quality || 'Premium');\n\n// ---------- Branding reserve ----------\nconst cd = s.company_details || {};\nconst hasBrandingText = Boolean(cd.company_name) || Boolean(cd.website) || Boolean(cd.phone) || Boolean(cd.address);\nconst reserveBottomStrip = hasBrandingText;\nconst reserveTopRight = true;\n\n// ---------- Style guides ----------\nconst SHOOT_STYLE_GUIDE = {\n  'Luxury Studio': 'premium softbox studio lighting, dark velvet or gradient grey background, museum-quality jewellery showcase, dramatic key light on stones',\n  'White Catalogue': 'pure white seamless background, even shadowless ecommerce lighting, Amazon/Flipkart catalogue ready, ultra clean',\n  'Bridal Editorial': 'rich warm gold tones, ornate silk drape backdrop, candlelight + softbox mix, Vogue Bridal magazine feel',\n  'Macro Detail': 'extreme macro shot, ring-light reflections in every stone facet, shallow depth of field, gemstone-first composition',\n  'Lifestyle Campaign': 'natural daylight cafe / outdoor terrace mood, modern Indian woman lifestyle, soft bokeh, social-media ad feel',\n  'Indian Model': 'warm honey-tan Indian skin tone, natural Indian facial features, traditional or fusion styling, soft glow makeup',\n  'Bridal Look': 'heavy bridal styling with subtle mehndi, traditional bridal makeup, dupatta drape, regal posture, wedding photography feel',\n  'Luxury Editorial': 'high-fashion editorial aesthetic, dramatic shadow play, designer-magazine feel, model styled as luxury brand muse',\n  'Minimal Modern': 'minimal scandi-influenced styling, soft neutral palette, modern Indian woman, clean understated elegance'\n};\nconst MODEL_TYPE_GUIDE = {\n  'No Model': 'product-only — no human, no hand. Pure jewellery composition on the chosen surface/prop.',\n  'Hand Model': 'elegant feminine hand with manicured natural nails. Hand placement keeps the jewellery as the visual hero.',\n  'Couple Hands': 'two hands together (engagement / wedding feel) — one masculine, one feminine. Subtle warmth.',\n  'Female Model': 'Indian female adult model, jewellery clearly visible, styled around the piece.',\n  'Bridal Model': 'Indian bride in full bridal styling — dupatta, traditional outfit, bridal makeup, regal pose.',\n  'Luxury Flat Lay': 'top-down flat lay on a premium surface (velvet / silk / marble). Jewellery is the hero with curated props.',\n  'Macro Detail': 'extreme zoom on the jewellery only — no model, no full piece view. Focus on a single stone / facet / engraving.',\n  'Ear Close-up': 'extreme close-up of one ear wearing the earring, side profile, focus on earring sparkle.',\n  'Bust Portrait': 'shoulders-up portrait with face and jewellery both visible, elegant pose.',\n  'Half Body': 'waist-up lifestyle shot showing model styling around the jewellery.',\n  'Full Body': 'editorial full-body shot with the jewellery as the focal accessory.',\n  'Neck Focus': 'tight crop on neckline showing the necklace draped naturally.',\n  'Neck Close-up': 'extreme close-up of neckline — jewellery detail and skin texture only.',\n  'Wrist Close-up': 'tight wrist crop with bracelet/kada as hero.',\n  'Lifestyle Hand': 'natural hand pose in lifestyle context (holding coffee cup, on lap, etc.).',\n  'Detail Close-up': 'extreme detail crop of the jewellery — pattern, stone setting, engraving.',\n  'Editorial Scene': 'staged scene with model + jewellery in an editorial context (palace, garden, studio set).'\n};\nconst ACCESSORY_GUIDE = {\n  'No Accessories': 'no props — clean focus on the jewellery only.',\n  'Flat Lay': 'top-down flat lay arrangement on a premium fabric or surface.',\n  'Velvet Box': 'jewellery resting on or beside an open black/maroon velvet box — luxury showroom feel.',\n  'Marble Surface': 'placed on polished white-and-grey veined marble with subtle reflection.',\n  'Silk Drape': 'cascading silk fabric (cream, ivory or jewel-tone) as backdrop / under-layer.',\n  'Rose Petals': 'scattered fresh rose petals as romantic accent — sparse, tasteful.',\n  'Marigold + Diya': 'marigold flowers and a small lit diya — temple/festival jewellery context.',\n  'Diamond Sparkle Set': 'loose crystals and mirror shards catching light — adds sparkle drama.',\n  'Pearl String Decor': 'strands of pearls draped softly around the jewellery as accent.',\n  'Wooden Antique Tray': 'placed on a vintage carved wooden tray — heritage / antique jewellery context.'\n};\nconst CAMERA_ANGLE_GUIDE = {\n  'Auto Angle': 'choose the most flattering angle for this jewellery type',\n  'Eye Level': 'straight-on eye-level shot, parallel to subject',\n  '45° Angle': '45-degree tilt — classic jewellery showcase angle',\n  'Top Down': 'directly overhead flat-lay perspective',\n  'Side Profile': 'pure side view — best for earrings and pendants'\n};\nconst FACE_GUIDE = {\n  'Soft Smile': 'gentle warm smile, eyes relaxed',\n  'Confident': 'confident closed-mouth expression, direct gaze',\n  'Serious': 'serious editorial expression, eyes off-camera',\n  'Royal': 'regal bridal expression, chin slightly raised',\n  'Natural': 'candid natural expression, no posing'\n};\nconst pickGuide = (tbl, k, fb) => tbl[k] || `\"${k}\"${fb ? ' — ' + fb : ''}`;\n\nconst shootStyleDesc = pickGuide(SHOOT_STYLE_GUIDE, s.shoot_style, 'premium photography style');\nconst modelTypeDesc = pickGuide(MODEL_TYPE_GUIDE, s.model_type, 'as described');\nconst accessoryDesc = pickGuide(ACCESSORY_GUIDE, s.accessories, 'as described');\nconst cameraAngleDesc = pickGuide(CAMERA_ANGLE_GUIDE, s.camera_angle, 'as described');\nconst faceDesc = pickGuide(FACE_GUIDE, s.face_expression, 'natural expression');\n\nconst moreList = Array.isArray(s.more_jewellery) && s.more_jewellery.length\n  ? ` (${s.more_jewellery.join(', ')})`\n  : '';\nconst jewelLabel = `${s.jewellery_type || 'Jewellery piece'}${moreList}`;\n\nfunction buildPrompt(idx) {\n  return `\nROLE: You are a senior luxury jewellery photographer + AI image editor working for an Indian D2C jewellery brand.\nOBJECTIVE: Take the reference jewellery photo I am providing and produce a single ${aspect} ${quality}-grade catalogue/editorial visual that strictly preserves the original jewellery while restyling the scene per the spec below.${mode === 'bulk' ? `\\n[Batch ${idx + 1} of ${rawItems.length} — keep style consistent across the batch.]` : ''}\n\n========================================================\n  HARD RULES — NEVER VIOLATE\n========================================================\n1. PRESERVE THE JEWELLERY EXACTLY as in the reference image:\n   - same overall SHAPE, contour and silhouette\n   - same NUMBER of stones, same stone CUT, same stone COLOR\n   - same METAL TONE (yellow gold / rose gold / silver / white gold / oxidized / kundan / polki)\n   - same engravings, embossed patterns, polish texture, finishing\n   - DO NOT redesign, restyle, recolor or \"improve\" the piece. Style the scene AROUND it.\n2. NO TEXT, NO SKU, NO PRODUCT CODE, NO BARCODE, NO NUMBERS, NO PRICE, NO LABELS anywhere on or near the jewellery. The image must be 100% free of typography and codes.\n3. NO LOGOS of any kind baked into the image — \"AgentForge\", \"AF\", brand watermarks, etc. are added separately client-side after this image is generated. Your output should be a clean photograph only.\n4. ${reserveBottomStrip ? 'RESERVE the BOTTOM 14% of the canvas as a clean, gently blurred, neutral surface. No jewellery, no model face, no busy props in that strip. A branding text strip will be overlaid post-process.' : 'Compose freely across the full canvas.'}\n5. ${reserveTopRight ? 'Keep the TOP-RIGHT corner (roughly 18% width x 18% height) visually calm — avoid bright highlights, faces or critical jewellery detail there. A small logo badge will be overlaid post-process.' : ''}\n6. Output must be a SINGLE photograph — no collages, no split frames, no before/after panels.\n\n========================================================\n  SHOOT SPEC\n========================================================\n- Jewellery: ${jewelLabel}\n- Shoot Style & Model Look: \"${s.shoot_style}\" → ${shootStyleDesc}\n- Accessories / Props: \"${s.accessories}\" → ${accessoryDesc}\n- Model Type: \"${s.model_type}\" → ${modelTypeDesc}\n- Pose: \"${s.pose}\"\n- Face Expression: \"${s.face_expression}\" → ${faceDesc}\n- Camera Angle: \"${s.camera_angle}\" → ${cameraAngleDesc}\n- Output Frame: ${aspect}\n- Quality Tier: ${quality}${quality === 'Ultra HD' ? ' — push micro-detail, extra sharpness, crisper stone facets, finer skin texture' : ''}\n\n========================================================\n  CLIENT NOTES (must be respected verbatim)\n========================================================\n- Jewellery protection notes: ${s.jewellery_notes ? `\"${s.jewellery_notes}\"` : '(none provided — default to faithful preservation)'}\n- Model styling notes: ${s.model_notes ? `\"${s.model_notes}\"` : '(none)'}\n- Custom instruction: ${s.custom_instruction ? `\"${s.custom_instruction}\"` : '(none)'}\n\n========================================================\n  TECHNICAL\n========================================================\n- DSLR-grade detail, accurate metallic reflections, true-to-life gemstone color\n- Studio softbox + rim light unless the chosen style says otherwise\n- Skin tone for Indian models: warm honey-tan, natural Indian facial features, soft minimal makeup unless Bridal style is selected\n- Color grading: jewellery-first — background must support, never compete\n- Aspect: ${aspect}\n- Final: clean, share-ready, no text, no logos baked in, no SKU\n\nReturn ONE image only.\n`.trim();\n}\n\nconst out = rawItems.map((item, idx) => {\n  if (!item.source_image_url) throw new Error(`Item ${idx} missing source_image_url`);\n  return {\n    json: {\n      mode,\n      batch_id: batchId,\n      batch_size: rawItems.length,\n      batch_index: idx,\n      generation_id: item.generation_id,\n      user_id: body.user_id,\n      source_image_url: item.source_image_url,\n      original_name: item.original_name || `image-${idx + 1}`,\n      aspect_ratio: isMobile ? '9:16' : '1:1',\n      is_free_account: Boolean(s.af_watermark),\n      company_details: cd,\n      master_prompt: buildPrompt(idx)\n    }\n  };\n});\nreturn out;\n"
+      },
+      "id": "normalize-and-prompt",
+      "name": "Normalize + Build Per-Item Prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 360]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "split-batches",
+      "name": "Split In Batches (1 / loop)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [700, 360]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://fal.run/fal-ai/nano-banana/edit",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Key {{ $env.FAL_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": {{ JSON.stringify($json.master_prompt) }},\n  \"image_urls\": [{{ JSON.stringify($json.source_image_url) }}],\n  \"num_images\": 1,\n  \"output_format\": \"png\"\n}",
+        "options": {
+          "timeout": 180000
+        }
+      },
+      "id": "fal-nano-banana-edit",
+      "name": "FAL · Nano Banana Edit (sync)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [940, 360],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Read FAL sync response → pull the first image URL.\n// FAL sync returns: { images: [{ url, content_type, width, height }], description, seed, ... }\nconst resp = $json;\nconst meta = $('Normalize + Build Per-Item Prompts').item.json;\n\n// HTTP node error path (continueOnFail) may give us { error: ... }\nif (resp?.error || resp?.detail) {\n  return [{\n    json: {\n      ...meta,\n      ok: false,\n      error_message: 'FAL error: ' + JSON.stringify(resp.error || resp.detail).slice(0, 400)\n    }\n  }];\n}\n\nconst images = resp?.images || resp?.data?.images || [];\nconst first = images[0];\nif (!first?.url) {\n  return [{\n    json: {\n      ...meta,\n      ok: false,\n      error_message: 'FAL returned no image. Raw: ' + JSON.stringify(resp).slice(0, 400)\n    }\n  }];\n}\n\nconst mime = first.content_type || 'image/png';\nconst ext = mime.includes('jpeg') ? 'jpg' : 'png';\nconst objectPath = `jewellery-outputs/${meta.user_id || 'guest'}/${Date.now()}-${meta.generation_id}.${ext}`;\n\nreturn [{\n  json: {\n    ...meta,\n    ok: true,\n    fal_image_url: first.url,\n    output_mime: mime,\n    output_ext: ext,\n    object_path: objectPath,\n    fal_seed: resp.seed || null\n  }\n}];\n"
+      },
+      "id": "extract-fal-result",
+      "name": "Extract FAL Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1180, 360]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "ok-check",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-success",
+      "name": "IF · success?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1420, 360]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.fal_image_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          },
+          "timeout": 60000
+        }
+      },
+      "id": "download-fal-result",
+      "name": "Download FAL Result Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1660, 240]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/storage/v1/object/designs/{{ $json.object_path }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "={{ $json.output_mime }}" },
+            { "name": "x-upsert", "value": "true" },
+            { "name": "Cache-Control", "value": "3600" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "upload-supabase",
+      "name": "Upload to Supabase Storage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1900, 240]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build the public URL for the freshly uploaded Supabase object.\nconst meta = $('Extract FAL Result').item.json;\nconst supabaseUrl = $env.SUPABASE_URL;\nconst publicUrl = `${supabaseUrl}/storage/v1/object/public/designs/${meta.object_path}`;\nreturn [{ json: { ...meta, output_url: publicUrl } }];\n"
+      },
+      "id": "build-public-url",
+      "name": "Build Public URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2140, 240]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/generations",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "id", "value": "=eq.{{ $json.generation_id }}" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"status\": \"completed\",\n  \"output_url\": {{ JSON.stringify($json.output_url) }},\n  \"updated_at\": {{ JSON.stringify(new Date().toISOString()) }}\n}"
+      },
+      "id": "update-generations",
+      "name": "Update generations row (completed)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2380, 240]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/generations",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "id", "value": "=eq.{{ $json.generation_id }}" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"status\": \"failed\",\n  \"error_message\": {{ JSON.stringify($json.error_message || 'Unknown error') }},\n  \"updated_at\": {{ JSON.stringify(new Date().toISOString()) }}\n}"
+      },
+      "id": "mark-failed",
+      "name": "Mark Failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1660, 480]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Collect this loop iteration's result into workflow static data.\nconst meta = $json;\nconst state = $getWorkflowStaticData('node');\nstate.results = state.results || [];\nstate.results.push({\n  generation_id: meta.generation_id,\n  status: meta.ok === false ? 'failed' : 'completed',\n  output_url: meta.output_url || null,\n  error_message: meta.error_message || null,\n  original_name: meta.original_name\n});\nreturn [{ json: meta }];\n"
+      },
+      "id": "collect-results",
+      "name": "Collect Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2620, 360]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Runs after Split In Batches finishes all iterations.\n// Reads per-item results from workflow static data and emits a single item\n// containing the final response object — 'Respond to Webhook' then serialises\n// it via {{ $json }}.\nconst state = $getWorkflowStaticData('node');\nconst results = Array.isArray(state.results) ? state.results : [];\nstate.results = []; // reset for next webhook run\n\nconst first = $('Normalize + Build Per-Item Prompts').first().json || {};\nconst completed = results.filter(r => r.status === 'completed');\nconst failed = results.filter(r => r.status === 'failed');\n\nreturn [{\n  json: {\n    success: failed.length === 0,\n    mode: first.mode || 'single',\n    batch_id: first.batch_id || null,\n    total: results.length,\n    completed: completed.length,\n    failed: failed.length,\n    // single-mode convenience fields\n    generation_id: results[0]?.generation_id || null,\n    image_url: results[0]?.output_url || null,\n    output_url: results[0]?.output_url || null,\n    // full per-item map (bulk mode)\n    results\n  }\n}];\n"
+      },
+      "id": "build-response-body",
+      "name": "Build Response Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2860, 360]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [3100, 360]
+    }
+  ],
+  "connections": {
+    "Webhook · /generate-jewellery": {
+      "main": [[{ "node": "Normalize + Build Per-Item Prompts", "type": "main", "index": 0 }]]
+    },
+    "Normalize + Build Per-Item Prompts": {
+      "main": [[{ "node": "Split In Batches (1 / loop)", "type": "main", "index": 0 }]]
+    },
+    "Split In Batches (1 / loop)": {
+      "main": [
+        [{ "node": "Build Response Body", "type": "main", "index": 0 }],
+        [{ "node": "FAL · Nano Banana Edit (sync)", "type": "main", "index": 0 }]
+      ]
+    },
+    "FAL · Nano Banana Edit (sync)": {
+      "main": [[{ "node": "Extract FAL Result", "type": "main", "index": 0 }]]
+    },
+    "Extract FAL Result": {
+      "main": [[{ "node": "IF · success?", "type": "main", "index": 0 }]]
+    },
+    "IF · success?": {
+      "main": [
+        [{ "node": "Download FAL Result Image", "type": "main", "index": 0 }],
+        [{ "node": "Mark Failed", "type": "main", "index": 0 }]
+      ]
+    },
+    "Download FAL Result Image": {
+      "main": [[{ "node": "Upload to Supabase Storage", "type": "main", "index": 0 }]]
+    },
+    "Upload to Supabase Storage": {
+      "main": [[{ "node": "Build Public URL", "type": "main", "index": 0 }]]
+    },
+    "Build Public URL": {
+      "main": [[{ "node": "Update generations row (completed)", "type": "main", "index": 0 }]]
+    },
+    "Update generations row (completed)": {
+      "main": [[{ "node": "Collect Result", "type": "main", "index": 0 }]]
+    },
+    "Mark Failed": {
+      "main": [[{ "node": "Collect Result", "type": "main", "index": 0 }]]
+    },
+    "Collect Result": {
+      "main": [[{ "node": "Split In Batches (1 / loop)", "type": "main", "index": 0 }]]
+    },
+    "Build Response Body": {
+      "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "errorWorkflow": ""
+  },
+  "tags": [
+    { "name": "agentforge" },
+    { "name": "jewellery-ai" }
+  ],
+  "meta": {
+    "instanceId": "agentforge"
+  }
+}

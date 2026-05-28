@@ -724,6 +724,13 @@ export default function ProductographyPage() {
       return;
     }
 
+    // Fresh upload → reset to Step 1 so the user configures the new product
+    // from scratch (category, model usage, shoot, final).
+    setBuilderStep(1);
+    setTimeout(() => {
+      stepTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+
     // Bulk plan check — multiple files require bulk access
     if (files.length > 1 && !canBulk) {
       alert(
