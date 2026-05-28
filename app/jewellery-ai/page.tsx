@@ -160,51 +160,83 @@ const MODEL_USAGE_BY_JEWELLERY: Record<string, OptionItem[]> = {
     { label: "No Model", icon: Package, hint: "Pure product", iconFile: "no-model" },
     { label: "Hand Model", icon: Hand, hint: "Ring close-up", iconFile: "hand-close-up" },
     { label: "Couple Hands", icon: UserRound, hint: "Engagement feel", iconFile: "couple-hands" },
+    { label: "Female Model", icon: UserRound, hint: "Full styling", iconFile: "female-model" },
+    { label: "Bridal Model", icon: Crown, hint: "Wedding rich", iconFile: "bridal-model" },
     { label: "Luxury Flat Lay", icon: ImageIcon, hint: "Premium surface", iconFile: "luxury-flat-ray" },
+    { label: "Macro Detail", icon: ScanSearch, hint: "Stone focus", iconFile: "macro-detail" },
   ],
   Earrings: [
     { label: "No Model", icon: Package, hint: "Pure product", iconFile: "no-model" },
     { label: "Ear Close-up", icon: UserRound, hint: "Wearing detail", iconFile: "ear-close-up" },
     { label: "Female Model", icon: UserRound, hint: "Wearable luxury", iconFile: "female-model" },
     { label: "Bridal Model", icon: Crown, hint: "Wedding style", iconFile: "bridal-model" },
+    { label: "Bust Portrait", icon: Camera, hint: "Face + jewellery", iconFile: "bust-portrait" },
+    { label: "Half Body", icon: UserRound, hint: "Lifestyle look", iconFile: "half-body" },
+    { label: "Luxury Flat Lay", icon: ImageIcon, hint: "Velvet box", iconFile: "luxury-flat-ray" },
   ],
   Necklace: [
     { label: "No Model", icon: Package, hint: "Pure product", iconFile: "no-model" },
     { label: "Neck Focus", icon: Gem, hint: "Close-up neck", iconFile: "neck-focus" },
+    { label: "Neck Close-up", icon: Gem, hint: "Detail shot", iconFile: "neck-close-up" },
     { label: "Female Model", icon: UserRound, hint: "Wearable luxury", iconFile: "female-model" },
     { label: "Bridal Model", icon: Crown, hint: "Heavy look", iconFile: "bridal-model" },
     { label: "Bust Portrait", icon: Camera, hint: "Face + jewellery", iconFile: "bust-portrait" },
+    { label: "Half Body", icon: UserRound, hint: "Outfit + necklace", iconFile: "half-body" },
+    { label: "Luxury Flat Lay", icon: ImageIcon, hint: "Velvet box", iconFile: "luxury-flat-ray" },
   ],
   Bracelet: [
     { label: "No Model", icon: Package, hint: "Pure product", iconFile: "no-model" },
     { label: "Hand Model", icon: Hand, hint: "Wrist detail", iconFile: "hand-close-up" },
     { label: "Wrist Close-up", icon: ScanSearch, hint: "Texture focus", iconFile: "wrist-close-up" },
+    { label: "Couple Hands", icon: UserRound, hint: "Engagement feel", iconFile: "couple-hands" },
     { label: "Lifestyle Hand", icon: ImageIcon, hint: "Natural usage", iconFile: "lifestyle-hand" },
+    { label: "Female Model", icon: UserRound, hint: "Full styling", iconFile: "female-model" },
+    { label: "Luxury Flat Lay", icon: ImageIcon, hint: "Premium surface", iconFile: "luxury-flat-ray" },
   ],
   "More Options": [
     { label: "No Model", icon: Package, hint: "Product only", iconFile: "no-model" },
+    { label: "Hand Model", icon: Hand, hint: "Hand styling", iconFile: "hand-close-up" },
+    { label: "Couple Hands", icon: UserRound, hint: "Engagement feel", iconFile: "couple-hands" },
     { label: "Female Model", icon: UserRound, hint: "Wearable look", iconFile: "female-model" },
     { label: "Bridal Model", icon: Crown, hint: "Wedding rich", iconFile: "bridal-model" },
+    { label: "Bust Portrait", icon: Camera, hint: "Face + jewellery", iconFile: "bust-portrait" },
+    { label: "Half Body", icon: UserRound, hint: "Lifestyle", iconFile: "half-body" },
+    { label: "Full Body", icon: UserRound, hint: "Editorial", iconFile: "full-body" },
     { label: "Detail Close-up", icon: ScanSearch, hint: "Jewellery focus", iconFile: "detail-close-up" },
     { label: "Editorial Scene", icon: ImageIcon, hint: "Campaign feel", iconFile: "editorial-scene" },
+    { label: "Luxury Flat Lay", icon: ImageIcon, hint: "Premium surface", iconFile: "luxury-flat-ray" },
   ],
 };
 
 const POSE_OPTIONS: OptionItem[] = [
+  // Auto + body poses
   { label: "Auto Pose", icon: Wand2, hint: "Best fit", iconFile: "auto-pose" },
   { label: "Front Pose", icon: UserRound, hint: "Clean front", iconFile: "front-pose" },
   { label: "Side Pose", icon: UserRound, hint: "Angle look", iconFile: "side-pose" },
   { label: "Half Body", icon: UserRound, hint: "Waist-up", iconFile: "half-body" },
   { label: "Full Body", icon: UserRound, hint: "Editorial", iconFile: "full-body" },
+  { label: "Bust Portrait", icon: Camera, hint: "Face + jewellery", iconFile: "bust-portrait" },
+
+  // Hand poses (rings / bracelets)
+  { label: "Hand Pose", icon: Hand, hint: "Extended hand", iconFile: "hand-close-up" },
+  { label: "Wrist Detail", icon: ScanSearch, hint: "Bracelet shot", iconFile: "wrist-close-up" },
+  { label: "Couple Hands", icon: Hand, hint: "Engagement feel", iconFile: "couple-hands" },
+
+  // Neck poses (necklace / mangalsutra)
+  { label: "Neck Close-up", icon: Gem, hint: "Necklace focus", iconFile: "neck-close-up" },
+  { label: "Neck Tilt", icon: UserRound, hint: "Drape detail", iconFile: "neck-focus" },
+  { label: "Touching Necklace", icon: UserRound, hint: "Natural pose", iconFile: "neck-focus" },
+
+  // Ear poses (earrings)
+  { label: "Ear Close-up", icon: UserRound, hint: "Earring focus", iconFile: "ear-close-up" },
+
+  // Detail
+  { label: "Detail Close-up", icon: ScanSearch, hint: "Pattern focus", iconFile: "detail-close-up" },
 ];
 
-const MODEL_LOOK_OPTIONS: OptionItem[] = [
-  { label: "Indian Model", icon: UserRound, hint: "Indian market", iconFile: "indian-model" },
-  { label: "Bridal Look", icon: Crown, hint: "Wedding premium", iconFile: "bridal-look" },
-  { label: "Luxury Editorial", icon: BadgeCheck, hint: "Fashion shoot", iconFile: "luxury-editorial" },
-  { label: "Minimal Modern", icon: ShieldCheck, hint: "Clean look", iconFile: "minimal-modern" },
-  { label: "Custom Look", icon: Sparkles, hint: "Type below", iconFile: "custom-look" },
-];
+// Model look options are now merged into SHOOT_STYLE_OPTIONS below.
+// Constant kept for backward-compat references (unused by UI).
+const MODEL_LOOK_OPTIONS: OptionItem[] = [];
 
 const FACE_EXPRESSION_OPTIONS: OptionItem[] = [
   { label: "Soft Smile", icon: Sparkles, hint: "Warm face", iconFile: "soft-smile" },
@@ -214,20 +246,44 @@ const FACE_EXPRESSION_OPTIONS: OptionItem[] = [
   { label: "Natural", icon: ShieldCheck, hint: "Real feel", iconFile: "natural" },
 ];
 
+// Camera angle — crucial for jewellery presentation
+const CAMERA_ANGLE_OPTIONS: OptionItem[] = [
+  { label: "Auto Angle", icon: Wand2, hint: "AI picks best", iconFile: "auto-pose" },
+  { label: "Eye Level", icon: Camera, hint: "Straight on", iconFile: "front-pose" },
+  { label: "45° Angle", icon: Camera, hint: "Slight tilt", iconFile: "side-pose" },
+  { label: "Top Down", icon: Camera, hint: "Flat lay view", iconFile: "luxury-flat-ray" },
+  { label: "Side Profile", icon: Camera, hint: "Earring/profile", iconFile: "side-pose" },
+];
+
+// Shoot Style — merged with Model Look (one unified selection covering both
+// shoot atmosphere AND model aesthetic).
 const SHOOT_STYLE_OPTIONS: OptionItem[] = [
+  // Lighting / presentation
   { label: "Luxury Studio", icon: Crown, hint: "Premium lights", iconFile: "luxury-studio" },
   { label: "White Catalogue", icon: Square, hint: "Clean ecommerce", iconFile: "white-catalogue" },
   { label: "Bridal Editorial", icon: Sparkles, hint: "Wedding rich", iconFile: "bridal-editorial" },
   { label: "Macro Detail", icon: ScanSearch, hint: "Stone focus", iconFile: "macro-detail" },
   { label: "Lifestyle Campaign", icon: ImageIcon, hint: "Ad creative", iconFile: "lifestyle-campaign" },
+  // Model looks (merged in)
+  { label: "Indian Model", icon: UserRound, hint: "Indian market", iconFile: "indian-model" },
+  { label: "Bridal Look", icon: Crown, hint: "Wedding premium", iconFile: "bridal-look" },
+  { label: "Luxury Editorial", icon: BadgeCheck, hint: "Fashion shoot", iconFile: "luxury-editorial" },
+  { label: "Minimal Modern", icon: ShieldCheck, hint: "Clean look", iconFile: "minimal-modern" },
 ];
 
+// 11 props covering temple, diamond, bridal and luxury flat-lay use cases.
+// AI agent picks the appropriate styling based on the jewellery type + this choice.
 const ACCESSORY_OPTIONS: OptionItem[] = [
   { label: "No Accessories", icon: ShieldCheck, hint: "Clean focus", iconFile: "no-accessories" },
-  { label: "Velvet Box", icon: Package, hint: "Luxury support", iconFile: "velvet-box" },
-  { label: "Marble Base", icon: Square, hint: "Premium base", iconFile: "marble-base" },
-  { label: "Pearls", icon: Gem, hint: "Soft richness", iconFile: "pearls" },
-  { label: "Flowers", icon: Sparkles, hint: "Bridal touch", iconFile: "flowers" },
+  { label: "Flat Lay", icon: Square, hint: "Top-down spread", iconFile: "luxury-flat-ray" },
+  { label: "Velvet Box", icon: Package, hint: "Luxury display", iconFile: "velvet-box" },
+  { label: "Marble Surface", icon: Square, hint: "Premium base", iconFile: "marble-base" },
+  { label: "Silk Drape", icon: Sparkles, hint: "Rich backdrop", iconFile: "luxury-flat-ray" },
+  { label: "Rose Petals", icon: Sparkles, hint: "Romantic vibe", iconFile: "flowers" },
+  { label: "Marigold + Diya", icon: Sparkles, hint: "Temple jewellery", iconFile: "flowers" },
+  { label: "Diamond Sparkle Set", icon: Diamond, hint: "Crystals + mirror", iconFile: "macro-detail" },
+  { label: "Pearl String Decor", icon: Gem, hint: "Soft luxury", iconFile: "pearls" },
+  { label: "Wooden Antique Tray", icon: Package, hint: "Vintage style", iconFile: "luxury-flat-ray" },
 ];
 
 const FRAME_OUTPUT_OPTIONS: OptionItem[] = [
@@ -642,6 +698,8 @@ export default function JewelleryAIPage() {
   const [faceExpression, setFaceExpression] = useState("Soft Smile");
   const [shootStyle, setShootStyle] = useState("Luxury Studio");
   const [accessory, setAccessory] = useState("No Accessories");
+  const [cameraAngle, setCameraAngle] = useState("Auto Angle");
+  const [customCameraAngle, setCustomCameraAngle] = useState("");
   const [outputSize, setOutputSize] = useState("Square 1080x1080");
   const [quality, setQuality] = useState("Premium");
 
@@ -685,6 +743,8 @@ export default function JewelleryAIPage() {
         setFaceExpression(settings.faceExpression || "Soft Smile");
         setShootStyle(settings.shootStyle || "Luxury Studio");
         setAccessory(settings.accessory || "No Accessories");
+        setCameraAngle(settings.cameraAngle || "Auto Angle");
+        setCustomCameraAngle(settings.customCameraAngle || "");
         setOutputSize(settings.outputSize || "Square 1080x1080");
         setQuality(settings.quality || "Premium");
         setCustomPose(settings.customPose || "");
@@ -729,6 +789,8 @@ export default function JewelleryAIPage() {
           faceExpression,
           shootStyle,
           accessory,
+          cameraAngle,
+          customCameraAngle,
           outputSize,
           quality,
           customPose,
@@ -759,6 +821,8 @@ export default function JewelleryAIPage() {
     faceExpression,
     shootStyle,
     accessory,
+    cameraAngle,
+    customCameraAngle,
     outputSize,
     quality,
     customPose,
@@ -822,8 +886,6 @@ export default function JewelleryAIPage() {
     const custom = customJewellery.trim();
     return [selected, custom].filter(Boolean).join(", ") || "More Options";
   }, [customJewellery, jewelleryType, moreJewellery]);
-
-  const dynamicModelOptions = MODEL_USAGE_BY_JEWELLERY[jewelleryType] || MODEL_USAGE_BY_JEWELLERY["More Options"];
 
   const credits = useMemo(() => {
     const base = quality === "Ultra HD" ? 20 : outputSize.includes("Mobile") ? 17 : 15;
@@ -1283,10 +1345,12 @@ const WEBHOOK_URL =
       output_type: customShootStyle || shootStyle,
       model_type: modelType,
       pose: customPose || pose,
-      model_look: customModelLook || modelLook,
+      // model_look is now merged into shoot_style — send same value for backend compat
+      model_look: customShootStyle || shootStyle,
       face_expression: faceExpression,
       shoot_style: customShootStyle || shootStyle,
       accessories: customAccessory || accessory,
+      camera_angle: customCameraAngle || cameraAngle,
       output_size: outputSize,
       output_quality: quality,
       jewellery_notes: jewelleryDetails,
@@ -2039,37 +2103,33 @@ if (!response.ok) {
 
                 {builderStep === 2 && (
                   <div className="space-y-4">
-                    
-                    <SelectionGrid title="Shoot Style" subtitle="Choose lighting, background and jewellery presentation." options={SHOOT_STYLE_OPTIONS} value={shootStyle} onChange={setShootStyle} />
-                    <TextInputBox label="Custom Shoot Style" value={customShootStyle} onChange={setCustomShootStyle} placeholder="Example: black glossy background, warm gold lighting, festive campaign..." />
-                    <SelectionGrid title="Accessories" subtitle="Choose jewellery-related support props." options={ACCESSORY_OPTIONS} value={accessory} onChange={setAccessory} />
-                    <TextInputBox label="Custom Accessories" value={customAccessory} onChange={setCustomAccessory} placeholder="Example: silk cloth, jewellery box, flowers, diya, mirror..." />
-                    <SelectionGrid title="Model / Scene Usage" subtitle="Options change according to selected jewellery." options={dynamicModelOptions} value={modelType} onChange={setModelType} />
+                    {/* Shoot Style — now includes both shoot atmosphere AND model look */}
+                    <SelectionGrid title="Shoot Style &amp; Model Look" subtitle="One unified pick — lighting, background, presentation, plus Indian/bridal/luxury model aesthetic." options={SHOOT_STYLE_OPTIONS} value={shootStyle} onChange={setShootStyle} />
+                    <TextInputBox label="Custom Shoot Style" value={customShootStyle} onChange={setCustomShootStyle} placeholder="Example: Punjabi bridal with warm gold lighting, South Indian temple jewellery shoot, modern luxury campaign..." />
+
+                    {/* Accessories & Props (10 options after removing Bridal Red Pillow) */}
+                    <SelectionGrid title="Accessories &amp; Props" subtitle="Background props — temple, diamond, bridal, flat-lay setups." options={ACCESSORY_OPTIONS} value={accessory} onChange={setAccessory} />
+                    <TextInputBox label="Custom Accessories" value={customAccessory} onChange={setCustomAccessory} placeholder="Example: silk cloth, jewellery box, flowers, diya, mirror, brass bell..." />
                   </div>
                 )}
 
                 {builderStep === 3 && (
                   <div className="space-y-4">
-                    <SelectionGrid title="Pose" subtitle="Add model pose or product scene pose." options={POSE_OPTIONS} value={pose} onChange={setPose} />
+                    {/* Pose */}
+                    <SelectionGrid title="Pose" subtitle="Body, hand, neck or ear pose for jewellery presentation." options={POSE_OPTIONS} value={pose} onChange={setPose} />
                     <TextInputBox label="Custom Pose" value={customPose} onChange={setCustomPose} placeholder="Example: hand near face, neck close-up, bride looking side..." />
-                    <SelectionGrid title="Model Looks" subtitle="Choose model look according to jewellery market." options={MODEL_LOOK_OPTIONS} value={modelLook} onChange={setModelLook} />
-                    <TextInputBox label="Custom Model Look" value={customModelLook} onChange={setCustomModelLook} placeholder="Example: Punjabi bridal, South Indian bride, modern luxury model..." />
-                    <SelectionGrid title="Face Expression" subtitle="Useful when model face is visible." options={FACE_EXPRESSION_OPTIONS} value={faceExpression} onChange={setFaceExpression} />
-                    <div className="rounded-[1.35rem] border border-black/10 bg-white/70 p-4 dark:border-white/10 dark:bg-white/[0.045]">
-                      <p className="text-xs font-black uppercase tracking-widest text-cyan-600">Model & Styling Notes</p>
-                      <textarea
-                        rows={3}
-                        value={modelNotes}
-                        onChange={(e) => setModelNotes(e.target.value)}
-                        placeholder="Example: elegant female model, refined hand pose, bridal softness, luxury editorial styling."
-                        className="mt-3 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-cyan-400 dark:border-white/10 dark:bg-black/20"
-                      />
-                    </div>
+
+                    {/* Camera Angle (kept inside Pose step) */}
+                    <SelectionGrid title="Camera Angle" subtitle="Eye-level, 45°, top-down, side profile — controls the jewellery framing." options={CAMERA_ANGLE_OPTIONS} value={cameraAngle} onChange={setCameraAngle} />
+                    <TextInputBox label="Custom Camera Angle" value={customCameraAngle} onChange={setCustomCameraAngle} placeholder="Example: low angle hero shot, dramatic top-down, 30° tilt with bokeh..." />
                   </div>
                 )}
 
                 {builderStep === 4 && (
   <div className="space-y-4">
+
+    {/* Face Expression — placed before Frame & Quality */}
+    <SelectionGrid title="Face Expression" subtitle="Useful when model face is visible — picks the mood of the shot." options={FACE_EXPRESSION_OPTIONS} value={faceExpression} onChange={setFaceExpression} />
 
     <FrameQualityGrid
       outputSize={outputSize}
@@ -2077,6 +2137,7 @@ if (!response.ok) {
       setOutputSize={setOutputSize}
       setQuality={setQuality}
     />
+
                     <div className="rounded-[1.35rem] border border-black/10 bg-white/70 p-4 dark:border-white/10 dark:bg-white/[0.045]">
                       <button type="button" onClick={() => setShowPromptBox(!showPromptBox)} className="flex w-full items-center justify-between gap-3 text-left font-black">
                         <span>📝 Custom Instruction (Optional)</span>
@@ -2097,13 +2158,12 @@ if (!response.ok) {
                     <div className="rounded-[1.35rem] border border-cyan-300/40 bg-gradient-to-br from-cyan-400/10 via-blue-500/10 to-purple-500/10 p-5">
                       <div className="grid gap-3 sm:grid-cols-2">
                         <SummaryRow label="Jewellery" value={selectedJewelleryLabel} />
-                        <SummaryRow label="Shoot" value={customShootStyle || shootStyle} />
-                        <SummaryRow label="Model" value={modelType} />
+                        <SummaryRow label="Shoot Style" value={customShootStyle || shootStyle} />
                         <SummaryRow label="Pose" value={customPose || pose} />
-                        <SummaryRow label="Look" value={customModelLook || modelLook} />
-                        <SummaryRow label="Face" value={faceExpression} />
-                        <SummaryRow label="Frame" value={`${outputSize} / ${quality}`} />
+                        <SummaryRow label="Camera Angle" value={customCameraAngle || cameraAngle} />
+                        <SummaryRow label="Face Expression" value={faceExpression} />
                         <SummaryRow label="Accessories" value={customAccessory || accessory} />
+                        <SummaryRow label="Frame" value={`${outputSize} / ${quality}`} />
                         <SummaryRow label="Uploads" value={String(uploads.length)} />
                       </div>
                       <button type="button" onClick={handleGenerate} disabled={isGenerating || !uploads.length} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 px-5 py-4 text-sm font-black text-white shadow-lg shadow-cyan-500/25 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50">

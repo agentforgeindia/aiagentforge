@@ -133,6 +133,12 @@ export default function Footer() {
           <div>
             <h4 className="mb-3 text-sm font-black">Company</h4>
             <div className={`space-y-2 text-sm ${muted}`}>
+              <Link href="/about" className="block transition hover:text-cyan-500">
+                About AgentForge
+              </Link>
+              <Link href="/case-studies" className="block transition hover:text-cyan-500">
+                Case Studies
+              </Link>
               <Link href="/gallery" className="block transition hover:text-cyan-500">
                 Gallery
               </Link>

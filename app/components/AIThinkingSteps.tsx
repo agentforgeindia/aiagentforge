@@ -16,14 +16,18 @@ type Props = {
 };
 
 /**
- * Premium "AI is thinking…" checklist that auto-advances through pipeline
- * steps. Completed items get a cyan check + line-through; the current item
- * pulses with a gradient dot and animated trailing dots; future items
- * appear faded.
+ * Premium "AI is thinking…" indicator that shows ONE step at a time
+ * (not a long vertical list). Designed mobile-first — total height ~120px
+ * instead of growing with step count.
  *
- * The auto-advance freezes on the last step (so the user keeps seeing the
- * final step "in progress" until the real generation finishes and the
- * caller unmounts this component).
+ * Layout per render:
+ *   ● [title]              Step 3 of 8
+ *   ──────────────────────────────────
+ *   ┌────────────────────────────────┐
+ *   │  ✓  Choosing the perfect       │  ← current step (animated)
+ *   │     pose...                    │
+ *   └────────────────────────────────┘
+ *   ●●●○○○○○                        38% done
  */
 export default function AIThinkingSteps({
   steps,
@@ -39,7 +43,6 @@ export default function AIThinkingSteps({
     const id = window.setInterval(() => {
       setCurrentIdx((i) => {
         if (i >= steps.length - 1) {
-          // hold on the last step or wrap to start
           return holdAtLast ? steps.length - 1 : 0;
         }
         return i + 1;
@@ -48,82 +51,93 @@ export default function AIThinkingSteps({
     return () => window.clearInterval(id);
   }, [intervalMs, steps.length, holdAtLast]);
 
+  if (steps.length === 0) return null;
+
+  const currentStep = steps[currentIdx];
+  const isLast = currentIdx >= steps.length - 1;
+  const progressPct = Math.round(((currentIdx + 1) / steps.length) * 100);
+
   const eyebrowColor = darkMode ? "text-cyan-300" : "text-cyan-700";
-  const pendingTextColor = darkMode ? "text-white/50" : "text-slate-500";
-  const currentTextColor = darkMode ? "text-white" : "text-slate-900";
-  const doneTextColor = darkMode ? "text-white/65" : "text-slate-600";
+  const counterColor = darkMode ? "text-white/55" : "text-slate-500";
+  const stepBg = darkMode ? "bg-white/[0.06]" : "bg-slate-50";
+  const stepBorder = darkMode ? "border-white/10" : "border-cyan-200/60";
+  const stepText = darkMode ? "text-white" : "text-slate-900";
+  const pipDone = "bg-gradient-to-r from-cyan-400 to-blue-600";
+  const pipPending = darkMode ? "bg-white/15" : "bg-slate-300";
+  const progressTextColor = darkMode ? "text-white/55" : "text-slate-500";
 
   return (
     <div className="relative">
-      <p className={`mb-3 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.28em] ${eyebrowColor}`}>
-        <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500" />
+      {/* Header row: title + step counter */}
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <p className={`inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] ${eyebrowColor}`}>
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500" />
+          </span>
+          <span className="truncate">{title}</span>
+        </p>
+        <span className={`shrink-0 text-[10px] font-black uppercase tracking-[0.18em] ${counterColor}`}>
+          {currentIdx + 1} / {steps.length}
         </span>
-        {title}
-      </p>
+      </div>
 
-      <ul className="space-y-1.5">
-        {steps.map((step, i) => {
-          const status =
-            i < currentIdx ? "done" : i === currentIdx ? "current" : "pending";
-          return (
-            <li
-              key={step}
-              className={`flex items-start gap-2.5 transition-all duration-500 ${
-                status === "current"
-                  ? "opacity-100 translate-x-0"
-                  : status === "done"
-                  ? "opacity-70 translate-x-0"
-                  : "opacity-40 translate-x-0"
-              }`}
-            >
-              <span
-                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition ${
-                  status === "done"
-                    ? "bg-cyan-500 text-white shadow-sm shadow-cyan-500/40"
-                    : status === "current"
-                    ? "bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-md shadow-cyan-500/40"
-                    : darkMode
-                    ? "bg-white/10 text-white/40"
-                    : "bg-slate-200 text-slate-400"
-                }`}
-              >
-                {status === "done" ? (
-                  <Check className="h-3 w-3" strokeWidth={3} />
-                ) : status === "current" ? (
-                  <span className="block h-2 w-2 animate-pulse rounded-full bg-white" />
-                ) : (
-                  <span className="block h-1.5 w-1.5 rounded-full bg-current opacity-60" />
-                )}
-              </span>
+      {/* Single-step card — only the CURRENT step is visible, with cross-fade on change */}
+      <div
+        key={currentIdx /* re-mount on step change to trigger animation */}
+        className={`flex items-start gap-3 rounded-2xl border ${stepBorder} ${stepBg} p-3.5 transition`}
+        style={{ animation: "afStepIn 0.4s ease-out" }}
+      >
+        {/* Animated icon — pulse while current, check on hold-at-last */}
+        <span
+          className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white shadow-md shadow-cyan-500/40 ${
+            isLast ? "bg-gradient-to-br from-cyan-500 to-blue-600" : "bg-gradient-to-br from-cyan-400 to-blue-600"
+          }`}
+        >
+          {isLast ? (
+            <Check className="h-4 w-4" strokeWidth={3} />
+          ) : (
+            <span className="block h-2.5 w-2.5 animate-pulse rounded-full bg-white" />
+          )}
+        </span>
 
-              <span
-                className={`text-[12px] leading-5 sm:text-[13px] ${
-                  status === "current"
-                    ? `font-black ${currentTextColor}`
-                    : status === "done"
-                    ? `font-bold ${doneTextColor}`
-                    : `font-bold ${pendingTextColor}`
-                }`}
-              >
-                {step}
-                {status === "current" && (
-                  <span className="ml-0.5 inline-flex">
-                    <span className="animate-pulse">.</span>
-                    <span className="animate-pulse" style={{ animationDelay: "0.2s" }}>
-                      .
-                    </span>
-                    <span className="animate-pulse" style={{ animationDelay: "0.4s" }}>
-                      .
-                    </span>
-                  </span>
-                )}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+        {/* Step label */}
+        <span className={`text-sm font-black leading-snug sm:text-[15px] ${stepText}`}>
+          {currentStep}
+          {!isLast && (
+            <span className="ml-0.5 inline-flex">
+              <span className="animate-pulse">.</span>
+              <span className="animate-pulse" style={{ animationDelay: "0.2s" }}>.</span>
+              <span className="animate-pulse" style={{ animationDelay: "0.4s" }}>.</span>
+            </span>
+          )}
+        </span>
+      </div>
+
+      {/* Tiny pip indicators — visualises overall progress without growing the height */}
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5">
+          {steps.map((_, i) => (
+            <span
+              key={i}
+              className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
+                i <= currentIdx ? pipDone : pipPending
+              } ${i === currentIdx ? "w-4" : ""}`}
+            />
+          ))}
+        </div>
+        <span className={`text-[10px] font-black uppercase tracking-[0.18em] ${progressTextColor}`}>
+          {progressPct}% done
+        </span>
+      </div>
+
+      {/* Local keyframes for the step cross-fade */}
+      <style>{`
+        @keyframes afStepIn {
+          0%   { opacity: 0; transform: translateY(8px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
