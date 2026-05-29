@@ -91,6 +91,18 @@ function classify(url: string): {
   if (/\/(privacy-policy|terms|refund-policy)$/.test(url)) {
     return { priority: 0.3, changeFrequency: "yearly" };
   }
+  // Trust & policy detail pages — semi-static but valuable
+  // (target enterprise + DPDP-compliance searches).
+  if (
+    /\/(ai-safety-policy|commercial-usage-policy|data-protection)$/.test(url)
+  ) {
+    return { priority: 0.5, changeFrequency: "yearly" };
+  }
+  // FAQ / How-It-Works / Supported Industries — SEO-friendly
+  // and convert visitors, so they get a meaningful priority.
+  if (/\/(faq|how-it-works|supported-industries)$/.test(url)) {
+    return { priority: 0.8, changeFrequency: "monthly" };
+  }
   // Blog post (individual)
   if (/\/blog\/[^/]+$/.test(url)) {
     return { priority: 0.7, changeFrequency: "monthly" };

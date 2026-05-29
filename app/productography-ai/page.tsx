@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
 import { useTheme } from "@/app/components/ThemeProvider";
 import { useAuth } from "@/app/components/AuthProvider";
+import StickyMobileCTA from "@/app/components/StickyMobileCTA";
 import {
   BadgeCheck,
   Camera,
@@ -1980,6 +1981,30 @@ export default function ProductographyPage() {
         onClose={() => setShowSignupPopup(false)}
         source="productography-ai"
         context="product shoot"
+      />
+
+      <StickyMobileCTA
+        ctaName="productography_sticky_mobile"
+        label={
+          authUser?.id
+            ? readyItems.length > 0
+              ? `Generate ${readyItems.length > 1 ? readyItems.length + " Shoots" : "Shoot"} · ${totalCreditsNeeded} credits`
+              : "Upload product photo →"
+            : "Start with free credits"
+        }
+        subLabel={authUser?.id ? "AI Productography" : "100 free credits on signup"}
+        hidden={loading}
+        onClick={() => {
+          if (!authUser?.id) {
+            setShowSignupPopup(true);
+            return;
+          }
+          if (readyItems.length > 0) {
+            void handleGenerate();
+          } else {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        }}
       />
     </main>
   );

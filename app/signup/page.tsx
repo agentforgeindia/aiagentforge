@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -336,7 +337,14 @@ export default function SignupPage() {
                 </p>
               </div>
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-amber-300/40 bg-white shadow-lg shadow-amber-500/20 dark:border-amber-400/30 dark:bg-white/10">
-                <img src="/af-logo.png" alt="AgentForge" className="h-9 w-9 rounded-xl object-cover" />
+                <Image
+                  src="/af-logo.png"
+                  alt="AgentForge"
+                  width={36}
+                  height={36}
+                  sizes="36px"
+                  className="h-9 w-9 rounded-xl object-cover"
+                />
               </div>
             </div>
 

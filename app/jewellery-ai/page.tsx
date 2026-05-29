@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/components/AuthProvider";
+import StickyMobileCTA from "@/app/components/StickyMobileCTA";
 import { track } from "@/lib/analytics";
 import {
   ArrowRight,
@@ -211,28 +212,24 @@ const MODEL_USAGE_BY_JEWELLERY: Record<string, OptionItem[]> = {
 
 const POSE_OPTIONS: OptionItem[] = [
   // Auto + body poses
-  { label: "Auto Pose", icon: Wand2, hint: "Best fit", iconFile: "auto-pose" },
-  { label: "Front Pose", icon: UserRound, hint: "Clean front", iconFile: "front-pose" },
-  { label: "Side Pose", icon: UserRound, hint: "Angle look", iconFile: "side-pose" },
-  { label: "Half Body", icon: UserRound, hint: "Waist-up", iconFile: "half-body" },
-  { label: "Full Body", icon: UserRound, hint: "Editorial", iconFile: "full-body" },
-  { label: "Bust Portrait", icon: Camera, hint: "Face + jewellery", iconFile: "bust-portrait" },
+  { label: "Auto Pose", icon: Wand2, hint: "Random AI pick", iconFile: "auto-pose" },
+  { label: "Front Pose", icon: UserRound, hint: "Upper body front shot", iconFile: "front-pose" },
+  { label: "Side Pose", icon: UserRound, hint: "45° model turn", iconFile: "side-pose" },
+  { label: "Half Body", icon: UserRound, hint: "Half model frame", iconFile: "half-body" },
+  { label: "Full Body", icon: UserRound, hint: "Full model frame", iconFile: "full-body" },
+  { label: "Bust Portrait", icon: Camera, hint: "Upper-half body — neck + face jewellery", iconFile: "bust-portrait" },
 
-  // Hand poses (rings / bracelets)
-  { label: "Hand Pose", icon: Hand, hint: "Extended hand", iconFile: "hand-close-up" },
-  { label: "Wrist Detail", icon: ScanSearch, hint: "Bracelet shot", iconFile: "wrist-close-up" },
+  // Hand poses (rings / bracelets) — AI must match gender to jewellery
+  { label: "Hand Pose", icon: Hand, hint: "Hand matched to jewellery (male/female)", iconFile: "hand-close-up" },
+  { label: "Wrist Detail", icon: ScanSearch, hint: "Wrist matched to jewellery (male/female)", iconFile: "wrist-close-up" },
   { label: "Couple Hands", icon: Hand, hint: "Engagement feel", iconFile: "couple-hands" },
 
   // Neck poses (necklace / mangalsutra)
-  { label: "Neck Close-up", icon: Gem, hint: "Necklace focus", iconFile: "neck-close-up" },
-  { label: "Neck Tilt", icon: UserRound, hint: "Drape detail", iconFile: "neck-focus" },
-  { label: "Touching Necklace", icon: UserRound, hint: "Natural pose", iconFile: "neck-focus" },
+  { label: "Neck Close-up", icon: Gem, hint: "Female neck shot — necklace focus", iconFile: "neck-close-up" },
+  { label: "Touching Necklace", icon: UserRound, hint: "Model wearing + hand touching necklace", iconFile: "neck-focus" },
 
   // Ear poses (earrings)
-  { label: "Ear Close-up", icon: UserRound, hint: "Earring focus", iconFile: "ear-close-up" },
-
-  // Detail
-  { label: "Detail Close-up", icon: ScanSearch, hint: "Pattern focus", iconFile: "detail-close-up" },
+  { label: "Ear Close-up", icon: UserRound, hint: "Side pose, earring visible", iconFile: "ear-close-up" },
 ];
 
 // Model look options are now merged into SHOOT_STYLE_OPTIONS below.
@@ -251,31 +248,33 @@ const FACE_EXPRESSION_OPTIONS: OptionItem[] = [
 const CAMERA_ANGLE_OPTIONS: OptionItem[] = [
   { label: "Auto Angle", icon: Wand2, hint: "AI picks best", iconFile: "auto-pose" },
   { label: "Eye Level", icon: Camera, hint: "Straight on", iconFile: "front-pose" },
-  { label: "45° Angle", icon: Camera, hint: "Slight tilt", iconFile: "side-pose" },
   { label: "Top Down", icon: Camera, hint: "Flat lay view", iconFile: "luxury-flat-ray" },
   { label: "Side Profile", icon: Camera, hint: "Earring/profile", iconFile: "side-pose" },
 ];
 
 // Shoot Style — merged with Model Look (one unified selection covering both
-// shoot atmosphere AND model aesthetic).
+// shoot atmosphere AND model aesthetic). Hints describe what the user
+// should expect from the AI output for each selection.
 const SHOOT_STYLE_OPTIONS: OptionItem[] = [
   // Lighting / presentation
-  { label: "Luxury Studio", icon: Crown, hint: "Premium lights", iconFile: "luxury-studio" },
-  { label: "White Catalogue", icon: Square, hint: "Clean ecommerce", iconFile: "white-catalogue" },
-  { label: "Bridal Editorial", icon: Sparkles, hint: "Wedding rich", iconFile: "bridal-editorial" },
-  { label: "Macro Detail", icon: ScanSearch, hint: "Stone focus", iconFile: "macro-detail" },
-  { label: "Lifestyle Campaign", icon: ImageIcon, hint: "Ad creative", iconFile: "lifestyle-campaign" },
+  { label: "Luxury Studio", icon: Crown, hint: "Indian model in studio jewellery shoot", iconFile: "luxury-studio" },
+  { label: "White Catalogue", icon: Square, hint: "Young model on clean white BG", iconFile: "white-catalogue" },
+  { label: "Bridal Editorial", icon: Sparkles, hint: "Indian bride model + chosen styling", iconFile: "bridal-editorial" },
+  { label: "Macro Detail", icon: ScanSearch, hint: "Diamond / kundan stone focus", iconFile: "macro-detail" },
   // Model looks (merged in)
-  { label: "Indian Model", icon: UserRound, hint: "Indian market", iconFile: "indian-model" },
-  { label: "Bridal Look", icon: Crown, hint: "Wedding premium", iconFile: "bridal-look" },
-  { label: "Luxury Editorial", icon: BadgeCheck, hint: "Fashion shoot", iconFile: "luxury-editorial" },
-  { label: "Minimal Modern", icon: ShieldCheck, hint: "Clean look", iconFile: "minimal-modern" },
+  { label: "Indian Model", icon: UserRound, hint: "Model auto-matched to jewellery type", iconFile: "indian-model" },
+  { label: "Bridal Look", icon: Crown, hint: "Indian bride, pose-matched", iconFile: "bridal-look" },
+  { label: "Luxury Editorial", icon: BadgeCheck, hint: "Western-dress model with your jewellery", iconFile: "luxury-editorial" },
+  { label: "Minimal Modern", icon: ShieldCheck, hint: "Royal model in royal attire", iconFile: "minimal-modern" },
 ];
 
-// 11 props covering temple, diamond, bridal and luxury flat-lay use cases.
+// 10 props covering temple, diamond, bridal and luxury flat-lay use cases.
 // AI agent picks the appropriate styling based on the jewellery type + this choice.
+// IMPORTANT: when "No Accessories" is selected, the back-end agent must NOT add
+// any extra jewellery, tray contents, or decorative pieces beyond the model + the
+// uploaded jewellery itself. This is enforced via `style_directives` in the payload.
 const ACCESSORY_OPTIONS: OptionItem[] = [
-  { label: "No Accessories", icon: ShieldCheck, hint: "Clean focus", iconFile: "no-accessories" },
+  { label: "No Accessories", icon: ShieldCheck, hint: "Strict — only uploaded jewellery, nothing extra", iconFile: "no-accessories" },
   { label: "Flat Lay", icon: Square, hint: "Top-down spread", iconFile: "luxury-flat-ray" },
   { label: "Velvet Box", icon: Package, hint: "Luxury display", iconFile: "velvet-box" },
   { label: "Marble Surface", icon: Square, hint: "Premium base", iconFile: "marble-base" },
@@ -1503,6 +1502,64 @@ const WEBHOOK_URL =
 
     setGenerationProgress(38);
 
+    // ────────────────────────────────────────────────────────────
+    // Style directives — hidden strict instructions sent to n8n so
+    // the agent enforces specific behaviour for certain selections.
+    // The user's free-text custom_instruction stays clean.
+    // ────────────────────────────────────────────────────────────
+    const resolvedShootStyle = customShootStyle || shootStyle;
+    const resolvedAccessory = customAccessory || accessory;
+
+    const styleDirectives: string[] = [];
+
+    if (resolvedAccessory === "No Accessories") {
+      styleDirectives.push(
+        "STRICT_ISOLATION: Only the uploaded jewellery piece is visible on the model or in the frame. Do NOT add any other jewellery, no display tray contents, no extra props, no decorative items in the scene. The model wears ONLY the uploaded jewellery — nothing else.",
+      );
+    }
+
+    if (resolvedShootStyle === "Indian Model") {
+      styleDirectives.push(
+        "MODEL_MATCH_JEWELLERY: Choose the model archetype based on the jewellery type. Bridal/heavy pieces → Indian bride model with bridal attire. Daily-wear pendants/light necklaces → young everyday Indian woman in casual modern attire. Do NOT reuse the same saree-clad bridal model for every jewellery type.",
+      );
+    }
+
+    if (resolvedShootStyle === "Bridal Look") {
+      styleDirectives.push(
+        "INDIAN_BRIDE_MODEL: Use a clearly Indian bride in traditional bridal attire (lehenga/saree) that complements the uploaded jewellery's metal tone and stones. Pose should match the selected pose option.",
+      );
+    }
+
+    if (resolvedShootStyle === "Luxury Editorial") {
+      styleDirectives.push(
+        "WESTERN_DRESS_MODEL: Use a model in modern Western fashion (cocktail dress, evening gown, structured top) that elevates the uploaded jewellery. Editorial fashion-magazine vibe.",
+      );
+    }
+
+    if (resolvedShootStyle === "Minimal Modern") {
+      styleDirectives.push(
+        "ROYAL_MODEL: Use a royal-styled model in luxurious traditional or modern royal attire (anarkali, sharara, evening gown with regal accents). Clean minimal composition.",
+      );
+    }
+
+    if (resolvedShootStyle === "Luxury Studio") {
+      styleDirectives.push(
+        "INDIAN_STUDIO_SHOOT: Indian model inside a premium jewellery studio setup with professional lights, clean backdrop, and styled focus on the uploaded jewellery.",
+      );
+    }
+
+    if (resolvedShootStyle === "White Catalogue") {
+      styleDirectives.push(
+        "YOUNG_MODEL_WHITE_BG: Young model on a pure white background. Marketplace-clean composition — Amazon / Meesho catalogue safe.",
+      );
+    }
+
+    if (resolvedShootStyle === "Bridal Editorial") {
+      styleDirectives.push(
+        "INDIAN_BRIDE_EDITORIAL: Indian bride model in editorial bridal styling combined with whatever pose / accessory the user selected.",
+      );
+    }
+
     const sharedSettings = {
       source_image_url: firstImageUrl,
       model_image_url: "",
@@ -1512,20 +1569,24 @@ const WEBHOOK_URL =
       is_empire: String(profile.plan || "").toLowerCase().includes("empire"),
       jewellery_type: selectedJewelleryLabel,
       more_jewellery: moreJewellery,
-      output_type: customShootStyle || shootStyle,
+      output_type: resolvedShootStyle,
       model_type: modelType,
       pose: customPose || pose,
       // model_look is now merged into shoot_style — send same value for backend compat
-      model_look: customShootStyle || shootStyle,
+      model_look: resolvedShootStyle,
       face_expression: faceExpression,
-      shoot_style: customShootStyle || shootStyle,
-      accessories: customAccessory || accessory,
+      shoot_style: resolvedShootStyle,
+      accessories: resolvedAccessory,
       camera_angle: customCameraAngle || cameraAngle,
       output_size: outputSize,
       output_quality: quality,
       jewellery_notes: jewelleryDetails,
       model_notes: modelNotes,
       custom_instruction: customInstruction,
+      // Hidden strict directives the n8n agent should weave into the prompt.
+      // These are NOT shown to the user — they enforce the behaviour the UI
+      // hints describe (e.g. "Strict — only uploaded jewellery, nothing extra").
+      style_directives: styleDirectives.join(" | "),
       required_credits: credits,
       af_watermark: isFreeAccount,
       company_details: {
@@ -1600,13 +1661,39 @@ try {
 }
 
 if (!response.ok) {
+  // Try to parse the server's structured error so we can surface
+  // a useful message instead of the generic catch-all alert.
   const errorText = await response.text();
+  let serverError: any = null;
+  try {
+    serverError = JSON.parse(errorText);
+  } catch {
+    /* leave serverError null */
+  }
+  const errorMessage =
+    serverError?.error ||
+    serverError?.message ||
+    errorText ||
+    `HTTP ${response.status}`;
 
-  console.error("Webhook error:", errorText);
+  console.error("[jewellery-generate] server returned non-OK", {
+    status: response.status,
+    code: serverError?.code,
+    error: errorMessage,
+    raw: errorText,
+  });
 
-  throw new Error(
-    `Server Error ${response.status}: ${errorText}`
-  );
+  // Friendly mapping for common failure codes.
+  if (response.status === 401) {
+    alert("Session expired. Please log out and sign in again.");
+    return;
+  }
+  if (response.status === 402 || serverError?.code === "INSUFFICIENT_CREDITS") {
+    alert("Not enough credits. Please recharge to continue.");
+    return;
+  }
+
+  throw new Error(`Server Error ${response.status}: ${errorMessage}`);
 }
 
     const data = await response.json().catch(() => ({}));
@@ -1729,7 +1816,7 @@ if (!response.ok) {
     setGenerationProgress(94);
     alert("Generation started. It is taking longer than expected. You can check My Creations shortly.");
   } catch (error) {
-    console.error(error);
+    console.error("[jewellery-generate] caught error:", error);
     // Refund only if the server actually deducted (server route
     // already refunds on its own failures, so this attempts a
     // gated refund tied to this generationId — server checks the
@@ -1737,7 +1824,13 @@ if (!response.ok) {
     if (authUser?.id) {
       await refundCredits(authUser.id, credits, generationId);
     }
-    alert("Something went wrong. Credits refunded if they were deducted.");
+    // Surface the actual error message so the user (and our logs)
+    // know what really happened.
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Something went wrong";
+    alert(`${message}\n\nCredits refunded if they were deducted.`);
   } finally {
     setIsGenerating(false);
   }
@@ -1759,6 +1852,29 @@ if (!response.ok) {
         context="jewellery visual"
       />
 
+      <StickyMobileCTA
+        ctaName="jewellery_sticky_mobile"
+        label={
+          authUser?.id
+            ? uploads.length > 0
+              ? `Generate Visual · ${credits} credits`
+              : "Upload jewellery photo →"
+            : "Start with free credits"
+        }
+        subLabel={authUser?.id ? "AI Visual Studio" : "100 free credits on signup"}
+        hidden={isGenerating}
+        onClick={() => {
+          if (!authUser?.id) {
+            setShowSignupPopup(true);
+            return;
+          }
+          if (uploads.length > 0) {
+            void handleGenerate();
+          } else {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        }}
+      />
 
       <div
         className="absolute inset-0 opacity-[0.14] dark:opacity-[0.06]"

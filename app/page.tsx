@@ -78,39 +78,47 @@ export default function Home() {
  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   /* ───────────── Live generations counter ───────────── */
-  // Starting baseline — adjust upward over time as your real numbers grow.
-  const COUNTER_BASE = 12842;
-  const COUNTER_LAST_24H = 247;
-  const [liveCount, setLiveCount] = useState(0);
-  const [last24h, setLast24h] = useState(0);
+  // Real counts pulled from /api/stats (Supabase aggregate over the
+  // `generations` table). The counter section is HIDDEN until we
+  // have authentic numbers, so we never advertise inflated proof.
+  //
+  // If you want the section to be visible only once you cross a
+  // social-proof threshold (e.g. 500 generations), bump COUNTER_FLOOR.
+  const COUNTER_FLOOR = 0;
+  const [liveCount, setLiveCount] = useState<number | null>(null);
+  const [last24h, setLast24h] = useState<number | null>(null);
+  const counterVisible =
+    liveCount !== null && liveCount >= COUNTER_FLOOR;
 
-  // Animated count-up on mount (ease-out cubic)
+  // Fetch real stats once on mount + refresh every 60s while page
+  // is open. Falls back gracefully if the endpoint fails — the
+  // section just stays hidden.
   useEffect(() => {
-    const start = performance.now();
-    const duration = 2200;
-    let raf = 0;
-    const tick = (now: number) => {
-      const t = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setLiveCount(Math.floor(COUNTER_BASE * eased));
-      setLast24h(Math.floor(COUNTER_LAST_24H * eased));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, []);
+    let active = true;
 
-  // Periodic +1..3 to feel "live" — every 8–14s
-  useEffect(() => {
-    const tickOnce = () => {
-      setLiveCount((c) => c + Math.floor(Math.random() * 3) + 1);
-      if (Math.random() < 0.4) setLast24h((c) => c + 1);
+    async function load() {
+      try {
+        const res = await fetch("/api/stats", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!active) return;
+        if (typeof data?.total === "number") {
+          setLiveCount(data.total);
+        }
+        if (typeof data?.last24h === "number") {
+          setLast24h(data.last24h);
+        }
+      } catch {
+        // swallow — section stays hidden on network errors.
+      }
+    }
+
+    load();
+    const interval = window.setInterval(load, 60_000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
     };
-    let timeout = window.setTimeout(function loop() {
-      tickOnce();
-      timeout = window.setTimeout(loop, 8000 + Math.random() * 6000);
-    }, 8000 + Math.random() * 6000);
-    return () => window.clearTimeout(timeout);
   }, []);
 
   const agents: Agent[] = useMemo(
@@ -540,7 +548,10 @@ export default function Home() {
           `}</style>
         </section>
 
-        {/* ───────── Live Generations Counter ───────── */}
+        {/* ───────── Live Generations Counter ─────────
+            Hidden until we have authentic non-zero numbers from
+            /api/stats. Better no counter than a fake one. */}
+        {counterVisible && (
         <section className="mx-auto max-w-5xl px-4 pb-4 sm:px-5 sm:pb-6">
           <div className={`group relative overflow-hidden rounded-[1.5rem] border-2 p-4 shadow-xl backdrop-blur-xl sm:p-5 ${
             darkMode
@@ -566,7 +577,7 @@ export default function Home() {
                         fontVariantNumeric: "tabular-nums",
                       }}
                     >
-                      {liveCount.toLocaleString("en-IN")}+
+                      {(liveCount ?? 0).toLocaleString("en-IN")}+
                     </span>
                   </p>
                   <p className={`mt-1 text-xs font-black uppercase tracking-[0.2em] sm:text-[13px] ${muted}`}>
@@ -590,7 +601,7 @@ export default function Home() {
                 }`}>
                   <Activity className="h-3.5 w-3.5 text-cyan-500" />
                   <span style={{ fontVariantNumeric: "tabular-nums" }}>
-                    {last24h.toLocaleString("en-IN")}
+                    {(last24h ?? 0).toLocaleString("en-IN")}
                   </span>
                   <span className={`text-[10px] font-bold uppercase tracking-wider ${muted}`}>
                     in last 24h
@@ -607,6 +618,7 @@ export default function Home() {
             </div>
           </div>
         </section>
+        )}
 
         <section className="mx-auto max-w-7xl px-4 py-8 sm:px-5 sm:py-12">
           <div className="mb-6 text-center sm:mb-8">
@@ -694,9 +706,10 @@ export default function Home() {
             <div className="relative">
               {/* Horizontal animated dashed line (desktop only)
                   Positioned to pass through the centre of the icon nodes.
-                  Icon container = mt-3 (12px) + STEP chip area; icon h-24 = 96px;
-                  vertical centre ≈ 76px from the top of each step div. */}
-              <div className="pointer-events-none absolute left-[12%] right-[12%] top-[76px] hidden -translate-y-1/2 lg:block">
+                  Step chip is absolutely positioned (doesn't affect flow),
+                  so icon vertical centre = mt-3 (12px) + h-24/2 (48px) = 60px
+                  from the top of each step div. */}
+              <div className="pointer-events-none absolute left-[12%] right-[12%] top-[60px] hidden -translate-y-1/2 lg:block">
                 <div
                   className="h-0.5 w-full rounded-full opacity-60"
                   style={{
@@ -776,7 +789,7 @@ export default function Home() {
 
                       {/* Inline arrow (desktop, between nodes) — centered on the dashed line */}
                       {!isLast && (
-                        <ChevronRight className="pointer-events-none absolute right-[-14px] top-[76px] hidden h-6 w-6 -translate-y-1/2 text-cyan-500 lg:block" />
+                        <ChevronRight className="pointer-events-none absolute right-[-14px] top-[60px] hidden h-6 w-6 -translate-y-1/2 text-cyan-500 lg:block" />
                       )}
 
                       <h4 className="text-lg font-black sm:text-xl">{step.title}</h4>

@@ -238,13 +238,21 @@ export default function RootLayout({
                   url: "https://www.aiagentforge.in/pricing",
                 },
               ],
-              aggregateRating: {
-                "@type": "AggregateRating",
-                ratingValue: "4.9",
-                ratingCount: "412",
-                bestRating: "5",
-                worstRating: "1",
-              },
+              // NOTE: aggregateRating was removed because the previous
+              // hardcoded values (4.9 / 412 reviews) weren't backed by
+              // a public review source. Google can penalise sites that
+              // emit unverifiable AggregateRating in rich-result schema
+              // (see https://developers.google.com/search/docs/appearance/structured-data/review-snippet).
+              //
+              // Re-add this block only when reviews are publicly viewable
+              // on the site AND the count is queried from real data, e.g:
+              //   aggregateRating: {
+              //     "@type": "AggregateRating",
+              //     ratingValue: <real_avg_rounded_1dp>,
+              //     ratingCount: <real_published_count>,
+              //     bestRating: "5",
+              //     worstRating: "1",
+              //   },
               publisher: {
                 "@type": "Organization",
                 name: "AgentForge AI",

@@ -7,6 +7,7 @@ import { useTheme } from "@/app/components/ThemeProvider";
 import { useAuth } from "@/app/components/AuthProvider";
 import { Crown, Sparkles, Upload, UploadCloud, X } from "lucide-react";
 import { track } from "@/lib/analytics";
+import StickyMobileCTA from "@/app/components/StickyMobileCTA";
 import { canGenerate } from "@/lib/checkCredits";
 import { shouldDeductCredits } from "@/lib/deductCredits";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
@@ -3620,6 +3621,30 @@ export default function Home() {
         onClose={() => setShowSignupPopup(false)}
         source="textile-ai"
         context="textile mockup"
+      />
+
+      <StickyMobileCTA
+        ctaName="textile_sticky_mobile"
+        label={
+          authUser?.id
+            ? readyItems.length > 0
+              ? `Generate ${readyItems.length > 1 ? readyItems.length + " Mockups" : "Mockup"} · ${totalCreditsNeeded} credits`
+              : "Upload textile design →"
+            : "Start with free credits"
+        }
+        subLabel={authUser?.id ? "AI Textile Studio" : "100 free credits on signup"}
+        hidden={loading}
+        onClick={() => {
+          if (!authUser?.id) {
+            setShowSignupPopup(true);
+            return;
+          }
+          if (readyItems.length > 0) {
+            void handleGenerate();
+          } else {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        }}
       />
     </main>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import { useEffect, useState } from "react";
@@ -445,7 +446,14 @@ router.push("/payment-success");
                   </div>
 
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-cyan-100 bg-white shadow-inner sm:h-14 sm:w-14">
-                    <img src="/logo-new.jpg" alt="AgentForge AI plan badge" width={56} height={56} loading="lazy" className="h-full w-full object-cover" />
+                    <Image
+                      src="/logo-new.jpg"
+                      alt="AgentForge AI plan badge"
+                      width={56}
+                      height={56}
+                      sizes="(min-width: 640px) 56px, 48px"
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                 </div>
 

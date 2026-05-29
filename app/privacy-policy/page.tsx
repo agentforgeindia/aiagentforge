@@ -43,19 +43,35 @@ export default function PrivacyPolicyPage() {
     },
     {
       title: "8. Data Retention",
-      body: "We retain data as long as your account is active or as needed for legal, security, operational, accounting, and support purposes. You may request deletion of your account data by contacting us.",
+      body: "Active accounts: all data is retained while your account is active. Account deletion: profile, generations and uploads are removed within 30 days of an account-deletion request. Billing records may be retained up to 7 years per Indian tax law. Inactive accounts (24+ months) may be archived after a 30-day email notice. See the Data Protection page for the full retention matrix.",
     },
     {
-      title: "9. Children’s Privacy",
-      body: "AgentForge is not intended for individuals under 18 years of age. We do not knowingly collect personal data from children.",
+      title: "9. DPDP Act 2023 — Your Rights as a Data Principal",
+      body: "Under India's Digital Personal Data Protection Act 2023, you have the right to information about your data, the right to correction and erasure, the right to withdraw consent, the right to nominate, and the right to grievance redressal. To exercise any of these rights, email info@aiagentforge.in with the subject 'DPDP Request — [Right Name]'. We respond within 30 days as required by law.",
     },
     {
-      title: "10. Changes to This Policy",
-      body: "We may update this Privacy Policy from time to time. Any updates will be posted on this page with a revised effective date.",
+      title: "10. Grievance Officer",
+      body: "Per the DPDP Act 2023 and the IT (Intermediary) Rules 2021, AgentForge has appointed a Grievance Officer. Contact: info@aiagentforge.in. We acknowledge complaints within 7 days and resolve within 30 days. Full contact details, including breach notification protocol, are on our Data Protection page.",
     },
     {
-      title: "11. Contact Us",
-      body: "For privacy-related questions, account deletion requests, or data concerns, contact us at info@aiagentforge.in.",
+      title: "11. Data Breach Notification",
+      body: "In the event of a personal data breach that may pose a risk to data principals, AgentForge will notify the Data Protection Board of India and affected users within the timelines required by the DPDP Act 2023, with the nature of the breach, categories and approximate number of users affected, likely consequences, and mitigation actions taken.",
+    },
+    {
+      title: "12. Children's Privacy",
+      body: "AgentForge is not intended for individuals under 18 years of age. We do not knowingly collect personal data from children. Under the DPDP Act 2023, processing of a child's data requires verifiable parental consent — we do not solicit such data.",
+    },
+    {
+      title: "13. Cross-Border Data Transfers",
+      body: "Our cloud infrastructure (Supabase, Razorpay, analytics partners) may process data outside India. Transfers are made under standard contractual safeguards and only to jurisdictions that meet AgentForge's data-protection standards.",
+    },
+    {
+      title: "14. Changes to This Policy",
+      body: "We may update this Privacy Policy from time to time. Material updates are notified by email and posted on this page with a revised effective date. Continued use of AgentForge after the effective date constitutes acceptance.",
+    },
+    {
+      title: "15. Contact Us",
+      body: "For privacy-related questions, account deletion requests, DPDP rights requests, or grievance filings, contact info@aiagentforge.in. See also our dedicated Data Protection page for technical security details.",
     },
   ];
 
