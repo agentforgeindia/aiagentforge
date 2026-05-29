@@ -30,6 +30,18 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "lh3.googleusercontent.com" }, // Google avatars
       { protocol: "https", hostname: "avatars.githubusercontent.com" },
     ],
+
+    // ────────────────────────────────────────────────────────────
+    // Next.js 16 locks down local images with query strings to
+    // prevent enumeration attacks. Our /public images are served
+    // without query strings — next/image auto-versions them via
+    // its own optimizer cache. If you ever need a cache-buster,
+    // add an exact entry here, e.g.
+    //   { pathname: "/banner.png", search: "?v=3" }
+    // ────────────────────────────────────────────────────────────
+    localPatterns: [
+      { pathname: "/**", search: "" },
+    ],
   },
 
   // ============================================================

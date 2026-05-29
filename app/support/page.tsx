@@ -112,7 +112,7 @@ const faqs: Array<{ q: string; a: string }> = [
   },
   {
     q: "How long does image generation take?",
-    a: "Usually 10–30 seconds, depending on image size and server load. The Empire plan's priority queue makes it even faster.",
+    a: "Usually 10–60 seconds, depending on image size and server load. The Empire plan's priority queue makes it even faster.",
   },
   {
     q: "Will my textile design change?",
@@ -206,32 +206,6 @@ const socialPlatforms: SocialPlatform[] = [
     iconColor: "text-white",
     cta: "Visit Facebook page",
     embed: { kind: "fb", pageHref: "https://www.facebook.com/Agentforgeindia" },
-  },
-  {
-    name: "X",
-    handle: "@Agentforgeindia",
-    displayName: "AgentForge India",
-    url: "https://x.com/Agentforgeindia",
-    Icon: FaXTwitter,
-    headerGradient: "bg-[linear-gradient(135deg,#0f172a_0%,#000000_100%)]",
-    iconColor: "text-white",
-    cta: "Follow on X",
-    embed: { kind: "twitter", handle: "Agentforgeindia" },
-  },
-  {
-    name: "LinkedIn",
-    handle: "agentforgeindia",
-    displayName: "Agent Forge",
-    url: "https://www.linkedin.com/in/agentforgeindia/",
-    Icon: FaLinkedinIn,
-    headerGradient: "bg-[linear-gradient(135deg,#0A66C2_0%,#004182_100%)]",
-    iconColor: "text-white",
-    cta: "Connect on LinkedIn",
-    embed: {
-      kind: "linkedin",
-      vanity: "agentforgeindia",
-      profileUrl: "https://in.linkedin.com/in/agentforgeindia?trk=profile-badge",
-    },
   },
 ];
 

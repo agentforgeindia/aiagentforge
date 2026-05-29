@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 /**
@@ -88,10 +89,13 @@ export default function AppIntro() {
           <div className="absolute inset-0 -m-6 rounded-full bg-white/60 blur-xl" />
 
           {/* Logo (no black frame — sits directly on the soft white background) */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/af-logo.png"
             alt="AI Agentforge"
+            width={160}
+            height={160}
+            preload
+            sizes="(min-width: 640px) 160px, 128px"
             className="relative h-32 w-32 sm:h-40 sm:w-40 select-none af-logo-enter drop-shadow-[0_12px_28px_rgba(124,58,237,0.35)]"
             draggable={false}
           />

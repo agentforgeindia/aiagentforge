@@ -457,7 +457,7 @@ export default function SignupPage() {
               <span className="opacity-40">·</span>
               <span className="inline-flex items-center gap-1">
                 <BadgeCheck className="h-3.5 w-3.5 text-cyan-500" />
-                Free 200 credits
+                Free 100 credits
               </span>
             </div>
 

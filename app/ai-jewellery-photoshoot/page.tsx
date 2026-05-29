@@ -6,7 +6,7 @@ const SITE = "https://www.aiagentforge.in";
 export const metadata: Metadata = {
   title: "AI Jewellery Photoshoot — Bridal, Diamond & Daily-Wear Catalogues in 30s",
   description:
-    "Premium AI jewellery photoshoots without a studio. Bridal sets, diamond rings, necklaces, earrings, kundan and pearls — catalogue-ready in 30 seconds. Built for Indian jewellery brands.",
+    "Premium AI jewellery photoshoots without a studio. Bridal sets, diamond rings, necklaces, earrings, kundan and pearls — catalogue-ready in 60 seconds. Built for Indian jewellery brands.",
   keywords: [
     "AI jewellery photoshoot",
     "AI jewellery model photoshoot",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "AI Jewellery Photoshoot — AgentForge AI",
     description:
-      "Bridal sets, diamond rings, necklaces, earrings — generate premium AI jewellery photoshoots in 30 seconds.",
+      "Bridal sets, diamond rings, necklaces, earrings — generate premium AI jewellery photoshoots in 60 seconds.",
     url: `${SITE}/ai-jewellery-photoshoot`,
     type: "website",
   },
@@ -35,7 +35,7 @@ export default function Page() {
       heroEmoji="💎"
       h1="AI Jewellery Photoshoots without the studio"
       highlight="without the studio"
-      subheadline="Bridal sets, diamond rings, necklaces, earrings, bangles and kundan — upload your product photo and get editorial-grade catalogue images in 30 seconds. No model, no MUA, no security transport."
+      subheadline="Bridal sets, diamond rings, necklaces, earrings, bangles and kundan — upload your product photo and get editorial-grade catalogue images in 60 seconds. No model, no MUA, no security transport."
       primaryCtaLabel="Start Jewellery Shoot"
       primaryCtaHref="/jewellery-ai"
       secondaryCtaLabel="View Gallery"

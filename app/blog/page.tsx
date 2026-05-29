@@ -208,7 +208,7 @@ export default function BlogIndexPage() {
                 Stop reading. Start shipping AI catalogues today.
               </h3>
               <p className="mt-2 text-sm text-black/60 dark:text-white/65 sm:text-base">
-                Sign up free · 200 credits on the house · No card required
+                Sign up free · 100 credits on the house · No card required
               </p>
             </div>
             <div className="flex flex-wrap gap-3 md:justify-end">

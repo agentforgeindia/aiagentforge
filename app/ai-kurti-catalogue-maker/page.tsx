@@ -6,7 +6,7 @@ const SITE = "https://www.aiagentforge.in";
 export const metadata: Metadata = {
   title: "AI Kurti Catalogue Maker — Daily Drops for WhatsApp, Instagram & Amazon",
   description:
-    "Upload a kurti photo or design and get a model-worn AI kurti catalogue image in 30 seconds. Built for Jaipur, Delhi, Mumbai kurti brands shipping daily WhatsApp & Instagram drops.",
+    "Upload a kurti photo or design and get a model-worn AI kurti catalogue image in 60 seconds. Built for Jaipur, Delhi, Mumbai kurti brands shipping daily WhatsApp & Instagram drops.",
   keywords: [
     "AI kurti catalogue maker",
     "AI kurti mockup",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "AI Kurti Catalogue Maker — AgentForge AI",
     description:
-      "Generate daily kurti catalogue drops for WhatsApp, Instagram and Amazon in 30 seconds. Built for Indian kurti brands.",
+      "Generate daily kurti catalogue drops for WhatsApp, Instagram and Amazon in 60 seconds. Built for Indian kurti brands.",
     url: `${SITE}/ai-kurti-catalogue-maker`,
     type: "website",
   },
@@ -35,7 +35,7 @@ export default function Page() {
       heroEmoji="👚"
       h1="The AI Kurti Catalogue Maker for daily drops"
       highlight="for daily drops"
-      subheadline="Upload a kurti photo or print, choose a model and vibe — get a premium catalogue image with article code overlay in 30 seconds. Built for Jaipur, Delhi, Mumbai and Bengaluru kurti brands."
+      subheadline="Upload a kurti photo or print, choose a model and vibe — get a premium catalogue image with article code overlay in 60 seconds. Built for Jaipur, Delhi, Mumbai and Bengaluru kurti brands."
       primaryCtaLabel="Make Kurti Catalogue"
       primaryCtaHref="/textileprints-to-mockup"
       secondaryCtaLabel="View Gallery"
@@ -112,7 +112,7 @@ export default function Page() {
         },
         {
           q: "How fast can I ship a full daily catalogue?",
-          a: "30 seconds per image. A 20-piece daily drop is done in ~10 minutes. Empire plan unlocks bulk mode for hundreds of pieces in parallel.",
+          a: "60 seconds per image. A 20-piece daily drop is done in ~10 minutes. Empire plan unlocks bulk mode for hundreds of pieces in parallel.",
         },
         {
           q: "Does it handle embroidered, hand-block printed and digital prints?",

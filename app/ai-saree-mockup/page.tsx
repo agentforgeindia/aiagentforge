@@ -6,7 +6,7 @@ const SITE = "https://www.aiagentforge.in";
 export const metadata: Metadata = {
   title: "AI Saree Mockup Generator — Model-Worn Saree Catalogues in 30s",
   description:
-    "Upload a flat saree photo and get a model-worn AI saree mockup in 30 seconds. Built for Surat manufacturers, wholesalers and saree D2C brands. Festive, bridal, casual & daily-wear.",
+    "Upload a flat saree photo and get a model-worn AI saree mockup in 60 seconds. Built for Surat manufacturers, wholesalers and saree D2C brands. Festive, bridal, casual & daily-wear.",
   keywords: [
     "AI saree mockup",
     "AI saree photoshoot",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "AI Saree Mockup Generator — AgentForge AI",
     description:
-      "Flat saree photo to model-worn catalogue image in 30 seconds. Built for Indian saree sellers.",
+      "Flat saree photo to model-worn catalogue image in 60 seconds. Built for Indian saree sellers.",
     url: `${SITE}/ai-saree-mockup`,
     type: "website",
   },
@@ -35,7 +35,7 @@ export default function Page() {
       heroEmoji="🥻"
       h1="The AI Saree Mockup Generator for Indian sellers"
       highlight="for Indian sellers"
-      subheadline="Take a flat saree photo from your phone. Get a premium model-worn catalogue image with accurate draping, festive lighting and your article code overlay — in 30 seconds."
+      subheadline="Take a flat saree photo from your phone. Get a premium model-worn catalogue image with accurate draping, festive lighting and your article code overlay — in 60 seconds."
       primaryCtaLabel="Generate Saree Mockup"
       primaryCtaHref="/textileprints-to-mockup"
       secondaryCtaLabel="See Examples"

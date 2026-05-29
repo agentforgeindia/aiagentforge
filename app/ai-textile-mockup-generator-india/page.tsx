@@ -6,7 +6,7 @@ const SITE = "https://www.aiagentforge.in";
 export const metadata: Metadata = {
   title: "AI Textile Mockup Generator India — Saree, Kurti, Kurta & Lehenga Mockups in 30s",
   description:
-    "India's #1 AI textile mockup generator. Turn a flat fabric photo or digital design into a premium model-worn catalogue image in 30 seconds. Built for Surat, Jaipur, Ludhiana, Mumbai & Delhi textile sellers.",
+    "India's #1 AI textile mockup generator. Turn a flat fabric photo or digital design into a premium model-worn catalogue image in 60 seconds. Built for Surat, Jaipur, Ludhiana, Mumbai & Delhi textile sellers.",
   keywords: [
     "AI textile mockup generator India",
     "textile design to mockup AI",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "AI Textile Mockup Generator India — AgentForge AI",
     description:
-      "Generate model-worn saree, kurti, kurta and lehenga mockups in 30 seconds. Built for Indian textile manufacturers, wholesalers and D2C sellers.",
+      "Generate model-worn saree, kurti, kurta and lehenga mockups in 60 seconds. Built for Indian textile manufacturers, wholesalers and D2C sellers.",
     url: `${SITE}/ai-textile-mockup-generator-india`,
     type: "website",
   },
@@ -36,7 +36,7 @@ export default function Page() {
       heroEmoji="👕"
       h1="The AI Textile Mockup Generator built for India"
       highlight="built for India"
-      subheadline="Turn your fabric photo or digital design into a premium model-worn catalogue image in 30 seconds. Saree, kurti, kurta, lehenga, kidswear and home textile — no model, no studio, no shoot."
+      subheadline="Turn your fabric photo or digital design into a premium model-worn catalogue image in 60 seconds. Saree, kurti, kurta, lehenga, kidswear and home textile — no model, no studio, no shoot."
       primaryCtaLabel="Generate Textile Mockup"
       primaryCtaHref="/textileprints-to-mockup"
       secondaryCtaLabel="View Gallery"
@@ -92,7 +92,7 @@ export default function Page() {
         { title: "Upload fabric or design", desc: "Snap a flat fabric photo or upload a digital print from your phone." },
         { title: "Pick category", desc: "Saree, kurti, kurta, lehenga, kidswear, home textile or universal fabric." },
         { title: "Choose model & shoot", desc: "Indian / Western model, festive or studio shoot, bridal or casual." },
-        { title: "Generate & download", desc: "HD 1080 image in 30 seconds, ready for WhatsApp, Amazon, Flipkart or Instagram." },
+        { title: "Generate & download", desc: "HD 1080 image in 60 seconds, ready for WhatsApp, Amazon, Flipkart or Instagram." },
       ]}
       useCases={[
         "Surat saree manufacturers shipping daily WhatsApp catalogues",

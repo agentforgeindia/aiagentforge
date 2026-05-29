@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import {
   Upload,
   Sparkles,
@@ -197,10 +198,22 @@ export default function UGCForgePage() {
       message: "UGC Studio generation started.",
     });
 
+    // Attach the JWT — server returns 401 without it.
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) {
+      alert("Please sign in to generate.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/ugc-forge/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({
           generation_id: generationId,
           creator_image_url: creatorImageUrl,

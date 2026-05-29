@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -121,7 +122,7 @@ export default function Home() {
         tag: "Textile AI",
         imageClass:
           "bg-[radial-gradient(circle_at_25%_20%,#22d3ee_0_12%,transparent_13%),repeating-linear-gradient(45deg,#0ea5e9_0_14px,#facc15_14px_28px,#a78bfa_28px_42px,#fb7185_42px_56px)]",
-        imageSrc: "/textile-banner.png?v=2",
+        imageSrc: "/textile-banner.png",
         icon: "textile",
       },
       {
@@ -214,32 +215,6 @@ export default function Home() {
         cta: "Visit Facebook page",
         embed: { kind: "fb", pageHref: "https://www.facebook.com/Agentforgeindia" },
       },
-      {
-        name: "X",
-        handle: "@Agentforgeindia",
-        displayName: "AgentForge India",
-        url: "https://x.com/Agentforgeindia",
-        Icon: FaXTwitter,
-        headerGradient: "bg-[linear-gradient(135deg,#0f172a_0%,#000000_100%)]",
-        iconColor: "text-white",
-        cta: "Follow on X",
-        embed: { kind: "twitter", handle: "Agentforgeindia" },
-      },
-      {
-  name: "LinkedIn",
-  handle: "agentforgeindia",
-  displayName: "Agent Forge",
-  url: "https://www.linkedin.com/in/agentforgeindia/",
-  Icon: FaLinkedinIn,
-  headerGradient: "bg-[linear-gradient(135deg,#0A66C2_0%,#004182_100%)]",
-  iconColor: "text-white",
-  cta: "Connect on LinkedIn",
-  embed: {
-    kind: "linkedin",
-    vanity: "agentforgeindia",
-    profileUrl: "https://in.linkedin.com/in/agentforgeindia?trk=profile-badge",
-  },
-},
     ],
     [],
   );
@@ -452,7 +427,7 @@ export default function Home() {
             <span className="block">Turn Mobile Photos Into</span>
             <span className="block">Premium Catalogue Shoots</span>
             <span className="af-shimmer-text mt-3 block text-[24px] sm:text-4xl md:text-5xl">
-              Using AI — in 30 seconds.
+              Using AI — in 60 seconds.
             </span>
           </h1>
 
@@ -667,11 +642,13 @@ export default function Home() {
                     `}</style>
                   </>
                 )}
-                <div className="h-48 w-full overflow-hidden">
-                  <img
+                <div className="relative h-48 w-full overflow-hidden">
+                  <Image
                     src={item.imageSrc}
                     alt={`${item.title} generated using AgentForge AI`}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    fill
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    className="object-cover transition duration-500 group-hover:scale-105"
                   />
                 </div>
                 <div className="p-5 sm:p-6">
@@ -1038,7 +1015,7 @@ export default function Home() {
               {
                 href: "/ai-saree-mockup",
                 title: "AI Saree Mockup",
-                desc: "Flat saree to model-worn catalogue image in 30 seconds.",
+                desc: "Flat saree to model-worn catalogue image in 60 seconds.",
                 icon: "/icons/saree.svg",
                 tintBg: darkMode ? "bg-rose-500/10" : "bg-rose-50",
               },
@@ -1183,7 +1160,14 @@ export default function Home() {
                         <Icon className={`h-5 w-5 ${platform.iconColor}`} />
                       </div>
                       <div className="absolute -bottom-7 left-4 flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border-4 border-white bg-white shadow-lg dark:border-[#0b1220]">
-                        <img src="/af-logo.png" alt="AgentForge" className="h-full w-full object-cover" />
+                        <Image
+                          src="/af-logo.png"
+                          alt="AgentForge"
+                          width={56}
+                          height={56}
+                          sizes="56px"
+                          className="h-full w-full object-cover"
+                        />
                       </div>
                     </a>
 
@@ -1415,7 +1399,14 @@ export default function Home() {
           {/* Header row — logo + (eyebrow + heading), each on its own clean line */}
           <div className="relative flex items-center gap-3">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-white bg-white shadow-md shadow-cyan-500/20 sm:h-14 sm:w-14 dark:border-[#0b1220]">
-              <img src="/af-logo.png" alt="AgentForge" className="h-full w-full object-cover" />
+              <Image
+                src="/af-logo.png"
+                alt="AgentForge"
+                width={56}
+                height={56}
+                sizes="(min-width: 640px) 56px, 48px"
+                className="h-full w-full object-cover"
+              />
             </div>
             <div className="min-w-0 flex-1">
               <p className="whitespace-nowrap text-[10px] font-black uppercase tracking-[0.22em] text-cyan-600">
@@ -1455,7 +1446,7 @@ export default function Home() {
               {" "}— without waiting for designers, studios, or models. What
               once took days now happens in{" "}
               <span className={`font-black ${darkMode ? "text-white" : "text-black"}`}>
-                under 30 seconds
+                under 60 seconds
               </span>.
             </p>
 
@@ -1542,7 +1533,7 @@ export default function Home() {
           <div className="relative mt-2 space-y-2">
             {[
               { trad: "₹25k photoshoot", af: "AI generation" },
-              { trad: "4 – 7 days", af: "~30 seconds" },
+              { trad: "4 – 7 days", af: "~60 seconds" },
               { trad: "Models required", af: "No model needed" },
               { trad: "Stitching needed", af: "Design only" },
             ].map((row) => (

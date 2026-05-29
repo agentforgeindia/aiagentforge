@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/components/AuthProvider";
+import { track } from "@/lib/analytics";
 import {
   ArrowRight,
   BadgeCheck,
@@ -1137,13 +1138,45 @@ const uploadFileToSupabase = async (file: File, folder: string) => {
   return data.publicUrl;
 };
 
-const refundCredits = async (userId: string, amount: number) => {
-  const { data } = await supabase.from("profiles").select("credits").eq("id", userId).single();
-  await supabase
-    .from("profiles")
-    .update({ credits: (data?.credits || 0) + amount })
-    .eq("id", userId);
-  refreshProfile?.();
+// Server-gated refund — direct UPDATE on profiles.credits is now
+// blocked by a Postgres trigger (see sql/credits.sql). The server
+// validates ownership + status='failed' + idempotency before refunding.
+const refundCredits = async (
+  userId: string,
+  amount: number,
+  generationId?: string,
+) => {
+  try {
+    const { data: sess } = await supabase.auth.getSession();
+    const jwt = sess.session?.access_token;
+    if (!jwt || !generationId) {
+      // Without a generation_id the server can't gate the refund. Skip
+      // silently — the user will need to contact support. Logged here
+      // so we can detect this in production.
+      console.warn("[refundCredits] missing JWT or generation_id; skipping", {
+        userId,
+        amount,
+        generationId,
+      });
+      return;
+    }
+    await fetch("/api/credits/refund", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwt}`,
+      },
+      body: JSON.stringify({
+        generation_id: generationId,
+        amount,
+        reason: "client_detected_failure",
+      }),
+    });
+  } catch (err) {
+    console.error("[refundCredits] failed:", err);
+  } finally {
+    refreshProfile?.();
+  }
 };
 
 // ============================================================
@@ -1405,6 +1438,14 @@ const WEBHOOK_URL =
     setGeneratedOutputUrl("");
     setGenerationProgress(12);
 
+    // Funnel event — fires at the moment the user actually commits
+    // to a generation. Captured regardless of downstream success.
+    const generationStartedAt = Date.now();
+    track({ name: "generation_started", agent: "jewellery", credits });
+
+    // Read profile for plan info only — credits are now read,
+    // checked AND deducted atomically by /api/jewellery/generate
+    // (see sql/credits.sql:deduct_credits + the server route).
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("credits, plan")
@@ -1416,22 +1457,14 @@ const WEBHOOK_URL =
       return;
     }
 
+    // Pre-flight credit check — purely a UX nicety. The atomic
+    // deduction on the server is the real gate.
     if ((profile.credits || 0) < credits) {
+      track({ name: "insufficient_credits", agent: "jewellery", required: credits });
       alert(`Not enough credits. Required: ${credits}, Available: ${profile.credits || 0}`);
       return;
     }
 
-    const { error: deductError } = await supabase
-      .from("profiles")
-      .update({ credits: (profile.credits || 0) - credits })
-      .eq("id", authUser.id);
-
-    if (deductError) {
-      alert("Credit deduction failed.");
-      return;
-    }
-
-    refreshProfile?.();
     setGenerationProgress(25);
 
     const uploadedImageUrls = [];
@@ -1446,8 +1479,15 @@ const WEBHOOK_URL =
     }
 
     if (!uploadedImageUrls.length) {
-      await refundCredits(authUser.id, credits);
-      alert("Image upload failed. Credits refunded.");
+      // Upload failed before we hit the server, so no credits
+      // were deducted — nothing to refund.
+      track({
+        name: "generation_failed",
+        agent: "jewellery",
+        stage: "upload",
+        reason: "no_image_uploaded",
+      });
+      alert("Image upload failed. Please try again.");
       return;
     }
 
@@ -1458,15 +1498,8 @@ const WEBHOOK_URL =
 
     const firstImageUrl = uploadedImageUrls[0]?.source_image_url || "";
 
-    await supabase.from("generations").insert({
-      id: generationId,
-      user_id: authUser.id,
-      status: "queued",
-      design_url: firstImageUrl,
-      style_type: "jewellery",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
+    // Generations row is now inserted server-side inside
+    // /api/jewellery/generate with the JWT-verified user_id.
 
     setGenerationProgress(38);
 
@@ -1540,6 +1573,16 @@ if (hasInvalidImageUrl) {
 }
 
     setGenerationProgress(48);
+
+// Attach the JWT so the server can verify the caller. Without
+// this the server returns 401 and no credits are deducted.
+const { data: sessionData } = await supabase.auth.getSession();
+const accessToken = sessionData.session?.access_token;
+if (!accessToken) {
+  alert("Session expired. Please sign in again.");
+  return;
+}
+
 let response;
 
 try {
@@ -1547,6 +1590,7 @@ try {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
+    Authorization: `Bearer ${accessToken}`,
   },
   body: JSON.stringify(payload),
 });
@@ -1567,11 +1611,27 @@ if (!response.ok) {
 
     const data = await response.json().catch(() => ({}));
 
+    // Note: when the server returns non-OK above, it has already
+    // refunded credits internally (see app/api/jewellery/generate/route.ts).
+    // This block is reached only if the throw at line ~1581 was
+    // somehow bypassed; double-refunds are blocked by the server's
+    // idempotency check, so calling refund here is safe.
     if (!response.ok) {
-      await refundCredits(authUser.id, credits);
+      track({
+        name: "generation_failed",
+        agent: "jewellery",
+        stage: "n8n",
+        reason: (data as any)?.code || (data as any)?.error || "server_error",
+      });
+      await refundCredits(authUser.id, credits, generationId);
       console.error(data);
       alert("Generation failed. Credits refunded. Check n8n.");
       return;
+    }
+
+    // Server returns the new balance — refresh the UI immediately.
+    if (typeof (data as any)?.new_balance === "number") {
+      refreshProfile?.();
     }
 
     setGenerationProgress(65);
@@ -1603,6 +1663,13 @@ if (!response.ok) {
         generationId,
       });
 
+      track({
+        name: "generation_completed",
+        agent: "jewellery",
+        generation_id: generationId,
+        duration_ms: Date.now() - generationStartedAt,
+      });
+
       setGeneratedOutputUrl(finalUrl);
       setGenerationProgress(100);
       refreshProfile?.();
@@ -1627,6 +1694,12 @@ if (!response.ok) {
           afWatermark: isFreeAccount,
           generationId,
         });
+        track({
+          name: "generation_completed",
+          agent: "jewellery",
+          generation_id: generationId,
+          duration_ms: Date.now() - generationStartedAt,
+        });
         setGeneratedOutputUrl(finalUrl);
         setGenerationProgress(100);
         refreshProfile?.();
@@ -1635,7 +1708,17 @@ if (!response.ok) {
       }
 
       if (row?.status === "failed") {
-        await refundCredits(authUser.id, credits);
+        // Polling detected an n8n worker failure AFTER our server
+        // route already returned 200 and deducted. Ask the server
+        // to refund — it gates on ownership + status='failed' +
+        // idempotency.
+        track({
+          name: "generation_failed",
+          agent: "jewellery",
+          stage: "polling",
+          reason: "n8n_marked_failed",
+        });
+        await refundCredits(authUser.id, credits, generationId);
         alert("Generation failed in n8n. Credits refunded.");
         return;
       }
@@ -1647,7 +1730,13 @@ if (!response.ok) {
     alert("Generation started. It is taking longer than expected. You can check My Creations shortly.");
   } catch (error) {
     console.error(error);
-    if (authUser?.id) await refundCredits(authUser.id, credits);
+    // Refund only if the server actually deducted (server route
+    // already refunds on its own failures, so this attempts a
+    // gated refund tied to this generationId — server checks the
+    // row's status and idempotency before crediting).
+    if (authUser?.id) {
+      await refundCredits(authUser.id, credits, generationId);
+    }
     alert("Something went wrong. Credits refunded if they were deducted.");
   } finally {
     setIsGenerating(false);

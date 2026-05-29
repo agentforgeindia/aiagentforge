@@ -207,7 +207,7 @@ export default function LandingPage(props: LandingPageProps) {
         <section className="mx-auto max-w-6xl px-4 py-10 sm:px-5 sm:py-14">
           <div className="mb-8 text-center">
             <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-600">How it works</p>
-            <h2 className="mt-2 text-2xl font-black sm:text-3xl md:text-4xl">Live in 30 seconds</h2>
+            <h2 className="mt-2 text-2xl font-black sm:text-3xl md:text-4xl">Live in 60 seconds</h2>
           </div>
           <div className="grid gap-4 sm:gap-5 md:grid-cols-2 lg:grid-cols-4">
             {props.steps.map((step, idx) => (
@@ -275,7 +275,7 @@ export default function LandingPage(props: LandingPageProps) {
         <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-5">
           <div className="relative overflow-hidden rounded-[2rem] border border-cyan-300/40 bg-gradient-to-r from-cyan-400/15 via-blue-500/15 to-purple-500/15 p-8 text-center shadow-2xl backdrop-blur-xl">
             <h2 className="text-2xl font-black sm:text-3xl md:text-4xl">
-              Start creating in the next 30 seconds
+              Start creating in the next 60 seconds
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-black/65 dark:text-white/65 sm:text-base">
               Sign up to AgentForge AI and get 100 free credits. No card required.

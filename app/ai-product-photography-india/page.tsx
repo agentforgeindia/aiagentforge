@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "AI Product Photography India — AgentForge AI",
     description:
-      "Mobile product photo to Amazon-ready hero shot in 30 seconds. Built for Indian D2C brands and ecommerce sellers.",
+      "Mobile product photo to Amazon-ready hero shot in 60 seconds. Built for Indian D2C brands and ecommerce sellers.",
     url: `${SITE}/ai-product-photography-india`,
     type: "website",
   },
@@ -37,7 +37,7 @@ export default function Page() {
       heroEmoji="📸"
       h1="AI Product Photography for Indian D2C brands"
       highlight="for Indian D2C brands"
-      subheadline="Turn a mobile product photo into an Amazon-ready hero shot, Instagram ad creative or Flipkart listing image — in 30 seconds. Skincare, perfume, watches, gadgets, food, fashion accessories and more."
+      subheadline="Turn a mobile product photo into an Amazon-ready hero shot, Instagram ad creative or Flipkart listing image — in 60 seconds. Skincare, perfume, watches, gadgets, food, fashion accessories and more."
       primaryCtaLabel="Start Product Shoot"
       primaryCtaHref="/productography-ai"
       secondaryCtaLabel="View Gallery"

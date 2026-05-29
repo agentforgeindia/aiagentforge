@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import {
   FaFacebookF,
@@ -53,9 +54,12 @@ export default function Footer() {
         {/* ───────── Top: Identity (centered) ───────── */}
         <div className="relative flex flex-col items-center justify-center pb-8 text-center">
           <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border-2 border-white bg-white shadow-xl shadow-cyan-500/20 sm:h-20 sm:w-20 dark:border-[#0b1220]">
-            <img
+            <Image
               src="/af-logo.png"
               alt="AgentForge AI Logo"
+              width={80}
+              height={80}
+              sizes="(min-width: 640px) 80px, 64px"
               className="h-full w-full object-cover"
             />
           </div>
@@ -104,7 +108,31 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-3 text-sm font-black">Products</h4>
+            <h4 className="mb-3 text-sm font-black">Navigation</h4>
+            <div className={`space-y-2 text-sm ${muted}`}>
+              <Link href="/" className="block transition hover:text-cyan-500">
+                Home
+              </Link>
+              <Link href="/gallery" className="block transition hover:text-cyan-500">
+                Gallery
+              </Link>
+              <Link href="/about" className="block transition hover:text-cyan-500">
+                About
+              </Link>
+              <Link href="/news" className="block transition hover:text-cyan-500">
+                News &amp; Blog
+              </Link>
+              <Link href="/support" className="block transition hover:text-cyan-500">
+                Support
+              </Link>
+              <Link href="/pricing" className="block transition hover:text-cyan-500">
+                Pricing
+              </Link>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="mb-3 text-sm font-black">AI Agents</h4>
             <div className={`space-y-2 text-sm ${muted}`}>
               <Link href="/textileprints-to-mockup" className="block transition hover:text-cyan-500">
                 TextilePrints to Mockup AI
@@ -115,35 +143,8 @@ export default function Footer() {
               <Link href="/productography-ai" className="block transition hover:text-cyan-500">
                 Productography AI
               </Link>
-              <Link href="/pricing" className="block transition hover:text-cyan-500">
-                Pricing
-              </Link>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="mb-3 text-sm font-black">Company</h4>
-            <div className={`space-y-2 text-sm ${muted}`}>
-              <Link href="/about" className="block transition hover:text-cyan-500">
-                About AgentForge
-              </Link>
               <Link href="/case-studies" className="block transition hover:text-cyan-500">
                 Case Studies
-              </Link>
-              <Link href="/gallery" className="block transition hover:text-cyan-500">
-                Gallery
-              </Link>
-              <Link href="/blog" className="block transition hover:text-cyan-500">
-                Blog
-              </Link>
-              <Link href="/profile" className="block transition hover:text-cyan-500">
-                Profile
-              </Link>
-              <Link href="/settings" className="block transition hover:text-cyan-500">
-                Settings
-              </Link>
-              <Link href="/support" className="block transition hover:text-cyan-500">
-                Support &amp; Tutorials
               </Link>
             </div>
           </div>

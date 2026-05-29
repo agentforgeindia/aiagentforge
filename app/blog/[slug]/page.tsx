@@ -1,12 +1,25 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BLOG_POSTS, getPostBySlug, type BlogSection } from "../posts";
+import {
+  getPostBySlug,
+  listPublishedPosts,
+  listPublishedSlugs,
+  POST_CATEGORY_LABEL,
+  type PostSection,
+  type UnifiedPost,
+} from "@/lib/posts";
+import BlogPostViewTracker from "./BlogPostViewTracker";
 
 const SITE = "https://www.aiagentforge.in";
 
-export function generateStaticParams() {
-  return BLOG_POSTS.map((post) => ({ slug: post.slug }));
+// Pre-build any slug we know about at build time. Slugs added to
+// the DB after build are still served — Next.js falls back to
+// on-demand SSR (dynamicParams = true by default).
+export async function generateStaticParams() {
+  const slugs = await listPublishedSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -15,16 +28,17 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlug(slug);
 
   if (!post) {
     return {
       title: "Post not found",
-      description: "The blog post you are looking for could not be found.",
+      description: "The post you are looking for could not be found.",
     };
   }
 
   const url = `${SITE}/blog/${post.slug}`;
+  const ogImage = post.heroImageUrl ?? `${SITE}/logo-new.jpg`;
 
   return {
     title: post.title,
@@ -39,11 +53,13 @@ export async function generateMetadata({
       publishedTime: post.publishedAt,
       authors: [post.author],
       siteName: "AgentForge AI",
+      images: [{ url: ogImage }],
     },
     twitter: {
       card: "summary_large_image",
       title: post.title,
       description: post.description,
+      images: [ogImage],
     },
   };
 }
@@ -56,7 +72,7 @@ function formatDate(iso: string) {
   });
 }
 
-function RenderSection({ section }: { section: BlogSection }) {
+function RenderSection({ section }: { section: PostSection }) {
   if (section.type === "p") {
     return (
       <p className="mt-5 text-[15px] leading-7 text-black/75 dark:text-white/75 sm:text-base sm:leading-8">
@@ -72,13 +88,17 @@ function RenderSection({ section }: { section: BlogSection }) {
     );
   }
   if (section.type === "h3") {
-    return <h3 className="mt-7 text-xl font-black tracking-tight sm:text-2xl">{section.text}</h3>;
+    return (
+      <h3 className="mt-7 text-xl font-black tracking-tight sm:text-2xl">
+        {section.text}
+      </h3>
+    );
   }
   if (section.type === "ul") {
     return (
       <ul className="mt-4 space-y-2.5 text-[15px] leading-7 text-black/75 dark:text-white/75 sm:text-base sm:leading-7">
-        {section.items.map((it) => (
-          <li key={it} className="flex items-start gap-3">
+        {section.items.map((it, i) => (
+          <li key={`${it}-${i}`} className="flex items-start gap-3">
             <span className="mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500" />
             <span>{it}</span>
           </li>
@@ -93,6 +113,26 @@ function RenderSection({ section }: { section: BlogSection }) {
       </blockquote>
     );
   }
+  if (section.type === "image") {
+    return (
+      <figure className="my-8">
+        <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-black/10 bg-white/40 dark:border-white/10 dark:bg-white/[0.04]">
+          <Image
+            src={section.src}
+            alt={section.alt ?? ""}
+            fill
+            sizes="(min-width: 768px) 760px, 100vw"
+            className="object-cover"
+          />
+        </div>
+        {section.caption && (
+          <figcaption className="mt-2 text-center text-xs text-black/55 dark:text-white/55">
+            {section.caption}
+          </figcaption>
+        )}
+      </figure>
+    );
+  }
   return null;
 }
 
@@ -102,7 +142,7 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlug(slug);
 
   if (!post) {
     notFound();
@@ -110,10 +150,15 @@ export default async function BlogPostPage({
 
   const url = `${SITE}/blog/${post.slug}`;
 
-  // Related posts (same category, exclude current)
-  const related = BLOG_POSTS.filter(
-    (p) => p.slug !== post.slug && p.category === post.category,
-  ).slice(0, 3);
+  // Related posts — same category, exclude current. Async because
+  // they may come from DB.
+  const sameCategory = await listPublishedPosts({
+    category: post.category,
+    limit: 4,
+  });
+  const related = sameCategory.filter((p) => p.slug !== post.slug).slice(0, 3);
+
+  const categoryLabel = POST_CATEGORY_LABEL[post.category];
 
   // JSON-LD Article schema
   const articleSchema = {
@@ -121,6 +166,7 @@ export default async function BlogPostPage({
     "@type": "Article",
     headline: post.title,
     description: post.description,
+    image: post.heroImageUrl ?? `${SITE}/logo-new.jpg`,
     author: { "@type": "Organization", name: post.author },
     publisher: {
       "@type": "Organization",
@@ -139,13 +185,14 @@ export default async function BlogPostPage({
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: SITE },
-      { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE}/blog` },
+      { "@type": "ListItem", position: 2, name: "News", item: `${SITE}/news` },
       { "@type": "ListItem", position: 3, name: post.title, item: url },
     ],
   };
 
   return (
     <main className="relative min-h-screen overflow-hidden">
+      <BlogPostViewTracker slug={post.slug} category={categoryLabel} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
@@ -171,20 +218,36 @@ export default async function BlogPostPage({
             Home
           </Link>
           <span>/</span>
-          <Link href="/blog" className="hover:text-cyan-600 dark:hover:text-cyan-300">
-            Blog
+          <Link href="/news" className="hover:text-cyan-600 dark:hover:text-cyan-300">
+            News
           </Link>
           <span>/</span>
-          <span className="truncate text-black/70 dark:text-white/70">{post.category}</span>
+          <span className="truncate text-black/70 dark:text-white/70">{categoryLabel}</span>
         </nav>
+
+        {/* Hero image (if uploaded) — otherwise emoji card */}
+        {post.heroImageUrl ? (
+          <div className="relative mb-8 aspect-[16/9] w-full overflow-hidden rounded-[1.75rem] border border-black/10 shadow-xl dark:border-white/10">
+            <Image
+              src={post.heroImageUrl}
+              alt={post.title}
+              fill
+              sizes="(min-width: 768px) 760px, 100vw"
+              priority
+              className="object-cover"
+            />
+          </div>
+        ) : null}
 
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-400/20 to-blue-500/20 text-5xl shadow-lg">
-            {post.heroEmoji}
-          </div>
+          {!post.heroImageUrl && (
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-400/20 to-blue-500/20 text-5xl shadow-lg">
+              {post.heroEmoji}
+            </div>
+          )}
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-600">
-            {post.category} · {post.readMinutes} min read
+            {categoryLabel} · {post.readMinutes} min read
           </p>
           <h1 className="mx-auto mt-3 max-w-2xl text-3xl font-black leading-tight tracking-tight sm:text-4xl md:text-5xl">
             {post.title}
@@ -204,38 +267,46 @@ export default async function BlogPostPage({
           ))}
         </div>
 
-        {/* CTA */}
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 rounded-[1.5rem] border border-cyan-300/40 bg-gradient-to-r from-cyan-50 to-blue-50 p-6 text-center dark:border-cyan-400/20 dark:bg-gradient-to-r dark:from-cyan-500/10 dark:to-blue-500/10 sm:flex-row sm:text-left">
-          <div className="min-w-0">
-            <p className="text-base font-black sm:text-lg">Ready to try it on your own products?</p>
-            <p className="mt-1 text-sm text-black/60 dark:text-white/60">
-              Sign up and get 100 free credits — no card required.
-            </p>
+        {/* CTA (only if author set one) */}
+        {post.ctaLabel && post.ctaHref && (
+          <div className="mt-12 flex flex-col items-center justify-between gap-4 rounded-[1.5rem] border border-cyan-300/40 bg-gradient-to-r from-cyan-50 to-blue-50 p-6 text-center dark:border-cyan-400/20 dark:bg-gradient-to-r dark:from-cyan-500/10 dark:to-blue-500/10 sm:flex-row sm:text-left">
+            <div className="min-w-0">
+              <p className="text-base font-black sm:text-lg">
+                Ready to try it on your own products?
+              </p>
+              <p className="mt-1 text-sm text-black/60 dark:text-white/60">
+                Sign up and get 100 free credits — no card required.
+              </p>
+            </div>
+            <Link
+              href={post.ctaHref}
+              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-6 py-3 text-sm font-black text-white shadow-xl shadow-cyan-500/25 transition hover:scale-105"
+            >
+              {post.ctaLabel} →
+            </Link>
           </div>
-          <Link
-            href={post.ctaHref}
-            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-6 py-3 text-sm font-black text-white shadow-xl shadow-cyan-500/25 transition hover:scale-105"
-          >
-            {post.ctaLabel} →
-          </Link>
-        </div>
+        )}
 
         {/* Keywords */}
-        <div className="mt-8 flex flex-wrap gap-2">
-          {post.keywords.map((kw) => (
-            <span
-              key={kw}
-              className="inline-flex items-center rounded-full border border-black/10 bg-white/80 px-3 py-1 text-[11px] font-bold text-black/60 dark:border-white/10 dark:bg-white/[0.05] dark:text-white/65"
-            >
-              #{kw}
-            </span>
-          ))}
-        </div>
+        {post.keywords.length > 0 && (
+          <div className="mt-8 flex flex-wrap gap-2">
+            {post.keywords.map((kw) => (
+              <span
+                key={kw}
+                className="inline-flex items-center rounded-full border border-black/10 bg-white/80 px-3 py-1 text-[11px] font-bold text-black/60 dark:border-white/10 dark:bg-white/[0.05] dark:text-white/65"
+              >
+                #{kw}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Related */}
         {related.length > 0 && (
           <div className="mt-12">
-            <h3 className="text-xl font-black sm:text-2xl">More on {post.category}</h3>
+            <h3 className="text-xl font-black sm:text-2xl">
+              More on {categoryLabel}
+            </h3>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               {related.map((r) => (
                 <Link
@@ -243,11 +314,23 @@ export default async function BlogPostPage({
                   href={`/blog/${r.slug}`}
                   className="group flex items-start gap-3 rounded-2xl border border-black/10 bg-white/85 p-4 transition hover:-translate-y-0.5 hover:border-cyan-300 dark:border-white/10 dark:bg-white/[0.05]"
                 >
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-100 to-blue-100 text-2xl dark:from-cyan-500/15 dark:to-blue-500/15">
-                    {r.heroEmoji}
+                  <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-cyan-100 to-blue-100 text-2xl dark:from-cyan-500/15 dark:to-blue-500/15">
+                    {r.heroImageUrl ? (
+                      <Image
+                        src={r.heroImageUrl}
+                        alt={r.title}
+                        fill
+                        sizes="48px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <span aria-hidden="true">{r.heroEmoji}</span>
+                    )}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-black leading-snug">{r.title}</p>
+                    <p className="line-clamp-2 text-sm font-black leading-snug">
+                      {r.title}
+                    </p>
                     <p className="mt-1 text-[11px] font-bold text-cyan-600 dark:text-cyan-300">
                       Read article →
                     </p>

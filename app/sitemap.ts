@@ -95,9 +95,9 @@ function classify(url: string): {
   if (/\/blog\/[^/]+$/.test(url)) {
     return { priority: 0.7, changeFrequency: "monthly" };
   }
-  // Blog index
-  if (url.endsWith("/blog")) {
-    return { priority: 0.7, changeFrequency: "weekly" };
+  // Blog / News index
+  if (url.endsWith("/blog") || url.endsWith("/news")) {
+    return { priority: 0.8, changeFrequency: "weekly" };
   }
   // SEO landing pages (ai-* keyword pages)
   if (/\/ai-[a-z0-9-]+$/.test(url)) {

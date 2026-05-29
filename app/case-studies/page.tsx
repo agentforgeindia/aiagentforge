@@ -97,7 +97,7 @@ const CASE_STUDIES: CaseStudy[] = [
     ],
     story: [
       "An independent Mumbai bridal jewellery brand competing with Tanishq, Kalyan and CaratLane on Instagram was at a creative disadvantage — bridal model shoots cost ₹80,000 per session, MUA + security transport + photographer added more. A 60-piece catalogue cost ₹4–5 lakh and took 8 weeks.",
-      "AgentForge Jewellery AI changed the math. The brand uploads product photos taken with their phone in good light, picks 'Indian Bridal Model + Festive Lighting + Marble Backdrop', and generates editorial-grade bridal campaign images in 30 seconds.",
+      "AgentForge Jewellery AI changed the math. The brand uploads product photos taken with their phone in good light, picks 'Indian Bridal Model + Festive Lighting + Marble Backdrop', and generates editorial-grade bridal campaign images in 60 seconds.",
       "Wedding-season campaigns that previously locked their team for 2 months now ship in a single day. The same brand identity now competes head-to-head with the largest jewellery players on visual production value — at 3% of the cost.",
     ],
     agentHref: "/jewellery-ai",
@@ -126,7 +126,7 @@ const CASE_STUDIES: CaseStudy[] = [
     ],
     story: [
       "A Bengaluru D2C skincare brand launching 3–5 new SKUs every month had a costly photography routine — ₹15,000 per session, 6 SKUs covered, 2-week turnaround from booking to delivery. By the time the catalogue arrived, the brand had moved to the next launch.",
-      "With AgentForge Productography AI, the founder takes phone photos of new SKUs in natural light, uploads them, and gets Amazon-ready hero shots, Instagram lifestyle creatives, and Meta Ads variants — all in 30 seconds each.",
+      "With AgentForge Productography AI, the founder takes phone photos of new SKUs in natural light, uploads them, and gets Amazon-ready hero shots, Instagram lifestyle creatives, and Meta Ads variants — all in 60 seconds each.",
       "The strategic shift: Amazon hero images are now refreshed weekly based on performance data. Ad creative testing went from 4 variants/month to 40+. Every new SKU now has a complete visual asset library ready on launch day.",
     ],
     agentHref: "/productography-ai",
@@ -337,7 +337,7 @@ export default function CaseStudiesPage() {
         <div className="relative overflow-hidden rounded-[2rem] border border-cyan-300/40 bg-gradient-to-r from-cyan-50 via-white to-blue-50 p-8 text-center shadow-xl dark:border-cyan-400/20 dark:bg-gradient-to-r dark:from-cyan-500/10 dark:via-white/[0.04] dark:to-blue-500/10">
           <h2 className="text-2xl font-black sm:text-3xl">Your business, your case study</h2>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-black/65 dark:text-white/65 sm:text-base">
-            Sign up free and get 200 credits. Generate your first AI catalogue today —
+            Sign up free and get 100 credits. Generate your first AI catalogue today —
             and join the next case study.
           </p>
           <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">

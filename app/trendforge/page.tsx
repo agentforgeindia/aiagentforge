@@ -145,17 +145,24 @@ export default function TrendForgePage() {
 
       const { data: sessionData } = await supabase.auth.getSession();
       const user = sessionData.session?.user;
+      const accessToken = sessionData.session?.access_token;
 
-      if (!user) {
+      if (!user || !accessToken) {
         router.push("/login");
         return;
       }
 
       const imageUrl = await uploadImage(user.id);
 
+      // user_id is also derived from the JWT server-side; we keep
+      // it in the body for n8n's existing payload contract but the
+      // server overwrites it with the verified value.
       const response = await fetch("/api/trendforge/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({
           user_id: user.id,
           image_url: imageUrl,

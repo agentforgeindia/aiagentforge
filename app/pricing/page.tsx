@@ -15,6 +15,7 @@ import {
   X as XIcon,
 } from "lucide-react";
 import TrustBadges from "@/app/components/TrustBadges";
+import { track } from "@/lib/analytics";
 
 
 declare global {
@@ -120,6 +121,11 @@ export default function PricingPage() {
   const [paymentMessage, setPaymentMessage] = useState("");
   
 
+  // Funnel: pricing was actually viewed. Fires once per mount.
+  useEffect(() => {
+    track({ name: "view_pricing" });
+  }, []);
+
   useEffect(() => {
     let active = true;
 
@@ -164,9 +170,12 @@ export default function PricingPage() {
 
       setLoadingPlan(plan.name);
 
-      if (typeof window !== "undefined" && (window as any).fbq) {
-  (window as any).fbq("track", "InitiateCheckout");
-}
+      // Funnel: user committed to a plan and is opening Razorpay.
+      track({
+        name: "begin_checkout",
+        plan: plan.name,
+        value: plan.amount,
+      });
 
       const orderResponse = await fetch("/api/razorpay/create-order", {
         method: "POST",

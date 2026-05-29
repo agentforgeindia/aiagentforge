@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
 import { useAuth } from "@/app/components/AuthProvider";
 import { Crown, Sparkles, Upload, UploadCloud, X } from "lucide-react";
+import { track } from "@/lib/analytics";
 import { canGenerate } from "@/lib/checkCredits";
 import { shouldDeductCredits } from "@/lib/deductCredits";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
@@ -1811,48 +1812,35 @@ export default function Home() {
         .join(" | "),
     };
 
-    const { error: dbError } = await supabase.from("generations").insert([
-      {
-        id: generationId,
-        user_id: userId,
-        design_url: item.url,
-        input_image_url: item.url,
-        model_type: resolvedModelType,
-        product_type: resolvedProduct,
-        shoot_style: resolvedShootStyle,
-        accessories: resolvedAccessories,
-        output_size: resolvedOutputSize,
-        quality: resolvedQuality,
-        model_pose: pose,
-        article_number: item.designNumber.trim() || null,
-        custom_instruction: customInstruction || null,
-        status: "pending",
-      },
-    ]);
+    // Funnel: per-item generation started. Bulk generates fire
+    // one event per item; matches the per-item billing model.
+    const generationStartedAt = Date.now();
+    track({ name: "generation_started", agent: "textile", credits: itemCredits });
 
-    if (dbError) {
-      throw new Error(`Database record failed: ${dbError.message}`);
+    // Insert + n8n forwarding both happen inside /api/textile/generate.
+    // The browser no longer touches the n8n webhook URL directly,
+    // which closes the public-internet exploit on n8n.
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) {
+      track({
+        name: "generation_failed",
+        agent: "textile",
+        stage: "deduct",
+        reason: "no_session",
+      });
+      throw new Error("Session expired. Please sign in again.");
     }
 
-    // Use the module-scoped WEBHOOK_URL (defined at top of file).
-    // Don't shadow with `|| ""` — empty string causes the fetch to go to the
-    // current origin and return the Next.js 404 page, which masks the real
-    // problem (missing env var or n8n workflow inactive).
-    if (!WEBHOOK_URL || !/^https?:\/\//i.test(WEBHOOK_URL)) {
-      throw new Error(
-        `Webhook URL not configured. Check NEXT_PUBLIC_N8N_PRODUCTION_WEBHOOK env var. Got: "${WEBHOOK_URL}"`,
-      );
-    }
-
-    const response = await fetch(WEBHOOK_URL, {
+    const response = await fetch("/api/textile/generate", {
       method: "POST",
-      mode: "cors",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
         generation_id: generationId,
-        user_id: userId,
+        // user_id deliberately omitted — server stamps it from JWT.
         design_url: item.url,
 
         textile_category: textileCategory,
@@ -1898,12 +1886,26 @@ export default function Home() {
 
     const text = await response.text();
     if (!response.ok) {
-      throw new Error(`n8n error ${response.status}: ${text}`);
+      track({
+        name: "generation_failed",
+        agent: "textile",
+        stage: "n8n",
+        reason: `status_${response.status}`,
+      });
+      throw new Error(`Server error ${response.status}: ${text}`);
     }
 
     const data = text ? JSON.parse(text) : {};
+    // n8n's reply is nested inside webhook_response now that the
+    // request flows through our adapter route; fall back to top-
+    // level keys so this stays compatible if the server ever
+    // unwraps the payload.
+    const inner = data?.webhook_response ?? data;
     const immediateImage =
-      data?.image_url || data?.output_image_url || data?.image || data?.url;
+      inner?.image_url ||
+      inner?.output_image_url ||
+      inner?.image ||
+      inner?.url;
     const rawFinalImage =
       immediateImage || (await pollGenerationResult(generationId));
 
@@ -1935,6 +1937,13 @@ export default function Home() {
           generationId,
         })
       : rawFinalImage;
+
+    track({
+      name: "generation_completed",
+      agent: "textile",
+      generation_id: generationId,
+      duration_ms: Date.now() - generationStartedAt,
+    });
 
     setItems((prev) =>
       prev.map((it) =>
@@ -2052,6 +2061,11 @@ export default function Home() {
       const needed = requiredCredits * queue.length;
 
       if (!canGenerate(latestProfile, needed)) {
+        track({
+          name: "insufficient_credits",
+          agent: "textile",
+          required: needed,
+        });
         alert(
           `You don't have enough credits (${needed} required for ${queue.length} mockup${queue.length > 1 ? "s" : ""}). Please recharge to continue.`,
         );

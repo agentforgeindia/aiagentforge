@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   },
 
   description:
-    "AgentForge AI is India's AI visual studio for textile mockups, jewellery photoshoots and product photography. Upload a photo, get catalogue-ready visuals in 30 seconds.",
+    "AgentForge AI is India's AI visual studio for textile mockups, jewellery photoshoots and product photography. Upload a photo, get catalogue-ready visuals in 60 seconds.",
 
   keywords: [
     // Textile / fashion
@@ -93,7 +93,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "AI Textile Mockup Generator & Jewellery AI Studio | AgentForge AI",
     description:
-      "India's AI visual studio for textile mockups, jewellery photoshoots and product photography. Generate catalogue-ready visuals in 30 seconds.",
+      "India's AI visual studio for textile mockups, jewellery photoshoots and product photography. Generate catalogue-ready visuals in 60 seconds.",
     url: "https://www.aiagentforge.in",
     siteName: "AgentForge AI",
     images: [
@@ -112,7 +112,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "AI Textile Mockup Generator & Jewellery AI Studio | AgentForge AI",
     description:
-      "Upload a photo. Get catalogue-ready AI visuals in 30 seconds. India's AI mockup & photoshoot platform.",
+      "Upload a photo. Get catalogue-ready AI visuals in 60 seconds. India's AI mockup & photoshoot platform.",
     images: ["/logo-new.jpg"],
   },
 };
@@ -129,6 +129,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        
       <link rel="manifest" href="/manifest.json"></link>
         {/* Facebook ownership — kept here because the metadata API
             doesn't have a typed slot for this specific FB verification */}
@@ -149,7 +150,7 @@ export default function RootLayout({
               url: "https://www.aiagentforge.in",
               logo: "https://www.aiagentforge.in/logo-new.jpg",
               description:
-                "India's AI visual studio for textile mockups, jewellery photoshoots and product photography. Generate catalogue-ready visuals in 30 seconds.",
+                "India's AI visual studio for textile mockups, jewellery photoshoots and product photography. Generate catalogue-ready visuals in 60 seconds.",
               email: "info@aiagentforge.in",
               address: {
                 "@type": "PostalAddress",
@@ -199,7 +200,7 @@ export default function RootLayout({
               operatingSystem: "Web, iOS, Android",
               url: "https://www.aiagentforge.in",
               description:
-                "AI visual studio for Indian textile, jewellery and product businesses. Generate model-worn fashion mockups, jewellery photoshoots and product photography in 30 seconds.",
+                "AI visual studio for Indian textile, jewellery and product businesses. Generate model-worn fashion mockups, jewellery photoshoots and product photography in 60 seconds.",
               image: "https://www.aiagentforge.in/logo-new.jpg",
               softwareVersion: "2026.1",
               inLanguage: ["en", "en-IN"],
@@ -256,29 +257,55 @@ export default function RootLayout({
 
       <body className="relative min-h-full overflow-x-hidden flex flex-col">
         {/* ============================================================
-            ANALYTICS & ADS TRACKING (already wired up site-wide)
+            ANALYTICS & ADS TRACKING (site-wide)
             ============================================================
-            • Google Ads / Google Tag      → AW-18170895451  (below)
-            • Meta (Facebook) Pixel        → 1136318385188354 (bottom of body)
+            • Google Ads (gtag)            → AW-18170895451       (always on)
+            • Google Analytics 4 (gtag)    → NEXT_PUBLIC_GA4_ID   (env-gated)
+            • Microsoft Clarity            → NEXT_PUBLIC_CLARITY_ID (env-gated)
+            • Meta (Facebook) Pixel        → 1136318385188354     (always on)
             • Meta domain verification     → in <head> above
             • Pinterest verification       → in metadata.verification above
             • Google Search Console        → auto-verified via the Google Tag
-            • Purchase / InitiateCheckout events → fired from
-              pricing/billing/payment-success pages
+            • Custom funnel events         → lib/analytics.ts → track()
+            • Auto page_view on route change → AnalyticsRouteTracker
+              inside LayoutClient
+            ============================================================
+            To activate GA4 + Clarity, add these to .env.local:
+              NEXT_PUBLIC_GA4_ID=G-XXXXXXXXXX
+              NEXT_PUBLIC_CLARITY_ID=xxxxxxxxxx
+            (No env vars → scripts skip silently. Safe in dev.)
             ============================================================ */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=AW-18170895451"
           strategy="afterInteractive"
         />
 
-        <Script id="google-ads" strategy="afterInteractive">
+        <Script id="google-tags-bootstrap" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             window.gtag = function(){ window.dataLayer.push(arguments); };
             window.gtag('js', new Date());
             window.gtag('config', 'AW-18170895451');
+            ${
+              process.env.NEXT_PUBLIC_GA4_ID
+                ? `window.gtag('config', '${process.env.NEXT_PUBLIC_GA4_ID}', { send_page_view: false });`
+                : ""
+            }
           `}
         </Script>
+
+        {/* Microsoft Clarity — free heatmaps + session recording */}
+        {process.env.NEXT_PUBLIC_CLARITY_ID && (
+          <Script id="microsoft-clarity" strategy="afterInteractive">
+            {`
+              (function(c,l,a,r,i,t,y){
+                  c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                  t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                  y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+              })(window, document, "clarity", "script", "${process.env.NEXT_PUBLIC_CLARITY_ID}");
+            `}
+          </Script>
+        )}
 
         <div className="fixed inset-0 -z-50 bg-[#fff8e8] dark:bg-[#070b14]" />
 

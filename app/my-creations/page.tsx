@@ -112,7 +112,7 @@ export default function MyCreationsPage() {
 
                 <p className={`mx-auto mt-4 max-w-lg text-base leading-7 ${muted}`}>
                   Upload a design or product photo, pick a vibe, and premium AI visuals are ready in{" "}
-                  <span className={`font-black ${darkMode ? "text-white/85" : "text-black/85"}`}>30 seconds</span>{" "}
+                  <span className={`font-black ${darkMode ? "text-white/85" : "text-black/85"}`}>60 seconds</span>{" "}
                   — everything stays saved here, download anytime.
                 </p>
 

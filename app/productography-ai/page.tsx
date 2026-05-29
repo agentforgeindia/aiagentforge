@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
+import { track } from "@/lib/analytics";
 import { useTheme } from "@/app/components/ThemeProvider";
 import { useAuth } from "@/app/components/AuthProvider";
 import {
@@ -91,7 +92,7 @@ const PRODUCTOGRAPHY_SEED_TESTIMONIALS: Testimonial[] = [
     name: "Ritika P****",
     city: "Ahmedabad",
     message:
-      "I run a D2C food brand. Festive banner ready in 30 seconds. No more dependency on a designer.",
+      "I run a D2C food brand. Festive banner ready in 60 seconds. No more dependency on a designer.",
     rating: 5,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1).toISOString(),
     source: "in-app",
@@ -101,7 +102,7 @@ const PRODUCTOGRAPHY_SEED_TESTIMONIALS: Testimonial[] = [
     name: "Arjun S****",
     city: "Mumbai",
     message:
-      "A watch shoot used to cost ₹8k at the studio. Got 10 angles here for 200 credits. Quality is at the same level.",
+      "A watch shoot used to cost ₹8k at the studio. Got 10 angles here for 100 credits. Quality is at the same level.",
     rating: 4,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
     source: "whatsapp",
@@ -999,24 +1000,38 @@ export default function ProductographyPage() {
       category: "productography",
     };
 
-    const { error: dbError } = await supabase.from("generations").insert([dbRow]);
-    if (dbError) throw new Error(`Database record failed: ${dbError.message}`);
+    // Funnel: per-item generation started.
+    const generationStartedAt = Date.now();
+    track({
+      name: "generation_started",
+      agent: "productography",
+      credits: requiredCredits,
+    });
 
-    if (!WEBHOOK_URL_IS_VALID) {
-      throw new Error(
-        "Productography webhook URL is not configured. Set NEXT_PUBLIC_PRODUCTOGRAPHY_WEBHOOK_URL in your production environment (Vercel/host dashboard) and redeploy. Got: \"" +
-          WEBHOOK_URL +
-          "\"",
-      );
+    // Both the row insert AND the n8n forward happen inside the
+    // server route, so the browser no longer touches the n8n
+    // webhook URL directly (which closed the public exploit).
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) {
+      track({
+        name: "generation_failed",
+        agent: "productography",
+        stage: "deduct",
+        reason: "no_session",
+      });
+      throw new Error("Session expired. Please sign in again.");
     }
 
-    const response = await fetch(WEBHOOK_URL, {
+    const response = await fetch("/api/productography/generate", {
       method: "POST",
-      mode: "cors",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
       body: JSON.stringify({
         generation_id: generationId,
-        user_id: userId,
+        // user_id deliberately omitted — server stamps it from JWT.
         agent_type: "productography",
         product_image_url: item.url,
         design_url: item.url,
@@ -1050,9 +1065,21 @@ export default function ProductographyPage() {
     });
 
     const text = await response.text();
-    if (!response.ok) throw new Error(`n8n error ${response.status}: ${text}`);
+    if (!response.ok) {
+      track({
+        name: "generation_failed",
+        agent: "productography",
+        stage: "n8n",
+        reason: `status_${response.status}`,
+      });
+      throw new Error(`Server error ${response.status}: ${text}`);
+    }
     const data = text ? JSON.parse(text) : {};
-    const immediateImage = data?.image_url || data?.output_image_url || data?.image || data?.url;
+    // n8n's reply is nested inside webhook_response now that
+    // the request flows through our adapter route.
+    const inner = data?.webhook_response ?? data;
+    const immediateImage =
+      inner?.image_url || inner?.output_image_url || inner?.image || inner?.url;
     const rawFinalImage = immediateImage || (await pollGenerationResult(generationId));
 
     // Apply Canvas logo overlay (company top-right + AF bottom-right for free)
@@ -1063,6 +1090,13 @@ export default function ProductographyPage() {
           generationId,
         })
       : rawFinalImage;
+
+    track({
+      name: "generation_completed",
+      agent: "productography",
+      generation_id: generationId,
+      duration_ms: Date.now() - generationStartedAt,
+    });
 
     setItems((prev) =>
       prev.map((it) => (it.id === item.id ? { ...it, resultUrl: finalImage || "", status: "done" } : it)),
@@ -1083,6 +1117,11 @@ export default function ProductographyPage() {
     const availableCredits = Number(userCredits ?? profile?.credits ?? 0);
     const allowed = await canGenerate(authUser.id, totalCreditsNeeded);
     if (!allowed && availableCredits < totalCreditsNeeded) {
+      track({
+        name: "insufficient_credits",
+        agent: "productography",
+        required: totalCreditsNeeded,
+      });
       alert(`Not enough credits. Required: ${totalCreditsNeeded}, Available: ${availableCredits}`);
       return;
     }
@@ -1250,7 +1289,7 @@ export default function ProductographyPage() {
               <span className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
                 Mobile photo → Amazon-ready hero shot.
               </span>{" "}
-              <span className={muted}>In 30 seconds.</span>
+              <span className={muted}>In 60 seconds.</span>
             </p>
 
             <p className={`mt-4 max-w-lg text-justify text-sm leading-6 hyphens-auto lg:text-base ${muted}`}>

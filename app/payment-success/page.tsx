@@ -3,6 +3,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { reportAdsConversion, track } from "@/lib/analytics";
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
@@ -11,29 +12,38 @@ export default function PaymentSuccessPage() {
     const searchParams = new URLSearchParams(window.location.search);
 
     const amount = Number(searchParams.get("amount")) || 1999;
+    const planName = searchParams.get("plan") ?? "Unknown";
+    const transactionId =
+      searchParams.get("payment_id") ?? `AF-${Date.now()}`;
 
-    // Meta Purchase Event
-    if (typeof window !== "undefined" && (window as any).fbq) {
-      (window as any).fbq("track", "Purchase");
-    }
-
-// Google Ads Purchase Conversion
-if (typeof window !== "undefined") {
-  setTimeout(() => {
-    (window as any).gtag?.("event", "conversion", {
-      send_to: "AW-18170895451/hLf_CMDA7q8cENu4x9hD",
+    // GA4 + Meta Purchase event in one call.
+    track({
+      name: "purchase",
+      transaction_id: transactionId,
       value: amount,
+      plan: planName,
       currency: "INR",
-      transaction_id: `AF-${Date.now()}`,
     });
-  }, 1500);
-}
+
+    // Google Ads conversion — fired slightly later so the gtag
+    // cookie is fully set before we ship the conversion ping.
+    const adsTimer = window.setTimeout(() => {
+      reportAdsConversion({
+        send_to: "AW-18170895451/hLf_CMDA7q8cENu4x9hD",
+        value: amount,
+        currency: "INR",
+        transaction_id: transactionId,
+      });
+    }, 1500);
 
     const timer = setTimeout(() => {
       router.push("/");
     }, 3000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(adsTimer);
+    };
   }, [router]);
 
   return (

@@ -2,16 +2,12 @@
 
 import Link from "next/link";
 import {
-  BadgeCheck,
-  Building2,
   Camera,
   CheckCircle2,
   ChevronRight,
   Gem,
   Heart,
-  Mail,
   MapPin,
-  MessageCircle,
   Package,
   Quote,
   Shield,
@@ -22,13 +18,6 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-import {
-  FaFacebookF,
-  FaInstagram,
-  FaLinkedinIn,
-  FaXTwitter,
-  FaYoutube,
-} from "react-icons/fa6";
 
 export default function AboutPage() {
   return (
@@ -248,14 +237,14 @@ export default function AboutPage() {
               </p>
               <p className="mt-3 text-base leading-7 text-black/75 dark:text-white/80">
                 One day,{" "}
-                <span className="font-black text-black dark:text-white">Bhavin</span> — a textile
+                <span className="font-black text-black dark:text-white">Mr. Bhavin</span> — a textile
                 industry professional we knew through family — shared a frustration that stayed in
                 our mind.
               </p>
               <p className="mt-3 text-base leading-7 text-black/75 dark:text-white/80">
                 A client was constantly asking for{" "}
                 <span className="font-black text-black dark:text-white">
-                  saree mockups and fresh catalogue visuals
+                  shirt mockups and fresh catalogue visuals
                 </span>
                 . But internally, the process had become painful. Designers with strong creative
                 skills were spending hours inside Photoshop just creating mockups manually.
@@ -295,7 +284,7 @@ export default function AboutPage() {
                   without stitching, without shoots, without depending on so many people."
                 </p>
                 <p className="mt-3 text-xs font-black uppercase tracking-wider text-fuchsia-600">
-                  — Bhavin, textile industry
+                  — Mr. Bhavin, textile industry
                 </p>
               </div>
 
@@ -651,133 +640,6 @@ export default function AboutPage() {
         </section>
 
         {/* ===================================================
-            WHAT WE BUILD
-            =================================================== */}
-        <section className="mt-16">
-          <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-600">
-            What we build
-          </p>
-          <h2 className="mt-2 text-2xl font-black sm:text-3xl">Three AI agents, one platform</h2>
-
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            {[
-              {
-                Icon: ShoppingBag,
-                title: "TextilePrints to Mockup AI",
-                desc: "Saree, kurti, kurta, lehenga, kidswear and home textile mockups in 30 seconds.",
-                href: "/textileprints-to-mockup",
-                grad: "from-cyan-400 to-blue-500",
-              },
-              {
-                Icon: Gem,
-                title: "Jewellery AI Studio",
-                desc: "Bridal sets, diamond rings, necklaces, earrings — editorial-grade in 30 seconds.",
-                href: "/jewellery-ai",
-                grad: "from-amber-400 to-rose-500",
-              },
-              {
-                Icon: Package,
-                title: "Productography AI",
-                desc: "Skincare, perfume, watches, gadgets, food — Amazon-ready hero shots in 30 seconds.",
-                href: "/productography-ai",
-                grad: "from-violet-500 to-fuchsia-500",
-              },
-            ].map((a) => (
-              <Link
-                key={a.title}
-                href={a.href}
-                className="group relative rounded-2xl border border-black/10 bg-white/80 p-5 transition hover:-translate-y-1 hover:border-cyan-300 hover:shadow-xl dark:border-white/10 dark:bg-white/[0.05]"
-              >
-                <div
-                  className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${a.grad} text-white shadow-md`}
-                >
-                  <a.Icon className="h-5 w-5" />
-                </div>
-                <h3 className="mt-4 text-base font-black leading-snug">{a.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-black/60 dark:text-white/65">{a.desc}</p>
-                <p className="mt-4 inline-flex items-center gap-1 text-xs font-black text-cyan-600 dark:text-cyan-300">
-                  Open agent <ChevronRight className="h-3 w-3" />
-                </p>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* ===================================================
-            FOUNDER STORY
-            =================================================== */}
-        <section className="mt-16">
-          <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-600">
-            The mind behind
-          </p>
-          <h2 className="mt-2 text-2xl font-black sm:text-3xl">Founding story</h2>
-
-          <div className="mt-6 rounded-[2rem] border border-cyan-200/60 bg-gradient-to-br from-cyan-50/60 via-white to-blue-50/40 p-6 shadow-xl dark:border-cyan-400/20 dark:bg-gradient-to-br dark:from-cyan-500/10 dark:via-white/[0.04] dark:to-blue-500/10 sm:p-8">
-            <div className="grid gap-6 md:grid-cols-[1fr_2fr] md:items-start">
-              {/* Avatar / brand mark */}
-              <div className="mx-auto md:mx-0">
-                <div className="relative">
-                  <div className="absolute -inset-2 rounded-3xl bg-gradient-to-br from-cyan-400/30 to-blue-600/30 blur-xl" />
-                  <div className="relative flex h-32 w-32 items-center justify-center overflow-hidden rounded-[1.75rem] border-4 border-white bg-white shadow-2xl shadow-cyan-500/30 dark:border-[#0b1220]">
-                    <img
-                      src="/af-logo.png"
-                      alt="AgentForge AI founding team"
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                </div>
-                <p className="mt-4 text-center text-sm font-black md:text-left">
-                  The AgentForge Team
-                </p>
-                <p className="text-center text-xs text-black/55 dark:text-white/55 md:text-left">
-                  Founders · Engineers · Designers
-                </p>
-              </div>
-
-              {/* Story */}
-              <div className="space-y-4 text-sm leading-6 text-black/75 dark:text-white/75 sm:text-base sm:leading-7">
-                <p>
-                  AgentForge was started by a small team obsessed with one question: why is
-                  premium product photography priced like a luxury when Indian SMBs need it like
-                  oxygen?
-                </p>
-                <p>
-                  The founders come from a mix of{" "}
-                  <span className="font-black text-black dark:text-white">
-                    branding, ecommerce, manufacturing and AI engineering
-                  </span>{" "}
-                  backgrounds — having shipped catalogues, designed for Indian wholesale, and
-                  watched the same friction repeat across saree mandis, jewellery showrooms and
-                  D2C ad shoots.
-                </p>
-                <p>
-                  We are not a generic AI wrapper. Every output style, every overlay rule, every
-                  category in AgentForge was designed by talking to actual Surat manufacturers,
-                  Jaipur kurti brands, Mumbai jewellers and Bengaluru D2C founders. The result is a
-                  platform that feels like it was built for your business — because it was.
-                </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {[
-                    "Indian fashion specialists",
-                    "AI engineering team",
-                    "Ex-brand operators",
-                    "Customer-led roadmap",
-                  ].map((t) => (
-                    <span
-                      key={t}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-cyan-300/60 bg-white/80 px-3 py-1 text-[11px] font-black text-cyan-700 backdrop-blur dark:border-cyan-400/30 dark:bg-white/10 dark:text-cyan-200"
-                    >
-                      <Sparkles className="h-3 w-3" />
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ===================================================
             VALUES
             =================================================== */}
         <section className="mt-16">
@@ -861,99 +723,6 @@ export default function AboutPage() {
         </section>
 
         {/* ===================================================
-            CONTACT
-            =================================================== */}
-        <section className="mt-16">
-          <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-600">
-            Get in touch
-          </p>
-          <h2 className="mt-2 text-2xl font-black sm:text-3xl">Contact AgentForge</h2>
-
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            {/* Email */}
-            <a
-              href="mailto:info@aiagentforge.in"
-              className="group flex items-start gap-3 rounded-2xl border border-black/10 bg-white/80 p-5 backdrop-blur transition hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-lg dark:border-white/10 dark:bg-white/[0.05]"
-            >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-md">
-                <Mail className="h-5 w-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-600">
-                  Email
-                </p>
-                <p className="mt-1 truncate text-sm font-black group-hover:text-cyan-600 dark:group-hover:text-cyan-300">
-                  info@aiagentforge.in
-                </p>
-                <p className="mt-1 text-xs text-black/55 dark:text-white/55">
-                  Sales, support, partnership
-                </p>
-              </div>
-            </a>
-
-            {/* Operating region */}
-            <div className="flex items-start gap-3 rounded-2xl border border-black/10 bg-white/80 p-5 backdrop-blur dark:border-white/10 dark:bg-white/[0.05]">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 text-white shadow-md">
-                <Building2 className="h-5 w-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-600">
-                  Based in
-                </p>
-                <p className="mt-1 text-sm font-black">India · Remote-first</p>
-                <p className="mt-1 text-xs text-black/55 dark:text-white/55">
-                  Serving businesses across India
-                </p>
-              </div>
-            </div>
-
-            {/* Support */}
-            <Link
-              href="/support"
-              className="group flex items-start gap-3 rounded-2xl border border-black/10 bg-white/80 p-5 backdrop-blur transition hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-lg dark:border-white/10 dark:bg-white/[0.05]"
-            >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-md">
-                <BadgeCheck className="h-5 w-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-600">
-                  Support
-                </p>
-                <p className="mt-1 text-sm font-black group-hover:text-cyan-600 dark:group-hover:text-cyan-300">
-                  Help & Tutorials
-                </p>
-                <p className="mt-1 text-xs text-black/55 dark:text-white/55">
-                  FAQ + step-by-step guides
-                </p>
-              </div>
-            </Link>
-          </div>
-
-          {/* Socials */}
-          <div className="mt-6 flex flex-wrap items-center gap-2">
-            <p className="mr-1 text-xs font-bold text-black/55 dark:text-white/55">Follow:</p>
-            {[
-              { Icon: FaInstagram, href: "https://www.instagram.com/agentforgeindia/", label: "Instagram", color: "hover:text-pink-500" },
-              { Icon: FaYoutube, href: "https://www.youtube.com/@agentforgeindia", label: "YouTube", color: "hover:text-rose-500" },
-              { Icon: FaLinkedinIn, href: "https://www.linkedin.com/in/agentforgeindia/", label: "LinkedIn", color: "hover:text-[#0A66C2]" },
-              { Icon: FaFacebookF, href: "https://www.facebook.com/Agentforgeindia", label: "Facebook", color: "hover:text-[#1877F2]" },
-              { Icon: FaXTwitter, href: "https://x.com/Agentforgeindia", label: "X (Twitter)", color: "hover:text-black dark:hover:text-white" },
-            ].map((s) => (
-              <a
-                key={s.label}
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={s.label}
-                className={`flex h-9 w-9 items-center justify-center rounded-xl border border-black/10 bg-white text-black/70 transition hover:scale-110 hover:shadow-md dark:border-white/10 dark:bg-white/[0.05] dark:text-white/70 ${s.color}`}
-              >
-                <s.Icon className="h-4 w-4" />
-              </a>
-            ))}
-          </div>
-        </section>
-
-        {/* ===================================================
             LEGAL & TRUST LINKS
             =================================================== */}
         <section className="mt-16">
@@ -983,31 +752,6 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ===================================================
-            FINAL CTA
-            =================================================== */}
-        <section className="mt-16 mb-8">
-          <div className="relative overflow-hidden rounded-[2rem] border border-cyan-300/40 bg-gradient-to-r from-cyan-400/15 via-blue-500/15 to-purple-500/15 p-8 text-center shadow-2xl backdrop-blur-xl">
-            <h2 className="text-2xl font-black sm:text-3xl">Start with 100 free credits</h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-black/65 dark:text-white/65 sm:text-base">
-              No card required. Sign up and try AgentForge AI on your own products in 30 seconds.
-            </p>
-            <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link
-                href="/signup"
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-7 py-3.5 text-sm font-black text-white shadow-xl shadow-cyan-500/30 transition hover:scale-105"
-              >
-                ✨ Sign Up Free
-              </Link>
-              <Link
-                href="/pricing"
-                className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-7 py-3.5 text-sm font-bold text-black transition hover:scale-105 dark:border-white/15 dark:bg-white/10 dark:text-white"
-              >
-                View Pricing →
-              </Link>
-            </div>
-          </div>
-        </section>
       </main>
     </>
   );

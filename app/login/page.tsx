@@ -244,7 +244,7 @@ export default function LoginPage() {
                 <p className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-base font-black text-transparent sm:text-lg">
                   Free
                 </p>
-                <p className={`text-[9px] font-bold uppercase tracking-wider ${muted}`}>200 credits to start</p>
+                <p className={`text-[9px] font-bold uppercase tracking-wider ${muted}`}>100 credits to start</p>
               </div>
             </div>
           </div>

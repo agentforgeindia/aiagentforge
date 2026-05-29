@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 import { useRouter, usePathname } from "next/navigation";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
+import { identify, track } from "@/lib/analytics";
 
 interface AuthContextType {
   user: User | null;
@@ -36,6 +37,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!error && data) {
         setProfile(data);
         setCredits(data.credits || 0);
+
+        // Attach durable user metadata to all subsequent analytics
+        // events (GA4 user_id, Clarity identify). Safe to call on
+        // every profile refresh — trackers de-dup internally.
+        identify({
+          userId: userId,
+          email: data.email ?? null,
+          plan: data.plan ?? "free",
+        });
 
         // Redirect if phone number missing
         if (!data.phone && pathname !== "/complete-profile") {
@@ -75,6 +85,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session) {
           setUser(session.user);
           fetchProfile(session.user.id);
+          // Track auth funnel events at the source of truth so we
+          // capture both email + OAuth flows without duplicating
+          // call sites in every form.
+          if (event === "SIGNED_IN") {
+            track({
+              name: "login",
+              method:
+                session.user.app_metadata?.provider === "email"
+                  ? "email"
+                  : session.user.app_metadata?.provider ?? "unknown",
+            });
+          }
         } else {
           setUser(null);
           setProfile(null);
