@@ -1538,25 +1538,25 @@ const WEBHOOK_URL =
 
     if (resolvedShootStyle === "Minimal Modern") {
       styleDirectives.push(
-        "ROYAL_MODEL: Use a royal-styled model in luxurious traditional or modern royal attire (anarkali, sharara, evening gown with regal accents). Clean minimal composition.",
+        "YOUNG_MODEL_MINIMAL: ALWAYS include a YOUNG (20–28 yr) Indian female model. Match model archetype to jewellery type — bridal/heavy pieces → young bride styling; daily-wear pendants/light necklaces → young casual woman; statement → young fusion-styled woman. Clean minimal Scandinavian-influenced composition, soft neutral palette (cream, beige, sage), soft diffused window light, uncluttered backdrop. Modern D2C feel.",
       );
     }
 
     if (resolvedShootStyle === "Luxury Studio") {
       styleDirectives.push(
-        "INDIAN_STUDIO_SHOOT: Indian model inside a premium jewellery studio setup with professional lights, clean backdrop, and styled focus on the uploaded jewellery.",
+        "YOUNG_MODEL_STUDIO: ALWAYS include a YOUNG (20–28 yr) Indian female model. Match model archetype to jewellery type — bridal pieces → young bride; daily-wear → young everyday woman; festive → young festive-styled woman. Set inside a premium jewellery studio with professional softbox + key + rim lights, dark velvet or gradient grey backdrop. Jewellery is hero, lit for metal reflections and stone brilliance.",
       );
     }
 
     if (resolvedShootStyle === "White Catalogue") {
       styleDirectives.push(
-        "YOUNG_MODEL_WHITE_BG: Young model on a pure white background. Marketplace-clean composition — Amazon / Meesho catalogue safe.",
+        "YOUNG_MODEL_WHITE_BG: ALWAYS include a YOUNG (20–28 yr) Indian female model on a PURE WHITE seamless background. Match model archetype to jewellery type — bridal pieces → young bride; daily-wear → young casual woman; statement → young fusion-styled woman. Even shadowless soft ecommerce lighting (Amazon / Meesho catalogue safe). Clean natural makeup, neutral plain outfit. Jewellery clearly visible and centered.",
       );
     }
 
     if (resolvedShootStyle === "Bridal Editorial") {
       styleDirectives.push(
-        "INDIAN_BRIDE_EDITORIAL: Indian bride model in editorial bridal styling combined with whatever pose / accessory the user selected.",
+        "YOUNG_BRIDE_EDITORIAL: ALWAYS include a YOUNG (20–28 yr) Indian bride model in editorial bridal styling. Match wedding attire to jewellery type — heavy bridal sets → full lehenga + dupatta drape; lighter bridal pieces → engagement-style saree or anarkali. Rich warm gold tones, ornate silk fabric backdrop, candlelight + softbox lighting mix. Vogue Bridal magazine wedding-rich feel. Combine with whatever pose and accessory the user selected.",
       );
     }
 

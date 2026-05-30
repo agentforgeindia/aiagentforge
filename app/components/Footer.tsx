@@ -37,6 +37,7 @@ const COMPANY_LINKS = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
   { label: "News & Blog", href: "/news" },
+  { label: "Tutorials", href: "/tutorials" },
   { label: "How It Works", href: "/how-it-works" },
   { label: "FAQ", href: "/faq" },
   { label: "Supported Industries", href: "/supported-industries" },

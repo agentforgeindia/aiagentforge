@@ -30,6 +30,12 @@ export type Testimonial = {
 
 type Props = {
   agentType: AgentType;
+  /**
+   * @deprecated — no-op since v2. The slider now uses Tailwind
+   * `dark:` variants and auto-respects the page theme via the
+   * `dark` class on <html>. Kept in the signature so existing
+   * callers (textile + productography) keep compiling.
+   */
   darkMode?: boolean;
   /** Default seed entries shown when DB is empty / not yet wired. */
   seed: Testimonial[];
@@ -74,7 +80,8 @@ function relativeTime(iso: string): string {
 
 export default function TestimonialsSlider({
   agentType,
-  darkMode = false,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  darkMode: _legacyDarkMode = false,
   seed,
   heading = "What early users are saying",
   subtitle = "Real messages from our first users — names masked for privacy.",
@@ -253,14 +260,16 @@ export default function TestimonialsSlider({
   };
 
   /* ───────────── Render ───────────── */
+  // All theme styling lives in Tailwind `dark:` variants now —
+  // no JS branch needed. This is why removing the darkMode prop
+  // dependency was the correct fix: the parent page's <html
+  // class="dark"> automatically toggles everything below.
 
-  const card = darkMode
-    ? "border-white/10 bg-white/[0.05] shadow-black/40"
-    : "border-black/10 bg-white shadow-cyan-500/10";
-  const muted = darkMode ? "text-white/55" : "text-black/55";
-  const input = darkMode
-    ? "border-white/10 bg-black/25 text-white placeholder:text-white/35"
-    : "border-black/10 bg-white text-black placeholder:text-black/35";
+  const card =
+    "border-black/10 bg-white text-black shadow-cyan-500/10 dark:border-white/10 dark:bg-white/[0.05] dark:text-white dark:shadow-black/40";
+  const muted = "text-black/55 dark:text-white/55";
+  const input =
+    "border-black/10 bg-white text-black placeholder:text-black/35 dark:border-white/10 dark:bg-black/25 dark:text-white dark:placeholder:text-white/35";
 
   return (
     <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-5 sm:pb-16">
@@ -296,11 +305,7 @@ export default function TestimonialsSlider({
             type="button"
             aria-label="Previous"
             onClick={() => step(-1)}
-            className={`flex h-10 w-10 items-center justify-center rounded-full border transition hover:scale-105 ${
-              darkMode
-                ? "border-white/15 bg-white/[0.06] text-white"
-                : "border-black/10 bg-white text-black shadow-sm"
-            }`}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-black shadow-sm transition hover:scale-105 dark:border-white/15 dark:bg-white/[0.06] dark:text-white dark:shadow-none"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -308,11 +313,7 @@ export default function TestimonialsSlider({
             type="button"
             aria-label="Next"
             onClick={() => step(1)}
-            className={`flex h-10 w-10 items-center justify-center rounded-full border transition hover:scale-105 ${
-              darkMode
-                ? "border-white/15 bg-white/[0.06] text-white"
-                : "border-black/10 bg-white text-black shadow-sm"
-            }`}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-black shadow-sm transition hover:scale-105 dark:border-white/15 dark:bg-white/[0.06] dark:text-white dark:shadow-none"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
@@ -362,11 +363,7 @@ export default function TestimonialsSlider({
 
                 {/* Body — chat bubble */}
                 <div className="relative flex flex-1 flex-col gap-3 p-4">
-                  <div
-                    className={`relative inline-block rounded-2xl rounded-tl-md px-4 py-3 shadow-sm ${
-                      darkMode ? "bg-white/[0.06]" : "bg-emerald-50/60"
-                    }`}
-                  >
+                  <div className="relative inline-block rounded-2xl rounded-tl-md bg-emerald-50/60 px-4 py-3 text-black shadow-sm dark:bg-white/[0.06] dark:text-white">
                     <p className="text-sm leading-6 sm:text-[15px]">{t.message}</p>
                     <span className="mt-1.5 flex items-center justify-end gap-1 text-[10px] font-bold text-emerald-600/70 dark:text-emerald-300/60">
                       {relativeTime(t.createdAt)}
@@ -396,9 +393,7 @@ export default function TestimonialsSlider({
                           className={`h-3.5 w-3.5 ${
                             n <= t.rating
                               ? "fill-amber-400 text-amber-400"
-                              : darkMode
-                              ? "text-white/15"
-                              : "text-black/15"
+                              : "text-black/15 dark:text-white/15"
                           }`}
                         />
                       ))}
@@ -425,9 +420,7 @@ export default function TestimonialsSlider({
             className={`h-1.5 rounded-full transition-all ${
               i === active
                 ? "w-6 bg-cyan-500"
-                : darkMode
-                ? "w-1.5 bg-white/30"
-                : "w-1.5 bg-black/20"
+                : "w-1.5 bg-black/20 dark:bg-white/30"
             }`}
           />
         ))}
@@ -436,22 +429,14 @@ export default function TestimonialsSlider({
       {/* Submit modal */}
       {showForm && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 px-4 backdrop-blur-md">
-          <div
-            className={`relative w-full max-w-lg overflow-hidden rounded-[1.75rem] border p-6 shadow-2xl backdrop-blur-xl sm:p-7 ${
-              darkMode
-                ? "border-white/10 bg-[#0b1220] text-white"
-                : "border-black/10 bg-white text-black"
-            }`}
-          >
+          <div className="relative w-full max-w-lg overflow-hidden rounded-[1.75rem] border border-black/10 bg-white p-6 text-black shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-[#0b1220] dark:text-white sm:p-7">
             <button
               type="button"
               onClick={() => {
                 setShowForm(false);
                 setSubmitMessage(null);
               }}
-              className={`absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full transition ${
-                darkMode ? "bg-white/10 text-white hover:bg-white/20" : "bg-black/5 text-black hover:bg-black/10"
-              }`}
+              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/5 text-black transition hover:bg-black/10 dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
               aria-label="Close"
             >
               <XIcon className="h-4 w-4" />
@@ -521,9 +506,7 @@ export default function TestimonialsSlider({
                         className={`h-6 w-6 ${
                           n <= formRating
                             ? "fill-amber-400 text-amber-400"
-                            : darkMode
-                            ? "text-white/20"
-                            : "text-black/20"
+                            : "text-black/20 dark:text-white/20"
                         }`}
                       />
                     </button>
@@ -531,11 +514,8 @@ export default function TestimonialsSlider({
                 </div>
               </div>
 
-              <label
-                className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-3 transition hover:border-cyan-400 ${
-                  darkMode ? "border-white/10 bg-white/[0.04]" : "border-black/10 bg-white/70"
-                }`}
-              >
+              <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-black/10 bg-white/70 p-3 transition hover:border-cyan-400 dark:border-white/10 dark:bg-white/[0.04]">
+
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white">
                   {formImagePreview ? <Camera className="h-5 w-5" /> : <ImageIcon className="h-5 w-5" />}
                 </span>

@@ -551,114 +551,56 @@ export default function SupportPage() {
           </div>
         </section>
 
-        {/* ───────── Tutorials ───────── */}
-        <section className="mx-auto max-w-7xl px-4 py-8 sm:px-5 sm:py-12">
-          <div className={`rounded-[2rem] border p-6 shadow-2xl backdrop-blur-xl md:p-8 ${card}`}>
-            <div className="mx-auto mb-6 max-w-2xl text-center">
-              <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-600">
-                Watch &amp; Learn
-              </p>
-              <h3 className="mt-2 text-2xl font-black sm:text-3xl md:text-4xl">
-                <span className="bg-gradient-to-r from-cyan-400 via-cyan-500 to-blue-600 bg-clip-text text-transparent">
-                  Tutorials in 3 short videos
-                </span>
-              </h3>
-              <p className={`mt-2 text-sm leading-6 ${muted}`}>
-                Three simple walkthroughs — upload, generate, and add an article code.
-              </p>
-            </div>
+        {/* ───────── Tutorials — moved to /tutorials ─────────
+            The full library now lives on /tutorials (auto-synced
+            from YouTube, filter by agent, per-video schema). We
+            keep this compact CTA here so users on /support still
+            discover the learning content. */}
+        <section className="mx-auto max-w-5xl px-4 py-8 sm:px-5 sm:py-12">
+          <div
+            className={`relative overflow-hidden rounded-[2rem] border-2 border-cyan-400/40 p-7 shadow-2xl shadow-cyan-500/20 backdrop-blur-xl md:p-10 ${card}`}
+          >
+            {/* Decorative glow */}
+            <div className="pointer-events-none absolute -left-16 -top-16 h-48 w-48 rounded-full bg-cyan-400/25 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-16 -right-16 h-48 w-48 rounded-full bg-blue-500/25 blur-3xl" />
 
-            {/* Featured video — highlighted at top */}
-            {tutorials[0] && (
-              <div className="relative mb-5 overflow-hidden rounded-[1.75rem] border-2 border-cyan-400 shadow-2xl shadow-cyan-500/25">
-                {/* Glow halo */}
-                <div className="pointer-events-none absolute -inset-1 -z-10 rounded-[1.75rem] bg-gradient-to-r from-cyan-400/40 via-blue-500/40 to-purple-500/40 blur-2xl" />
-
-                <div className="grid items-stretch lg:grid-cols-[1.6fr_1fr]">
-                  {/* Big video */}
-                  <div className="relative aspect-video w-full overflow-hidden bg-black">
-                    <iframe
-                      src={`https://www.youtube.com/embed/${tutorials[0].youtubeId}?rel=0&modestbranding=1`}
-                      title={tutorials[0].title}
-                      className="h-full w-full"
-                      loading="lazy"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                    {/* Featured ribbon */}
-                    <span className="absolute left-3 top-3 inline-flex animate-pulse items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-white shadow-lg shadow-amber-500/40">
-                      <Sparkles className="h-3 w-3" />
-                      Start here
-                    </span>
-                  </div>
-
-                  {/* Side meta */}
-                  <div className={`flex flex-col justify-center gap-4 p-6 sm:p-8 ${
-                    darkMode ? "bg-gradient-to-br from-cyan-500/10 via-white/[0.04] to-blue-500/10" : "bg-gradient-to-br from-cyan-50 via-white to-blue-50"
-                  }`}>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white shadow-md shadow-cyan-500/30">
-                        <PlayCircle className="h-3 w-3" />
-                        Featured · Video 1
-                      </span>
-                    </div>
-                    <h4 className="text-xl font-black leading-tight sm:text-2xl md:text-3xl">
-                      <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">
-                        {tutorials[0].title}
-                      </span>
-                    </h4>
-                    <p className={`text-sm leading-6 sm:text-[15px] sm:leading-7 ${muted}`}>
-                      {tutorials[0].desc}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-2 pt-1">
-                      <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${
-                        darkMode ? "border-white/10 bg-white/[0.04] text-white/70" : "border-black/10 bg-white text-black/65"
-                      }`}>
-                        <BadgeCheck className="h-3 w-3 text-cyan-500" />
-                        Recommended first
-                      </span>
-                      <a
-                        href={`https://youtu.be/${tutorials[0].youtubeId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${
-                          darkMode ? "bg-white/10 text-white/70" : "bg-black/[0.04] text-black/65"
-                        }`}
-                      >
-                        <PlayCircle className="h-3 w-3" />
-                        Watch on YouTube
-                      </a>
-                    </div>
-                  </div>
-                </div>
+            <div className="relative flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="max-w-xl">
+                <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-600">
+                  Watch &amp; Learn
+                </p>
+                <h3 className="mt-2 text-2xl font-black leading-tight sm:text-3xl">
+                  <span className="bg-gradient-to-r from-cyan-400 via-cyan-500 to-blue-600 bg-clip-text text-transparent">
+                    Looking for a walkthrough?
+                  </span>
+                </h3>
+                <p className={`mt-3 text-sm leading-7 sm:text-base ${muted}`}>
+                  Every AgentForge tutorial — for textile, jewellery and
+                  productography — lives in our auto-updated tutorial library.
+                  Filter by the agent you're using and watch what you need.
+                </p>
               </div>
-            )}
 
-            {/* The other two videos — 2-column grid below */}
-            <div className="grid gap-5 md:grid-cols-2">
-              {tutorials.slice(1).map((item, index) => (
-                <div key={item.title} className={`group overflow-hidden rounded-3xl border transition hover:-translate-y-1 ${softCard}`}>
-                  <div className="relative aspect-video w-full overflow-hidden bg-black">
-                    <iframe
-                      src={`https://www.youtube.com/embed/${item.youtubeId}?rel=0&modestbranding=1`}
-                      title={item.title}
-                      className="h-full w-full"
-                      loading="lazy"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  </div>
-
-                  <div className="p-5">
-                    <p className="inline-flex items-center gap-1.5 rounded-full bg-cyan-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-cyan-700 dark:bg-white/10 dark:text-cyan-200">
-                      <PlayCircle className="h-3 w-3" />
-                      Video {index + 2}
-                    </p>
-                    <h4 className="mt-2 text-lg font-black">{item.title}</h4>
-                    <p className={`mt-2 text-sm leading-6 ${muted}`}>{item.desc}</p>
-                  </div>
-                </div>
-              ))}
+              <div className="flex flex-col items-stretch gap-2 md:items-end">
+                <Link
+                  href="/tutorials"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-6 py-3 text-sm font-black text-white shadow-lg shadow-cyan-500/30 transition hover:scale-105"
+                >
+                  📺 Browse all tutorials →
+                </Link>
+                <a
+                  href="https://www.youtube.com/@agentforgeindia"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`inline-flex items-center justify-center gap-2 rounded-full border px-4 py-2 text-xs font-bold transition hover:border-cyan-400 ${
+                    darkMode
+                      ? "border-white/15 bg-white/[0.04] text-white/70"
+                      : "border-black/10 bg-white text-black/70"
+                  }`}
+                >
+                  Or subscribe on YouTube ↗
+                </a>
+              </div>
             </div>
           </div>
         </section>

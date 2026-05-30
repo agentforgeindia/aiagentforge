@@ -1,7 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import {
+  fetchChannelVideos,
+  groupVideosByAgent,
+  type AgentCategory,
+  type YouTubeVideo,
+} from "@/lib/youtube";
+
 const SITE = "https://www.aiagentforge.in";
+
+// Re-fetch the YouTube RSS feed at most every 15 minutes — keeps
+// /how-it-works automatically up to date as new tutorials ship
+// without any rebuild.
+export const revalidate = 900;
 
 export const metadata: Metadata = {
   title: "How It Works — AgentForge AI Generation Flow",
@@ -97,6 +109,177 @@ const BEHIND = [
   },
 ];
 
+// ────────────────────────────────────────────────────────────
+// TUTORIAL VIDEOS — auto-synced from YouTube
+// ────────────────────────────────────────────────────────────
+// At request time the page pulls the channel's RSS feed via
+// lib/youtube.ts, auto-categorises each video by keywords in
+// its title/description, and renders the result. Cache window
+// is 15 min (revalidate below), so a freshly uploaded video
+// appears on /how-it-works within 15 minutes — NO rebuild,
+// NO manual code edit.
+//
+// Hooks you can use to override the auto behaviour:
+//   • VIDEO_OVERRIDES — force a specific videoId into a chosen
+//     agent category when keyword matching gets it wrong.
+//   • HIDDEN_VIDEO_IDS — drop a videoId from the page entirely
+//     (e.g. brand / marketing videos that don't belong in a
+//     tutorial section).
+//   • STATIC_FALLBACK — list of videos shown when the RSS fetch
+//     fails (offline, blocked, etc.). Keeps the page useful.
+//
+// Channel ID lives in lib/youtube.ts call below. Update it
+// here if you ever migrate channels.
+// ────────────────────────────────────────────────────────────
+
+const CHANNEL_ID = "UCtA6G7quYS8CGnB6YxfGBng"; // Agent Forge India
+const CHANNEL_UPLOADS_PLAYLIST_ID = "UUtA6G7quYS8CGnB6YxfGBng";
+
+// Force a video into a specific category. Add entries when the
+// auto-categoriser misses (e.g. video title doesn't contain any
+// of the agent keywords).
+//   "videoId123": "jewellery",
+const VIDEO_OVERRIDES: Record<string, AgentCategory> = {};
+
+// Videos you don't want shown on /how-it-works at all
+// (e.g. brand / marketing videos that aren't tutorials).
+const HIDDEN_VIDEO_IDS = new Set<string>([
+  "OoiX6d_TPfQ", // "Heavy Workload in Textile Business" — marketing
+  "Vt9WYLcGPuw", // "Photoshoots Without Models" — marketing
+]);
+
+// Per-agent display metadata. Videos themselves are pulled live;
+// these are just the section headers + agent CTAs.
+const AGENT_DISPLAY: Record<
+  Exclude<AgentCategory, "other">,
+  { title: string; emoji: string; description: string; agentHref: string }
+> = {
+  jewellery: {
+    title: "Jewellery AI Studio",
+    emoji: "💎",
+    description:
+      "Bridal sets, daily-wear, kundan, diamond — see how to upload, pick a shoot style and generate.",
+    agentHref: "/jewellery-ai",
+  },
+  textile: {
+    title: "TextilePrints to Mockup AI",
+    emoji: "👕",
+    description:
+      "Saree, kurti, kurta, lehenga, kidswear, home textile — pick the tutorial that matches your product line.",
+    agentHref: "/textileprints-to-mockup",
+  },
+  productography: {
+    title: "Productography AI",
+    emoji: "📸",
+    description:
+      "Product packshots, lifestyle scenes and Amazon-compliant catalogue images — full walkthrough.",
+    agentHref: "/productography-ai",
+  },
+};
+
+// Order in which agent sections render on the page.
+const AGENT_ORDER: Exclude<AgentCategory, "other">[] = [
+  "jewellery",
+  "textile",
+  "productography",
+];
+
+// Type kept for the static fallback array below.
+type AgentTutorialBlock = {
+  slug: string;
+  title: string;
+  emoji: string;
+  description: string;
+  agentHref: string;
+  videos: { id: string; title: string; desc: string }[];
+};
+
+// Last-resort fallback for the rare case where the YouTube
+// fetch fails (timeout, blocked, channel down). Keeps the page
+// useful instead of empty.
+const STATIC_FALLBACK: AgentTutorialBlock[] = [
+  {
+    slug: "jewellery",
+    title: "Jewellery AI Studio",
+    emoji: "💎",
+    description:
+      "Bridal sets, daily-wear, kundan, diamond — see how to upload, pick a shoot style and generate.",
+    agentHref: "/jewellery-ai",
+    videos: [
+      {
+        id: "1qmLLUqhvP8",
+        title: "Jewellery designs → AI model shoots",
+        desc: "Full overview — upload jewellery, pick model + style, get a premium shoot.",
+      },
+      {
+        id: "dVRxlvIiouA",
+        title: "AI earring mockup walkthrough",
+        desc: "Earring design to model-worn ear close-up in 30 seconds.",
+      },
+    ],
+  },
+  {
+    slug: "textile",
+    title: "TextilePrints to Mockup AI",
+    emoji: "👕",
+    description:
+      "Saree, kurti, kurta, lehenga, kidswear, home textile — pick the tutorial that matches your product line.",
+    agentHref: "/textileprints-to-mockup",
+    videos: [
+      {
+        id: "IbLgfPJCzao",
+        title: "Textile prints → AI fashion models",
+        desc: "Main overview — fabric design uploaded, model-worn mockup generated.",
+      },
+      {
+        id: "drcvDWwuQLA",
+        title: "AgentForge textile tutorial (Hindi)",
+        desc: "Step-by-step Hindi walkthrough for Indian textile sellers.",
+      },
+      {
+        id: "5IJFmFgH-z0",
+        title: "Men's shirt mockup tutorial",
+        desc: "Shirt design → professional male model fashion shoot.",
+      },
+      {
+        id: "d1-cqb1Dq20",
+        title: "Kidswear mockup tutorial",
+        desc: "Family-safe kids fashion mockup from a plain design.",
+      },
+      {
+        id: "tIhEO5srqRg",
+        title: "Curtain & home-textile mockup",
+        desc: "Fabric design rendered as a curtain in a real interior scene.",
+      },
+    ],
+  },
+  {
+    slug: "productography",
+    title: "Productography AI",
+    emoji: "📸",
+    description:
+      "Product packshots, lifestyle scenes and Amazon-compliant catalogue images — full walkthrough.",
+    agentHref: "/productography-ai",
+    videos: [
+      {
+        id: "ORKxrasItIM",
+        title: "AI product photography in minutes",
+        desc: "Main overview — phone photo to catalogue-ready hero shot.",
+      },
+      {
+        id: "FQqTZoQ1nZQ",
+        title: "Product → AI model showcase",
+        desc: "Product photo turned into a model lifestyle scene.",
+      },
+      {
+        id: "Oprfu1eLSqg",
+        title: "Product → AI presentation",
+        desc: "Premium AI product mockup for ads and pitch decks.",
+      },
+    ],
+  },
+];
+
 const howToSchema = {
   "@context": "https://schema.org",
   "@type": "HowTo",
@@ -126,7 +309,69 @@ const breadcrumbSchema = {
   ],
 };
 
-export default function HowItWorksPage() {
+// ────────────────────────────────────────────────────────────
+// Render-shape adapter — combines auto-synced YouTube videos
+// with the static fallback so the page always has something
+// to show.
+// ────────────────────────────────────────────────────────────
+function buildTutorialBlocks(
+  videos: YouTubeVideo[],
+): AgentTutorialBlock[] {
+  // Drop the marketing / brand videos we don't want on this page.
+  const visible = videos.filter((v) => !HIDDEN_VIDEO_IDS.has(v.id));
+  const grouped = groupVideosByAgent(visible, VIDEO_OVERRIDES);
+
+  const fallbackMap = new Map(
+    STATIC_FALLBACK.map((b) => [b.slug, b] as const),
+  );
+
+  return AGENT_ORDER.map((slug) => {
+    const meta = AGENT_DISPLAY[slug];
+    const live = grouped[slug];
+
+    // Prefer live videos. If RSS fetch returned nothing for this
+    // agent, fall back to the hardcoded list so the section
+    // never disappears.
+    const liveVideos = live.map((v) => ({
+      id: v.id,
+      title: v.title,
+      desc: shortDescription(v.description),
+    }));
+
+    const fallback = fallbackMap.get(slug);
+    const videosForSection =
+      liveVideos.length > 0
+        ? liveVideos
+        : (fallback?.videos ?? []);
+
+    return {
+      slug,
+      title: meta.title,
+      emoji: meta.emoji,
+      description: meta.description,
+      agentHref: meta.agentHref,
+      videos: videosForSection,
+    };
+  });
+}
+
+/** Trim YouTube descriptions to a tweet-sized hint — first sentence
+ *  or 120 chars, whichever is shorter. */
+function shortDescription(raw: string): string {
+  const cleaned = raw.replace(/\s+/g, " ").trim();
+  if (!cleaned) return "AgentForge tutorial — watch the full walkthrough.";
+  const firstSentence = cleaned.split(/(?<=[.!?])\s+/)[0] ?? cleaned;
+  if (firstSentence.length <= 120) return firstSentence;
+  return firstSentence.slice(0, 117).trimEnd() + "…";
+}
+
+export default async function HowItWorksPage() {
+  // Fetched at build / request boundary; cached via `revalidate`
+  // above so the page refreshes within 15 minutes of any new
+  // video being uploaded to the YouTube channel.
+  const liveVideos = await fetchChannelVideos(CHANNEL_ID);
+  const AGENT_TUTORIALS = buildTutorialBlocks(liveVideos);
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
       <script
@@ -184,6 +429,89 @@ export default function HowItWorksPage() {
               </p>
             </div>
           ))}
+        </div>
+
+        {/* ───────── Tutorials — compact preview ─────────
+            Shows ONE featured video per agent (the latest one).
+            Full library lives at /tutorials with filter chips,
+            VideoObject schema and the complete grid. */}
+        <h2 className="mt-12 mb-2 text-2xl font-black md:text-3xl">
+          Watch the tutorials
+        </h2>
+        <p className="mb-6 text-sm leading-7 text-black/60 dark:text-white/65 md:text-base">
+          A featured walkthrough for each agent. Want the complete library? See{" "}
+          <Link
+            href="/tutorials"
+            className="font-black text-cyan-600 underline"
+          >
+            all AgentForge tutorials →
+          </Link>
+        </p>
+
+        <div className="grid gap-5 md:grid-cols-3">
+          {AGENT_TUTORIALS.map((agent) => {
+            // Compact mode: render only the FIRST (latest) video.
+            // Fall back to the channel playlist if we somehow have
+            // no video for this agent at all.
+            const featured = agent.videos[0];
+            const embedSrc = featured
+              ? `https://www.youtube.com/embed/${featured.id}?rel=0&modestbranding=1`
+              : `https://www.youtube.com/embed/videoseries?list=${CHANNEL_UPLOADS_PLAYLIST_ID}&rel=0&modestbranding=1`;
+            const remaining = Math.max(0, agent.videos.length - 1);
+
+            return (
+              <article
+                key={agent.slug}
+                className="flex flex-col overflow-hidden rounded-[1.7rem] border border-black/10 bg-white/85 shadow-md backdrop-blur dark:border-white/10 dark:bg-white/[0.05]"
+              >
+                <div className="relative aspect-video w-full overflow-hidden bg-black/5 dark:bg-white/[0.04]">
+                  <iframe
+                    src={embedSrc}
+                    title={featured?.title ?? `${agent.title} tutorials`}
+                    loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="absolute inset-0 h-full w-full"
+                  />
+                </div>
+                <div className="flex flex-1 flex-col p-5">
+                  <h3 className="flex items-center gap-2 text-base font-black md:text-lg">
+                    <span aria-hidden="true">{agent.emoji}</span>
+                    {agent.title}
+                  </h3>
+                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-black/65 dark:text-white/65">
+                    {featured?.desc ?? agent.description}
+                  </p>
+                  <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-4">
+                    <Link
+                      href={`/tutorials?agent=${agent.slug}`}
+                      className="text-xs font-black text-cyan-600 hover:underline"
+                    >
+                      {remaining > 0
+                        ? `View ${remaining} more →`
+                        : "View all tutorials →"}
+                    </Link>
+                    <Link
+                      href={agent.agentHref}
+                      className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-3 py-1.5 text-[11px] font-black text-white shadow-sm transition hover:scale-105"
+                    >
+                      Open agent →
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+
+        {/* "View all" pill — second affordance to /tutorials */}
+        <div className="mt-6 text-center">
+          <Link
+            href="/tutorials"
+            className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-5 py-2.5 text-sm font-black text-cyan-700 transition hover:bg-cyan-400/20 dark:text-cyan-200"
+          >
+            📺 Browse the full tutorial library
+          </Link>
         </div>
 
         {/* Behind the scenes */}

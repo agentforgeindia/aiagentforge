@@ -103,6 +103,11 @@ function classify(url: string): {
   if (/\/(faq|how-it-works|supported-industries)$/.test(url)) {
     return { priority: 0.8, changeFrequency: "monthly" };
   }
+  // Tutorials — auto-refreshing video library, eligible for
+  // Google video carousel via VideoObject schema. High value.
+  if (url.endsWith("/tutorials")) {
+    return { priority: 0.9, changeFrequency: "weekly" };
+  }
   // Blog post (individual)
   if (/\/blog\/[^/]+$/.test(url)) {
     return { priority: 0.7, changeFrequency: "monthly" };
