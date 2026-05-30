@@ -9,6 +9,17 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@fontsource/noto-sans": "^5.1.0",
+    "@fontsource/noto-sans-bengali": "^5.1.0",
+    "@fontsource/noto-sans-devanagari": "^5.1.0",
+    "@fontsource/noto-sans-gujarati": "^5.1.0",
+    "@fontsource/noto-sans-gurmukhi": "^5.1.0",
+    "@fontsource/noto-sans-kannada": "^5.1.0",
+    "@fontsource/noto-sans-malayalam": "^5.1.0",
+    "@fontsource/noto-sans-tamil": "^5.1.0",
+    "@fontsource/noto-sans-telugu": "^5.1.0",
+    "@fontsource/noto-nastaliq-urdu": "^5.1.0",
+    "@fontsource/poppins": "^5.1.0",
     "@supabase/supabase-js": "^2.104.1",
     "lucide-react": "^1.14.0",
     "next": "16.2.4",
@@ -16,6 +27,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-icons": "^5.6.0",
+    "sharp": "^0.34.0",
     "tesseract.js": "^7.0.0"
   },
   "devDependencies": {

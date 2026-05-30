@@ -1,0 +1,249 @@
+{
+  "name": "AgentForge — Social Media Ads Designer (FAL gpt-image-1 + composer overlay, single + bulk)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-social-ads",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-social-ads",
+      "name": "Webhook · /generate-social-ads",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [200, 360],
+      "webhookId": "generate-social-ads"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// SOCIAL ADS — Fan out: 1 item per (ad spec × variation index)\n// ============================================================\n// Trusts user_id (JWT-verified server-side) but NOTHING else.\n// Builds a prompt that asks gpt-image-1 to leave text zones\n// EMPTY — the composer route overlays the real text downstream.\n//\n// Picks the FAL endpoint based on whether reference images are\n// provided:\n//   • Has hero / extras → fal-ai/gpt-image-1/edit-image/byok\n//   • Otherwise         → fal-ai/gpt-image-1/text-to-image/byok\n// ============================================================\n\nconst body = $json.body || $json;\n\nif (!body.user_id) throw new Error('Missing user_id — call via /api/social-ads/generate.');\nif (!Array.isArray(body.items) || body.items.length === 0) {\n  throw new Error('Missing items[].');\n}\n\nconst PLATFORM_SIZES = {\n  'instagram-post':     { w: 1080, h: 1080, aspect: '1:1 square',         fal_size: '1024x1024' },\n  'instagram-story':    { w: 1080, h: 1920, aspect: '9:16 vertical',      fal_size: '1024x1536' },\n  'facebook-post':      { w: 1200, h: 630,  aspect: '1.91:1 landscape',   fal_size: '1536x1024' },\n  'linkedin-post':      { w: 1200, h: 627,  aspect: '1.91:1 landscape',   fal_size: '1536x1024' },\n  'youtube-thumbnail':  { w: 1280, h: 720,  aspect: '16:9 landscape',     fal_size: '1536x1024' },\n  'whatsapp-status':    { w: 1080, h: 1920, aspect: '9:16 vertical',      fal_size: '1024x1536' },\n  'newspaper-ad':       { w: 1500, h: 1100, aspect: '1.36:1 landscape',   fal_size: '1536x1024' }\n};\n\nconst CATEGORY_GUIDE = {\n  'doctor':               'Professional medical visual. Blue and white palette. Doctor portrait (white coat + stethoscope) on the right third. Service icons row (checkup, appointment, medicine). Calm clinical background blur. Trust-building, hygienic.',\n  'hospital-clinic':      'Modern hospital visual. Clean blue/teal palette. Building hero or interior reception. Reassuring professional feel.',\n  'restaurant-food':      'Appetizing food visual. Warm orange/red palette. Top-down hero food shot or plated dish photo. Mouth-watering, vibrant.',\n  'real-estate':          'Modern real estate visual. Premium grey/blue palette. House or building hero on a serving tray or skyline. Clean aspirational.',\n  'gift-shop':            'Festive colorful gift shop visual. Confetti, gift box illustrations, festival theme. Bright cheerful palette.',\n  'hotel':                'Luxury hotel visual. Dark warm brown/gold background. Three-photo collage center (room, pool, dining). Premium resort feel.',\n  'jewellery':            'Premium jewellery visual. Dark velvet or jewel-tone background. Subtle sparkle. Product hero center. Luxury showroom.',\n  'fashion-boutique':     'Editorial magazine layout. Model in outfit (if hero provided). Seasonal collection feel.',\n  'industrial-steel':     'Bold industrial visual. Multi-panel grid layout. Infrastructure imagery (bridges, buildings, elephant for strength). Earth tones with red/yellow accents.',\n  'education-coaching':   'Bright optimistic coaching visual. Blue + yellow palette. Student photo or success symbol. Trust-building.',\n  'salon-spa':            'Soft pastel pink/peach salon visual. Elegant. Model with styled hair or spa setup. Calming luxe feel.',\n  'automobile-servicing': 'Bold dark blue or black garage background with red/yellow accents. Car or bike hero on a lift or in service bay (use hero image if provided). Industrial mechanic-trust feel. Tools or service-bay details in soft focus.',\n  'gym-fitness':          'High-energy dark gym background. Athlete or equipment hero. Bold red/orange accents.',\n  'wedding-planner':      'Elegant rose-gold / blush palette. Couple silhouette or floral mandap. Romantic.',\n  'travel-tours':         'Vibrant destination hero (beach, mountain, monument). Sky-blue + sunshine palette.',\n  'pooja-store':          'Warm orange / saffron palette. Diya, brass items, marigold. Devotional traditional.',\n  'general-business':     'Modern business visual. Clean professional layout. Brand-color accent. Hero product/service photo.'\n};\n\nconst STYLE_GUIDE = {\n  'modern':           'modern flat design, generous whitespace, subtle gradients',\n  'luxury':           'dark premium palette, gold accents, soft glow lighting',\n  'festive':          'bright celebratory colors, confetti / floral motifs, joyful',\n  'minimal':          'monochrome or two-tone palette, lots of whitespace, restrained',\n  'bold-industrial':  'high-contrast bold palette, strong red / yellow / black, gritty texture',\n  'traditional':      'ethnic ornamental motifs, warm spice palette, classical'\n};\n\nfunction buildPrompt(spec, varIdx) {\n  const size = PLATFORM_SIZES[spec.platform];\n  const catDesc = CATEGORY_GUIDE[spec.business_category] || CATEGORY_GUIDE['general-business'];\n  const styleDesc = STYLE_GUIDE[spec.style_theme] || STYLE_GUIDE['modern'];\n  const hasHero = Boolean(spec.hero_image_url);\n\n  return `\nROLE: Senior social-media ad designer.\nGOAL: Create ONE ${size.aspect} background composition (${size.w}x${size.h}) for the ${spec.platform} platform. Variation ${varIdx + 1} of ${spec.variations}.\n\n========================================================\n  CATEGORY DIRECTION\n========================================================\n${catDesc}\n\n========================================================\n  STYLE\n========================================================\n${styleDesc}\n${spec.color_palette ? `Honor brand colors: ${spec.color_palette}` : ''}\n\n========================================================\n  CRITICAL — TEXT ZONES MUST BE EMPTY\n========================================================\nDO NOT render any text, headlines, taglines, prices, phone numbers, business names, lorem ipsum, or watermarks anywhere on the image.\nReserve these zones EMPTY / blurred / neutral so that text overlays can be composited later:\n  • Top-left corner (18% width × 14% height) — clean, calm — LOGO will go here\n  • Top-right corner (18% × 18%) — clean, calm — OFFER BADGE will go here\n  • Bottom 10% strip — clean, gently darker — CONTACT info will go here\n  • Center 60% width — leave a clean band where the headline will be overlaid\n\n========================================================\n  HERO REFERENCE\n========================================================\n${hasHero ? '- A hero image is provided as a reference. Use it as the primary visual subject (product / person / building). Preserve brand-critical features faithfully.' : '- No hero provided — synthesize a category-appropriate professional photo.'}\n\n========================================================\n  RULES\n========================================================\n1. Single photograph composition — NO collages / split frames.\n2. NO TEXT of any kind. NO labels, NO prices, NO URLs, NO Lorem Ipsum.\n3. NO logos baked in.\n4. Photo-realistic where appropriate (real estate, food, automobile); editorial where appropriate (fashion, jewellery).\n\n${spec.custom_instruction ? `EXTRA INSTRUCTION: \"${spec.custom_instruction}\"` : ''}\n\nReturn one image at ${size.fal_size}.\n`.trim();\n}\n\nconst out = [];\nfor (const item of body.items) {\n  const size = PLATFORM_SIZES[item.platform] || PLATFORM_SIZES['instagram-post'];\n  const variations = Math.max(1, Math.min(4, Number(item.variations) || 1));\n\n  // Reference images for the edit-image endpoint.\n  const refs = [\n    item.hero_image_url,\n    ...(Array.isArray(item.extra_image_urls) ? item.extra_image_urls : [])\n  ].filter(Boolean);\n  const hasRefs = refs.length > 0;\n  // FAL endpoint pick:\n  //   With refs → edit-image (keeps hero faithful)\n  //   Without   → text-to-image\n  const falEndpoint = hasRefs\n    ? 'https://fal.run/fal-ai/gpt-image-1/edit-image/byok'\n    : 'https://fal.run/fal-ai/gpt-image-1/text-to-image/byok';\n\n  for (let v = 0; v < variations; v++) {\n    out.push({\n      json: {\n        user_id: body.user_id,\n        batch_id: body.batch_id || null,\n        generation_id: item.generation_id,\n        variation_index: v,\n        total_variations: variations,\n        platform: item.platform,\n        fal_size: size.fal_size,\n        fal_endpoint: falEndpoint,\n        has_refs: hasRefs,\n        reference_urls: refs,\n        final_w: size.w,\n        final_h: size.h,\n        language: item.language,\n        category: item.business_category,\n        // pass through every text + url field for the composite stage\n        business_name: item.business_name,\n        main_headline: item.main_headline,\n        tagline: item.tagline,\n        offer_text: item.offer_text,\n        contact_info: item.contact_info,\n        logo_url: item.logo_url,\n        hero_image_url: item.hero_image_url,\n        extra_image_urls: item.extra_image_urls || [],\n        master_prompt: buildPrompt(item, v)\n      }\n    });\n  }\n}\n\nif (!out.length) throw new Error('Fan-out produced 0 items.');\nreturn out;\n"
+      },
+      "id": "fan-out",
+      "name": "Fan out: spec × variations",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 360]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "split-batches",
+      "name": "Split In Batches (1 / image)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [660, 360]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.fal_endpoint }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Key {{ $env.FAL_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\":         {{ JSON.stringify($json.master_prompt) }},\n  \"image_size\":     {{ JSON.stringify($json.fal_size) }},\n  \"num_images\":     1,\n  \"openai_api_key\": {{ JSON.stringify($env.OPENAI_API_KEY) }}\n  {{ $json.has_refs ? ', \"image_urls\": ' + JSON.stringify($json.reference_urls) : '' }}\n}",
+        "options": { "timeout": 180000 }
+      },
+      "id": "fal-gpt-image",
+      "name": "FAL · gpt-image-1 (BYOK)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 360],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// FAL gpt-image-1 returns:\n//   { images: [{ url, content_type, width, height }], ... }\n// We pass the URL straight to the composite route — no temp\n// upload needed, FAL URLs are publicly fetchable for ~24h.\n// ============================================================\n\nconst resp = $json;\nconst meta = $('Fan out: spec × variations').itemMatching($itemIndex)?.json\n          || $('Fan out: spec × variations').item.json;\n\n// HTTP node error path (continueOnFail) may surface as { error } / { detail }\nif (resp?.error || resp?.detail) {\n  return [{\n    json: {\n      ...meta,\n      ok: false,\n      error_message: 'FAL error: ' + JSON.stringify(resp.error || resp.detail).slice(0, 400)\n    }\n  }];\n}\n\nconst images = resp?.images || resp?.data?.images || [];\nconst first = images[0];\nif (!first?.url) {\n  return [{\n    json: {\n      ...meta,\n      ok: false,\n      error_message: 'FAL returned no image. Raw: ' + JSON.stringify(resp).slice(0, 400)\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ...meta,\n    ok: true,\n    base_image_url: first.url,\n    fal_seed: resp.seed || null\n  }\n}];\n"
+      },
+      "id": "extract-fal-result",
+      "name": "Extract FAL Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1140, 360]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "ok-check",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-success",
+      "name": "IF · fal ok?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1380, 360]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.APP_URL }}/api/social-ads/composite",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-Internal-Secret", "value": "={{ $env.INTERNAL_COMPOSITE_SECRET }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"generation_id\":   {{ JSON.stringify($json.generation_id) }},\n  \"user_id\":         {{ JSON.stringify($json.user_id) }},\n  \"variation_index\": {{ Number($json.variation_index) }},\n  \"base_image_url\":  {{ JSON.stringify($json.base_image_url) }},\n  \"logo_url\":        {{ JSON.stringify($json.logo_url) }},\n  \"business_name\":   {{ JSON.stringify($json.business_name) }},\n  \"main_headline\":   {{ JSON.stringify($json.main_headline) }},\n  \"tagline\":         {{ JSON.stringify($json.tagline) }},\n  \"offer_text\":      {{ JSON.stringify($json.offer_text) }},\n  \"contact_info\":    {{ JSON.stringify($json.contact_info) }},\n  \"language\":        {{ JSON.stringify($json.language) }},\n  \"platform\":        {{ JSON.stringify($json.platform) }}\n}",
+        "options": { "timeout": 90000 }
+      },
+      "id": "call-composite",
+      "name": "Call /api/social-ads/composite",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1620, 260],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Collect the composite route's output_url, prepare to aggregate.\nconst resp = $json;\nconst meta = $('Extract FAL Result').item.json;\nif (!resp?.success || !resp?.output_url) {\n  return [{ json: { ...meta, ok: false, error_message: resp?.error || 'composite failed' } }];\n}\nreturn [{\n  json: {\n    user_id: meta.user_id,\n    batch_id: meta.batch_id,\n    generation_id: meta.generation_id,\n    variation_index: meta.variation_index,\n    total_variations: meta.total_variations,\n    platform: meta.platform,\n    output_url: resp.output_url,\n    ok: true\n  }\n}];\n"
+      },
+      "id": "post-composite-collect",
+      "name": "Collect composite result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1860, 260]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// Aggregate: group all variation outputs by generation_id and\n// emit one PATCH per generation row.\n// ============================================================\nconst items = $input.all().map((i) => i.json).filter((j) => j.ok);\nconst byGen = new Map();\nfor (const it of items) {\n  const arr = byGen.get(it.generation_id) || [];\n  arr.push(it);\n  byGen.set(it.generation_id, arr);\n}\nconst out = [];\nfor (const [gid, arr] of byGen) {\n  arr.sort((a, b) => a.variation_index - b.variation_index);\n  out.push({\n    json: {\n      generation_id: gid,\n      batch_id: arr[0]?.batch_id || null,\n      user_id: arr[0]?.user_id,\n      output_urls: arr.map((a) => a.output_url),\n      output_url: arr[0]?.output_url || null,\n      total_variations: arr[0]?.total_variations || arr.length\n    }\n  });\n}\nreturn out;\n"
+      },
+      "id": "aggregate-per-generation",
+      "name": "Aggregate per generation_id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 600]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/generations?id=eq.{{ $json.generation_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"status\": \"completed\",\n  \"output_url\":  {{ JSON.stringify($json.output_url) }},\n  \"output_urls\": {{ JSON.stringify($json.output_urls) }}\n}",
+        "options": { "timeout": 30000 }
+      },
+      "id": "patch-generations-success",
+      "name": "Generations → completed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 600]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build one final aggregate payload for the response.\nconst items = $input.all().map((i) => i.json);\nreturn [{\n  json: {\n    success: true,\n    generation_ids: items.map((i) => i.generation_id),\n    batch_id: items[0]?.batch_id || null,\n    outputs: items.map((i) => ({\n      generation_id: i.generation_id,\n      output_urls: i.output_urls\n    }))\n  }\n}];\n"
+      },
+      "id": "build-response",
+      "name": "Build aggregate response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1140, 600]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "respond-success",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1380, 600]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/generations?id=eq.{{ $json.generation_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"status\": \"failed\",\n  \"error_message\": {{ JSON.stringify($json.error_message || 'unknown failure') }}\n}",
+        "options": { "timeout": 30000 }
+      },
+      "id": "patch-generations-failed",
+      "name": "Generations → failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1620, 460]
+    }
+  ],
+  "connections": {
+    "Webhook · /generate-social-ads": {
+      "main": [[{ "node": "Fan out: spec × variations", "type": "main", "index": 0 }]]
+    },
+    "Fan out: spec × variations": {
+      "main": [[{ "node": "Split In Batches (1 / image)", "type": "main", "index": 0 }]]
+    },
+    "Split In Batches (1 / image)": {
+      "main": [
+        [{ "node": "Aggregate per generation_id", "type": "main", "index": 0 }],
+        [{ "node": "FAL · gpt-image-1 (BYOK)", "type": "main", "index": 0 }]
+      ]
+    },
+    "FAL · gpt-image-1 (BYOK)": {
+      "main": [[{ "node": "Extract FAL Result", "type": "main", "index": 0 }]]
+    },
+    "Extract FAL Result": {
+      "main": [[{ "node": "IF · fal ok?", "type": "main", "index": 0 }]]
+    },
+    "IF · fal ok?": {
+      "main": [
+        [{ "node": "Call /api/social-ads/composite", "type": "main", "index": 0 }],
+        [{ "node": "Generations → failed", "type": "main", "index": 0 }]
+      ]
+    },
+    "Call /api/social-ads/composite": {
+      "main": [[{ "node": "Collect composite result", "type": "main", "index": 0 }]]
+    },
+    "Collect composite result": {
+      "main": [[{ "node": "Split In Batches (1 / image)", "type": "main", "index": 0 }]]
+    },
+    "Aggregate per generation_id": {
+      "main": [[{ "node": "Generations → completed", "type": "main", "index": 0 }]]
+    },
+    "Generations → completed": {
+      "main": [[{ "node": "Build aggregate response", "type": "main", "index": 0 }]]
+    },
+    "Build aggregate response": {
+      "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]]
+    }
+  }
+}

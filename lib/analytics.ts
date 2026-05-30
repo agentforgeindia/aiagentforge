@@ -43,7 +43,8 @@ export type AgentName =
   | "productography"
   | "ugc-forge"
   | "trendforge"
-  | "election-campaign";
+  | "election-campaign"
+  | "social-ads";
 
 export type AnalyticsEvent =
   /** Fired by AnalyticsRouteTracker on every App Router pathname change. */
