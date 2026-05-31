@@ -10,7 +10,56 @@ import {
   type PostSection,
   type UnifiedPost,
 } from "@/lib/posts";
+import type { BlogThumbnailConfig } from "@/app/blog/posts";
 import BlogPostViewTracker from "./BlogPostViewTracker";
+
+function BlogThumbnail({ cfg }: { cfg: BlogThumbnailConfig }) {
+  return (
+    <div
+      className="relative flex h-full w-full flex-col justify-between overflow-hidden p-6 sm:p-8"
+      style={{ background: `linear-gradient(135deg, ${cfg.gradientFrom}, ${cfg.gradientTo})` }}
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-20"
+        style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "26px 26px" }}
+      />
+      <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/15 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
+
+      <div className="relative flex items-center justify-between">
+        <span className="inline-flex items-center rounded-full bg-white/90 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-black/80 shadow">
+          {cfg.badge}
+        </span>
+        <span className="text-4xl drop-shadow-lg">{cfg.icon}</span>
+      </div>
+
+      <div className="relative flex items-center gap-2">
+        <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-white/90 shadow">
+          <span className="text-[11px] font-black text-blue-600">AF</span>
+        </div>
+        <span className="text-xs font-black uppercase tracking-widest text-white/80">AgentForge AI</span>
+      </div>
+
+      <div className="relative">
+        <p className="text-3xl font-black leading-tight tracking-tight text-white drop-shadow sm:text-4xl md:text-5xl">
+          {cfg.headline}
+          <span className="block text-white/80">{cfg.subline}</span>
+        </p>
+      </div>
+
+      {cfg.statsRow && (
+        <div className="relative flex flex-wrap gap-2">
+          {cfg.statsRow.map((s) => (
+            <span key={s} className="inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm">
+              {s}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const SITE = "https://www.aiagentforge.in";
 
@@ -225,9 +274,11 @@ export default async function BlogPostPage({
           <span className="truncate text-black/70 dark:text-white/70">{categoryLabel}</span>
         </nav>
 
-        {/* Hero image (if uploaded) — otherwise emoji card */}
-        {post.heroImageUrl ? (
-          <div className="relative mb-8 aspect-[16/9] w-full overflow-hidden rounded-[1.75rem] border border-black/10 shadow-xl dark:border-white/10">
+        {/* Hero — designed thumbnail or fallback emoji */}
+        <div className="relative mb-8 aspect-[16/9] w-full overflow-hidden rounded-[1.75rem] border border-black/10 shadow-xl dark:border-white/10">
+          {post.thumbnail ? (
+            <BlogThumbnail cfg={post.thumbnail} />
+          ) : post.heroImageUrl ? (
             <Image
               src={post.heroImageUrl}
               alt={post.title}
@@ -236,16 +287,16 @@ export default async function BlogPostPage({
               priority
               className="object-cover"
             />
-          </div>
-        ) : null}
-
-        {/* Header */}
-        <div className="text-center">
-          {!post.heroImageUrl && (
-            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-400/20 to-blue-500/20 text-5xl shadow-lg">
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-cyan-400/20 to-blue-500/20 text-8xl">
               {post.heroEmoji}
             </div>
           )}
+        </div>
+
+        {/* Header */}
+        <div className="text-center">
+          {/* emoji removed — thumbnail handles visual identity */}
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-600">
             {categoryLabel} · {post.readMinutes} min read
           </p>

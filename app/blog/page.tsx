@@ -2,7 +2,73 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { BLOG_POSTS, type BlogPost } from "./posts";
+import { BLOG_POSTS, type BlogPost, type BlogThumbnailConfig } from "./posts";
+
+// ============================================================
+// BlogThumbnail — designed card like a news/marketing thumbnail
+// ============================================================
+function BlogThumbnail({ cfg, title }: { cfg: BlogThumbnailConfig; title: string }) {
+  return (
+    <div
+      className="relative flex h-full w-full flex-col justify-between overflow-hidden p-5"
+      style={{ background: `linear-gradient(135deg, ${cfg.gradientFrom}, ${cfg.gradientTo})` }}
+    >
+      {/* Dot-grid texture */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-20"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, white 1px, transparent 1px)",
+          backgroundSize: "22px 22px",
+        }}
+      />
+      {/* Glow blobs */}
+      <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/20 blur-2xl" />
+      <div className="pointer-events-none absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-white/15 blur-2xl" />
+
+      {/* Top row: badge + icon */}
+      <div className="relative flex items-center justify-between">
+        <span className="inline-flex items-center rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-black/80 shadow">
+          {cfg.badge}
+        </span>
+        <span className="text-3xl drop-shadow-lg">{cfg.icon}</span>
+      </div>
+
+      {/* Middle: AgentForge logo row */}
+      <div className="relative flex items-center gap-1.5">
+        <div className="flex h-5 w-5 items-center justify-center rounded-md bg-white/90 shadow">
+          <span className="text-[10px] font-black text-blue-600">AF</span>
+        </div>
+        <span className="text-[10px] font-black uppercase tracking-widest text-white/80">
+          AgentForge AI
+        </span>
+      </div>
+
+      {/* Headline */}
+      <div className="relative">
+        <p className="text-2xl font-black leading-tight tracking-tight text-white drop-shadow sm:text-3xl">
+          {cfg.headline}
+          <span className="block text-white/80">{cfg.subline}</span>
+        </p>
+      </div>
+
+      {/* Stats row */}
+      {cfg.statsRow && (
+        <div className="relative flex flex-wrap gap-1.5">
+          {cfg.statsRow.map((s) => (
+            <span
+              key={s}
+              className="inline-flex items-center rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm"
+            >
+              {s}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const CATEGORY_ACCENT: Record<string, { from: string; to: string; chip: string; ring: string }> = {
   All: { from: "from-cyan-400", to: "to-blue-500", chip: "bg-cyan-50 text-cyan-700 border-cyan-300 dark:bg-cyan-500/15 dark:text-cyan-200 dark:border-cyan-400/30", ring: "ring-cyan-400" },
@@ -121,23 +187,17 @@ export default function BlogIndexPage() {
             className="group relative block overflow-hidden rounded-[2rem] border border-black/10 bg-white shadow-xl transition hover:-translate-y-1 hover:shadow-2xl dark:border-white/10 dark:bg-white/[0.04]"
           >
             <div className="grid gap-0 md:grid-cols-[1.05fr_1.4fr]">
-              {/* Visual side — gradient with emoji */}
-              <div
-                className={`relative flex items-center justify-center bg-gradient-to-br ${
-                  CATEGORY_ACCENT[featured.category].from
-                } ${CATEGORY_ACCENT[featured.category].to} p-10 md:p-14`}
-                style={{ minHeight: 200 }}
-              >
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 opacity-30"
-                  style={{
-                    backgroundImage:
-                      "radial-gradient(circle at 30% 30%, white 1px, transparent 1px), radial-gradient(circle at 70% 70%, white 1px, transparent 1px)",
-                    backgroundSize: "24px 24px",
-                  }}
-                />
-                <div className="relative text-7xl drop-shadow-lg md:text-8xl">{featured.heroEmoji}</div>
+              {/* Visual side — designed thumbnail */}
+              <div className="relative overflow-hidden" style={{ minHeight: 220 }}>
+                {featured.thumbnail ? (
+                  <BlogThumbnail cfg={featured.thumbnail} title={featured.title} />
+                ) : (
+                  <div
+                    className={`flex h-full items-center justify-center bg-gradient-to-br ${CATEGORY_ACCENT[featured.category].from} ${CATEGORY_ACCENT[featured.category].to} p-10 md:p-14`}
+                  >
+                    <div className="text-7xl drop-shadow-lg md:text-8xl">{featured.heroEmoji}</div>
+                  </div>
+                )}
                 <span className="absolute left-5 top-5 inline-flex items-center gap-1 rounded-full bg-white/95 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-black/80 shadow">
                   ⭐ Featured
                 </span>
@@ -242,24 +302,18 @@ function ArticleCard({ post }: { post: BlogPost }) {
       href={`/blog/${post.slug}`}
       className="group relative flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-black/10 bg-white shadow-sm transition hover:-translate-y-1 hover:border-cyan-300 hover:shadow-xl dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-cyan-400/40"
     >
-      {/* Visual */}
-      <div
-        className={`relative flex items-center justify-center bg-gradient-to-br ${accent.from} ${accent.to}`}
-        style={{ aspectRatio: "16 / 9" }}
-      >
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-25"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 30% 30%, white 1px, transparent 1px), radial-gradient(circle at 70% 70%, white 1px, transparent 1px)",
-            backgroundSize: "20px 20px",
-          }}
-        />
-        <div className="relative text-6xl drop-shadow-lg">{post.heroEmoji}</div>
-        <span
-          className={`absolute left-3 top-3 rounded-full border border-white/40 bg-white/95 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-black/80 shadow`}
-        >
+      {/* Visual — designed thumbnail */}
+      <div className="relative overflow-hidden" style={{ aspectRatio: "16 / 9" }}>
+        {post.thumbnail ? (
+          <BlogThumbnail cfg={post.thumbnail} title={post.title} />
+        ) : (
+          <div
+            className={`flex h-full items-center justify-center bg-gradient-to-br ${accent.from} ${accent.to}`}
+          >
+            <div className="text-6xl drop-shadow-lg">{post.heroEmoji}</div>
+          </div>
+        )}
+        <span className="absolute left-3 top-3 rounded-full border border-white/40 bg-white/95 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-black/80 shadow">
           {post.category}
         </span>
       </div>

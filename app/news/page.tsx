@@ -12,6 +12,55 @@ import {
   type PostCategory,
   type UnifiedPost,
 } from "@/lib/posts";
+import type { BlogThumbnailConfig } from "@/app/blog/posts";
+
+function BlogThumbnail({ cfg }: { cfg: BlogThumbnailConfig }) {
+  return (
+    <div
+      className="relative flex h-full w-full flex-col justify-between overflow-hidden p-5"
+      style={{ background: `linear-gradient(135deg, ${cfg.gradientFrom}, ${cfg.gradientTo})` }}
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-20"
+        style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "22px 22px" }}
+      />
+      <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/20 blur-2xl" />
+      <div className="pointer-events-none absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-white/15 blur-2xl" />
+
+      <div className="relative flex items-center justify-between">
+        <span className="inline-flex items-center rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-black/80 shadow">
+          {cfg.badge}
+        </span>
+        <span className="text-3xl drop-shadow-lg">{cfg.icon}</span>
+      </div>
+
+      <div className="relative flex items-center gap-1.5">
+        <div className="flex h-5 w-5 items-center justify-center rounded-md bg-white/90 shadow">
+          <span className="text-[10px] font-black text-blue-600">AF</span>
+        </div>
+        <span className="text-[10px] font-black uppercase tracking-widest text-white/80">AgentForge AI</span>
+      </div>
+
+      <div className="relative">
+        <p className="text-2xl font-black leading-tight tracking-tight text-white drop-shadow sm:text-3xl">
+          {cfg.headline}
+          <span className="block text-white/80">{cfg.subline}</span>
+        </p>
+      </div>
+
+      {cfg.statsRow && (
+        <div className="relative flex flex-wrap gap-1.5">
+          {cfg.statsRow.map((s) => (
+            <span key={s} className="inline-flex items-center rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
+              {s}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const SITE = "https://www.aiagentforge.in";
 
@@ -267,7 +316,9 @@ function FeaturedCard({ post }: { post: UnifiedPost }) {
     >
       <div className="grid gap-0 md:grid-cols-[1.1fr_1fr]">
         <div className="relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br from-cyan-100 via-blue-50 to-purple-100 dark:from-cyan-900/40 dark:via-blue-900/30 dark:to-purple-900/40">
-          {post.heroImageUrl ? (
+          {post.thumbnail ? (
+            <BlogThumbnail cfg={post.thumbnail} />
+          ) : post.heroImageUrl ? (
             <Image
               src={post.heroImageUrl}
               alt={post.title}
@@ -313,7 +364,9 @@ function PostCard({ post }: { post: UnifiedPost }) {
       className="group flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-black/10 bg-white/85 shadow-md backdrop-blur transition hover:-translate-y-0.5 hover:shadow-cyan-500/15 dark:border-white/10 dark:bg-white/[0.05]"
     >
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br from-cyan-50 to-purple-50 dark:from-cyan-900/30 dark:to-purple-900/30">
-        {post.heroImageUrl ? (
+        {post.thumbnail ? (
+          <BlogThumbnail cfg={post.thumbnail} />
+        ) : post.heroImageUrl ? (
           <Image
             src={post.heroImageUrl}
             alt={post.title}

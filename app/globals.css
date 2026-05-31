@@ -21,7 +21,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, "Segoe UI", Arial, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -107,33 +107,3 @@ body {
   }
 }
 
-/* ============================================================
-   TEXT JUSTIFICATION (site-wide)
-   ============================================================
-   Apply `text-align: justify` to body paragraphs inside <main>
-   so legal pages, blog posts, FAQ answers and trust pages read
-   like proper articles. UI text (buttons, links, headings) is
-   untouched because we target only <p>.
-
-   Opt-out with className="no-justify" on any <p> that needs left
-   alignment (short card descriptions, captions, etc.).
-   ============================================================ */
-main p:not(.no-justify) {
-  text-align: justify;
-  text-justify: inter-word;
-  hyphens: auto;
-}
-
-/* `<p>` inside cards / chips often holds 1–2 short lines where
-   justify creates ugly word-spacing gaps. Heuristic exclusion:
-   tiny / fixed-width text classes don't get justified. */
-main p.text-\[10px\]:not(.no-justify),
-main p.text-\[11px\]:not(.no-justify),
-main p.text-xs:not(.no-justify),
-main p.uppercase:not(.no-justify),
-main p.truncate:not(.no-justify),
-main p.line-clamp-1:not(.no-justify),
-main p.line-clamp-2:not(.no-justify) {
-  text-align: inherit;
-  hyphens: none;
-}

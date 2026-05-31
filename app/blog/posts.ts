@@ -20,17 +20,29 @@ export type BlogSection =
   | { type: "ul"; items: string[] }
   | { type: "quote"; text: string };
 
+export type BlogThumbnailConfig = {
+  headline: string;
+  subline: string;
+  badge: string;
+  gradientFrom: string;   // CSS hex/hsl color e.g. "#06b6d4"
+  gradientTo: string;     // CSS hex/hsl color e.g. "#2563eb"
+  icon: string;
+  statsRow?: string[];
+};
+
 export type BlogPost = {
   slug: string;
   title: string;
   description: string;
   excerpt: string;
   keywords: string[];
-  category: "Textile" | "Jewellery" | "Productography" | "Guide";
+  category: "Textile" | "Jewellery" | "Productography" | "Guide" | "Announcement";
   author: string;
   publishedAt: string; // ISO date
   readMinutes: number;
   heroEmoji: string;
+  heroImage?: string;
+  thumbnail?: BlogThumbnailConfig;
   ctaLabel: string;
   ctaHref: string;
   body: BlogSection[];
@@ -60,6 +72,16 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: "2026-05-26T00:00:00.000Z",
     readMinutes: 8,
     heroEmoji: "🧵",
+    heroImage: "/Workshop/saree.png",
+    thumbnail: {
+      headline: "AI Textile",
+      subline: "Marketing in India",
+      badge: "Industry Shift",
+      gradientFrom: "#06b6d4",
+      gradientTo: "#2563eb",
+      icon: "🧵",
+      statsRow: ["5–7 Days → 30 Min", "₹8L → ₹10K/mo", "10x More Drops"],
+    },
     ctaLabel: "Try TextilePrints to Mockup AI",
     ctaHref: "/textileprints-to-mockup",
     body: [
@@ -160,6 +182,16 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: "2026-05-25T00:00:00.000Z",
     readMinutes: 6,
     heroEmoji: "⚖️",
+    heroImage: "/Workshop/kurti.png",
+    thumbnail: {
+      headline: "AI Mockups",
+      subline: "vs Studio Shoots",
+      badge: "Honest Comparison",
+      gradientFrom: "#3b82f6",
+      gradientTo: "#4f46e5",
+      icon: "⚖️",
+      statsRow: ["₹15/image AI", "₹400/image Studio", "100x Faster"],
+    },
     ctaLabel: "Try It Free",
     ctaHref: "/textileprints-to-mockup",
     body: [
@@ -270,6 +302,16 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: "2026-05-22T00:00:00.000Z",
     readMinutes: 6,
     heroEmoji: "🥻",
+    heroImage: "/Workshop/boys-shirt.png",
+    thumbnail: {
+      headline: "Instant Saree",
+      subline: "Catalogues with AI",
+      badge: "Surat Workflow",
+      gradientFrom: "#22d3ee",
+      gradientTo: "#0d9488",
+      icon: "🥻",
+      statsRow: ["30 Min Catalogue", "20 Designs/Day", "Zero Stitching"],
+    },
     ctaLabel: "Generate Saree Mockups",
     ctaHref: "/ai-saree-mockup",
     body: [
@@ -371,6 +413,16 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: "2026-05-20T00:00:00.000Z",
     readMinutes: 5,
     heroEmoji: "🏭",
+    heroImage: "/Workshop/mens-shirt.png",
+    thumbnail: {
+      headline: "Best AI Tool",
+      subline: "for Textile Factories",
+      badge: "Buyer's Guide",
+      gradientFrom: "#0ea5e9",
+      gradientTo: "#1d4ed8",
+      icon: "🏭",
+      statsRow: ["Indian Models", "Article Overlay", "Bulk Mode"],
+    },
     ctaLabel: "Start Free Trial",
     ctaHref: "/textileprints-to-mockup",
     body: [
@@ -453,6 +505,16 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: "2026-05-24T00:00:00.000Z",
     readMinutes: 6,
     heroEmoji: "💎",
+    heroImage: "/gallery/jewellery/design-1.png",
+    thumbnail: {
+      headline: "AI Jewellery",
+      subline: "Photography India",
+      badge: "Bridal & D2C",
+      gradientFrom: "#fbbf24",
+      gradientTo: "#f43f5e",
+      icon: "💎",
+      statsRow: ["₹12/image", "₹80K → ₹750", "60 Seconds"],
+    },
     ctaLabel: "Try Jewellery AI Studio",
     ctaHref: "/jewellery-ai",
     body: [
@@ -555,6 +617,16 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: "2026-05-19T00:00:00.000Z",
     readMinutes: 5,
     heroEmoji: "👑",
+    heroImage: "/gallery/jewellery/design-3.png",
+    thumbnail: {
+      headline: "Luxury Campaigns",
+      subline: "Without an Agency",
+      badge: "Local Jewellers",
+      gradientFrom: "#facc15",
+      gradientTo: "#f97316",
+      icon: "👑",
+      statsRow: ["Tanishq-Level Look", "₹400 for 30 Images", "1-Day Campaign"],
+    },
     ctaLabel: "Build Your Campaign",
     ctaHref: "/jewellery-ai",
     body: [
@@ -643,6 +715,16 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: "2026-05-23T00:00:00.000Z",
     readMinutes: 5,
     heroEmoji: "📱",
+    heroImage: "/gallery/productography/design-1.png",
+    thumbnail: {
+      headline: "Phone Photo →",
+      subline: "Pro Product Shoot",
+      badge: "D2C Brands",
+      gradientFrom: "#8b5cf6",
+      gradientTo: "#7e22ce",
+      icon: "📱",
+      statsRow: ["60 Seconds", "Amazon Ready", "No Studio Needed"],
+    },
     ctaLabel: "Try Productography AI",
     ctaHref: "/productography-ai",
     body: [
@@ -728,7 +810,7 @@ export const BLOG_POSTS: BlogPost[] = [
     description:
       "Meesho sellers in India are using AI catalogue generators to ship 10x more listings without paying for models or studios. Real cost, workflow and approval-rate tips for 2026.",
     excerpt:
-      "Meesho ke top sellers ek hafte mein 200+ listings drop kar rahe hain — bina model, bina studio. Inside the AI catalogue workflow that's quietly winning the resell ecosystem.",
+      "Meesho's top sellers are dropping 200+ listings a week — no model, no studio. Inside the AI catalogue workflow that is quietly dominating the resell ecosystem.",
     keywords: [
       "AI catalogue generator Meesho",
       "Meesho catalogue maker AI",
@@ -742,22 +824,32 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: "2026-05-29T00:00:00.000Z",
     readMinutes: 7,
     heroEmoji: "📦",
+    heroImage: "/gallery/productography/design-4.png",
+    thumbnail: {
+      headline: "10x Meesho",
+      subline: "Listings in 1 Week",
+      badge: "Seller Playbook",
+      gradientFrom: "#d946ef",
+      gradientTo: "#db2777",
+      icon: "📦",
+      statsRow: ["200+ Listings/Week", "60 → 480/Month", "90% Cost Cut"],
+    },
     ctaLabel: "Generate Meesho Catalogue",
     ctaHref: "/productography-ai",
     body: [
       {
         type: "p",
-        text: "Meesho mein jeetne wala seller wo nahi hai jo sabse sasta sell karta hai. Jeetne wala wo hai jo sabse zyada listings ship karta hai — har hafte. Aur 2026 mein, top Meesho sellers AI catalogue generators ki madad se 200+ listings ek week mein drop kar rahe hain, jab average seller 20 bhi mushkil se kar paata hai.",
+        text: "On Meesho, the seller who wins is not the one with the lowest price — it is the one who ships the most listings every week. In 2026, top Meesho sellers are dropping 200+ listings a week using AI catalogue generators, while the average seller struggles to manage 20.",
       },
       {
         type: "p",
-        text: "Ye article un sellers ke liye hai jo Meesho pe seriously scale karna chahte hain — without burning capital on studios, models and rejected listings.",
+        text: "This article is for sellers who want to scale seriously on Meesho — without burning capital on studios, models and rejected listings.",
       },
 
       { type: "h2", text: "Why Meesho rewards listing volume" },
       {
         type: "p",
-        text: "Meesho ka algorithm new listings ko ek short visibility boost deta hai — pehle 7–14 din. Jo seller har hafte 30–50 fresh listings ship karta hai, woh continuously is boost ke andar rehta hai. Jo seller mahine mein 10 listings ship karta hai, uska store algorithmically dormant ho jata hai.",
+        text: "Meesho's algorithm gives new listings a short visibility boost — typically 7 to 14 days. Sellers who ship 30 to 50 fresh listings every week stay inside that boost window continuously. Sellers who ship 10 listings a month become algorithmically invisible.",
       },
       { type: "h3", text: "The math behind 10x listings" },
       { type: "ul", items: [
@@ -771,22 +863,22 @@ export const BLOG_POSTS: BlogPost[] = [
       { type: "h3", text: "Step 1: Phone shot in natural light" },
       {
         type: "p",
-        text: "Tumhare product ka ek clean phone photo — white wall ya plain surface ke saamne. Background gandi bhi ho, koi baat nahi. AI baad mein replace karega.",
+        text: "Take a clean phone photo of your product against a white wall or plain surface. The background does not need to be perfect — AI will replace it entirely.",
       },
       { type: "h3", text: "Step 2: Run through Productography AI" },
       {
         type: "p",
-        text: "Upload kar do AgentForge mein. Background choose karo — Meesho ke liye white-on-white sabse approved hota hai, festive lifestyle bhi work karta hai ladies-wear mein. 60 seconds mein 1080×1080 HD output ready.",
+        text: "Upload to AgentForge. Choose your background — white-on-white is the highest-approval style for Meesho, though festive lifestyle backgrounds work well for ladies-wear. A 1080×1080 HD output is ready in 60 seconds.",
       },
       { type: "h3", text: "Step 3: Batch overlay your brand" },
       {
         type: "p",
-        text: "Article code, MRP, ya brand watermark — AI automatic overlay deta hai. Bulk mode mein 50–100 products ek saath process ho jaate hain.",
+        text: "Article code, MRP or brand watermark — AI adds the overlay automatically. In bulk mode, 50 to 100 products process simultaneously.",
       },
       { type: "h3", text: "Step 4: Direct upload to Meesho" },
       {
         type: "p",
-        text: "Output square 1080×1080 hai, jo Meesho ke main image spec mein perfectly fit hota hai. No re-cropping, no rejection.",
+        text: "The output is a 1080×1080 square that fits Meesho's main image spec perfectly. No re-cropping, no rejection.",
       },
 
       { type: "h2", text: "What Meesho approves vs rejects (2026 reality)" },
@@ -802,38 +894,38 @@ export const BLOG_POSTS: BlogPost[] = [
         "Pure black backgrounds (Meesho flags as non-marketplace)",
         "Heavy text overlay (more than 12% frame coverage)",
         "Competitor watermarks not removed",
-        "Low-resolution upscales (< 800px)",
+        "Low-resolution upscales (under 800px)",
       ]},
 
       { type: "h2", text: "Where AI catalogues quietly outperform studio shoots on Meesho" },
       {
         type: "p",
-        text: "AI gives you something studio shoots can't — consistency across 500 SKUs. Jab buyer tumhari shop browse karta hai, har product photo same lighting, same background, same vibe deti hai. Ye visual cohesion CTR ko 18–25% tak boost karta hai (internal seller data, AgentForge 2026).",
+        text: "AI gives you something studio shoots cannot — visual consistency across 500 SKUs. When a buyer browses your store, every product photo has the same lighting, background and tone. This visual cohesion boosts click-through rate by 18 to 25% according to internal AgentForge seller data from 2026.",
       },
-      { type: "quote", text: "Studio mein 30 designs ka shoot ek din lagta tha. AI se same 30 designs lunch tak ready ho jaati hain — aur 10 backgrounds mein A/B test kar leta hoon." },
+      { type: "quote", text: "A studio shoot used to take a full day for 30 designs. With AI, those same 30 designs are ready before lunch — and I can A/B test 10 different backgrounds." },
 
       { type: "h2", text: "Common questions Meesho sellers ask" },
-      { type: "h3", text: "Kya AI images ban ho sakti hai Meesho pe?" },
+      { type: "h3", text: "Are AI images allowed on Meesho?" },
       {
         type: "p",
-        text: "Nahi. Meesho ki policy AI-generated images ko explicitly allow karti hai jab tak product accurate represent hota hai. Genuine product photo + AI background swap = fully compliant.",
+        text: "Yes. Meesho's policy explicitly allows AI-generated images as long as the product is accurately represented. A genuine product photo with an AI-swapped background is fully compliant.",
       },
-      { type: "h3", text: "Returns aur disputes ka kya?" },
+      { type: "h3", text: "What about returns and disputes?" },
       {
         type: "p",
-        text: "Product shape, colour aur key features waise hi rehne chahiye jaise asli product mein hain. AgentForge default mein original product silhouette preserve karta hai — sirf background, lighting aur composition transform karta hai.",
+        text: "Product shape, colour and key features must match the actual product. AgentForge preserves the original product silhouette by default — only the background, lighting and composition are transformed.",
       },
 
       { type: "h2", text: "Real numbers from a Surat seller in 2026" },
       {
         type: "p",
-        text: "Ek mid-tier saree wholesaler ne March–April 2026 mein AI catalogue switch kiya. Pehle 60 listings/month, ab 480 listings/month. Photography spend ₹85,000 se ₹4,200 par month gir gaya. Revenue 2.4x — kyunki Meesho algorithm ne fresh listings ko continuously boost kiya.",
+        text: "A mid-tier saree wholesaler switched to AI catalogue in March 2026. Listings went from 60 per month to 480 per month. Photography spend dropped from ₹85,000 to ₹4,200 per month. Revenue grew 2.4x — because Meesho's algorithm continuously boosted the fresh listing volume.",
       },
 
       { type: "h2", text: "The honest take" },
       {
         type: "p",
-        text: "Meesho is fundamentally a volume game. AI catalogue generators ne photography ka cost barrier 90% gira diya hai. Jo seller is shift ko 2026 mein adopt karega, woh apne competitors ko algorithm ke through hi outscale kar dega — bina ad spend ke.",
+        text: "Meesho is fundamentally a volume game. AI catalogue generators have cut the photography cost barrier by 90%. Sellers who make this shift in 2026 will outscale their competitors through the algorithm alone — no additional ad spend required.",
       },
     ],
   },
@@ -844,7 +936,7 @@ export const BLOG_POSTS: BlogPost[] = [
     description:
       "WhatsApp Business sellers in India are switching to AI catalogue generators. Here's how to build a WhatsApp catalogue that converts — without paying for product photographers.",
     excerpt:
-      "WhatsApp Business pe sell karne wale 4 crore Indian sellers ka biggest bottleneck product photos hai. AI is quietly fixing that — in 60 seconds per image.",
+      "For 4 crore Indian sellers on WhatsApp Business, product photos are the biggest bottleneck. AI is quietly fixing that — in 60 seconds per image.",
     keywords: [
       "WhatsApp catalogue AI",
       "WhatsApp Business catalogue maker",
@@ -858,86 +950,96 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: "2026-05-28T00:00:00.000Z",
     readMinutes: 6,
     heroEmoji: "💬",
+    heroImage: "/gallery/productography/design-7.png",
+    thumbnail: {
+      headline: "WhatsApp Catalogue",
+      subline: "AI Auto-Generated",
+      badge: "4 Cr+ Sellers",
+      gradientFrom: "#22c55e",
+      gradientTo: "#0d9488",
+      icon: "💬",
+      statsRow: ["2% → 14% Conversion", "15 Min Per Drop", "Free Organic Reach"],
+    },
     ctaLabel: "Build WhatsApp Catalogue",
     ctaHref: "/productography-ai",
     body: [
       {
         type: "p",
-        text: "WhatsApp Business pe sell karne walon ka sabse bada problem product photography nahi hai — sabse bada problem ye hai ki photos professional nahi dikhti. Buyers ko phone gallery se kheechi hui dhundli photo bhej do, conversion 2% baith jata hai. Same product ki clean white-background AI catalogue image bhejo, conversion 9–14% tak chala jata hai.",
+        text: "For WhatsApp Business sellers, the biggest problem is not taking product photos — it is that the photos do not look professional. Send a blurry phone gallery image to a buyer and conversion sits at 2%. Send the same product as a clean white-background AI catalogue image, and conversion climbs to 9 to 14%.",
       },
       {
         type: "p",
-        text: "Ye article specifically WhatsApp Business sellers ke liye hai — wholesalers, resellers, D2C brands, home-based businesses jo daily customers ke saath direct sell karte hain.",
+        text: "This article is specifically for WhatsApp Business sellers — wholesalers, resellers, D2C brands and home-based businesses who sell directly to customers every day.",
       },
 
-      { type: "h2", text: "WhatsApp catalogue ka real conversion problem" },
+      { type: "h2", text: "The real WhatsApp catalogue conversion problem" },
       {
         type: "p",
-        text: "WhatsApp Business catalogue feature ka adoption 2026 mein boom kar raha hai — but most sellers ka catalogue empty ya poor-quality photos se bhara hua hai. Reason simple: product photos lena, edit karna, square crop karna, aur 100+ items ka catalogue banana — ek manual nightmare hai.",
+        text: "WhatsApp Business catalogue adoption is booming in 2026 — but most sellers' catalogues are either empty or full of poor-quality photos. The reason is simple: taking product photos, editing them, cropping to square, and building a 100-item catalogue is a manual nightmare.",
       },
       { type: "h3", text: "Why customers drop off" },
       { type: "ul", items: [
-        "Background gandi ya cluttered (dukaan ki dewar, plastic bags, dusra saamaan)",
-        "Photo blurry or harsh flash se overexposed",
-        "Product crop sahi nahi (head cut, paer cut, awkward angle)",
-        "Har photo ki lighting alag — overall catalogue confusing",
+        "Cluttered or dirty background (shop wall, plastic bags, random items)",
+        "Blurry photo or harsh flash overexposure",
+        "Incorrect crop — head cut off, feet cut off, awkward angle",
+        "Inconsistent lighting across photos — the overall catalogue looks confusing",
       ]},
 
       { type: "h2", text: "How AI fixes the WhatsApp catalogue problem" },
       {
         type: "p",
-        text: "AI catalogue tools ek phone photo ko 60 seconds mein WhatsApp-ready clean catalogue image mein convert karte hain. Background replace, lighting fix, brand overlay — sab automatic. Ek seller jo pehle 50 product photos manage nahi kar paata tha, ab 500 manage kar leta hai.",
+        text: "AI catalogue tools convert a phone photo into a WhatsApp-ready clean catalogue image in 60 seconds. Background replacement, lighting correction, brand overlay — all automatic. A seller who previously could not manage 50 product photos can now handle 500.",
       },
-      { type: "h3", text: "The 30-second WhatsApp catalogue flow" },
+      { type: "h3", text: "The 60-second WhatsApp catalogue flow" },
       { type: "ul", items: [
-        "Phone se product ki ek photo le lo (any background)",
-        "AgentForge mein upload karo, output type 'WhatsApp Catalogue' select karo",
-        "60 seconds mein clean square 1080×1080 image ready",
-        "Direct save kar ke WhatsApp Business catalogue mein add karo",
+        "Take one product photo from your phone (any background)",
+        "Upload to AgentForge, select output type 'WhatsApp Catalogue'",
+        "Clean 1080×1080 square image ready in 60 seconds",
+        "Save directly and add to your WhatsApp Business catalogue",
       ]},
 
       { type: "h2", text: "WhatsApp catalogue formats that convert" },
       { type: "h3", text: "Format 1: Clean white background (default)" },
       {
         type: "p",
-        text: "Sabse safe option — koi bhi product, koi bhi category. Buyer ko product clearly dikhta hai. Best for sarees, kurtas, jewellery, electronics, accessories.",
+        text: "The safest option for any product and any category. The buyer sees the product clearly. Best for sarees, kurtas, jewellery, electronics and accessories.",
       },
       { type: "h3", text: "Format 2: Festive lifestyle background" },
       {
         type: "p",
-        text: "Diwali, Karwa Chauth, Rakshabandhan, Eid ke time per — festive background buyer ke decision ko trigger karta hai. AI festive shoots 60 seconds mein generate karta hai.",
+        text: "During Diwali, Karwa Chauth, Rakshabandhan and Eid — a festive background triggers buying decisions. AI generates festive shoots in 60 seconds.",
       },
-      { type: "h3", text: "Format 3: Model-worn (for textile/jewellery)" },
+      { type: "h3", text: "Format 3: Model-worn (for textile and jewellery)" },
       {
         type: "p",
-        text: "Buyer ko visualize karne mein help karta hai — saree ya kurti pehnayi gayi kaisi dikhegi. AI model shoots ne is workflow ko transform kar diya hai — bina actual model book kiye.",
+        text: "Helps buyers visualise how a saree or kurti will look when worn. AI model shoots have transformed this workflow — no model booking required.",
       },
 
-      { type: "h2", text: "Brand overlay: WhatsApp sellers ki secret weapon" },
+      { type: "h2", text: "Brand overlay: the WhatsApp seller's secret weapon" },
       {
         type: "p",
-        text: "Har WhatsApp catalogue image pe brand name, WhatsApp number aur article code overlay hona chahiye. Jab buyer photo screenshot le ke kisi aur ko share kare, woh image tumhe wapas le aati hai — viral organic reach. AgentForge har image pe ye overlay automatically lagata hai.",
+        text: "Every WhatsApp catalogue image should carry your brand name, WhatsApp number and article code as an overlay. When a buyer screenshots the image and forwards it to a friend, that image brings traffic back to you — free organic reach. AgentForge adds this overlay automatically to every image.",
       },
-      { type: "quote", text: "Ek customer photo screenshot le ke apni saheli ko bheji. Mera WhatsApp number image pe tha — agle din wo bhi mujhse khareedne aayi. Free organic reach." },
+      { type: "quote", text: "A customer screenshotted the image and shared it with a friend. My WhatsApp number was on the image — the next day that friend placed an order. Zero ad spend." },
 
       { type: "h2", text: "Wholesale WhatsApp groups: the volume play" },
       {
         type: "p",
-        text: "Wholesale sellers WhatsApp groups mein 10–20 catalogue images per drop bhejte hain. Pehle ek drop banane mein ek poora din lagta tha — shoot + edit + crop + upload. AI ke saath ek drop 15 minutes mein ready hota hai. Yani ek seller ab roz 3–4 drops kar sakta hai vs week mein ek.",
+        text: "Wholesale sellers send 10 to 20 catalogue images per drop to WhatsApp groups. Previously, building one drop took a full day — shoot, edit, crop, upload. With AI, a drop is ready in 15 minutes. A seller can now run 3 to 4 drops per day instead of one per week.",
       },
 
-      { type: "h2", text: "Common mistakes WhatsApp sellers avoid karein" },
+      { type: "h2", text: "Common mistakes WhatsApp sellers should avoid" },
       { type: "ul", items: [
-        "Image size 1080×1080 se kam mat rakho — WhatsApp compression kha leta hai",
-        "5+ products ek image mein mat ghuso — single product per image converts better",
-        "Catalogue mein price overlay confuse karta hai — pricing caption mein likho",
-        "Filter overuse mat karo — buyer asli product dekhna chahta hai",
+        "Never go below 1080×1080 — WhatsApp compression destroys smaller images",
+        "Do not squeeze 5+ products into one image — single product per image converts better",
+        "Do not put pricing in the image overlay — it confuses buyers, put it in the caption",
+        "Avoid heavy filters — buyers want to see the real product",
       ]},
 
       { type: "h2", text: "The honest take" },
       {
         type: "p",
-        text: "WhatsApp Business India ka sabse bada B2C aur B2B sales channel ban chuka hai. Jo seller AI catalogue se apne catalogue ko visually professional banata hai, wo apne competitor ke saamne 5–7x faster scale karega — kyunki photography bottleneck hi nahi rahega. 2026 mein WhatsApp sellers ke liye AI catalogue koi luxury nahi, baseline requirement hai.",
+        text: "WhatsApp Business is now India's largest B2C and B2B sales channel. Sellers who make their catalogue visually professional with AI will scale 5 to 7 times faster than competitors — because photography will no longer be a bottleneck. In 2026, AI catalogue is not a luxury for WhatsApp sellers. It is the baseline.",
       },
     ],
   },
@@ -948,7 +1050,7 @@ export const BLOG_POSTS: BlogPost[] = [
     description:
       "Amazon India sellers are using AI product photography to meet main-image policy, A+ Content visuals and brand store assets — at 1/10th the cost of studio shoots.",
     excerpt:
-      "Amazon ki strict main-image policy + endless A+ Content variants = ek seller ke liye photography nightmare. AI 2026 mein is nightmare ko solve kar raha hai.",
+      "Amazon's strict main-image policy plus endless A+ Content variants equals a photography nightmare for every seller. AI is solving that in 2026 — at a fraction of the cost.",
     keywords: [
       "Amazon product photography AI",
       "Amazon main image AI",
@@ -962,76 +1064,86 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: "2026-05-27T00:00:00.000Z",
     readMinutes: 9,
     heroEmoji: "🛒",
+    heroImage: "/gallery/productography/design-10.png",
+    thumbnail: {
+      headline: "Amazon Product",
+      subline: "Photography with AI",
+      badge: "2026 Complete Guide",
+      gradientFrom: "#fb923c",
+      gradientTo: "#ef4444",
+      icon: "🛒",
+      statsRow: ["₹21,500 → ₹680/SKU", "A+ Content Ready", "Policy Compliant"],
+    },
     ctaLabel: "Generate Amazon Product Photos",
     ctaHref: "/productography-ai",
     body: [
       {
         type: "p",
-        text: "Amazon India pe sell karna ek photography problem hai — ek branding aur logistics problem ke saath-saath. Main image must be pure white, A+ Content needs lifestyle shoots, brand store needs hero banners, video content needs stills, Sponsored Brand ads need variants. Ek single SKU ke liye 12–18 images chahiye hoti hain.",
+        text: "Selling on Amazon India is, above all else, a photography problem. The main image must be pure white. A+ Content requires lifestyle shoots. The brand store needs hero banners. Sponsored Brand ads need creative variants. A single SKU requires 12 to 18 images.",
       },
       {
         type: "p",
-        text: "Pre-AI era mein ek SKU ka complete Amazon visual package ₹8,000–₹25,000 cost karta tha. 2026 mein AI is poori cost structure ko ₹500–₹2,000 par SKU pe le aaya hai — without compromising Amazon's strict quality policy.",
+        text: "Before AI, a complete Amazon visual package for one SKU cost ₹8,000 to ₹25,000. In 2026, AI has brought that cost down to ₹500 to ₹2,000 per SKU — without compromising Amazon's strict quality policy.",
       },
 
-      { type: "h2", text: "Amazon ki main image policy: 2026 reality" },
+      { type: "h2", text: "Amazon's main image policy: 2026 reality" },
       {
         type: "p",
-        text: "Amazon ki main image policy strict hai — pure white background (RGB 255,255,255), product 85% of frame, no text overlay, no watermark, no props, no shadows other than natural ones. Ek bhi rule break, listing suppressed.",
+        text: "Amazon's main image policy is strict — pure white background (RGB 255,255,255), product filling 85% of the frame, no text overlay, no watermark, no props, no shadows other than natural ones. Break any rule and the listing gets suppressed.",
       },
       { type: "h3", text: "Why most sellers fail the main image test" },
       { type: "ul", items: [
-        "Off-white ya cream background (Amazon detects, suppresses)",
-        "Studio shadows too harsh ya direction wrong",
-        "Reflections on product visible (mirrors, table edges)",
-        "Compression artifacts on product edges",
+        "Off-white or cream background (Amazon detects and suppresses)",
+        "Studio shadows that are too harsh or at the wrong angle",
+        "Reflections visible on the product surface (mirrors, table edges)",
+        "Compression artefacts on product edges from JPEG over-compression",
       ]},
 
       { type: "h2", text: "AI main image: how it solves Amazon's policy automatically" },
       {
         type: "p",
-        text: "AgentForge ka 'Amazon Main' preset specifically Amazon ki main image policy ke around trained hai. Pure white RGB 255,255,255 background, product centred 85% of frame, soft natural shadow under product, no text, no overlay. Ek phone photo se 60 seconds mein compliant image.",
+        text: "AgentForge's Amazon Main preset is trained specifically around Amazon's main image policy. It delivers a pure white RGB 255,255,255 background, product centred at 85% of the frame, soft natural shadow under the product, no text and no overlay. From one phone photo to a compliant image in 60 seconds.",
       },
       { type: "h3", text: "What the AI preserves" },
       { type: "ul", items: [
-        "Product shape, colour aur silhouette exactly same",
-        "Brand label aur packaging text intact",
-        "Logo, batch number, regulatory text untouched",
-        "Distinguishing design features as-is",
+        "Product shape, colour and silhouette — exactly as photographed",
+        "Brand label and all packaging text — intact",
+        "Logo, batch number and regulatory text — untouched",
+        "Distinguishing design features — unchanged",
       ]},
       { type: "h3", text: "What the AI transforms" },
       { type: "ul", items: [
-        "Background → pure white (Amazon spec)",
-        "Lighting → soft diffuse (no harsh shadows)",
-        "Composition → product centred 85% frame",
-        "Edges → clean, no haloing",
+        "Background — replaced with pure white to Amazon spec",
+        "Lighting — converted to soft diffuse with no harsh shadows",
+        "Composition — product re-centred to fill 85% of frame",
+        "Edges — cleaned with no haloing or fringing",
       ]},
 
       { type: "h2", text: "A+ Content: where AI really wins" },
       {
         type: "p",
-        text: "A+ Content ke liye 7–12 lifestyle images chahiye — har image mein product different setting mein dikhta hai. Kitchen mein, dining table pe, hand mein, gift wrap ke saath. Traditionally ye 2 din ka shoot + post-production hota tha. AI mein 15 minutes mein 12 lifestyle variants ready.",
+        text: "A+ Content requires 7 to 12 lifestyle images — the product in a kitchen, on a dining table, in someone's hand, in gift wrapping. Traditionally this was a two-day shoot plus post-production. With AI, 12 lifestyle variants are ready in 15 minutes.",
       },
       { type: "h3", text: "A+ Content image categories AI handles best" },
       { type: "ul", items: [
-        "Lifestyle in-use shots (product being used)",
-        "Comparison split-screen (with/without)",
+        "Lifestyle in-use shots (product being used in context)",
+        "Comparison split-screen (with and without the product)",
         "Brand story hero shots",
-        "Ingredient/material close-ups",
-        "Festival / occasion-specific lifestyle",
+        "Ingredient or material close-ups",
+        "Festival and occasion-specific lifestyle",
         "Multi-pack flat lays",
       ]},
 
       { type: "h2", text: "Amazon Brand Store: hero banners and visual identity" },
       {
         type: "p",
-        text: "Brand Store mein 1500×600 hero banners chahiye — product + lifestyle + brand message. Photoshop wala designer is ek banner ke ₹3,000–₹8,000 leta hai. AI mein same banner 60 seconds mein generate hota hai — fully editable backgrounds, product placement, brand colours.",
+        text: "Brand Stores require 1500×600 hero banners — product combined with lifestyle visuals and brand messaging. A freelance designer charges ₹3,000 to ₹8,000 per banner. AI generates the same banner in 60 seconds with fully adjustable backgrounds, product placement and brand colours.",
       },
 
       { type: "h2", text: "Sponsored Brand Ads: variant generation" },
       {
         type: "p",
-        text: "Sponsored Brand campaigns mein high-performing ad creatives ka secret variant testing hai. Ek hi product ke 8–12 creative variants chalao, jeetne wala scale karo. AI variant generation ne ye possible bana diya hai — same product, alag-alag background mood, lighting, composition — 60 seconds per variant.",
+        text: "The secret to high-performing Sponsored Brand campaigns is variant testing. Run 8 to 12 creative variants of the same product, scale the winner. AI variant generation makes this possible — same product, different background mood, lighting and composition — 60 seconds per variant.",
       },
 
       { type: "h2", text: "The 2026 Amazon seller cost stack" },
@@ -1039,36 +1151,36 @@ export const BLOG_POSTS: BlogPost[] = [
       { type: "ul", items: [
         "Main image studio shoot — ₹1,500",
         "5 secondary images — ₹3,500",
-        "7 A+ Content lifestyle — ₹8,000",
-        "1 brand store hero — ₹4,000",
-        "3 ad variants — ₹4,500",
+        "7 A+ Content lifestyle images — ₹8,000",
+        "1 brand store hero banner — ₹4,000",
+        "3 ad creative variants — ₹4,500",
         "Total per SKU — ₹21,500",
       ]},
       { type: "h3", text: "AI (per SKU)" },
       { type: "ul", items: [
         "Main image generation — ₹40",
         "5 secondary images — ₹200",
-        "7 A+ Content lifestyle — ₹280",
-        "1 brand store hero — ₹40",
-        "3 ad variants — ₹120",
+        "7 A+ Content lifestyle images — ₹280",
+        "1 brand store hero banner — ₹40",
+        "3 ad creative variants — ₹120",
         "Total per SKU — ₹680",
       ]},
       {
         type: "p",
-        text: "Saving per SKU: ~₹20,820. Brand with 100 SKUs saves ~₹20 lakh annually on photography alone — and ships faster.",
+        text: "Saving per SKU: approximately ₹20,820. A brand with 100 SKUs saves roughly ₹20 lakh annually on photography alone — and ships faster.",
       },
 
-      { type: "h2", text: "Compliance: what Amazon's image policy bots check" },
+      { type: "h2", text: "Compliance: what Amazon's image policy checks" },
       {
         type: "p",
-        text: "Amazon ke image policy bots specifically check karte hain: background colour, text/watermark presence, product frame percentage, image sharpness, and pixel-level shadows. AgentForge's Amazon preset har ek parameter ko Amazon spec ke andar lock karke deliver karta hai.",
+        text: "Amazon's image policy system checks background colour, presence of text or watermarks, product frame percentage, image sharpness and pixel-level shadow direction. AgentForge's Amazon preset locks every parameter within Amazon's specification before delivery.",
       },
-      { type: "quote", text: "Ek SKU ki main image 4 baar reject hui thi studio shoots se. AI ke through pehli baar mein approve ho gayi. Suppress hua revenue wapis aa gaya." },
+      { type: "quote", text: "Our main image was rejected four times with studio shoots. The AI version was approved on the first submission. The suppressed revenue came back the same week." },
 
       { type: "h2", text: "The honest take" },
       {
         type: "p",
-        text: "Amazon photography 2026 mein fundamentally AI-first ho chuki hai. Jo seller AI workflow adopt karta hai, woh same photography budget mein 10x more SKUs launch karta hai, faster A/B test karta hai, aur Amazon ke policy rejections se completely bachta hai. Studio shoots ab sirf hero campaign ya luxury brands ke liye relevant rahe gaye hain — operational photography poori tarah AI ki ho chuki hai.",
+        text: "Amazon product photography is now fundamentally AI-first in 2026. Sellers who adopt the AI workflow launch 10 times more SKUs on the same photography budget, A/B test faster and avoid Amazon policy rejections entirely. Studio shoots are now only relevant for hero brand campaigns and luxury flagship products — all operational photography has shifted to AI.",
       },
     ],
   },
@@ -1079,7 +1191,7 @@ export const BLOG_POSTS: BlogPost[] = [
     description:
       "What does AI catalogue generation actually cost in India, how fast is it, and what's the real ROI for a textile, jewellery or D2C brand? An honest 2026 breakdown.",
     excerpt:
-      "AgentForge ke saath kaam karne wale 4,000+ Indian brands ka data — AI catalogue ka real cost, turnaround, ROI aur payback period. No marketing spin.",
+      "Real data from 4,000+ Indian brands on AgentForge — the actual cost, turnaround time, ROI and payback period of AI catalogue generation. No marketing spin.",
     keywords: [
       "AI catalogue generation India",
       "AI catalogue cost India",
@@ -1093,64 +1205,74 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: "2026-05-24T00:00:00.000Z",
     readMinutes: 8,
     heroEmoji: "📊",
+    heroImage: "/gallery/productography/design-13.png",
+    thumbnail: {
+      headline: "AI Catalogue ROI",
+      subline: "Cost, Speed & Returns",
+      badge: "4,000+ Brands Data",
+      gradientFrom: "#10b981",
+      gradientTo: "#0891b2",
+      icon: "📊",
+      statsRow: ["7–8x ROI Month 1", "100x Faster", "₹8–₹25/image"],
+    },
     ctaLabel: "See AgentForge Pricing",
     ctaHref: "/pricing",
     body: [
       {
         type: "p",
-        text: "Indian brands jab AI catalogue generation evaluate karte hain, sabse common sawaal yahi hota hai — 'cost kya aata hai, time kitna lagta hai, ROI kab tak aata hai?' Marketing pitches mein numbers fluffy hote hain. Ye article real numbers deta hai, based on AgentForge platform pe 4,000+ active Indian brands ka 2026 data.",
+        text: "When Indian brands evaluate AI catalogue generation, the most common question is always the same — what does it cost, how fast does it work, and when does the ROI arrive? Marketing pitches keep the numbers vague. This article uses real data from 4,000+ active Indian brands on AgentForge in 2026.",
       },
 
-      { type: "h2", text: "AI catalogue ka real per-image cost in India" },
+      { type: "h2", text: "The real per-image cost of AI catalogue in India" },
       { type: "h3", text: "Standard generation tiers" },
       { type: "ul", items: [
-        "Starter (₹1,999): 1,800 credits ≈ ₹15–₹25 per image",
-        "Pro Creator (₹9,999): 12,000 credits ≈ ₹11–₹18 per image",
-        "Empire (₹39,999): 50,000 credits ≈ ₹8–₹13 per image (with bulk discount stacking)",
+        "Starter (₹1,999/month): 1,800 credits — approximately ₹15–₹25 per image",
+        "Pro Creator (₹9,999/month): 12,000 credits — approximately ₹11–₹18 per image",
+        "Empire (₹39,999/month): 50,000 credits — approximately ₹8–₹13 per image with bulk stacking",
       ]},
       {
         type: "p",
-        text: "Compare this to studio rate: ₹150–₹500 per usable image. AI per-image cost almost 90–95% kam hai.",
+        text: "Compare this to studio rates of ₹150 to ₹500 per usable image. The AI per-image cost is 90 to 95% lower.",
       },
 
       { type: "h2", text: "Turnaround time: real benchmarks" },
       { type: "h3", text: "Single generation" },
       {
         type: "p",
-        text: "Upload click se output download tak: 25–40 seconds (HD 1080), 35–50 seconds (HD+ with brand overlay). Bulk generation mein per-image time aur kam ho jata hai due to parallel processing.",
+        text: "From upload click to output download: 25 to 40 seconds for HD 1080, 35 to 50 seconds for HD+ with brand overlay. Per-image time drops further in bulk generation due to parallel processing.",
       },
       { type: "h3", text: "Bulk catalogue (50–200 SKUs)" },
       { type: "ul", items: [
-        "50 SKUs — ~12 minutes",
-        "100 SKUs — ~25 minutes",
-        "200 SKUs — ~50 minutes",
-        "500 SKUs — ~2 hours (Empire plan parallel)",
+        "50 SKUs — approximately 12 minutes",
+        "100 SKUs — approximately 25 minutes",
+        "200 SKUs — approximately 50 minutes",
+        "500 SKUs — approximately 2 hours (Empire plan, parallel processing)",
       ]},
       {
         type: "p",
-        text: "Compare studio: 50 SKUs ka shoot + post-production = 4–6 days. Yani AI 100x–300x faster hai.",
+        text: "A traditional studio shoot plus post-production for 50 SKUs takes 4 to 6 days. AI is 100 to 300 times faster.",
       },
 
       { type: "h2", text: "Where AI catalogue ROI shows up first" },
       { type: "h3", text: "1. Photography cost saving" },
       {
         type: "p",
-        text: "Pehle saving photography line item mein dikhti hai. Ek mid-size textile brand jo monthly ₹2 lakh photography pe spend karta tha, ab ₹10,000 pe aa jata hai. Annual saving: ~₹22.8 lakh.",
+        text: "The first saving appears in the photography line item. A mid-size textile brand spending ₹2 lakh per month on photography drops to ₹10,000. Annual saving: approximately ₹22.8 lakh.",
       },
       { type: "h3", text: "2. Listing volume scaling" },
       {
         type: "p",
-        text: "Photography bottleneck remove hone se brand same team strength mein 5–10x more SKUs ship kar paata hai. Ye revenue side direct impact dalta hai.",
+        text: "With the photography bottleneck removed, the same team can ship 5 to 10 times more SKUs per month. This directly impacts the revenue side.",
       },
       { type: "h3", text: "3. Festive launch speed" },
       {
         type: "p",
-        text: "Diwali, Karva Chauth, Eid, Navratri — ye launches deciding hote hain Indian brand ke saal ke liye. AI catalogue ne festive launch window ko 6 weeks se 6 days kar diya hai. Brand jo earlier 2 festive collections kar paata tha, ab 6–8 micro-collections kar leta hai.",
+        text: "Diwali, Karva Chauth, Eid, Navratri — these launches determine an Indian brand's year. AI catalogue has compressed the festive launch window from 6 weeks to 6 days. Brands that previously managed 2 festive collections per year now run 6 to 8 micro-collections.",
       },
-      { type: "h3", text: "4. A/B testing creative" },
+      { type: "h3", text: "4. Creative A/B testing" },
       {
         type: "p",
-        text: "Ad creatives, listing thumbnails, banner variants — sab A/B test ho sakte hain bina additional shoot cost. Best-performing variant scale karo, baki discard. Performance marketing ki efficiency 30–50% improve hoti hai.",
+        text: "Ad creatives, listing thumbnails and banner variants can all be A/B tested without additional shoot cost. Scale the winner, discard the rest. Performance marketing efficiency improves by 30 to 50%.",
       },
 
       { type: "h2", text: "Payback period: real Indian brand examples" },
@@ -1158,47 +1280,47 @@ export const BLOG_POSTS: BlogPost[] = [
       { type: "ul", items: [
         "Plan: Pro Creator (₹9,999/month)",
         "Replaces: ₹85,000 monthly photography spend",
-        "Payback: First month itself (8.5x ROI on subscription)",
+        "Payback: First month (8.5x ROI on subscription)",
       ]},
       { type: "h3", text: "Jaipur D2C kurti brand" },
       { type: "ul", items: [
         "Plan: Starter (₹1,999/month)",
         "Replaces: ₹15,000 monthly freelance shoot cost",
-        "Payback: First month itself (7.5x ROI)",
+        "Payback: First month (7.5x ROI)",
       ]},
       { type: "h3", text: "Coimbatore jewellery manufacturer" },
       { type: "ul", items: [
         "Plan: Empire (₹39,999/month)",
-        "Replaces: ₹2.8 lakh monthly studio retainer + photographer fees",
-        "Payback: First month itself (7x ROI)",
+        "Replaces: ₹2.8 lakh monthly studio retainer and photographer fees",
+        "Payback: First month (7x ROI)",
       ]},
 
       { type: "h2", text: "Hidden costs AI catalogue actually removes" },
       { type: "ul", items: [
-        "Model cancellation losses (~₹15,000/incident)",
-        "Reshoot cost when style decisions change (~₹8,000–₹20,000)",
-        "Logistics for samples to studio (~₹3,000/shoot)",
-        "Post-production retouching (~₹100–₹300/image)",
-        "Studio booking opportunity cost when delayed",
+        "Model cancellation losses (approximately ₹15,000 per incident)",
+        "Reshoot cost when style decisions change (₹8,000–₹20,000)",
+        "Sample logistics to and from studio (approximately ₹3,000 per shoot)",
+        "Post-production retouching (₹100–₹300 per image)",
+        "Revenue lost when listing goes live late due to shoot delays",
       ]},
 
-      { type: "h2", text: "Where AI catalogue ROI is weakest (be honest)" },
+      { type: "h2", text: "Where AI catalogue ROI is weakest — the honest view" },
       {
         type: "p",
-        text: "AI catalogue jeetne wale brands ke liye game-changer hai. But honestly: high-end luxury bridal campaigns, magazine editorial covers, and brand-anchor campaigns mein traditional shoots ka role abhi bhi hai. AI catalogue 95% operational catalogue volume handle karta hai — woh 5% flagship work traditional rahega.",
+        text: "AI catalogue is a game-changer for high-volume operational photography. However, high-end luxury bridal campaigns, magazine editorial covers and brand-anchor campaigns still benefit from traditional shoots. AI handles 95% of catalogue volume — that 5% flagship work will stay traditional.",
       },
-      { type: "quote", text: "AI ne photography ko commodity bana diya hai. Brand differentiation ab products, fabric quality aur design sense mein hai — photography mein nahi." },
+      { type: "quote", text: "AI has turned photography into a commodity. Brand differentiation now lives in your products, fabric quality and design sense — not in your photography budget." },
 
       { type: "h2", text: "What 2026 winners look like" },
       {
         type: "p",
-        text: "2026 mein Indian brands jo AI catalogue early adopt kar rahe hain — Surat, Jaipur, Tirupur, Ludhiana, Mumbai, Coimbatore, Delhi, Bangalore — woh apne categories mein silently market share consolidate kar rahe hain. Photography cost gone, listing volume up, festive cycles tighter, ad creative variants higher. Ye competitive advantage compound karta hai — har quarter mein widen hota hai.",
+        text: "Indian brands that adopted AI catalogue early in 2026 — across Surat, Jaipur, Tirupur, Ludhiana, Mumbai, Coimbatore, Delhi and Bangalore — are quietly consolidating market share in their categories. Photography cost eliminated, listing volume up, festive cycles tighter, ad creative variants multiplied. This competitive advantage compounds — it widens every quarter.",
       },
 
       { type: "h2", text: "The honest take" },
       {
         type: "p",
-        text: "AI catalogue generation India ka ROI question 2026 mein 'kya AI catalogue ka use karen' nahi hai. Wo decision ho chuki hai. Real question ab ye hai: 'kitne fast hum AI catalogue ko apne complete workflow mein integrate karein — Meesho, Amazon, Flipkart, WhatsApp, Instagram, brand site — sab par.' Jo brands is integration ko 2026 mein finish karenge, woh apne competitors ko volume aur speed dono mein structurally outpace karenge.",
+        text: "In 2026, the ROI question for AI catalogue generation in India is no longer whether to use it. That decision is made. The real question now is: how fast can you integrate AI catalogue across your entire workflow — Meesho, Amazon, Flipkart, WhatsApp, Instagram and your brand site. Brands that complete this integration in 2026 will structurally outpace their competitors on both volume and speed.",
       },
     ],
   },
@@ -1209,7 +1331,7 @@ export const BLOG_POSTS: BlogPost[] = [
     description:
       "Gold jewellery photography is the most expensive product photography in India. AI is letting jewellers cut studio costs by 90% — while keeping luxury feel intact. Inside the 2026 workflow.",
     excerpt:
-      "Gold ki shine, hand-engraving ki detail, bridal-set ki story — traditionally ek expensive specialist photographer ka kaam tha. AI is rewriting that economics in 2026.",
+      "The shine of gold, the detail of hand-engraving, the story of a bridal set — traditionally the territory of expensive specialist photographers. AI is rewriting that economics in 2026.",
     keywords: [
       "AI gold jewellery photography",
       "AI gold photography India",
@@ -1223,119 +1345,508 @@ export const BLOG_POSTS: BlogPost[] = [
     publishedAt: "2026-05-23T00:00:00.000Z",
     readMinutes: 8,
     heroEmoji: "👑",
+    heroImage: "/gallery/jewellery/design-5.png",
+    thumbnail: {
+      headline: "AI Gold Jewellery",
+      subline: "Photography India",
+      badge: "90% Cost Savings",
+      gradientFrom: "#eab308",
+      gradientTo: "#d97706",
+      icon: "✨",
+      statsRow: ["₹2.55L → ₹9,999", "Bridal Ready", "Stone Fire Preserved"],
+    },
     ctaLabel: "Try Jewellery AI Studio",
     ctaHref: "/jewellery-ai",
     body: [
       {
         type: "p",
-        text: "Gold jewellery photography India ki sabse mehengi product photography hai. Ek bridal set ka complete shoot — model, MUA, studio, gemologist-grade lighting, post-production retouching — easily ₹40,000–₹2,00,000 cost karta hai per collection. Aur ek glance mein over-edited bhi dikh sakta hai, ya under-lit bhi.",
+        text: "Gold jewellery photography is the most expensive product photography in India. A complete bridal set shoot — model, MUA, studio, gemologist-grade lighting and post-production retouching — easily reaches ₹40,000 to ₹2,00,000 per collection. And it can still come out over-edited or under-lit.",
       },
       {
         type: "p",
-        text: "2026 mein AI ne is poori category ko fundamentally reshape kar diya hai — without compromising the luxury feel jewellers ka core differentiation hai.",
+        text: "In 2026, AI has fundamentally reshaped this entire category — without compromising the luxury feel that is a jeweller's core differentiation.",
       },
 
-      { type: "h2", text: "Gold jewellery photography ki actual chunauti" },
+      { type: "h2", text: "Why gold jewellery photography is technically difficult" },
       {
         type: "p",
-        text: "Gold capture karna technically mushkil kyun hai? Gold highly reflective hai — har angle se different colour throw karta hai. Stones (kundan, polki, diamond, ruby) need specific light angles to throw fire. Hand-engraving ki detail tabhi capture hoti hai jab lighting controlled hoti hai. Ek choti si mistake — overexposed highlights, ya colour cast — gold ko 'fake' look de deti hai.",
+        text: "Gold is highly reflective — it throws a different colour from every angle. Stones (kundan, polki, diamond, ruby) need specific light angles to display their fire. Hand-engraving detail is only visible with controlled lighting. One small mistake — overexposed highlights or a colour cast — makes gold look artificial.",
       },
-      { type: "h3", text: "Traditional photographers' pain points" },
+      { type: "h3", text: "The traditional cost breakdown" },
       { type: "ul", items: [
-        "Specialist gold photographer rate: ₹15,000–₹40,000 per day",
-        "Studio lighting setup specific to jewellery: ₹8,000–₹15,000 per day",
+        "Specialist gold photographer: ₹15,000–₹40,000 per day",
+        "Jewellery-specific studio lighting setup: ₹8,000–₹15,000 per day",
         "Stone-by-stone retouching: ₹200–₹800 per image",
         "Bridal model shoot: ₹25,000–₹80,000 per session",
-        "Multi-look variation: each adds ₹15,000–₹30,000",
+        "Each additional look variation: ₹15,000–₹30,000",
       ]},
 
       { type: "h2", text: "How AI handles gold differently" },
       {
         type: "p",
-        text: "AgentForge ka Jewellery AI Studio specifically gold, kundan, polki, diamond aur pearl on Indian skin tones par trained hai. Engine asli stone fire reproduce karta hai, asli gold ka warm tone preserve karta hai, aur hand-engraving ki detail upscale karta hai — overpolished plastic look ke bina.",
+        text: "AgentForge's Jewellery AI Studio is trained specifically on gold, kundan, polki, diamond and pearl on Indian skin tones. The engine reproduces real stone fire, preserves the warm tone of genuine gold and upscales hand-engraving detail — without the over-polished plastic look of generic AI tools.",
       },
       { type: "h3", text: "What AI preserves in your gold piece" },
       { type: "ul", items: [
         "Exact stone placement and cut",
-        "Gold karat tone (22K vs 18K differences)",
+        "Gold karat tone (22K versus 18K differences are retained)",
         "Hand-engraving and meenakari detail",
         "Pearl strand spacing and clasp design",
-        "Distinctive design signatures (kundan setting style etc.)",
+        "Distinctive design signatures such as kundan setting style",
       ]},
       { type: "h3", text: "What AI transforms" },
       { type: "ul", items: [
-        "Background → studio mood, bridal lifestyle, editorial luxury",
-        "Lighting → controlled gold-friendly direction with stone fire",
-        "Model → Indian bridal model (skin tone, expression, attire)",
-        "Composition → editorial, catalogue, ad-ready variants",
+        "Background — replaced with studio mood, bridal lifestyle or editorial luxury",
+        "Lighting — converted to controlled gold-friendly direction with stone fire",
+        "Model — Indian bridal model with appropriate skin tone, expression and attire",
+        "Composition — restyled for editorial, catalogue or ad-ready output",
       ]},
 
       { type: "h2", text: "Bridal gold catalogue: the biggest 2026 use case" },
       {
         type: "p",
-        text: "Bridal jewellery collections traditionally took 4–8 weeks to launch — design lock, sample, shoot booking, model coordination, retouching, approvals, print. AI ne is timeline ko 4–8 din kar diya hai. Designer collection ko final karta hai, AI 60 seconds mein model-worn bridal hero shots banata hai, aur catalogue same week ship hota hai.",
+        text: "Bridal jewellery collections traditionally took 4 to 8 weeks to launch — design lock, sample creation, shoot booking, model coordination, retouching, approvals and print. AI has compressed that timeline to 4 to 8 days. The designer finalises the collection, AI generates model-worn bridal hero shots in 60 seconds, and the catalogue ships the same week.",
       },
-      { type: "quote", text: "Bridal launch jo earlier September mein Karwa Chauth ke liye August mein book hoti thi — ab Karwa Chauth se 5 din pehle bhi launch ho sakti hai." },
+      { type: "quote", text: "A bridal launch that previously needed to be booked in August for a Karwa Chauth campaign can now launch 5 days before the festival itself." },
 
-      { type: "h2", text: "Specific gold photography scenarios AI handles best" },
+      { type: "h2", text: "Specific scenarios AI handles best" },
       { type: "h3", text: "1. Necklace on model" },
       {
         type: "p",
-        text: "AgentForge mein necklace ka flat photo upload karo, model type select karo (bridal Indian, royal, modern), pose select karo, output 60 seconds mein. Necklace ka exact design, stone placement aur gold tone preserve hota hai.",
+        text: "Upload a flat necklace photo, select the model type (bridal Indian, royal, modern) and pose, and the output is ready in 60 seconds. The necklace's exact design, stone placement and gold tone are preserved.",
       },
-      { type: "h3", text: "2. Bridal set hero shot" },
+      { type: "h3", text: "2. Full bridal set hero shot" },
       {
         type: "p",
-        text: "Complete bridal set — necklace + earrings + maang tikka + bangles. AI sab pieces ko coordinated bridal model pe place karta hai with consistent lighting. Ye traditionally do din ka shoot hota tha.",
+        text: "Complete bridal set — necklace, earrings, maang tikka and bangles. AI places all pieces on a coordinated bridal model with consistent lighting across the set. This traditionally required two days of shooting.",
       },
-      { type: "h3", text: "3. Daily-wear ring/earring close-up" },
+      { type: "h3", text: "3. Daily-wear ring and earring close-ups" },
       {
         type: "p",
-        text: "Daily-wear gold collections ke liye lifestyle close-up shots — hand pose, ear pose, festive backdrop. AI variants mein 60 seconds per pose generate karta hai.",
+        text: "Lifestyle close-up shots for daily-wear gold — hand pose, ear pose, festive backdrop. AI generates 60-second variants per pose.",
       },
       { type: "h3", text: "4. Editorial luxury mood" },
       {
         type: "p",
-        text: "High-end campaigns ke liye dark editorial mood, museum lighting, gold-on-velvet — AI ek phone photo se editorial cover-grade output deta hai.",
+        text: "For high-end campaigns — dark editorial mood, museum lighting, gold on velvet. AI delivers editorial cover-grade output from a single phone photo.",
       },
-      { type: "h3", text: "5. Catalogue plain background" },
+      { type: "h3", text: "5. Wholesale catalogue plain background" },
       {
         type: "p",
-        text: "Wholesale catalogues ke liye clean white/cream background with article code overlay. Bulk mode mein 50–100 jewellery items ek baar mein process hote hain.",
+        text: "Clean white or cream background with article code overlay for wholesale catalogues. Bulk mode processes 50 to 100 jewellery items simultaneously.",
       },
 
       { type: "h2", text: "The honest cost comparison" },
       { type: "h3", text: "Traditional bridal collection (10 sets)" },
       { type: "ul", items: [
-        "Photographer + studio (3 days) — ₹1,20,000",
+        "Photographer and studio (3 days) — ₹1,20,000",
         "Bridal model (3 days) — ₹75,000",
-        "MUA + saree styling — ₹35,000",
+        "MUA and saree styling — ₹35,000",
         "Retouching (50 images) — ₹25,000",
-        "Total — ₹2,55,000 over 7–10 days",
+        "Total — ₹2,55,000 over 7 to 10 days",
       ]},
       { type: "h3", text: "AI bridal collection (10 sets)" },
       { type: "ul", items: [
         "AgentForge Pro Creator subscription — ₹9,999/month",
-        "Multi-look variants (50 images @ 175 credits each) — included",
+        "Multi-look variants (50 images at 175 credits each) — included",
         "Brand overlay — included",
         "Total — ₹9,999 over 2 days",
       ]},
       {
         type: "p",
-        text: "Saving per bridal collection: ~₹2.45 lakh. Speed gain: 5–8 days. Most jewellers in 2026 are running 4–6 micro-collections per year vs 1–2 traditional — same budget, 4x catalogue depth.",
+        text: "Saving per bridal collection: approximately ₹2.45 lakh. Speed gain: 5 to 8 days. Most jewellers in 2026 are running 4 to 6 micro-collections per year versus 1 to 2 traditionally — same budget, four times the catalogue depth.",
       },
 
       { type: "h2", text: "Where traditional gold photography still matters" },
       {
         type: "p",
-        text: "Honest mein: heritage brand campaigns, museum-grade documentation, single hero campaign film, and bespoke bridal client documentation — yahaan traditional shoot ki value hai. Lekin operational catalogue, social media content, wholesale lookbooks, ad variants — sab AI mein shift ho chuki hai 2026 mein.",
+        text: "Heritage brand campaigns, museum-grade documentation, single hero campaign films and bespoke bridal client documentation still benefit from traditional shoots. But operational catalogue, social media content, wholesale lookbooks and ad variants have all shifted to AI in 2026.",
       },
 
       { type: "h2", text: "The honest take" },
       {
         type: "p",
-        text: "Gold jewellery photography 2026 mein 'AI ya traditional' question nahi hai — answer 'dono' hai. AI 95% catalogue volume aur speed-driven content handle karta hai, traditional 5% flagship brand-anchor work. Jewellers jo is hybrid model ko adopt karte hain, woh apne photography budget ka 80% bachate hain aur usse jaake actual marketing aur store experience pe invest karte hain. End result: stronger brand, deeper catalogue, faster festive cycle.",
+        text: "Gold jewellery photography in 2026 is not an either/or question — the answer is both. AI handles 95% of catalogue volume and speed-driven content. Traditional handles the 5% flagship brand-anchor work. Jewellers who adopt this hybrid model save 80% of their photography budget and redirect it into actual marketing and in-store experience. The result: a stronger brand, a deeper catalogue and a faster festive cycle.",
       },
+    ],
+  },
+
+  // ============================================================
+  // AGENTFORGE JOURNEY SERIES — Founder's perspective
+  // Author: Gurpreet Singh Soni, CEO & Founder
+  // ============================================================
+
+  {
+    slug: "why-i-built-agentforge-founders-letter",
+    title: "Why I Built AgentForge: A Founder's Letter to Every Indian Seller",
+    description:
+      "Gurpreet Singh Soni, CEO & Founder of AgentForge AI, shares the real story behind building India's first AI-powered catalogue platform — the pain he saw, the gap nobody was filling, and why he quit a comfortable path to build it.",
+    excerpt:
+      "I watched my friend spend ₹6 lakh on a single season's photoshoots for his saree business — and still lose to competitors who shipped faster. That moment is why AgentForge exists.",
+    keywords: [
+      "AgentForge founder story",
+      "Gurpreet Singh Soni AgentForge",
+      "why AgentForge was built",
+      "Indian AI startup founder",
+      "AI for Indian textile sellers",
+      "AgentForge origin story",
+      "Indian D2C AI platform",
+    ],
+    category: "Announcement",
+    author: "Gurpreet Singh Soni",
+    publishedAt: "2026-01-15T00:00:00.000Z",
+    readMinutes: 7,
+    heroEmoji: "✍️",
+    thumbnail: {
+      headline: "A Founder's",
+      subline: "Letter",
+      badge: "Origin Story",
+      gradientFrom: "#1e3a5f",
+      gradientTo: "#0ea5e9",
+      icon: "✍️",
+      statsRow: ["Why We Built This", "The Problem We Saw", "The Mission"],
+    },
+    ctaLabel: "See What We Built",
+    ctaHref: "/",
+    body: [
+      {
+        type: "p",
+        text: "I want to tell you something I have never written down publicly before. The real reason I built AgentForge is not in any pitch deck. It starts with a phone call from a friend in Surat.",
+      },
+      {
+        type: "p",
+        text: "His name is Rajiv. He runs a mid-size saree wholesale operation — 40 to 60 designs per month, a team of 12, clients across 11 states on WhatsApp. In late 2024, he called me frustrated. He had just paid ₹6.2 lakh for a single season's photoshoots. Model fees, MUA, studio rental, photographer, logistics, post-production — all of it. And then he told me the part that hit hardest: by the time the photos arrived, two of his best-performing designs had already been copied by a competitor who saw them at a trade show. He lost the first-mover advantage because his own catalogue took 19 days to produce.",
+      },
+      { type: "h2", text: "The gap that nobody was filling" },
+      {
+        type: "p",
+        text: "I spent the next three months talking to textile sellers, jewellery manufacturers, D2C founders and Meesho resellers across Surat, Jaipur, Ludhiana, Coimbatore and Delhi. The story was the same everywhere. The photoshoot bottleneck was bleeding money, killing speed, and systematically favouring only the brands with deep capital — not the brands with the best designs.",
+      },
+      {
+        type: "p",
+        text: "I looked at existing AI image tools. Every single one was built for Western markets — they did not know what a saree drape looked like, they had no concept of article code overlays for wholesale, and their output looked wrong on Indian fabrics and skin tones. There was a real, urgent, India-specific problem with no India-first solution.",
+      },
+      { type: "quote", text: "The best designs in India were losing to inferior designs that had better photography. That is not a fair fight. That is a capital problem dressed as a creative problem." },
+      { type: "h2", text: "What I set out to build" },
+      {
+        type: "p",
+        text: "AgentForge was not built to be another generic AI tool. From day one, the brief was narrow and specific: build something that a Surat saree manufacturer, a Jaipur jewellery wholesaler, and a Tirupur knitwear factory can all open on Monday morning and use without training. Something that understands saree drapes, Indian bridal models, kundan settings, article code overlays, WhatsApp-square outputs and INR pricing. Not a Western product with Indian pricing slapped on it. An Indian product, built from scratch, for the way Indian sellers actually work.",
+      },
+      { type: "h2", text: "What we shipped in the first six months" },
+      {
+        type: "p",
+        text: "In the first six months after launch, AgentForge has processed over 4 lakh catalogue images for Indian brands. The average cost saving per brand is 87% compared to their previous photography spend. The average time from design lock to WhatsApp drop has gone from 5–7 days to under 2 hours.",
+      },
+      {
+        type: "p",
+        text: "But the number I am most proud of is not a platform metric. It is the message I got from a Jaipur-based jewellery manufacturer in March 2026 — a second-generation family business that had never been able to afford a bridal campaign shoot. She used AgentForge to build her first-ever festive campaign in one afternoon. She said it was the first time in 22 years of business that her catalogue looked like it belonged next to a national brand.",
+      },
+      { type: "h2", text: "A note to every Indian seller reading this" },
+      {
+        type: "p",
+        text: "If you sell textiles, jewellery, home decor, cosmetics or any physical product — you deserve to look like a premium brand without paying a premium photography bill. Your designs, your craftsmanship, your customer relationships are what make your business. Photography should not be the bottleneck between your product and your customer's attention.",
+      },
+      {
+        type: "p",
+        text: "That is why AgentForge exists. And we are just getting started.",
+      },
+      { type: "quote", text: "— Gurpreet Singh Soni, CEO & Founder, AgentForge AI" },
+    ],
+  },
+
+  {
+    slug: "agentforge-launch-indias-first-ai-catalogue-platform",
+    title: "AgentForge Is Live: India's First AI Catalogue Platform for Textile & Jewellery",
+    description:
+      "AgentForge AI officially launches as India's first AI-powered catalogue generation platform built specifically for textile manufacturers, jewellery brands and D2C sellers. Founder Gurpreet Singh Soni announces the platform, its features and the vision behind it.",
+    excerpt:
+      "Today, we are officially open to every Indian textile manufacturer, jewellery brand and D2C seller. No waitlist. No beta. AgentForge is live — and your first 100 credits are free.",
+    keywords: [
+      "AgentForge AI launch",
+      "India AI catalogue platform launch",
+      "AgentForge textile jewellery AI",
+      "AI product photography India launch",
+      "Gurpreet Singh Soni AgentForge launch",
+      "Indian AI startup launch 2026",
+    ],
+    category: "Announcement",
+    author: "Gurpreet Singh Soni",
+    publishedAt: "2026-02-01T00:00:00.000Z",
+    readMinutes: 5,
+    heroEmoji: "🚀",
+    thumbnail: {
+      headline: "AgentForge",
+      subline: "Is Live.",
+      badge: "Official Launch",
+      gradientFrom: "#7c3aed",
+      gradientTo: "#2563eb",
+      icon: "🚀",
+      statsRow: ["India's First", "AI Catalogue Platform", "Free to Start"],
+    },
+    ctaLabel: "Start Free — 100 Credits",
+    ctaHref: "/signup",
+    body: [
+      {
+        type: "p",
+        text: "Today is a day I have been building toward for over a year. AgentForge AI is officially live — and it is open to every Indian textile manufacturer, jewellery brand, D2C seller, Meesho reseller, and ecommerce operator who has ever been held back by a photography bill.",
+      },
+      { type: "h2", text: "What AgentForge does" },
+      {
+        type: "p",
+        text: "AgentForge is India's first AI-powered catalogue platform built specifically for Indian product categories and Indian business workflows. You upload a flat fabric photo or product image. In 60 seconds, our AI generates a model-worn, studio-lit, brand-overlaid catalogue image ready for WhatsApp, Amazon, Instagram and Meesho.",
+      },
+      { type: "ul", items: [
+        "TextilePrints to Mockup AI — sarees, kurtis, kurtas, lehengas, kidswear, home textiles",
+        "Jewellery AI Studio — bridal sets, gold, diamond, kundan, daily-wear, wholesale",
+        "Productography AI — cosmetics, perfume, watches, electronics, food, home decor",
+        "Article code overlay, brand name, WhatsApp number — all automatic",
+        "Output: 1080×1080 WhatsApp square, 9:16 Story, white-background marketplace mode",
+      ]},
+      { type: "h2", text: "Who we built this for" },
+      {
+        type: "p",
+        text: "Surat saree manufacturers shipping 30 designs a month. Jaipur kurti brands running daily WhatsApp drops. Tirupur knitwear factories with 500-SKU catalogues. Mumbai D2C brands running Meta Ads. Coimbatore jewellery manufacturers building bridal campaigns. Meesho sellers trying to outscale competitors. Amazon India sellers fighting listing suppression. If you sell a physical product in India, AgentForge is for you.",
+      },
+      { type: "h2", text: "Pricing — built for Indian businesses" },
+      { type: "ul", items: [
+        "Starter — ₹1,999/month — 1,800 credits — ~120 images",
+        "Pro Creator — ₹9,999/month — 12,000 credits — ~800 images",
+        "Empire — ₹39,999/month — 50,000 credits — 3,000+ images",
+        "Free tier — 100 credits on signup — no card required",
+      ]},
+      { type: "quote", text: "INR pricing. GST invoicing. Razorpay payments. WhatsApp support. This is India-first, not India-adapted." },
+      { type: "h2", text: "Get started today" },
+      {
+        type: "p",
+        text: "Sign up at aiagentforge.in. Your first 100 credits are free — no credit card, no commitment. Generate your first AI catalogue image in the next 10 minutes. Welcome to AgentForge.",
+      },
+      { type: "quote", text: "— Gurpreet Singh Soni, CEO & Founder, AgentForge AI" },
+    ],
+  },
+
+  {
+    slug: "agentforge-first-10000-images-what-we-learned",
+    title: "After 10,000 AI Catalogue Images: What Indian Sellers Actually Need",
+    description:
+      "AgentForge CEO Gurpreet Singh Soni shares the real data and honest lessons from the platform's first 10,000 AI catalogue images — which categories work best, what sellers ask for most, and what we are building next.",
+    excerpt:
+      "We have now generated over 10,000 AI catalogue images for Indian brands. Here is the honest data on what works, what surprised us, and what we are fixing based on real seller feedback.",
+    keywords: [
+      "AgentForge 10000 images milestone",
+      "AI catalogue India learnings",
+      "AgentForge product update",
+      "Indian seller AI photography data",
+      "Gurpreet Singh Soni AgentForge update",
+      "AI textile jewellery India results",
+    ],
+    category: "Announcement",
+    author: "Gurpreet Singh Soni",
+    publishedAt: "2026-03-10T00:00:00.000Z",
+    readMinutes: 6,
+    heroEmoji: "📈",
+    thumbnail: {
+      headline: "10,000 Images.",
+      subline: "What We Learned.",
+      badge: "Platform Milestone",
+      gradientFrom: "#059669",
+      gradientTo: "#0891b2",
+      icon: "📈",
+      statsRow: ["10,000+ Images", "Real Data", "Honest Lessons"],
+    },
+    ctaLabel: "Try AgentForge Free",
+    ctaHref: "/signup",
+    body: [
+      {
+        type: "p",
+        text: "We have crossed 10,000 AI catalogue images generated on AgentForge. I want to share what the data actually tells us — not the polished marketing version, but the honest founder's view of what is working, what surprised us, and what we are building next.",
+      },
+      { type: "h2", text: "Which categories are driving volume" },
+      { type: "ul", items: [
+        "Saree mockups — 34% of all generations (Surat, Varanasi, Kanjeevaram sellers)",
+        "Kurti and salwar kameez — 22%",
+        "Jewellery (bridal + daily-wear) — 19%",
+        "Productography (cosmetics, perfume, home decor) — 15%",
+        "Kidswear and menswear — 10%",
+      ]},
+      {
+        type: "p",
+        text: "Saree leads by a significant margin. The demand signal from Surat and Varanasi is the strongest we have seen. Sellers there are generating 20–50 images per day once they get set up.",
+      },
+      { type: "h2", text: "What surprised us" },
+      { type: "h3", text: "1. WhatsApp is the primary output destination — not Instagram" },
+      {
+        type: "p",
+        text: "We expected Instagram and marketplace sellers to dominate. Instead, 67% of all downloads are the 1080×1080 WhatsApp square format. Indian wholesale still runs on WhatsApp groups, and the speed of AI catalogue directly translates into more drops per day and more enquiries per week.",
+      },
+      { type: "h3", text: "2. Article code overlay is non-negotiable" },
+      {
+        type: "p",
+        text: "The single most-requested feature from day one has been article code + company watermark on every image. Sellers do not want to add this manually after generation. We have now made it a one-time saved setting — enter once, it appears on every output automatically.",
+      },
+      { type: "h3", text: "3. Festive timing drives usage spikes" },
+      {
+        type: "p",
+        text: "Usage spiked 340% in the 10 days before Holi and 280% in the week before Gudi Padwa. Sellers are using AgentForge to compress their festive launch cycles from weeks to days. This tells us that festive readiness is one of the highest-value use cases we should double down on.",
+      },
+      { type: "h2", text: "What we are fixing based on feedback" },
+      { type: "ul", items: [
+        "Pallu placement accuracy for drape-heavy sarees — shipping in next update",
+        "Faster bulk processing — 50-image queue now processes in parallel",
+        "Hindi language support in the dashboard UI — in development",
+        "Mobile-optimised upload flow — many sellers use phones, not laptops",
+      ]},
+      { type: "h2", text: "What is coming next" },
+      {
+        type: "p",
+        text: "We are building three features that the data clearly demands: a dedicated festive pack with seasonal backdrops updated every month, a bulk catalogue download with ZIP + article-code naming, and a direct WhatsApp Business API integration so sellers can push their catalogue images directly to their groups from within AgentForge.",
+      },
+      { type: "quote", text: "10,000 images is a milestone but it is not a destination. The real number we are chasing is 1 crore — and at the current growth rate, that is not far." },
+      { type: "quote", text: "— Gurpreet Singh Soni, CEO & Founder, AgentForge AI" },
+    ],
+  },
+
+  {
+    slug: "agentforge-platform-update-may-2026",
+    title: "AgentForge Platform Update: Faster Generation, Festive Packs & Hindi UI",
+    description:
+      "AgentForge's biggest platform update yet — faster image generation, Indian festive backdrop packs, Hindi dashboard, mobile-optimised upload and WhatsApp-direct integration. Full details from Founder Gurpreet Singh Soni.",
+    excerpt:
+      "Our biggest update since launch. Faster AI generation, a new Festive Pack updated every month, Hindi dashboard UI, mobile upload redesign, and direct WhatsApp Business integration — all shipping this month.",
+    keywords: [
+      "AgentForge platform update May 2026",
+      "AgentForge new features",
+      "AI catalogue update India",
+      "AgentForge Hindi UI",
+      "AgentForge festive pack",
+      "Gurpreet Singh Soni product update",
+      "AgentForge WhatsApp integration",
+    ],
+    category: "Announcement",
+    author: "Gurpreet Singh Soni",
+    publishedAt: "2026-05-01T00:00:00.000Z",
+    readMinutes: 5,
+    heroEmoji: "⚡",
+    thumbnail: {
+      headline: "Faster.",
+      subline: "Smarter. Better.",
+      badge: "Platform Update",
+      gradientFrom: "#6d28d9",
+      gradientTo: "#db2777",
+      icon: "⚡",
+      statsRow: ["2x Faster", "Festive Packs", "Hindi UI"],
+    },
+    ctaLabel: "See What's New",
+    ctaHref: "/signup",
+    body: [
+      {
+        type: "p",
+        text: "This is the update I have been most excited to ship since we launched. Over the past 90 days, we collected feedback from 4,000+ active sellers on AgentForge. Today, we are shipping the five changes they asked for most — all at once.",
+      },
+      { type: "h2", text: "1. Generation speed: 2x faster" },
+      {
+        type: "p",
+        text: "We rebuilt our inference pipeline from scratch. Single-image generation now completes in 25–35 seconds (down from 55–70 seconds). Bulk generation for 50-image catalogues has dropped from 45 minutes to under 20 minutes. This is the single biggest quality-of-life improvement for sellers doing daily drops.",
+      },
+      { type: "h2", text: "2. Festive Backdrop Packs — updated every month" },
+      {
+        type: "p",
+        text: "Every month, we curate and ship a new Festive Pack with 8–12 backdrops designed around the upcoming Indian festival calendar. May 2026 pack includes: Eid al-Adha, Rakshabandhan preview, and Independence Day themes. Packs are available to all Pro Creator and Empire subscribers — no extra charge.",
+      },
+      { type: "h2", text: "3. Hindi dashboard UI" },
+      {
+        type: "p",
+        text: "The full AgentForge dashboard is now available in Hindi. Every label, instruction, prompt and error message has been translated by our in-house team — not machine-translated. Sellers who found the English UI difficult to navigate can now switch to Hindi in one click from Settings.",
+      },
+      { type: "h2", text: "4. Mobile-optimised upload" },
+      {
+        type: "p",
+        text: "62% of AgentForge sessions come from mobile devices. The upload flow has been completely redesigned for phones — larger tap targets, camera-direct capture, and instant crop preview before generation. You can now go from phone camera to finished catalogue image in under 2 minutes on mobile.",
+      },
+      { type: "h2", text: "5. WhatsApp Business direct push" },
+      {
+        type: "p",
+        text: "This is the feature sellers have been asking for since day one. AgentForge now integrates directly with WhatsApp Business API. After generation, you can push your catalogue images directly to your WhatsApp Business groups — without downloading, switching apps or manual uploading. One click from AgentForge to your buyers.",
+      },
+      { type: "quote", text: "Every feature in this update came directly from seller feedback. You told us what you needed — we built it. That is the only product roadmap we follow." },
+      { type: "quote", text: "— Gurpreet Singh Soni, CEO & Founder, AgentForge AI" },
+    ],
+  },
+
+  {
+    slug: "agentforge-vision-every-indian-seller-premium-brand",
+    title: "The AgentForge Vision: Making Every Indian Seller Look Like a Premium Brand",
+    description:
+      "AgentForge Founder Gurpreet Singh Soni lays out the long-term vision — a world where every Indian seller, regardless of size or capital, has access to the same visual quality as India's largest retail brands.",
+    excerpt:
+      "Tanishq has a 200-person creative team. Fabindia has a dedicated photography studio. Most Indian sellers have a phone and a WhatsApp group. We are building the infrastructure that closes that gap — for good.",
+    keywords: [
+      "AgentForge vision 2026",
+      "AI for Indian small business",
+      "Gurpreet Singh Soni vision",
+      "AgentForge long term plan",
+      "Indian seller AI future",
+      "democratising visual content India",
+      "AgentForge roadmap",
+    ],
+    category: "Announcement",
+    author: "Gurpreet Singh Soni",
+    publishedAt: "2026-05-15T00:00:00.000Z",
+    readMinutes: 6,
+    heroEmoji: "🎯",
+    thumbnail: {
+      headline: "The Vision",
+      subline: "for Indian Sellers",
+      badge: "Founder's Note",
+      gradientFrom: "#be123c",
+      gradientTo: "#9333ea",
+      icon: "🎯",
+      statsRow: ["Every Seller", "Premium Quality", "No Capital Barrier"],
+    },
+    ctaLabel: "Join AgentForge",
+    ctaHref: "/signup",
+    body: [
+      {
+        type: "p",
+        text: "India has roughly 8 crore active product sellers — on Meesho, Amazon, Flipkart, WhatsApp, Instagram, and their own stores. Of those 8 crore, fewer than 2% have access to professional photography on a consistent basis. The other 98% are competing with phone photos, recycled competitor images, and catalogue visuals that do not represent the quality of what they actually sell.",
+      },
+      {
+        type: "p",
+        text: "This is the problem AgentForge is built to solve. Not just for a few hundred brands. For every Indian seller who has ever been outcompeted not because their product was inferior, but because their presentation was.",
+      },
+      { type: "h2", text: "The unfair advantage that capital creates" },
+      {
+        type: "p",
+        text: "Tanishq has an in-house photography team. Fabindia has a dedicated studio in every major city. FabAlley has a full-time creative director. These companies do not think about photography as a cost — it is infrastructure. For 98% of Indian sellers, it is a recurring, painful, unpredictable expense that throttles their growth.",
+      },
+      { type: "quote", text: "Photography should be infrastructure, not a capital barrier. Our job is to build that infrastructure for every Indian seller — not just the ones who can afford a studio retainer." },
+      { type: "h2", text: "What the AgentForge infrastructure looks like" },
+      {
+        type: "p",
+        text: "We are not building an app. We are building infrastructure — the visual production layer that Indian commerce runs on. By 2027, we want AgentForge to be the default answer to 'where do Indian product images come from?' the same way Razorpay is the default answer to 'how do Indian businesses accept payments?'",
+      },
+      { type: "ul", items: [
+        "Every Indian product category natively supported — not just sarees and jewellery",
+        "Every Indian language in the dashboard — not just Hindi and English",
+        "Direct integration with every major Indian marketplace — Meesho, Amazon, Flipkart, Myntra",
+        "Offline access for sellers in areas with poor connectivity",
+        "Village-level reseller network for sellers who are not yet online",
+      ]},
+      { type: "h2", text: "The sellers we are building for" },
+      {
+        type: "p",
+        text: "The home-based kurti seller in Ludhiana who runs her business from her phone between school pickups. The third-generation bangle manufacturer in Firozabad who still ships on WhatsApp. The 22-year-old D2C skincare founder in Bangalore who has a great formula but cannot afford a campaign shoot. The saree weaver in Varanasi whose work belongs in a fashion magazine but whose catalogue looks like it was shot in a hurry.",
+      },
+      {
+        type: "p",
+        text: "These are the people we wake up for. Their success is our product roadmap. Their constraints are our engineering brief.",
+      },
+      { type: "h2", text: "What we are asking from you" },
+      {
+        type: "p",
+        text: "If you sell a physical product in India and you have not tried AgentForge — try it today. Your first 100 credits are free. Generate your first AI catalogue image in the next 10 minutes. If it saves you money, time, or a missed festive deadline — tell someone. That word of mouth is the only marketing that has ever mattered to us.",
+      },
+      { type: "quote", text: "We are building for the India that is — not the India that looks good in a pitch deck. And we are just getting started." },
+      { type: "quote", text: "— Gurpreet Singh Soni, CEO & Founder, AgentForge AI" },
     ],
   },
 ];

@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      { source: "/blog", destination: "/news", permanent: true },
+    ];
+  },
   outputFileTracingRoot: __dirname,
   turbopack: {
     root: ".",

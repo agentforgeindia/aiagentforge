@@ -5,6 +5,7 @@
 // narrows the view server-side — shareable, no client JS.
 
 import Link from "next/link";
+import HeroSlider from "./HeroSlider";
 
 import {
   fetchChannelVideos,
@@ -211,52 +212,68 @@ export default async function TutorialsPage({
 
       <section className="relative z-10 mx-auto max-w-6xl px-5 py-14 md:py-20">
         {/* ───────── Hero ───────── */}
-        <div className="mb-8 rounded-[2.2rem] border border-black/10 bg-white/85 p-7 shadow-2xl backdrop-blur-xl md:p-10 dark:border-white/10 dark:bg-white/[0.07]">
-          <p className="mb-4 inline-flex rounded-full bg-cyan-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-cyan-600">
-            AgentForge Tutorials
-          </p>
-          <h1 className="text-4xl font-black leading-tight tracking-tight md:text-6xl">
-            Watch every{" "}
-            <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">
-              AgentForge tutorial
-            </span>{" "}
-            in one place
-          </h1>
-          <p className="mt-5 max-w-3xl text-base leading-8 text-black/60 dark:text-white/65 md:text-lg">
-            Step-by-step walkthroughs for every AI agent — auto-synced from our{" "}
-            <a
-              href={CHANNEL_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-black text-cyan-600 underline"
-            >
-              YouTube channel
-            </a>
-            . Pick the agent you're working with and watch what you need.
-          </p>
+        <div className="mb-8 overflow-hidden rounded-[2.2rem] border border-black/10 bg-white/85 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.07]">
+          <div className="grid gap-0 md:grid-cols-[1fr_1.1fr]">
 
-          {/* Quick stats */}
-          <div className="mt-6 inline-flex flex-wrap items-center gap-3 rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-4 py-3 text-sm font-bold">
-            <span>
-              <span className="text-lg font-black text-cyan-700 dark:text-cyan-200">
-                {totalCount}
-              </span>{" "}
-              <span className="text-black/60 dark:text-white/65">
-                tutorials
-              </span>
-            </span>
-            <span className="text-black/30 dark:text-white/25">·</span>
-            <span>
-              <span className="text-lg font-black text-cyan-700 dark:text-cyan-200">
-                3
-              </span>{" "}
-              <span className="text-black/60 dark:text-white/65">AI agents</span>
-            </span>
-            <span className="text-black/30 dark:text-white/25">·</span>
-            <span className="text-emerald-700 dark:text-emerald-300">
-              Updated every 15 min
-            </span>
+            {/* Left — copy */}
+            <div className="flex flex-col justify-center p-7 md:p-10">
+              <p className="mb-4 inline-flex w-fit rounded-full bg-cyan-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-cyan-600">
+                AgentForge Tutorials
+              </p>
+              <h1 className="text-3xl font-black leading-tight tracking-tight md:text-5xl">
+                Learn how to use{" "}
+                <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">
+                  every AI agent
+                </span>{" "}
+                — step by step
+              </h1>
+              <p className="mt-4 text-sm leading-7 text-black/60 dark:text-white/65 md:text-base">
+                Watch real walkthroughs for Jewellery AI Studio, TextilePrints to Mockup AI and Productography AI — from uploading your first image to downloading a catalogue-ready output.
+              </p>
+
+            </div>
+
+            {/* Right — auto-sliding hero slider */}
+            <div className="hidden p-4 md:block">
+              <HeroSlider
+                videos={AGENT_ORDER.flatMap((agent) =>
+                  grouped[agent].map((v) => ({
+                    id: v.id,
+                    title: v.title,
+                    url: v.url,
+                    agent,
+                    emoji: AGENT_DISPLAY[agent].emoji,
+                  }))
+                )}
+              />
+            </div>
           </div>
+        </div>
+
+        {/* ───────── Category cards ───────── */}
+        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {AGENT_ORDER.map((agent) => {
+            const meta = AGENT_DISPLAY[agent];
+            const count = grouped[agent].length;
+            return (
+              <Link
+                key={agent}
+                href={`/tutorials?agent=${agent}`}
+                className={`group flex items-center gap-4 rounded-2xl border px-6 py-5 transition hover:-translate-y-0.5 hover:shadow-lg ${meta.accent}`}
+              >
+                <span className="text-4xl">{meta.emoji}</span>
+                <div>
+                  <p className="text-base font-black leading-tight">
+                    {meta.title.replace(/\s*AI(\s+Studio)?$/i, "")}
+                  </p>
+                  <p className="mt-0.5 text-sm font-bold opacity-70">
+                    {count} tutorial{count !== 1 ? "s" : ""}
+                  </p>
+                </div>
+                <span className="ml-auto text-lg font-black opacity-40 transition group-hover:translate-x-1">→</span>
+              </Link>
+            );
+          })}
         </div>
 
         {/* ───────── Filter chips ───────── */}
@@ -323,16 +340,31 @@ export default async function TutorialsPage({
                   key={video.id}
                   className="group flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-black/10 bg-white/85 shadow-md backdrop-blur transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-cyan-500/15 dark:border-white/10 dark:bg-white/[0.05]"
                 >
-                  <div className="relative aspect-video w-full overflow-hidden bg-black/5 dark:bg-white/[0.04]">
-                    <iframe
-                      src={`https://www.youtube.com/embed/${video.id}?rel=0&modestbranding=1`}
-                      title={video.title}
+                  <a
+                    href={video.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group/thumb relative block aspect-video w-full overflow-hidden bg-black/5 dark:bg-white/[0.04]"
+                    aria-label={`Watch: ${video.title}`}
+                  >
+                    <img
+                      src={ytThumb(video.id)}
+                      alt={video.title}
+                      className="h-full w-full object-cover transition duration-300 group-hover/thumb:scale-105"
                       loading="lazy"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      className="absolute inset-0 h-full w-full"
                     />
-                  </div>
+                    <div className="absolute inset-0 bg-black/20 transition group-hover/thumb:bg-black/35" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/95 shadow-xl transition duration-200 group-hover/thumb:scale-110">
+                        <svg className="h-6 w-6 translate-x-0.5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <span className="absolute bottom-2 right-2 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                      YouTube ↗
+                    </span>
+                  </a>
 
                   <div className="flex flex-1 flex-col p-5">
                     <div className="mb-2 flex flex-wrap items-center gap-2">

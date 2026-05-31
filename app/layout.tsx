@@ -263,7 +263,7 @@ export default function RootLayout({
         />
       </head>
 
-      <body className="relative min-h-full overflow-x-hidden flex flex-col">
+      <body className={`${geistSans.variable} ${geistMono.variable} relative min-h-full overflow-x-hidden flex flex-col`}>
         {/* ============================================================
             ANALYTICS & ADS TRACKING (site-wide)
             ============================================================

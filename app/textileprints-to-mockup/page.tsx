@@ -819,6 +819,7 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const stepTopRef = useRef<HTMLDivElement | null>(null);
+  const resultRef = useRef<HTMLDivElement | null>(null);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
   const [dailyGalleryImage, setDailyGalleryImage] = useState(
     "/banner-design-output.png",
@@ -951,6 +952,12 @@ export default function Home() {
       text: "When the buyer sees fabric on a model, decision time drops because imagination becomes visual proof.",
     },
   ];
+
+  useEffect(() => {
+    if (showResult) {
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 300);
+    }
+  }, [showResult]);
 
   useEffect(() => {
     if (!loading) {
@@ -2340,6 +2347,39 @@ export default function Home() {
                 View Gallery
               </Link>
             </div>
+
+            {/* SEO category chips */}
+            <div className="mt-6">
+              <p className={`mb-3 text-[11px] font-black uppercase tracking-[0.18em] ${darkMode ? "text-white/40" : "text-black/40"}`}>
+                Popular categories
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { label: "Men's Shirt Mockup", emoji: "👔" },
+                  { label: "Kurta Mockup", emoji: "🧥" },
+                  { label: "Saree Mockup", emoji: "🥻" },
+                  { label: "Kurti Mockup", emoji: "👘" },
+                  { label: "Cushion Cover", emoji: "🛋️" },
+                  { label: "Curtain Mockup", emoji: "🪟" },
+                  { label: "Bedsheet Mockup", emoji: "🛏️" },
+                  { label: "Lehenga Mockup", emoji: "👗" },
+                  { label: "T-Shirt Mockup", emoji: "👕" },
+                ].map((cat) => (
+                  <a
+                    key={cat.label}
+                    href="#try"
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition hover:scale-105 hover:border-cyan-400/60 hover:text-cyan-600 ${
+                      darkMode
+                        ? "border-white/10 bg-white/[0.05] text-white/60"
+                        : "border-black/10 bg-white/70 text-black/60"
+                    }`}
+                  >
+                    <span>{cat.emoji}</span>
+                    {cat.label}
+                  </a>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div
@@ -2444,26 +2484,41 @@ export default function Home() {
             <div className="grid gap-5 lg:grid-cols-[0.72fr_1.28fr]">
               <div className="lg:sticky lg:top-24">
                 <label
-                  className={`flex min-h-[190px] cursor-pointer items-center justify-center rounded-[1.5rem] border-2 border-dashed p-5 text-center ${darkMode ? "border-white/15 bg-black/20" : "border-black/15 bg-[#fffaf0]"}`}
+                  className={`relative flex min-h-[190px] cursor-pointer overflow-hidden rounded-[1.5rem] border-2 border-dashed transition-all ${
+                    items[0]?.url
+                      ? darkMode ? "border-cyan-400/40" : "border-cyan-300/60"
+                      : darkMode ? "items-center justify-center bg-black/20 p-5 text-center border-white/15" : "items-center justify-center bg-[#fffaf0] p-5 text-center border-black/15"
+                  }`}
                 >
-                  <div>
-                    <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-blue-400 text-white shadow-lg shadow-cyan-400/25">
-                      <UploadCloud className="h-8 w-8" />
+                  {items[0]?.url ? (
+                    <>
+                      <img
+                        src={items[0].url}
+                        alt="Uploaded textile design preview"
+                        className="min-h-[190px] w-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/40 to-transparent p-3">
+                        <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-black text-black/70">Tap to change</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-blue-400 text-white shadow-lg shadow-cyan-400/25">
+                        <UploadCloud className="h-8 w-8" />
+                      </div>
+                      <p className="text-lg font-semibold">
+                        {isEmpireUser ? "Upload Textile Design(s)" : "Upload Textile Design"}
+                      </p>
+                      <p className={`mt-2 text-sm ${muted}`}>
+                        {isEmpireUser
+                          ? "Select one or multiple files — PNG, JPG, JPEG, WEBP"
+                          : "Normal packs support one design at a time — upgrade to Empire Pack for bulk creation"}
+                      </p>
+                      <p className="mt-2 text-xs font-bold text-cyan-600">
+                        Design code on the image is auto-detected via OCR
+                      </p>
                     </div>
-                    <p className="text-lg font-semibold">
-                      {isEmpireUser
-                        ? "Upload Textile Design(s)"
-                        : "Upload Textile Design"}
-                    </p>
-                    <p className={`mt-2 text-sm ${muted}`}>
-                      {isEmpireUser
-                        ? "Select one or multiple files — PNG, JPG, JPEG, WEBP"
-                        : "Normal packs support one design at a time — upgrade to Empire Pack for bulk creation"}
-                    </p>
-                    <p className="mt-2 text-xs font-bold text-cyan-600">
-                      Design code on the image is auto-detected via OCR
-                    </p>
-                  </div>
+                  )}
                   <input
                     type="file"
                     accept="image/*"
@@ -3348,16 +3403,26 @@ export default function Home() {
                     </div>
                     {showResult && (
                       <div
+                        ref={resultRef}
                         className={`mt-6 overflow-hidden rounded-[1.5rem] border shadow-2xl backdrop-blur-xl sm:rounded-[2.5rem] ${card}`}
                       >
                         <div className="flex flex-col">
-                          <div className="flex items-center justify-center bg-black/5 p-3 sm:p-5">
+                          <div className="bg-black/5 p-3 sm:p-5">
                             {previewResult ? (
-                              <img
-                                src={previewResult}
-                                alt="Final AI textile mockup generated using AgentForge"
-                                className="w-full max-w-[360px] rounded-3xl object-cover shadow-2xl transition hover:scale-[1.02]"
-                              />
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="text-center">
+                                  {previewImage ? (
+                                    <img src={previewImage} alt="Uploaded textile design" className="mx-auto max-h-[360px] w-full rounded-2xl object-cover shadow-lg" />
+                                  ) : (
+                                    <div className={`flex h-[200px] w-full items-center justify-center rounded-2xl border-2 border-dashed ${darkMode ? "border-white/20" : "border-black/15"}`}><span className="text-3xl opacity-30">📷</span></div>
+                                  )}
+                                  <p className={`mt-2 text-xs font-bold ${muted}`}>Your Design</p>
+                                </div>
+                                <div className="text-center">
+                                  <img src={previewResult} alt="Final AI textile mockup generated using AgentForge" className="mx-auto max-h-[360px] w-full rounded-2xl object-cover shadow-2xl shadow-cyan-400/20 transition hover:scale-[1.02]" />
+                                  <p className={`mt-2 text-xs font-bold ${muted}`}>AI Mockup</p>
+                                </div>
+                              </div>
                             ) : (
                               <div className="flex min-h-[400px] w-full flex-col items-center justify-center gap-5 p-5 text-center">
                                 {/* Animated logo */}
@@ -3439,6 +3504,13 @@ export default function Home() {
                             >
                               <span>Share on WhatsApp</span>
                             </a>
+
+                            <Link
+                              href="/my-creations"
+                              className={`mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-sm font-bold transition hover:scale-[1.01] ${darkMode ? "border-white/10 bg-white/[0.04] text-white/70 hover:border-cyan-400/30 hover:text-cyan-300" : "border-black/10 bg-cyan-50/70 text-black/70 hover:border-cyan-300 hover:text-cyan-700"}`}
+                            >
+                              🎨 Your old creations are saved in <span className="ml-1 font-black text-cyan-600">My Creations</span>
+                            </Link>
 
                             {items.filter((it) => it.resultUrl).length > 1 && (
                               <div className="mt-6">
@@ -3554,59 +3626,72 @@ export default function Home() {
       </div>
 
       {loading && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md">
-          <div className="mx-auto max-w-lg p-6 text-center text-white">
-            <div className="relative mx-auto mb-10 h-32 w-32">
-              <div className="absolute inset-0 animate-ping rounded-full bg-cyan-400 opacity-20" />
-              <div className="absolute -inset-3 animate-pulse rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 opacity-40 blur-2xl" />
-              <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white shadow-2xl ring-4 ring-cyan-400/60">
-                <img
-                  src="/logo-new.jpg"
-                  alt="AgentForge"
-                  className="h-full w-full object-cover"
-                  style={{ animation: "afLogoFloat 2.4s ease-in-out infinite" }}
-                />
-              </div>
-              <style>{`
-    @keyframes afLogoFloat {
-      0%, 100% { transform: scale(1) rotate(-4deg); }
-      50%      { transform: scale(1.1) rotate(4deg); }
-    }
-  `}</style>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden px-4">
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/40 via-white/15 to-purple-50/40 backdrop-blur-[2px] dark:from-cyan-900/20 dark:via-black/30 dark:to-purple-900/20" />
+
+          {[
+            { emoji: "👕", x: "6%", y: "10%", delay: "0s" },
+            { emoji: "🥻", x: "86%", y: "14%", delay: "0.7s" },
+            { emoji: "🧵", x: "10%", y: "72%", delay: "1.2s" },
+            { emoji: "👗", x: "82%", y: "68%", delay: "0.4s" },
+            { emoji: "✨", x: "3%", y: "42%", delay: "1.5s" },
+            { emoji: "🎨", x: "92%", y: "42%", delay: "0.9s" },
+            { emoji: "👔", x: "22%", y: "4%", delay: "1.8s" },
+            { emoji: "🧣", x: "70%", y: "3%", delay: "0.2s" },
+            { emoji: "⭐", x: "32%", y: "88%", delay: "1.4s" },
+            { emoji: "💫", x: "62%", y: "88%", delay: "0.55s" },
+          ].map((item, i) => (
+            <div
+              key={i}
+              className="pointer-events-none absolute text-4xl"
+              style={{ left: item.x, top: item.y, opacity: 0.5, animation: `tFloat ${4.5 + i * 0.35}s ease-in-out ${item.delay} infinite` }}
+            >
+              {item.emoji}
             </div>
+          ))}
 
-            <h3 className="text-3xl font-black">AI is Crafting...</h3>
-            <p className="mt-4 text-white/70">
-              Generating your royal fashion mockup. Please do not refresh.
-            </p>
+          <style>{`
+            @keyframes tFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-18px); } }
+            @keyframes afLogoFloat { 0%, 100% { transform: scale(1) rotate(-4deg); } 50% { transform: scale(1.1) rotate(4deg); } }
+          `}</style>
 
-            <div className="mt-10 space-y-4">
-              {/* AI thinking pipeline */}
-              <div className="overflow-hidden rounded-2xl bg-white/10 p-5 text-left backdrop-blur-md">
-                <AIThinkingSteps
-                  steps={TEXTILE_THINKING_STEPS}
-                  intervalMs={2200}
-                  darkMode={true}
-                  title="Generation pipeline"
-                />
+          <div className={`relative z-10 w-full max-w-md overflow-hidden rounded-[2rem] border p-7 shadow-[0_20px_60px_-15px_rgba(34,211,238,0.40)] backdrop-blur-2xl sm:p-8 ${darkMode ? "border-cyan-400/20 bg-[#0a1628]/92" : "border-cyan-200/70 bg-white/92"}`}>
+            <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-cyan-300/25 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-purple-300/25 blur-3xl" />
+
+            <div className="relative">
+              <div className="relative mx-auto mb-6 h-24 w-24">
+                <div className="absolute inset-0 animate-ping rounded-full bg-cyan-400 opacity-30" />
+                <div className="absolute -inset-2 animate-pulse rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 opacity-40 blur-2xl" />
+                <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white shadow-2xl ring-4 ring-cyan-400/60">
+                  <img src="/logo-new.jpg" alt="AgentForge" className="h-full w-full object-cover" style={{ animation: "afLogoFloat 2.4s ease-in-out infinite" }} onError={(e) => { e.currentTarget.src = "/af-logo.png"; }} />
+                </div>
               </div>
 
-              <div className="overflow-hidden rounded-2xl bg-white/10 p-6 text-left backdrop-blur-md transition-all">
-                <p className="text-[11px] font-black uppercase tracking-widest text-cyan-400">
+              <h3 className={`text-center text-2xl font-black tracking-tight sm:text-3xl ${darkMode ? "text-white" : "text-slate-900"}`}>
+                AI is Crafting...
+              </h3>
+              <p className={`mt-3 text-center text-sm leading-6 ${darkMode ? "text-white/60" : "text-slate-600"}`}>
+                Generating your royal fashion mockup. Please do not refresh.
+              </p>
+
+              <div className={`mt-6 overflow-hidden rounded-2xl border p-5 text-left shadow-inner ${darkMode ? "border-cyan-400/20 bg-white/[0.05]" : "border-cyan-200/70 bg-white/70"}`}>
+                <AIThinkingSteps steps={TEXTILE_THINKING_STEPS} intervalMs={2200} darkMode={darkMode} title="Generation pipeline" />
+              </div>
+
+              <div className={`mt-4 overflow-hidden rounded-2xl border p-4 text-left ${darkMode ? "border-cyan-400/10 bg-cyan-400/5" : "border-cyan-100 bg-cyan-50/60"}`}>
+                <p className="text-[11px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">
                   {textileFacts[factIndex].title}
                 </p>
-                <p className="mt-2 text-sm leading-relaxed text-white/90">
+                <p className={`mt-2 text-sm leading-relaxed ${darkMode ? "text-white/70" : "text-slate-600"}`}>
                   {textileFacts[factIndex].text}
                 </p>
               </div>
 
               {cancelVisible && (
                 <button
-                  onClick={() => {
-                    cancelRef.current = true;
-                    setLoading(false);
-                  }}
-                  className="text-xs font-black uppercase tracking-widest text-white/30 hover:text-rose-400 transition"
+                  onClick={() => { cancelRef.current = true; setLoading(false); }}
+                  className={`mt-5 w-full text-center text-xs font-black uppercase tracking-widest transition ${darkMode ? "text-white/30 hover:text-rose-400" : "text-slate-400 hover:text-rose-500"}`}
                 >
                   Cancel Generation
                 </button>
@@ -3633,7 +3718,7 @@ export default function Home() {
             : "Start with free credits"
         }
         subLabel={authUser?.id ? "AI Textile Studio" : "100 free credits on signup"}
-        hidden={loading}
+        hidden={loading || items.length > 0}
         onClick={() => {
           if (!authUser?.id) {
             setShowSignupPopup(true);

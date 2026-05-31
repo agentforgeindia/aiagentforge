@@ -11,22 +11,20 @@ import { BadgeCheck } from "lucide-react";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 const agents = [
-  { title: "TextilePrints to Mockup AI", desc: "Textile design → fashion mockup", link: "/textileprints-to-mockup", isNew: false },
+  { title: "TextilePrints to Mockup AI", desc: "Textile design → fashion mockup", link: "/textileprints-to-mockup", isNew: true },
   { title: "Jewellery AI Studio", desc: "Premium jewellery model shoots", link: "/jewellery-ai", isNew: true },
   { title: "Productography AI", desc: "Product photos → ad visuals", link: "/productography-ai", isNew: true },
 ];
 
-// Flow: Home → Gallery → News → About → Support → Pricing → Agents (dropdown)
-// News (which already merges blog + news + product updates) replaces the
-// old standalone Blog dropdown — see app/news/page.tsx.
+// Flow: Home → Gallery → Tutorials → News & Blog → Pricing → About → Support → Agents (dropdown)
 const navLinks = [
   { label: "Home", href: "/" },
   { label: "Gallery", href: "/gallery" },
-  { label: "News", href: "/news" },
   { label: "Tutorials", href: "/tutorials" },
+  { label: "News & Blog", href: "/news" },
+  { label: "Pricing", href: "/pricing" },
   { label: "About", href: "/about" },
   { label: "Support", href: "/support" },
-  { label: "Pricing", href: "/pricing" },
 ];
 
 // Safe helper to get user initials from name or email
@@ -151,7 +149,7 @@ export default function Navbar() {
   </div>
 </Link>
 
-        {/* Desktop nav — flow: Home → Gallery → News → About → Support → Pricing → Agents */}
+        {/* Desktop nav — flow: Home → Gallery → Tutorials → News & Blog → Pricing → About → Support → Agents */}
         <nav className="hidden items-center gap-1 text-sm font-medium lg:flex">
           {navLinks.map((link) => (
             <Link
@@ -214,6 +212,15 @@ export default function Navbar() {
                     <p className={`mt-0.5 text-xs ${muted}`}>{agent.desc}</p>
                   </Link>
                 ))}
+                <div className={`border-t px-4 py-3 ${darkMode ? "border-white/10" : "border-black/8"}`}>
+                  <Link
+                    href="/agents"
+                    className="flex items-center justify-between gap-2 text-xs font-black text-cyan-600 transition hover:text-cyan-500"
+                  >
+                    <span>View All Agents + Coming Soon</span>
+                    <span className="text-base">→</span>
+                  </Link>
+                </div>
               </div>
             )}
           </div>
@@ -223,14 +230,17 @@ export default function Navbar() {
         <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Credits badge — visible only when logged in (sm+) */}
           {isLoggedIn && (
-            <div
-              className={`hidden h-10 items-center gap-1.5 rounded-full px-3 text-[13px] font-black sm:inline-flex ${
-                darkMode ? "bg-white/10 text-white" : "border border-black/5 bg-white text-black shadow-sm"
-              }`}
+            <Link
+              href="/billing"
+              className="group hidden h-10 items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-4 shadow-md shadow-orange-500/30 transition hover:shadow-lg hover:shadow-rose-500/40 hover:brightness-110 sm:inline-flex"
             >
-              <span className="text-base leading-none">🪙</span>
-              <span style={{ fontVariantNumeric: "tabular-nums" }}>{credits}</span>
-            </div>
+              <svg className="h-3.5 w-3.5 text-white drop-shadow" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
+              <span className="text-[13px] font-black text-white" style={{ fontVariantNumeric: "tabular-nums" }}>
+                {credits.toLocaleString("en-IN")}
+              </span>
+            </Link>
           )}
 
           {/* Login button (visitor) OR Avatar (logged in) */}
@@ -391,7 +401,7 @@ export default function Navbar() {
             }`}
           >
             <div className="grid gap-1 text-sm font-semibold">
-              {/* Flow: Home → Gallery → News → About → Support → Pricing → Agents */}
+              {/* Flow: Home → Gallery → Tutorials → News & Blog → Pricing → About → Support → Agents */}
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
@@ -450,6 +460,12 @@ export default function Navbar() {
                         )}
                       </Link>
                     ))}
+                    <Link
+                      href="/agents"
+                      className="mt-1 flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black text-cyan-600 hover:bg-cyan-400/10"
+                    >
+                      View All Agents + Coming Soon →
+                    </Link>
                   </div>
                 )}
               </div>

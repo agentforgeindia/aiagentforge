@@ -673,6 +673,7 @@ export default function JewelleryAIPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
   const stepTopRef = useRef<HTMLDivElement | null>(null);
+  const resultRef = useRef<HTMLDivElement | null>(null);
 
   const [generationMode, setGenerationMode] = useState<GenerationMode>("single");
   const [uploads, setUploads] = useState<UploadItem[]>([]);
@@ -759,6 +760,12 @@ export default function JewelleryAIPage() {
       setShowGuidance(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (generatedOutputUrl) {
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 300);
+    }
+  }, [generatedOutputUrl]);
 
   // Bump generation counter once per successful output. After N gens, guidance
   // auto-disables on future sessions (until user manually re-enables).
@@ -1862,7 +1869,7 @@ if (!response.ok) {
             : "Start with free credits"
         }
         subLabel={authUser?.id ? "AI Visual Studio" : "100 free credits on signup"}
-        hidden={isGenerating}
+        hidden={isGenerating || uploads.length > 0}
         onClick={() => {
           if (!authUser?.id) {
             setShowSignupPopup(true);
@@ -2229,7 +2236,7 @@ if (!response.ok) {
 
             <div className="grid gap-5 lg:grid-cols-[0.72fr_1.28fr]">
               <div className="lg:sticky lg:top-24">
-                <label className="flex min-h-[190px] cursor-pointer items-center justify-center rounded-[1.5rem] border-2 border-dashed border-black/15 bg-[#fffaf0] p-5 text-center dark:border-white/15 dark:bg-black/20">
+                <label className={`relative flex min-h-[190px] cursor-pointer overflow-hidden rounded-[1.5rem] border-2 border-dashed transition-all ${uploads[0]?.preview ? "border-cyan-300/60 dark:border-cyan-400/40" : "items-center justify-center bg-[#fffaf0] p-5 text-center border-black/15 dark:bg-black/20 dark:border-white/15"}`}>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -2238,14 +2245,23 @@ if (!response.ok) {
                     className="hidden"
                     onChange={(e) => handleFiles(e.target.files)}
                   />
-                  <div>
-                    <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-blue-400 text-white shadow-lg shadow-cyan-400/25">
-                      <Upload className="h-7 w-7" />
+                  {uploads[0]?.preview ? (
+                    <>
+                      <img src={uploads[0].preview} alt="Uploaded jewellery preview" className="min-h-[190px] w-full object-cover" />
+                      <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/40 to-transparent p-3">
+                        <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-black text-black/70">Tap to change</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-blue-400 text-white shadow-lg shadow-cyan-400/25">
+                        <Upload className="h-7 w-7" />
+                      </div>
+                      <p className="text-lg font-semibold">Upload jewellery image</p>
+                      <p className="mt-2 text-sm text-slate-500 dark:text-white/50">PNG, JPG, WEBP supported</p>
+                      <p className="mt-2 text-xs font-semibold text-cyan-700 dark:text-cyan-200">Image uploading — you can fill options while we prepare the file.</p>
                     </div>
-                    <p className="text-lg font-semibold">Upload jewellery image</p>
-                    <p className="mt-2 text-sm text-slate-500 dark:text-white/50">PNG, JPG, WEBP supported</p>
-                    <p className="mt-2 text-xs font-semibold text-cyan-700 dark:text-cyan-200">Image uploading — you can fill options while we prepare the file.</p>
-                  </div>
+                  )}
                 </label>
 
                 {/* ───────── AI Guidance card ─────────
@@ -2602,20 +2618,28 @@ if (!response.ok) {
                       </button>
 
                       {generatedOutputUrl && (
-                        <div className="mt-5 overflow-hidden rounded-[1.5rem] border border-cyan-300/40 bg-white/90 p-4 shadow-xl shadow-cyan-500/10 dark:bg-slate-950/60">
+                        <div ref={resultRef} className="mt-5 overflow-hidden rounded-[1.5rem] border border-cyan-300/40 bg-white/90 p-4 shadow-xl shadow-cyan-500/10 dark:bg-slate-950/60">
                           <div className="mb-3 flex items-center justify-between gap-3">
                             <div>
                               <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">Generated Output</p>
-                              <p className="mt-1 text-xs text-slate-500 dark:text-white/50">Your result is also saved in My Creations.</p>
                             </div>
                             <BadgeCheck className="h-5 w-5 text-cyan-600 dark:text-cyan-300" />
                           </div>
 
-                          <img
-                            src={generatedOutputUrl}
-                            alt="Generated jewellery output"
-                            className="max-h-[520px] w-full rounded-[1.25rem] object-contain shadow-lg"
-                          />
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="text-center">
+                              {previewImage ? (
+                                <img src={previewImage} alt="Uploaded jewellery photo" className="mx-auto max-h-[320px] w-full rounded-[1.25rem] object-cover shadow-lg" />
+                              ) : (
+                                <div className="flex h-[200px] w-full items-center justify-center rounded-[1.25rem] border-2 border-dashed border-black/15 dark:border-white/20"><span className="text-3xl opacity-30">📷</span></div>
+                              )}
+                              <p className="mt-2 text-xs font-bold text-slate-500 dark:text-white/50">Your Photo</p>
+                            </div>
+                            <div className="text-center">
+                              <img src={generatedOutputUrl} alt="Generated jewellery output" className="mx-auto max-h-[320px] w-full rounded-[1.25rem] object-contain shadow-lg shadow-cyan-400/20" />
+                              <p className="mt-2 text-xs font-bold text-slate-500 dark:text-white/50">AI Visual</p>
+                            </div>
+                          </div>
 
                           <div className="mt-4 grid grid-cols-2 gap-3">
                             <button
@@ -2633,6 +2657,22 @@ if (!response.ok) {
                               Share / Copy Link
                             </button>
                           </div>
+
+                          <a
+                            href={`https://wa.me/?text=${encodeURIComponent(`AI Jewellery visual ready: ${generatedOutputUrl}`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-4 py-3 text-sm font-black text-white shadow-lg shadow-green-500/20 transition hover:scale-[1.02]"
+                          >
+                            Share on WhatsApp
+                          </a>
+
+                          <Link
+                            href="/my-creations"
+                            className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-black/10 bg-cyan-50/70 px-4 py-3 text-sm font-bold text-black/70 transition hover:border-cyan-300 hover:text-cyan-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/70 dark:hover:border-cyan-400/30 dark:hover:text-cyan-300"
+                          >
+                            🎨 Your old creations are saved in <span className="ml-1 font-black text-cyan-600">My Creations</span>
+                          </Link>
                         </div>
                       )}
                       <p className="mt-3 text-center text-xs leading-5 text-slate-500 dark:text-white/45">

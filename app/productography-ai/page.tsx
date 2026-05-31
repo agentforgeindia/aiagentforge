@@ -499,6 +499,7 @@ export default function ProductographyPage() {
   const [builderStep, setBuilderStep] = useState(1);
   const [heroSlide, setHeroSlide] = useState(0);
   const stepTopRef = useRef<HTMLDivElement | null>(null);
+  const resultRef = useRef<HTMLDivElement | null>(null);
   const cancelRef = useRef(false);
 
   const [productCategory, setProductCategory] = useState("Cosmetics");
@@ -542,6 +543,12 @@ export default function ProductographyPage() {
   const previewImage = activeItem?.url || null;
   const previewResult = activeItem?.resultUrl || null;
   const readyItems = items.filter((it) => it.status === "ready" || it.status === "done");
+
+  useEffect(() => {
+    if (previewResult) {
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 300);
+    }
+  }, [previewResult]);
 
   const card = darkMode
     ? "border-white/10 bg-white/[0.045] shadow-black/40"
@@ -1593,19 +1600,32 @@ export default function ProductographyPage() {
 
             <div className="grid gap-5 lg:grid-cols-[0.72fr_1.28fr]">
               <div className="lg:sticky lg:top-24">
-                <label className={`flex min-h-[190px] cursor-pointer items-center justify-center rounded-[1.5rem] border-2 border-dashed p-5 text-center ${darkMode ? "border-white/15 bg-black/20" : "border-black/15 bg-[#fffaf0]"}`}>
-                  <div>
-                    <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-blue-400 text-white shadow-lg shadow-cyan-400/25">
-                      <UploadCloud className="h-8 w-8" />
+                <label className={`relative flex min-h-[190px] cursor-pointer overflow-hidden rounded-[1.5rem] border-2 border-dashed transition-all ${
+                  items[0]?.url
+                    ? darkMode ? "border-cyan-400/40" : "border-cyan-300/60"
+                    : darkMode ? "items-center justify-center bg-black/20 p-5 text-center border-white/15" : "items-center justify-center bg-[#fffaf0] p-5 text-center border-black/15"
+                }`}>
+                  {items[0]?.url ? (
+                    <>
+                      <img src={items[0].url} alt="Uploaded product preview" className="min-h-[190px] w-full object-cover" />
+                      <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/40 to-transparent p-3">
+                        <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-black text-black/70">Tap to change</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-blue-400 text-white shadow-lg shadow-cyan-400/25">
+                        <UploadCloud className="h-8 w-8" />
+                      </div>
+                      <p className="text-lg font-semibold">Upload Product Photo</p>
+                      <p className={`mt-2 text-sm ${muted}`}>
+                        PNG, JPG, JPEG, WEBP. {canBulk ? "Multiple files supported." : "One file at a time (free tier)."}
+                      </p>
+                      <p className="mt-2 text-xs font-bold text-cyan-600">
+                        Still image generation only — no reel/video.
+                      </p>
                     </div>
-                    <p className="text-lg font-semibold">Upload Product Photo</p>
-                    <p className={`mt-2 text-sm ${muted}`}>
-                      PNG, JPG, JPEG, WEBP. {canBulk ? "Multiple files supported." : "One file at a time (free tier)."}
-                    </p>
-                    <p className="mt-2 text-xs font-bold text-cyan-600">
-                      Still image generation only — no reel/video.
-                    </p>
-                  </div>
+                  )}
                   <input
                     type="file"
                     accept="image/*"
@@ -1915,29 +1935,45 @@ export default function ProductographyPage() {
                       </div>
 
                       {(previewResult || loading) && (
-                        <div className="border-t border-cyan-400/10 p-4 sm:p-6">
-                          <div className="flex flex-col items-center justify-center rounded-3xl bg-black/5 p-4 sm:p-6">
-                            {previewResult ? (
-                              <img src={previewResult} alt="Final AI productography output" className="w-full max-w-[430px] rounded-3xl object-cover shadow-2xl" />
-                            ) : (
-                              <div className="flex h-[360px] w-full flex-col items-center justify-center text-center">
-                                <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-cyan-400 border-t-transparent" />
-                                <p className="font-bold">Finalizing your product shoot...</p>
+                        <div ref={resultRef} className="border-t border-cyan-400/10 p-4 sm:p-6">
+                          {previewResult ? (
+                            <>
+                              <div className="grid grid-cols-2 gap-3 rounded-3xl bg-black/5 p-4 sm:p-6">
+                                <div className="text-center">
+                                  {previewImage ? (
+                                    <img src={previewImage} alt="Uploaded product photo" className="mx-auto max-h-[300px] w-full rounded-2xl object-cover shadow-lg" />
+                                  ) : (
+                                    <div className={`flex h-[200px] w-full items-center justify-center rounded-2xl border-2 border-dashed ${darkMode ? "border-white/20" : "border-black/15"}`}><span className="text-3xl opacity-30">📷</span></div>
+                                  )}
+                                  <p className={`mt-2 text-xs font-bold ${darkMode ? "text-white/55" : "text-black/55"}`}>Your Product</p>
+                                </div>
+                                <div className="text-center">
+                                  <img src={previewResult} alt="Final AI productography output" className="mx-auto max-h-[300px] w-full rounded-2xl object-cover shadow-2xl shadow-cyan-400/20" />
+                                  <p className={`mt-2 text-xs font-bold ${darkMode ? "text-white/55" : "text-black/55"}`}>AI Shoot</p>
+                                </div>
                               </div>
-                            )}
-                          </div>
-
-                          {previewResult && (
-                            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                              <button onClick={handleDownloadResult} className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-5 py-3 font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-105">
-                                <Download className="h-5 w-5" /> Download
-                              </button>
-                              <button onClick={handleNativeShare} className="flex items-center justify-center gap-2 rounded-2xl bg-blue-500 px-5 py-3 font-black text-white shadow-lg shadow-blue-500/20 transition hover:scale-105">
-                                <Share2 className="h-5 w-5" /> Share
-                              </button>
-                              <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-5 py-3 font-black text-white shadow-lg shadow-green-500/20 transition hover:scale-105">
-                                WhatsApp
-                              </a>
+                              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                                <button onClick={handleDownloadResult} className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-5 py-3 font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-105">
+                                  <Download className="h-5 w-5" /> Download
+                                </button>
+                                <button onClick={handleNativeShare} className="flex items-center justify-center gap-2 rounded-2xl bg-blue-500 px-5 py-3 font-black text-white shadow-lg shadow-blue-500/20 transition hover:scale-105">
+                                  <Share2 className="h-5 w-5" /> Share
+                                </button>
+                                <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-5 py-3 font-black text-white shadow-lg shadow-green-500/20 transition hover:scale-105">
+                                  WhatsApp
+                                </a>
+                              </div>
+                              <Link
+                                href="/my-creations"
+                                className={`mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-sm font-bold transition hover:scale-[1.01] ${darkMode ? "border-white/10 bg-white/[0.04] text-white/70 hover:border-cyan-400/30 hover:text-cyan-300" : "border-black/10 bg-cyan-50/70 text-black/70 hover:border-cyan-300 hover:text-cyan-700"}`}
+                              >
+                                🎨 Your old creations are saved in <span className="ml-1 font-black text-cyan-600">My Creations</span>
+                              </Link>
+                            </>
+                          ) : (
+                            <div className="flex h-[360px] w-full flex-col items-center justify-center rounded-3xl bg-black/5 text-center">
+                              <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-cyan-400 border-t-transparent" />
+                              <p className="font-bold">Finalizing your product shoot...</p>
                             </div>
                           )}
                         </div>
@@ -1993,7 +2029,7 @@ export default function ProductographyPage() {
             : "Start with free credits"
         }
         subLabel={authUser?.id ? "AI Productography" : "100 free credits on signup"}
-        hidden={loading}
+        hidden={loading || items.length > 0}
         onClick={() => {
           if (!authUser?.id) {
             setShowSignupPopup(true);

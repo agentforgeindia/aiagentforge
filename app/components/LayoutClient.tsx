@@ -17,8 +17,8 @@ export default function LayoutClient({
 
   const pathname = usePathname();
 
-  const isWorkshopPage =
-  pathname.startsWith("/workshop");
+  const isWorkshopPage = pathname.startsWith("/workshop");
+  const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/signup");
 
   return (
     <>
@@ -29,13 +29,13 @@ export default function LayoutClient({
         <AnalyticsRouteTracker />
       </Suspense>
 
-      {!isWorkshopPage && <Navbar />}
+      {!isWorkshopPage && !isAuthPage && <Navbar />}
 
       {children}
 
-      {!isWorkshopPage && <Footer />}
-      {!isWorkshopPage && <AgentForgeAI />}
-      {!isWorkshopPage && <LaunchOfferPopup />}
+      {!isWorkshopPage && !isAuthPage && <Footer />}
+      {!isWorkshopPage && !isAuthPage && <AgentForgeAI />}
+      {!isWorkshopPage && !isAuthPage && <LaunchOfferPopup />}
     </>
   );
 }

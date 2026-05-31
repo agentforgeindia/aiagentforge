@@ -405,7 +405,7 @@ export default function SupportPage() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500" />
             </span>
-            6 step flow · 3 video tutorials · Custom demo on request
+            Upload · Generate · Done — 3 simple steps, zero confusion
           </p>
 
           {/* Trust strip */}
@@ -414,26 +414,26 @@ export default function SupportPage() {
           }`}>
             <div>
               <p className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-lg font-black text-transparent sm:text-2xl">
-                6 Steps
+                Upload
               </p>
               <p className={`text-[10px] font-bold uppercase tracking-wider sm:text-xs ${muted}`}>
-                Full flow
+                Step 1
               </p>
             </div>
             <div className={`border-x ${darkMode ? "border-white/10" : "border-black/10"}`}>
               <p className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-lg font-black text-transparent sm:text-2xl">
-                3 Videos
+                Generate
               </p>
               <p className={`text-[10px] font-bold uppercase tracking-wider sm:text-xs ${muted}`}>
-                Tutorials
+                Step 2
               </p>
             </div>
             <div>
               <p className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-lg font-black text-transparent sm:text-2xl">
-                24×7
+                Done
               </p>
               <p className={`text-[10px] font-bold uppercase tracking-wider sm:text-xs ${muted}`}>
-                Help available
+                Step 3
               </p>
             </div>
           </div>

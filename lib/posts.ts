@@ -8,7 +8,7 @@
 // ============================================================
 
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { BLOG_POSTS, type BlogPost, type BlogSection } from "@/app/blog/posts";
+import { BLOG_POSTS, type BlogPost, type BlogSection, type BlogThumbnailConfig } from "@/app/blog/posts";
 
 // ────────────────────────────────────────────────────────────
 // Types
@@ -72,6 +72,7 @@ export type UnifiedPost = {
   ctaHref: string | null;
   keywords: string[];
   body: PostSection[];
+  thumbnail?: BlogThumbnailConfig;
   /** "db" = mutable (admin can edit); "static" = code-defined. */
   source: "db" | "static";
 };
@@ -87,6 +88,7 @@ const STATIC_CATEGORY_MAP: Record<BlogPost["category"], PostCategory> = {
   Jewellery: "jewellery",
   Productography: "productography",
   Guide: "guide",
+  Announcement: "announcement",
 };
 
 function staticToUnified(p: BlogPost): UnifiedPost {
@@ -98,8 +100,9 @@ function staticToUnified(p: BlogPost): UnifiedPost {
     description: p.description,
     excerpt: p.excerpt,
     author: p.author,
-    heroImageUrl: null,
+    heroImageUrl: p.heroImage ?? null,
     heroEmoji: p.heroEmoji,
+    thumbnail: p.thumbnail,
     publishedAt: p.publishedAt,
     readMinutes: p.readMinutes,
     ctaLabel: p.ctaLabel ?? null,

@@ -64,7 +64,7 @@ export default function SignupPage() {
         id: userId,
         email: userEmail ?? trimmedEmail,
         full_name: fullName,
-        credits: 200,
+        credits: 100,
         plan: "free",
       },
       { onConflict: "id" },
@@ -279,7 +279,7 @@ export default function SignupPage() {
             }`}>
               <div>
                 <p className="bg-gradient-to-r from-amber-500 to-orange-600 bg-clip-text text-base font-black text-transparent sm:text-lg">
-                  200
+                  100
                 </p>
                 <p className={`text-[9px] font-bold uppercase tracking-wider ${muted}`}>Free credits</p>
               </div>

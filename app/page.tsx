@@ -132,6 +132,7 @@ export default function Home() {
           "bg-[radial-gradient(circle_at_25%_20%,#22d3ee_0_12%,transparent_13%),repeating-linear-gradient(45deg,#0ea5e9_0_14px,#facc15_14px_28px,#a78bfa_28px_42px,#fb7185_42px_56px)]",
         imageSrc: "/textile-banner.png",
         icon: "textile",
+        isNew: true,
       },
       {
         title: "Jewellery AI",
