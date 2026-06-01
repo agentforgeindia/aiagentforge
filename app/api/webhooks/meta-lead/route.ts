@@ -69,26 +69,35 @@ async function fetchLeadFromGraph(leadgenId: string): Promise<{
   raw: unknown;
 } | null> {
   const token = process.env.META_PAGE_ACCESS_TOKEN;
-console.log("[meta-lead] leadgenId:", leadgenId);
-console.log("[meta-lead] token present:", !!token);
+  console.log("[meta-lead] leadgenId:", leadgenId);
+  console.log("[meta-lead] token present:", !!token);
 
-const url = `https://graph.facebook.com/v25.0/${leadgenId}?fields=created_time,id,ad_id,form_id,field_data&access_token=${encodeURIComponent(token || "")}`;
+  if (!token) {
+    console.error("[meta-lead] META_PAGE_ACCESS_TOKEN missing");
+    return null;
+  }
 
-const res = await fetch(url);
-const lead = await res.json();
+  const url = `https://graph.facebook.com/v25.0/${leadgenId}?fields=created_time,id,ad_id,form_id,field_data&access_token=${encodeURIComponent(token)}`;
 
-if (!res.ok) {
-  console.error("[meta-lead] Graph fetch failed:", res.status, lead);
-  return null;
-}
-  const data = (await res.json()) as {
+  const res = await fetch(url);
+
+  // Read the body ONCE — we'll use the same parsed object for
+  // both error logging and field extraction.
+  const lead = (await res.json()) as {
     field_data?: { name: string; values: string[] }[];
+    error?: { message?: string; type?: string; code?: number };
   };
+
+  if (!res.ok) {
+    console.error("[meta-lead] Graph fetch failed:", res.status, lead);
+    return null;
+  }
+
   const fields: Record<string, string> = {};
-  for (const f of data.field_data ?? []) {
+  for (const f of lead.field_data ?? []) {
     fields[f.name] = (f.values || [])[0] ?? "";
   }
-  return { fields, raw: data };
+  return { fields, raw: lead };
 }
 
 // ────────────────────────────────────────────────────────────
@@ -167,7 +176,19 @@ export async function POST(request: Request) {
 
       // Fetch full lead from Graph
       const full = await fetchLeadFromGraph(leadgenId);
-      const fields = full?.fields ?? {};
+
+      // Graph fetch failed (test data with fake IDs, expired token,
+      // or insufficient permissions) → don't insert junk, just log.
+      if (!full) {
+        console.warn(
+          "[meta-lead] Could not fetch lead from Graph, skipping insert:",
+          leadgenId,
+        );
+        skipped++;
+        continue;
+      }
+
+      const fields = full.fields;
 
       const name =
         fields.full_name ||
@@ -199,7 +220,7 @@ export async function POST(request: Request) {
         status: "new",
         notes: "Auto-imported from Meta Lead Ads",
         external_lead_id: leadgenId,
-        raw_payload: full?.raw ?? change,
+        raw_payload: full.raw,
       };
 
       const { error } = await supabase
