@@ -1,25 +1,29 @@
 "use client";
 
 // ============================================================
-// /admin/customers/[id] — single user view with:
-//   • profile snapshot (plan, credits, join date)
-//   • notes + tags (add / list)
-//   • payments
-//   • credit_transactions (last 30)
+// /admin/customers/[id] — corporate single-customer view.
+// ============================================================
+// Sections shown (essential info only):
+//   • Identity card     — name, email, plan, balance, joined
+//   • Attribution       — source / campaign (collapsed if empty)
+//   • Notes             — add + list with tags
+//   • Payments          — short list, masked razorpay id
+//   • Credit history    — last 10 movements only
+//
+// Long internal identifiers (full UUIDs, full razorpay IDs) are
+// masked — staff only sees what they need.
 // ============================================================
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useTheme } from "@/app/components/ThemeProvider";
+import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import {
-  ArrowLeft,
-  Send,
-  ShieldCheck,
-  Tag,
-  Trash2,
-} from "lucide-react";
+import { Send, ShieldCheck, Tag, Trash2 } from "lucide-react";
+import AdminShell, {
+  adminCardCls,
+  adminInputCls,
+  adminMutedCls,
+  adminPrimaryBtnCls,
+} from "../../AdminShell";
 
 const ADMIN_EMAILS: string[] = [
   "info@aiagentforge.in",
@@ -73,8 +77,6 @@ type CreditTx = {
 
 export default function AdminCustomerDetailPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
-  const { darkMode } = useTheme();
   const userId = params?.id;
 
   const [loadingAuth, setLoadingAuth] = useState(true);
@@ -90,7 +92,6 @@ export default function AdminCustomerDetailPage() {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // New-note form
   const [newNote, setNewNote] = useState("");
   const [newTagsCsv, setNewTagsCsv] = useState("");
   const [savingNote, setSavingNote] = useState(false);
@@ -104,7 +105,7 @@ export default function AdminCustomerDetailPage() {
       setLoadingAuth(false);
     })();
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => setAuthEmail(session?.user?.email ?? null),
+      (_e, s) => setAuthEmail(s?.user?.email ?? null),
     );
     return () => {
       active = false;
@@ -139,7 +140,7 @@ export default function AdminCustomerDetailPage() {
           .select("id, delta, reason, balance_after, created_at")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
-          .limit(30),
+          .limit(10),
       ]);
       setProfile(pr as Profile | null);
       setNotes((nt ?? []) as Note[]);
@@ -157,10 +158,7 @@ export default function AdminCustomerDetailPage() {
   async function saveNote() {
     if (!userId || !newNote.trim()) return;
     setSavingNote(true);
-    const tags = newTagsCsv
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean);
+    const tags = newTagsCsv.split(",").map((t) => t.trim()).filter(Boolean);
     const { data: sess } = await supabase.auth.getSession();
     const authorId = sess.session?.user?.id ?? null;
     const { error } = await supabase.from("customer_notes").insert({
@@ -189,262 +187,278 @@ export default function AdminCustomerDetailPage() {
     setRefreshKey((k) => k + 1);
   }
 
-  const bg = darkMode ? "bg-[#070b14] text-white" : "bg-[#fff8e8] text-[#111827]";
-  const card = darkMode
-    ? "border-white/10 bg-white/[0.06]"
-    : "border-black/10 bg-white/85";
-  const muted = darkMode ? "text-white/60" : "text-black/55";
-  const inputCls =
-    "w-full rounded-xl border border-black/10 bg-white/90 px-3 py-2 text-sm transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/30 dark:border-white/10 dark:bg-white/[0.06] dark:text-white";
-
   if (loadingAuth) {
     return (
-      <main className={`flex min-h-screen items-center justify-center ${bg}`}>
-        <p className={muted}>Checking access…</p>
+      <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">
+        Checking access…
       </main>
     );
   }
   if (!isAdmin) {
     return (
-      <main className={`flex min-h-screen items-center justify-center px-6 ${bg}`}>
-        <div className={`max-w-md rounded-3xl border p-8 text-center ${card}`}>
-          <ShieldCheck className="mx-auto h-10 w-10 text-rose-500" />
-          <h1 className="mt-3 text-xl font-black">Access denied</h1>
+      <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] px-6 dark:bg-[#0b0d12]">
+        <div className="max-w-md rounded-lg border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-[#11141a]">
+          <ShieldCheck className="mx-auto h-8 w-8 text-rose-500" />
+          <h1 className="mt-3 text-base font-bold">Access denied</h1>
         </div>
       </main>
     );
   }
 
+  const displayName =
+    profile?.full_name?.trim() || profile?.email || "Customer";
+  const subtitle = profile
+    ? `${profile.plan ?? "Free"} · ${Number(profile.credits).toLocaleString("en-IN")} credits · ₹${totalSpent.toLocaleString("en-IN")} lifetime`
+    : undefined;
+
   return (
-    <main className={`relative min-h-screen ${bg}`}>
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-5 sm:py-12">
-        {/* Header */}
-        <button
-          type="button"
-          onClick={() => router.push("/admin/customers")}
-          className={`inline-flex items-center gap-2 text-xs font-bold ${muted}`}
-        >
-          <ArrowLeft className="h-4 w-4" /> All customers
-        </button>
+    <AdminShell
+      breadcrumbs={[
+        { label: "Customers", href: "/admin/customers" },
+        { label: displayName },
+      ]}
+      title={displayName}
+      subtitle={subtitle}
+      email={authEmail}
+    >
+      {loading ? (
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
+      ) : !profile ? (
+        <div className={`${adminCardCls} p-6 text-center`}>
+          <p className={`text-sm ${adminMutedCls}`}>
+            No profile found for this id.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* Identity row */}
+          <section className={`${adminCardCls} p-4`}>
+            <dl className="grid gap-3 sm:grid-cols-4">
+              <Field label="Email" value={profile.email ?? "—"} />
+              <Field
+                label="Plan"
+                value={profile.plan ?? "Free"}
+              />
+              <Field
+                label="Credit balance"
+                value={Number(profile.credits).toLocaleString("en-IN")}
+              />
+              <Field
+                label="Joined"
+                value={profile.created_at ? formatDate(profile.created_at) : "—"}
+              />
+            </dl>
+          </section>
 
-        {loading ? (
-          <p className={`mt-6 text-sm ${muted}`}>Loading…</p>
-        ) : !profile ? (
-          <div className={`mt-6 rounded-2xl border p-8 text-center ${card}`}>
-            <p className="text-3xl">😶</p>
-            <p className={`mt-2 text-sm ${muted}`}>
-              No profile found for this id.
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Profile card */}
-            <section className={`mt-4 rounded-3xl border p-5 sm:p-6 ${card}`}>
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.32em] text-cyan-600">
-                    Customer
-                  </p>
-                  <h1 className="mt-1 text-2xl font-black sm:text-3xl">
-                    {profile.full_name?.trim() || profile.email || profile.id}
-                  </h1>
-                  <p className={`mt-1 text-sm ${muted}`}>
-                    {profile.email ?? "(no email)"} · joined{" "}
-                    {profile.created_at ? formatDate(profile.created_at) : "—"}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-3xl font-black tabular-nums text-cyan-600">
-                    {Number(profile.credits).toLocaleString("en-IN")}
-                  </p>
-                  <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${muted}`}>
-                    credits in wallet
-                  </p>
-                  <p className="mt-1 text-xs font-black">
-                    Plan: <span className="text-violet-600">{profile.plan ?? "Free"}</span>
-                  </p>
-                  <p className={`mt-0.5 text-xs ${muted}`}>
-                    Lifetime spent: ₹{totalSpent.toLocaleString("en-IN")}
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            {/* Attribution — where did this user come from? */}
-            {(profile.utm_source ||
-              profile.utm_campaign ||
-              profile.referrer ||
-              profile.landing_path) && (
-              <section className={`mt-5 rounded-3xl border p-5 sm:p-6 ${card}`}>
-                <h2 className="text-sm font-black uppercase tracking-[0.18em] text-cyan-600">
-                  Attribution — where they came from
-                </h2>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  <Attr label="Source"    value={profile.utm_source}   muted={muted} />
-                  <Attr label="Medium"    value={profile.utm_medium}   muted={muted} />
-                  <Attr label="Campaign"  value={profile.utm_campaign} muted={muted} />
-                  <Attr label="Content"   value={profile.utm_content}  muted={muted} />
-                  <Attr label="Term"      value={profile.utm_term}     muted={muted} />
-                  <Attr label="Referrer"  value={profile.referrer}     muted={muted} mono />
-                  <Attr label="Landing page" value={profile.landing_path} muted={muted} mono />
-                  <Attr
-                    label="First seen"
-                    value={profile.first_seen_at ? formatDateTime(profile.first_seen_at) : null}
-                    muted={muted}
+          {/* Attribution — only when something was captured */}
+          {(profile.utm_source || profile.utm_campaign || profile.referrer) && (
+            <section className={`${adminCardCls} p-4`}>
+              <SectionTitle>Acquisition source</SectionTitle>
+              <dl className="mt-3 grid gap-3 sm:grid-cols-3">
+                <Field label="Source" value={profile.utm_source ?? "—"} />
+                <Field label="Medium" value={profile.utm_medium ?? "—"} />
+                <Field label="Campaign" value={profile.utm_campaign ?? "—"} />
+                {profile.referrer && (
+                  <Field
+                    label="Referrer"
+                    value={profile.referrer}
+                    mono
+                    full
                   />
-                </div>
-              </section>
-            )}
-
-            {/* Notes */}
-            <section className={`mt-5 rounded-3xl border p-5 sm:p-6 ${card}`}>
-              <h2 className="text-sm font-black uppercase tracking-[0.18em] text-cyan-600">
-                Notes
-              </h2>
-
-              {/* Add */}
-              <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_220px_auto]">
-                <textarea
-                  rows={1}
-                  value={newNote}
-                  onChange={(e) => setNewNote(e.target.value)}
-                  placeholder="Add a note (e.g. spoke on WhatsApp, asked about bulk pricing)"
-                  className={inputCls}
-                />
-                <input
-                  type="text"
-                  value={newTagsCsv}
-                  onChange={(e) => setNewTagsCsv(e.target.value)}
-                  placeholder="tags: bulk, hot-lead"
-                  className={inputCls}
-                />
-                <button
-                  type="button"
-                  onClick={saveNote}
-                  disabled={savingNote || !newNote.trim()}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-5 py-2 text-sm font-black text-white shadow disabled:opacity-50"
-                >
-                  <Send className="h-4 w-4" />
-                  {savingNote ? "Saving…" : "Add"}
-                </button>
-              </div>
-
-              {/* List */}
-              <ul className="mt-4 space-y-3">
-                {notes.length === 0 ? (
-                  <li className={`rounded-xl border border-dashed p-4 text-center text-sm ${muted} border-black/10 dark:border-white/10`}>
-                    No notes yet.
-                  </li>
-                ) : (
-                  notes.map((n) => (
-                    <li
-                      key={n.id}
-                      className="rounded-xl border border-black/10 bg-white/70 p-3 text-sm dark:border-white/10 dark:bg-white/[0.04]"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <p className="whitespace-pre-wrap leading-6">{n.note}</p>
-                        <button
-                          type="button"
-                          onClick={() => deleteNote(n.id)}
-                          title="Delete"
-                          className="shrink-0 rounded-full border border-rose-500/30 bg-rose-500/10 p-1.5 text-rose-500 hover:bg-rose-500/20"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                      <div className={`mt-2 flex flex-wrap items-center gap-2 text-[11px] ${muted}`}>
-                        <span>{formatDateTime(n.created_at)}</span>
-                        {n.tags.length > 0 && (
-                          <span className="flex flex-wrap items-center gap-1">
-                            <Tag className="h-3 w-3" />
-                            {n.tags.map((t) => (
-                              <span
-                                key={t}
-                                className="rounded-full bg-cyan-500/10 px-2 py-0.5 font-bold text-cyan-700 dark:text-cyan-300"
-                              >
-                                {t}
-                              </span>
-                            ))}
-                          </span>
-                        )}
-                      </div>
-                    </li>
-                  ))
                 )}
-              </ul>
+              </dl>
             </section>
+          )}
 
-            {/* Payments */}
-            <section className={`mt-5 rounded-3xl border p-5 sm:p-6 ${card}`}>
-              <h2 className="text-sm font-black uppercase tracking-[0.18em] text-cyan-600">
-                Payments
-              </h2>
-              {payments.length === 0 ? (
-                <p className={`mt-3 text-sm ${muted}`}>No payments yet.</p>
+          {/* Notes */}
+          <section className={`${adminCardCls} p-4`}>
+            <SectionTitle>Internal notes</SectionTitle>
+
+            <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_180px_auto]">
+              <textarea
+                rows={1}
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+                placeholder="Add a note for the team"
+                className={adminInputCls}
+              />
+              <input
+                type="text"
+                value={newTagsCsv}
+                onChange={(e) => setNewTagsCsv(e.target.value)}
+                placeholder="tags, comma, separated"
+                className={adminInputCls}
+              />
+              <button
+                type="button"
+                onClick={saveNote}
+                disabled={savingNote || !newNote.trim()}
+                className={adminPrimaryBtnCls}
+              >
+                <Send className="h-3.5 w-3.5" />
+                {savingNote ? "Saving…" : "Add"}
+              </button>
+            </div>
+
+            <ul className="mt-4 space-y-2">
+              {notes.length === 0 ? (
+                <li className={`rounded-md border border-dashed border-slate-200 p-4 text-center text-sm dark:border-slate-700 ${adminMutedCls}`}>
+                  No notes recorded yet.
+                </li>
               ) : (
-                <ul className="mt-3 divide-y divide-black/5 dark:divide-white/5">
-                  {payments.map((p) => (
-                    <li key={p.id} className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="min-w-0">
-                        <p className="text-sm font-black">{p.plan}</p>
-                        <p className={`text-xs ${muted}`}>
-                          {formatDateTime(p.created_at)} ·{" "}
-                          <span className="font-mono">{p.razorpay_payment_id ?? "—"}</span>
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3 text-right">
-                        <span className="text-xs font-bold uppercase tracking-wider text-emerald-600">
-                          {p.status}
+                notes.map((n) => (
+                  <li
+                    key={n.id}
+                    className="rounded-md border border-slate-200 bg-slate-50/50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900/40"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="whitespace-pre-wrap leading-6">{n.note}</p>
+                      <button
+                        type="button"
+                        onClick={() => deleteNote(n.id)}
+                        title="Delete"
+                        className="shrink-0 rounded-md p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/15"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <div className={`mt-2 flex flex-wrap items-center gap-2 text-[11px] ${adminMutedCls}`}>
+                      <span>{formatDateTime(n.created_at)}</span>
+                      {n.tags.length > 0 && (
+                        <span className="flex flex-wrap items-center gap-1">
+                          <Tag className="h-3 w-3" />
+                          {n.tags.map((t) => (
+                            <span
+                              key={t}
+                              className="rounded bg-slate-200 px-1.5 py-0.5 font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-200"
+                            >
+                              {t}
+                            </span>
+                          ))}
                         </span>
-                        <div>
-                          <p className="text-sm font-black tabular-nums">
-                            ₹{Number(p.amount).toLocaleString("en-IN")}
-                          </p>
-                          <p className={`text-[10px] ${muted}`}>
-                            +{Number(p.credits_added).toLocaleString("en-IN")} credits
-                          </p>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                      )}
+                    </div>
+                  </li>
+                ))
               )}
-            </section>
+            </ul>
+          </section>
 
-            {/* Credit ledger */}
-            <section className={`mt-5 rounded-3xl border p-5 sm:p-6 ${card}`}>
-              <h2 className="text-sm font-black uppercase tracking-[0.18em] text-cyan-600">
-                Credit history (last 30)
-              </h2>
-              {credits.length === 0 ? (
-                <p className={`mt-3 text-sm ${muted}`}>No credit movement.</p>
-              ) : (
-                <ul className="mt-3 divide-y divide-black/5 dark:divide-white/5">
-                  {credits.map((c) => (
-                    <li key={c.id} className="flex items-center justify-between gap-3 py-2 text-sm">
-                      <div className="min-w-0">
-                        <p className="truncate font-bold">{c.reason}</p>
-                        <p className={`text-[11px] ${muted}`}>{formatDateTime(c.created_at)}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className={`tabular-nums font-black ${c.delta >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                          {c.delta >= 0 ? "+" : ""}
-                          {Number(c.delta).toLocaleString("en-IN")}
-                        </p>
-                        <p className={`text-[11px] ${muted}`}>
-                          bal {Number(c.balance_after).toLocaleString("en-IN")}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          </>
-        )}
-      </div>
-    </main>
+          {/* Payments */}
+          <section className={`${adminCardCls} p-4`}>
+            <SectionTitle>Payments</SectionTitle>
+            {payments.length === 0 ? (
+              <p className={`mt-3 text-sm ${adminMutedCls}`}>No payments recorded.</p>
+            ) : (
+              <ul className="mt-3 divide-y divide-slate-200 dark:divide-slate-800">
+                {payments.map((p) => (
+                  <li
+                    key={p.id}
+                    className="flex items-center justify-between gap-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold">{p.plan}</p>
+                      <p className={`text-xs ${adminMutedCls}`}>
+                        {formatDateTime(p.created_at)} · {maskId(p.razorpay_payment_id)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold tabular-nums">
+                        ₹{Number(p.amount).toLocaleString("en-IN")}
+                      </p>
+                      <p className={`text-[10px] uppercase tracking-[0.16em] ${adminMutedCls}`}>
+                        {p.status}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          {/* Credit history — last 10 */}
+          <section className={`${adminCardCls} p-4`}>
+            <SectionTitle>Recent credit movement</SectionTitle>
+            {credits.length === 0 ? (
+              <p className={`mt-3 text-sm ${adminMutedCls}`}>No movement recorded.</p>
+            ) : (
+              <ul className="mt-3 divide-y divide-slate-200 dark:divide-slate-800">
+                {credits.map((c) => (
+                  <li
+                    key={c.id}
+                    className="flex items-center justify-between gap-3 py-2 text-sm"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{c.reason}</p>
+                      <p className={`text-[11px] ${adminMutedCls}`}>{formatDateTime(c.created_at)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p
+                        className={`tabular-nums font-bold ${
+                          c.delta >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
+                        }`}
+                      >
+                        {c.delta >= 0 ? "+" : ""}
+                        {Number(c.delta).toLocaleString("en-IN")}
+                      </p>
+                      <p className={`text-[10px] ${adminMutedCls}`}>
+                        bal {Number(c.balance_after).toLocaleString("en-IN")}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+      )}
+    </AdminShell>
   );
+}
+
+// ────────────────────────────────────────────────────────────
+// Helpers
+// ────────────────────────────────────────────────────────────
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+      {children}
+    </h2>
+  );
+}
+
+function Field({
+  label,
+  value,
+  mono,
+  full,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+  full?: boolean;
+}) {
+  return (
+    <div className={full ? "sm:col-span-3" : undefined}>
+      <dt className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+        {label}
+      </dt>
+      <dd
+        className={`mt-0.5 truncate text-sm ${
+          mono ? "font-mono text-xs" : "font-bold"
+        } text-slate-800 dark:text-slate-100`}
+      >
+        {value}
+      </dd>
+    </div>
+  );
+}
+
+function maskId(id: string | null) {
+  if (!id) return "—";
+  if (id.length <= 8) return id;
+  return `${id.slice(0, 4)}…${id.slice(-4)}`;
 }
 
 function formatDate(iso: string) {
@@ -453,31 +467,6 @@ function formatDate(iso: string) {
     month: "short",
     year: "numeric",
   });
-}
-
-function Attr({
-  label,
-  value,
-  muted,
-  mono,
-}: {
-  label: string;
-  value: string | null;
-  muted: string;
-  mono?: boolean;
-}) {
-  return (
-    <div className="rounded-xl border border-black/5 bg-white/60 px-3 py-2 dark:border-white/5 dark:bg-white/[0.03]">
-      <p className={`text-[10px] font-black uppercase tracking-[0.16em] ${muted}`}>
-        {label}
-      </p>
-      <p className={`mt-0.5 truncate text-sm ${mono ? "font-mono" : "font-bold"} ${
-        value ? "" : muted
-      }`}>
-        {value ?? "—"}
-      </p>
-    </div>
-  );
 }
 
 function formatDateTime(iso: string) {

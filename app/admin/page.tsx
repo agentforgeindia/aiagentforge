@@ -1,12 +1,11 @@
 "use client";
 
 // ============================================================
-// /admin — admin home / hub. Links to every admin tool.
+// /admin — admin home / hub. Corporate, minimal, no gradients.
 // ============================================================
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useTheme } from "@/app/components/ThemeProvider";
 import { supabase } from "@/lib/supabase";
 import {
   FileText,
@@ -16,6 +15,7 @@ import {
   Users,
   UserPlus,
 } from "lucide-react";
+import AdminShell, { adminCardCls, adminMutedCls } from "./AdminShell";
 
 const ADMIN_EMAILS: string[] = [
   "info@aiagentforge.in",
@@ -27,7 +27,6 @@ type Tile = {
   label: string;
   description: string;
   icon: React.ReactNode;
-  accent: string;
   badge?: string;
 };
 
@@ -35,44 +34,37 @@ const TILES: Tile[] = [
   {
     href: "/admin/customers",
     label: "Customers",
-    description: "Every signed-up user, plan, balance, notes, payments.",
-    icon: <Users className="h-5 w-5" />,
-    accent: "from-cyan-400 to-blue-600",
+    description: "Signed-up users, plans, balances, notes.",
+    icon: <Users className="h-4 w-4" />,
   },
   {
     href: "/admin/leads",
     label: "Leads",
-    description: "Prospects from IG, FB, WhatsApp, calls, referrals.",
-    icon: <UserPlus className="h-5 w-5" />,
-    accent: "from-violet-400 to-fuchsia-600",
+    description: "Inbound prospects from ads and outreach.",
+    icon: <UserPlus className="h-4 w-4" />,
   },
   {
     href: "/admin/posts",
-    label: "Posts",
-    description: "Blog, news, product updates published on /news.",
-    icon: <FileText className="h-5 w-5" />,
-    accent: "from-emerald-400 to-cyan-600",
+    label: "Content",
+    description: "Blog, news and product updates.",
+    icon: <FileText className="h-4 w-4" />,
   },
   {
     href: "/admin/testimonials",
     label: "Testimonials",
-    description: "Customer reviews shown on the homepage.",
-    icon: <MessageSquare className="h-5 w-5" />,
-    accent: "from-amber-400 to-rose-500",
+    description: "Customer reviews on the homepage.",
+    icon: <MessageSquare className="h-4 w-4" />,
   },
   {
     href: "/admin/invoices",
     label: "Invoices",
-    description: "Auto-generated GST invoices for every paid order.",
-    icon: <Receipt className="h-5 w-5" />,
-    accent: "from-slate-400 to-slate-600",
-    badge: "Coming soon",
+    description: "Auto-generated receipts and tax invoices.",
+    icon: <Receipt className="h-4 w-4" />,
+    badge: "Soon",
   },
 ];
 
 export default function AdminHomePage() {
-  const { darkMode } = useTheme();
-
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [authEmail, setAuthEmail] = useState<string | null>(null);
   const isAdmin = authEmail
@@ -96,30 +88,24 @@ export default function AdminHomePage() {
     };
   }, []);
 
-  const bg = darkMode ? "bg-[#070b14] text-white" : "bg-[#fff8e8] text-[#111827]";
-  const card = darkMode
-    ? "border-white/10 bg-white/[0.06]"
-    : "border-black/10 bg-white/85";
-  const muted = darkMode ? "text-white/60" : "text-black/55";
-
   if (loadingAuth) {
     return (
-      <main className={`flex min-h-screen items-center justify-center ${bg}`}>
-        <p className={muted}>Checking access…</p>
+      <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">
+        Checking access…
       </main>
     );
   }
   if (!authEmail) {
     return (
-      <main className={`flex min-h-screen items-center justify-center px-6 ${bg}`}>
-        <div className={`max-w-md rounded-3xl border p-8 text-center ${card}`}>
-          <ShieldCheck className="mx-auto h-10 w-10 text-cyan-500" />
-          <h1 className="mt-3 text-xl font-black">Admin login required</h1>
+      <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] px-6 dark:bg-[#0b0d12]">
+        <div className="max-w-md rounded-lg border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-[#11141a]">
+          <ShieldCheck className="mx-auto h-8 w-8 text-slate-500" />
+          <h1 className="mt-3 text-base font-bold">Admin sign-in required</h1>
           <Link
             href="/login"
-            className="mt-5 inline-flex rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-5 py-2.5 text-sm font-black text-white"
+            className="mt-4 inline-flex rounded-md bg-slate-900 px-4 py-2 text-sm font-bold text-white dark:bg-indigo-600"
           >
-            Go to login
+            Sign in
           </Link>
         </div>
       </main>
@@ -127,11 +113,11 @@ export default function AdminHomePage() {
   }
   if (!isAdmin) {
     return (
-      <main className={`flex min-h-screen items-center justify-center px-6 ${bg}`}>
-        <div className={`max-w-md rounded-3xl border p-8 text-center ${card}`}>
-          <ShieldCheck className="mx-auto h-10 w-10 text-rose-500" />
-          <h1 className="mt-3 text-xl font-black">Access denied</h1>
-          <p className={`mt-2 text-sm ${muted}`}>
+      <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] px-6 dark:bg-[#0b0d12]">
+        <div className="max-w-md rounded-lg border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-[#11141a]">
+          <ShieldCheck className="mx-auto h-8 w-8 text-rose-500" />
+          <h1 className="mt-3 text-base font-bold">Access denied</h1>
+          <p className="mt-1 text-xs text-slate-500">
             {authEmail} is not on the admin allowlist.
           </p>
         </div>
@@ -140,58 +126,48 @@ export default function AdminHomePage() {
   }
 
   return (
-    <main className={`relative min-h-screen ${bg}`}>
-      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-5 sm:py-16">
-        <p className="text-[10px] font-black uppercase tracking-[0.32em] text-cyan-600">
-          Admin
-        </p>
-        <h1 className="mt-1 text-3xl font-black sm:text-4xl">AgentForge Console</h1>
-        <p className={`mt-2 text-sm ${muted}`}>
-          Sab kuch ek jagah — customers, leads, content, billing.
-        </p>
-
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {TILES.map((t) => (
-            <TileCard key={t.href} tile={t} card={card} muted={muted} />
-          ))}
-        </div>
-
-        <p className={`mt-10 text-center text-xs ${muted}`}>
-          Signed in as <span className="font-black">{authEmail}</span>
-        </p>
+    <AdminShell
+      breadcrumbs={[{ label: "Dashboard" }]}
+      title="Console"
+      subtitle="Customers, leads and content — one place."
+      email={authEmail}
+    >
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {TILES.map((t) => {
+          const disabled = Boolean(t.badge === "Soon");
+          const inner = (
+            <div
+              className={`${adminCardCls} group flex items-start justify-between gap-3 p-4 transition ${
+                disabled ? "opacity-60" : "hover:border-slate-300 dark:hover:border-slate-700"
+              }`}
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                    {t.icon}
+                  </span>
+                  <h2 className="text-sm font-bold">{t.label}</h2>
+                  {t.badge && (
+                    <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.16em] text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+                      {t.badge}
+                    </span>
+                  )}
+                </div>
+                <p className={`mt-1.5 text-xs leading-5 ${adminMutedCls}`}>
+                  {t.description}
+                </p>
+              </div>
+            </div>
+          );
+          return disabled ? (
+            <div key={t.href}>{inner}</div>
+          ) : (
+            <Link key={t.href} href={t.href}>
+              {inner}
+            </Link>
+          );
+        })}
       </div>
-    </main>
+    </AdminShell>
   );
-}
-
-function TileCard({
-  tile,
-  card,
-  muted,
-}: {
-  tile: Tile;
-  card: string;
-  muted: string;
-}) {
-  const disabled = Boolean(tile.badge === "Coming soon");
-  const inner = (
-    <div className={`group relative h-full rounded-3xl border p-5 transition ${card} ${disabled ? "opacity-60" : "hover:-translate-y-0.5 hover:shadow-lg"}`}>
-      <div
-        className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br ${tile.accent} text-white shadow`}
-      >
-        {tile.icon}
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-lg font-black">{tile.label}</h2>
-        {tile.badge && (
-          <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] text-amber-700 dark:text-amber-300">
-            {tile.badge}
-          </span>
-        )}
-      </div>
-      <p className={`mt-1.5 text-sm leading-6 ${muted}`}>{tile.description}</p>
-    </div>
-  );
-  if (disabled) return <div>{inner}</div>;
-  return <Link href={tile.href}>{inner}</Link>;
 }

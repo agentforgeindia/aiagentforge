@@ -29,6 +29,12 @@ export default function LayoutClient({
 
   const isWorkshopPage = pathname.startsWith("/workshop");
   const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/signup");
+  // Invoice / bill download pages render plain — no navbar, footer,
+  // chat or popup — so the browser's "Save as PDF" produces a clean,
+  // single-page document.
+  const isInvoicePage = pathname.startsWith("/invoice");
+
+  const hideChrome = isWorkshopPage || isAuthPage || isInvoicePage;
 
   return (
     <>
@@ -45,13 +51,13 @@ export default function LayoutClient({
         <UtmCapture />
       </Suspense>
 
-      {!isWorkshopPage && !isAuthPage && <Navbar />}
+      {!hideChrome && <Navbar />}
 
       {children}
 
-      {!isWorkshopPage && !isAuthPage && <Footer />}
-      {!isWorkshopPage && !isAuthPage && <AgentForgeAI />}
-      {!isWorkshopPage && !isAuthPage && <LaunchOfferPopup />}
+      {!hideChrome && <Footer />}
+      {!hideChrome && <AgentForgeAI />}
+      {!hideChrome && <LaunchOfferPopup />}
     </>
   );
 }

@@ -169,6 +169,19 @@ export default function BillingPage() {
   const [payingPlan, setPayingPlan] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
+  // Past purchases — used to render the "Download bill" list at
+  // the bottom of the billing page.
+  const [paymentHistory, setPaymentHistory] = useState<{
+    id: string;
+    plan: string;
+    amount: number;
+    credits_added: number;
+    status: string;
+    razorpay_payment_id: string | null;
+    created_at: string;
+  }[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
   useEffect(() => {
     let active = true;
 
@@ -200,6 +213,22 @@ export default function BillingPage() {
 
         setCredits(profile?.credits ?? 0);
         setCurrentPlan(profile?.plan ?? "Free Trial");
+
+        // Past payments (RLS = only own rows). Drives the
+        // "Download bill" section at the bottom.
+        setHistoryLoading(true);
+        const { data: pays } = await supabase
+          .from("payments")
+          .select(
+            "id, plan, amount, credits_added, status, razorpay_payment_id, created_at",
+          )
+          .eq("user_id", session.user.id)
+          .eq("status", "paid")
+          .order("created_at", { ascending: false });
+        if (active) {
+          setPaymentHistory((pays ?? []) as typeof paymentHistory);
+          setHistoryLoading(false);
+        }
       } catch (error) {
         console.error("Billing load error:", error);
         setCredits(0);
@@ -581,7 +610,7 @@ export default function BillingPage() {
             {[
               { Icon: ShieldCheck, label: "100% Secure", desc: "Razorpay verified", accent: "from-emerald-400 to-cyan-500" },
               { Icon: Zap, label: "Instant Credits", desc: "Added in seconds", accent: "from-cyan-400 to-blue-500" },
-              { Icon: Receipt, label: "GST Invoice", desc: "Email confirmation", accent: "from-violet-400 to-fuchsia-500" },
+              { Icon: Receipt, label: "Downloadable bill", desc: "Print or save as PDF", accent: "from-violet-400 to-fuchsia-500" },
               { Icon: Gift, label: "No Hidden Fees", desc: "Pay only listed price", accent: "from-amber-400 to-orange-500" },
             ].map(({ Icon, label, desc, accent }) => (
               <div key={label} className="flex items-center gap-3">
@@ -784,6 +813,90 @@ export default function BillingPage() {
             </div>
           </div>
         </section>
+
+        {/* ───────── Payment history + downloadable bills ───────── */}
+        {isLoggedIn && (
+          <section className="relative z-10 mx-auto max-w-5xl px-4 pb-16 sm:px-5">
+            <div className={`rounded-[2rem] border p-5 sm:p-8 backdrop-blur ${card}`}>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.32em] text-cyan-600">
+                    Bills &amp; receipts
+                  </p>
+                  <h2 className="mt-1 text-2xl font-black sm:text-3xl">
+                    Your past payments
+                  </h2>
+                  <p className={`mt-1 text-sm ${muted}`}>
+                    Click <span className="font-black">Download</span> on any
+                    row to open a printable bill — use your browser's
+                    “Save as PDF” to keep a copy.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 overflow-hidden rounded-2xl border border-black/10 bg-white/60 dark:border-white/10 dark:bg-white/[0.04]">
+                {historyLoading ? (
+                  <p className={`p-6 text-center text-sm ${muted}`}>Loading…</p>
+                ) : paymentHistory.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <p className="text-3xl">🧾</p>
+                    <p className={`mt-2 text-sm ${muted}`}>
+                      No payments yet. Once you buy a plan, the bill will
+                      appear here for download.
+                    </p>
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-black/5 dark:divide-white/5">
+                    {paymentHistory.map((p) => (
+                      <li
+                        key={p.id}
+                        className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
+                              {p.status}
+                            </span>
+                            <span className="rounded-full bg-cyan-500/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-cyan-700 dark:text-cyan-300">
+                              {p.plan}
+                            </span>
+                            <span className={`text-[11px] font-bold ${muted}`}>
+                              {new Date(p.created_at).toLocaleDateString(
+                                "en-IN",
+                                { day: "numeric", month: "short", year: "numeric" },
+                              )}
+                            </span>
+                          </div>
+                          <p className="mt-1.5 truncate text-sm">
+                            <span className="font-black">
+                              ₹{Number(p.amount).toLocaleString("en-IN")}
+                            </span>{" "}
+                            <span className={muted}>·</span>{" "}
+                            <span className="tabular-nums">
+                              +{Number(p.credits_added).toLocaleString("en-IN")} credits
+                            </span>
+                          </p>
+                          <p className={`mt-0.5 truncate font-mono text-[11px] ${muted}`}>
+                            {p.razorpay_payment_id ?? "—"}
+                          </p>
+                        </div>
+                        <Link
+                          href={`/invoice/${p.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 self-start rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-4 py-2 text-xs font-black text-white shadow"
+                        >
+                          <Receipt className="h-3.5 w-3.5" />
+                          Download bill
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );
