@@ -52,9 +52,11 @@ function BlogThumbnail({ cfg, title }: { cfg: BlogThumbnailConfig; title: string
         </span>
       </div>
 
-      {/* Headline */}
-      <div className="relative">
-        <p className="text-2xl font-black leading-tight tracking-tight text-white drop-shadow sm:text-3xl">
+      {/* Headline — min-w-0 + break-words so long words wrap
+          cleanly on narrow phones; text size scales with the
+          card width via responsive breakpoints. */}
+      <div className="relative min-w-0">
+        <p className="break-words text-xl font-black leading-tight tracking-tight text-white drop-shadow sm:text-3xl">
           {cfg.headline}
           <span className="block text-white/80">{cfg.subline}</span>
         </p>

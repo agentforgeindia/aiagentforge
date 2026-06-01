@@ -17,13 +17,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Send, ShieldCheck, Tag, Trash2 } from "lucide-react";
+import { Plus, Send, ShieldCheck, Tag, Trash2 } from "lucide-react";
 import AdminShell, {
   adminCardCls,
   adminInputCls,
   adminMutedCls,
   adminPrimaryBtnCls,
+  adminSecondaryBtnCls,
 } from "../../AdminShell";
+import AddPastPaymentModal from "./AddPastPaymentModal";
 
 const ADMIN_EMAILS: string[] = [
   "info@aiagentforge.in",
@@ -95,6 +97,10 @@ export default function AdminCustomerDetailPage() {
   const [newNote, setNewNote] = useState("");
   const [newTagsCsv, setNewTagsCsv] = useState("");
   const [savingNote, setSavingNote] = useState(false);
+
+  // "Record past payment" modal — backfill helper for old buyers
+  // whose payment row never got inserted before the bugfix.
+  const [showAddPayment, setShowAddPayment] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -346,7 +352,17 @@ export default function AdminCustomerDetailPage() {
 
           {/* Payments */}
           <section className={`${adminCardCls} p-4`}>
-            <SectionTitle>Payments</SectionTitle>
+            <div className="flex items-center justify-between gap-3">
+              <SectionTitle>Payments</SectionTitle>
+              <button
+                type="button"
+                onClick={() => setShowAddPayment(true)}
+                className={adminSecondaryBtnCls}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Record past payment
+              </button>
+            </div>
             {payments.length === 0 ? (
               <p className={`mt-3 text-sm ${adminMutedCls}`}>No payments recorded.</p>
             ) : (
@@ -411,6 +427,18 @@ export default function AdminCustomerDetailPage() {
             )}
           </section>
         </div>
+      )}
+
+      {/* Backfill modal — only renders when admin clicks the button */}
+      {profile && (
+        <AddPastPaymentModal
+          open={showAddPayment}
+          onClose={() => setShowAddPayment(false)}
+          onSaved={() => setRefreshKey((k) => k + 1)}
+          userId={profile.id}
+          defaultName={profile.full_name}
+          defaultEmail={profile.email}
+        />
       )}
     </AdminShell>
   );

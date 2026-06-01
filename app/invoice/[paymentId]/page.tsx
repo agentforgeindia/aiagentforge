@@ -31,6 +31,13 @@ type Payment = {
   razorpay_order_id: string | null;
   razorpay_payment_id: string | null;
   created_at: string;
+  // Snapshot frozen at the moment of purchase.
+  billing_name: string | null;
+  billing_phone: string | null;
+  billing_email: string | null;
+  billing_company: string | null;
+  billing_address: string | null;
+  billing_gstin: string | null;
 };
 
 type Profile = {
@@ -66,7 +73,7 @@ export default function InvoicePage() {
         supabase
           .from("payments")
           .select(
-            "id, user_id, plan, amount, credits_added, status, razorpay_order_id, razorpay_payment_id, created_at",
+            "id, user_id, plan, amount, credits_added, status, razorpay_order_id, razorpay_payment_id, created_at, billing_name, billing_phone, billing_email, billing_company, billing_address, billing_gstin",
           )
           .eq("id", paymentId)
           .maybeSingle(),
@@ -194,16 +201,43 @@ export default function InvoicePage() {
               </div>
             </header>
 
-            {/* Buyer + meta */}
+            {/* Buyer + meta — prefer the snapshot frozen on the
+                payment row so old bills never change if the user
+                updates their billing details later. */}
             <section className="mt-6 grid gap-6 sm:grid-cols-2">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-black/45">
                   Billed to
                 </p>
                 <p className="mt-1 text-sm font-black">
-                  {profile?.full_name?.trim() || "(unnamed)"}
+                  {payment.billing_name?.trim() ||
+                    profile?.full_name?.trim() ||
+                    "(unnamed)"}
                 </p>
-                <p className="text-xs text-black/60">{profile?.email ?? "—"}</p>
+                {payment.billing_company && (
+                  <p className="text-xs font-bold text-black/70">
+                    {payment.billing_company}
+                  </p>
+                )}
+                <p className="text-xs text-black/60">
+                  {payment.billing_email?.trim() || profile?.email || "—"}
+                </p>
+                {payment.billing_phone && (
+                  <p className="text-xs text-black/60">{payment.billing_phone}</p>
+                )}
+                {payment.billing_address && (
+                  <p className="mt-1 whitespace-pre-line text-xs leading-5 text-black/60">
+                    {payment.billing_address}
+                  </p>
+                )}
+                {payment.billing_gstin && (
+                  <p className="mt-1 text-xs">
+                    <span className="text-black/55">GSTIN: </span>
+                    <span className="font-mono font-bold text-black/80">
+                      {payment.billing_gstin}
+                    </span>
+                  </p>
+                )}
               </div>
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-black/45">

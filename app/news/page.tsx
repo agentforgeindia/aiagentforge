@@ -48,8 +48,8 @@ function BlogThumbnail({ cfg }: { cfg: BlogThumbnailConfig }) {
         <span className="text-[10px] font-black uppercase tracking-widest text-white/85">AgentForge AI</span>
       </div>
 
-      <div className="relative">
-        <p className="text-2xl font-black leading-tight tracking-tight text-white drop-shadow sm:text-3xl">
+      <div className="relative min-w-0">
+        <p className="break-words text-xl font-black leading-tight tracking-tight text-white drop-shadow sm:text-3xl">
           {cfg.headline}
           <span className="block text-white/80">{cfg.subline}</span>
         </p>

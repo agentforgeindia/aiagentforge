@@ -5,6 +5,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
+import BillingDetailsModal, {
+  type BillingDetails,
+} from "@/app/components/BillingDetailsModal";
 import {
   BadgeCheck,
   ChevronRight,
@@ -182,6 +185,11 @@ export default function BillingPage() {
   }[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
+  // Billing-details modal state — shown right before Razorpay opens.
+  const [modalPlan, setModalPlan] = useState<BillingPlan | null>(null);
+  const [modalOpening, setModalOpening] = useState(false);
+  const [profileBilling, setProfileBilling] = useState<Partial<BillingDetails>>({});
+
   useEffect(() => {
     let active = true;
 
@@ -205,7 +213,9 @@ export default function BillingPage() {
 
         const { data: profile } = await supabase
           .from("profiles")
-          .select("credits, plan")
+          .select(
+            "credits, plan, full_name, billing_name, billing_phone, billing_company, billing_address, billing_gstin",
+          )
           .eq("id", session.user.id)
           .single();
 
@@ -213,6 +223,18 @@ export default function BillingPage() {
 
         setCredits(profile?.credits ?? 0);
         setCurrentPlan(profile?.plan ?? "Free Trial");
+
+        // Pre-fill the upcoming billing-details modal from the last
+        // values the user saved. Falls back to profile name / auth
+        // email so the form is rarely empty.
+        setProfileBilling({
+          name: profile?.billing_name ?? profile?.full_name ?? "",
+          phone: profile?.billing_phone ?? "",
+          email: session.user.email ?? "",
+          company: profile?.billing_company ?? "",
+          address: profile?.billing_address ?? "",
+          gstin: profile?.billing_gstin ?? "",
+        });
 
         // Past payments (RLS = only own rows). Drives the
         // "Download bill" section at the bottom.
@@ -266,15 +288,36 @@ export default function BillingPage() {
     setCurrentPlan(profile?.plan ?? "Free Trial");
   }
 
+  // Step 1: user clicks "Buy [plan]" → open the billing-details
+  // modal. We don't touch Razorpay yet — the modal must collect
+  // name + phone (and optional company/address/GSTIN) first.
   async function handlePayment(plan: BillingPlan) {
+    setMessage(null);
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.user) {
+      setMessage("Please login first to upgrade your plan.");
+      window.location.href = "/login";
+      return;
+    }
+    setModalPlan(plan);
+  }
+
+  // Step 2: modal submitted with billing snapshot → create order
+  // → open Razorpay → verify → store snapshot in payments table.
+  async function proceedToCheckout(
+    plan: BillingPlan,
+    billing: BillingDetails,
+  ) {
     try {
+      setModalOpening(true);
       setMessage(null);
       setPayingPlan(plan.name);
 
       const {
         data: { session },
       } = await supabase.auth.getSession();
-
       if (!session?.user) {
         setMessage("Please login first to upgrade your plan.");
         window.location.href = "/login";
@@ -305,7 +348,6 @@ export default function BillingPage() {
       });
 
       const orderData = await orderResponse.json();
-
       if (!orderResponse.ok || !orderData?.order?.id) {
         throw new Error(orderData?.error || "Unable to create payment order.");
       }
@@ -315,6 +357,9 @@ export default function BillingPage() {
         throw new Error("NEXT_PUBLIC_RAZORPAY_KEY_ID missing in .env.local");
       }
 
+      // Modal collected → safe to close now. Razorpay opens next.
+      setModalPlan(null);
+
       const options: RazorpayOptions = {
         key: razorpayKey,
         amount: plan.amount * 100,
@@ -323,8 +368,10 @@ export default function BillingPage() {
         description: `${plan.name} Plan - ${plan.creditsLabel}`,
         order_id: orderData.order.id,
         prefill: {
-          email: userEmail || session.user.email || "",
-        },
+          name: billing.name,
+          email: billing.email || userEmail || session.user.email || "",
+          contact: billing.phone,
+        } as any,
         notes: {
           user_id: session.user.id,
           plan: plan.name,
@@ -346,11 +393,17 @@ export default function BillingPage() {
               userId: session.user.id,
               amount: plan.amount,
               credits: plan.credits,
+              // Billing snapshot — frozen into payments table.
+              billing_name:    billing.name,
+              billing_phone:   billing.phone,
+              billing_email:   billing.email,
+              billing_company: billing.company,
+              billing_address: billing.address,
+              billing_gstin:   billing.gstin,
             }),
           });
 
           const verifyData = await verifyResponse.json();
-
           if (!verifyResponse.ok) {
             throw new Error(verifyData?.error || "Payment verification failed.");
           }
@@ -373,6 +426,8 @@ export default function BillingPage() {
       console.error("Payment error:", error);
       setMessage(errorMessage);
       setPayingPlan(null);
+    } finally {
+      setModalOpening(false);
     }
   }
 
@@ -898,6 +953,23 @@ export default function BillingPage() {
           </section>
         )}
       </div>
+
+      {/* Billing-details modal — only opens when user clicks
+          "Buy [plan]". Razorpay never opens before this form is
+          completed (or cancelled). */}
+      <BillingDetailsModal
+        open={Boolean(modalPlan)}
+        onClose={() => {
+          if (!modalOpening) setModalPlan(null);
+        }}
+        onSubmit={(details) => {
+          if (modalPlan) proceedToCheckout(modalPlan, details);
+        }}
+        initial={profileBilling}
+        planName={modalPlan?.name ?? ""}
+        amount={modalPlan?.amount ?? 0}
+        submitting={modalOpening}
+      />
     </main>
   );
 }
