@@ -5,9 +5,9 @@ import { createClient } from "@supabase/supabase-js";
 export const runtime = "nodejs";
 
 const PLAN_CONFIG: Record<string, { amount: number; credits: number }> = {
- Starter: { amount: 1999, credits: 1800 },
-"Pro Creator": { amount: 9999, credits: 12000 },
-Empire: { amount: 39999, credits: 50000 },
+  Starter: { amount: 1999, credits: 1800 },
+  "Pro Creator": { amount: 9999, credits: 12000 },
+  Empire: { amount: 39999, credits: 50000 },
 };
 
 function getSupabaseAdmin() {
@@ -51,13 +51,19 @@ export async function POST(request: Request) {
     const isValid = verifyWebhookSignature(rawBody, signature);
 
     if (!isValid) {
-      return NextResponse.json({ error: "Invalid webhook signature." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid webhook signature." },
+        { status: 400 },
+      );
     }
 
     const event = JSON.parse(rawBody);
 
     if (event?.event !== "payment.captured") {
-      return NextResponse.json({ success: true, ignored: event?.event || "unknown_event" });
+      return NextResponse.json({
+        success: true,
+        ignored: event?.event || "unknown_event",
+      });
     }
 
     const payment = event?.payload?.payment?.entity;
@@ -67,80 +73,65 @@ export async function POST(request: Request) {
     const planName = payment?.notes?.planName;
 
     if (!razorpayPaymentId || !razorpayOrderId || !userId || !planName) {
-      return NextResponse.json({ error: "Webhook missing required payment notes." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Webhook missing required payment notes." },
+        { status: 400 },
+      );
     }
 
     const plan = PLAN_CONFIG[planName];
 
     if (!plan) {
-      return NextResponse.json({ error: "Invalid webhook plan." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid webhook plan." },
+        { status: 400 },
+      );
     }
 
     const supabaseAdmin = getSupabaseAdmin();
 
-    const { data: existingPayment, error: existingPaymentError } = await supabaseAdmin
-      .from("payments")
-      .select("id")
-      .eq("razorpay_payment_id", razorpayPaymentId)
-      .maybeSingle();
+    // Single atomic, idempotent RPC — same one used by verify-payment.
+    // If Razorpay retries this webhook (or verify-payment ran first),
+    // the ON CONFLICT in the SQL function makes it a safe no-op.
+    // See sql/payments-fix.sql for the function definition.
+    const { data, error } = await supabaseAdmin.rpc(
+      "add_credits_for_payment",
+      {
+        p_user_id: userId,
+        p_amount: plan.amount,
+        p_credits: plan.credits,
+        p_plan: planName,
+        p_razorpay_order_id: razorpayOrderId,
+        p_razorpay_payment_id: razorpayPaymentId,
+        p_razorpay_signature: signature,
+      },
+    );
 
-    if (existingPaymentError) {
-      throw existingPaymentError;
+    if (error) {
+      console.error("[razorpay-webhook] add_credits_for_payment failed:", error);
+      return NextResponse.json(
+        { error: error.message || "Could not credit account." },
+        { status: 500 },
+      );
     }
 
-    if (existingPayment) {
-      return NextResponse.json({ success: true, alreadyProcessed: true });
-    }
+    const result = (data ?? {}) as {
+      added?: boolean;
+      credits_added?: number;
+      new_balance?: number;
+    };
 
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .select("credits")
-      .eq("id", userId)
-      .single();
-
-    if (profileError) {
-      throw profileError;
-    }
-
-    const currentCredits = Number(profile?.credits || 0);
-    const newCredits = currentCredits + plan.credits;
-
-    const { error: updateProfileError } = await supabaseAdmin
-      .from("profiles")
-      .update({
-        credits: newCredits,
-        plan: planName,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", userId);
-
-    if (updateProfileError) {
-      throw updateProfileError;
-    }
-
-    const { error: insertPaymentError } = await supabaseAdmin.from("payments").insert({
-      user_id: userId,
-      plan_name: planName,
-      amount: plan.amount,
-      credits: plan.credits,
-      currency: payment?.currency || "INR",
-      status: "paid",
-      razorpay_order_id: razorpayOrderId,
-      razorpay_payment_id: razorpayPaymentId,
-      razorpay_signature: signature,
-      raw_payload: event,
+    return NextResponse.json({
+      success: true,
+      alreadyProcessed: !result.added,
+      creditsAdded: result.credits_added ?? 0,
+      totalCredits: result.new_balance ?? 0,
     });
-
-    if (insertPaymentError) {
-      throw insertPaymentError;
-    }
-
-    return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("Razorpay webhook error:", error);
     return NextResponse.json(
       { error: error?.message || "Webhook processing failed." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

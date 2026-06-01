@@ -29,7 +29,7 @@ function getSupabaseAdmin() {
 function verifyRazorpaySignature(
   orderId: string,
   paymentId: string,
-  signature: string
+  signature: string,
 ) {
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     ) {
       return NextResponse.json(
         { error: "Missing payment verification details." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -77,98 +77,73 @@ export async function POST(request: Request) {
     if (!plan) {
       return NextResponse.json(
         { error: "Invalid plan selected." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (Number(amount) !== plan.amount || Number(credits) !== plan.credits) {
       return NextResponse.json(
         { error: "Plan amount or credits mismatch." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const isValid = verifyRazorpaySignature(
       razorpay_order_id,
       razorpay_payment_id,
-      razorpay_signature
+      razorpay_signature,
     );
 
     if (!isValid) {
       return NextResponse.json(
         { error: "Invalid Razorpay signature." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const supabaseAdmin = getSupabaseAdmin();
 
-    // 1. FIRST insert payment record.
-    // If same payment ID comes again, unique constraint blocks it before credits update.
-    const { error: insertPaymentError } = await supabaseAdmin
-      .from("payments")
-      .insert({
-        user_id: userId,
-        plan_name: planName,
-        amount: plan.amount,
-        credits: plan.credits,
-        currency: "INR",
-        status: "paid",
-        razorpay_order_id,
-        razorpay_payment_id,
-        razorpay_signature,
-      });
+    // Single atomic, idempotent RPC.
+    // See sql/payments-fix.sql for the function definition.
+    const { data, error } = await supabaseAdmin.rpc(
+      "add_credits_for_payment",
+      {
+        p_user_id: userId,
+        p_amount: plan.amount,
+        p_credits: plan.credits,
+        p_plan: planName,
+        p_razorpay_order_id: razorpay_order_id,
+        p_razorpay_payment_id: razorpay_payment_id,
+        p_razorpay_signature: razorpay_signature,
+      },
+    );
 
-    if (insertPaymentError) {
-      if (
-        insertPaymentError.code === "23505" ||
-        insertPaymentError.message?.toLowerCase().includes("duplicate")
-      ) {
-        return NextResponse.json({
-          success: true,
-          alreadyProcessed: true,
-          creditsAdded: 0,
-          message: "Payment already processed. Credits not added again.",
-        });
-      }
-
-      throw insertPaymentError;
+    if (error) {
+      console.error("[verify-payment] add_credits_for_payment failed:", error);
+      return NextResponse.json(
+        { error: error.message || "Could not credit account." },
+        { status: 500 },
+      );
     }
 
-    // 2. Only first successful insert reaches here.
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .select("credits")
-      .eq("id", userId)
-      .single();
-
-    if (profileError) throw profileError;
-
-    const currentCredits = Number(profile?.credits || 0);
-    const newCredits = currentCredits + plan.credits;
-
-    const { error: updateProfileError } = await supabaseAdmin
-      .from("profiles")
-      .update({
-        credits: newCredits,
-        plan: planName,
-      })
-      .eq("id", userId);
-
-    if (updateProfileError) throw updateProfileError;
+    const result = (data ?? {}) as {
+      added?: boolean;
+      credits_added?: number;
+      new_balance?: number;
+    };
 
     return NextResponse.json({
       success: true,
-      alreadyProcessed: false,
-      creditsAdded: plan.credits,
-      totalCredits: newCredits,
+      alreadyProcessed: !result.added,
+      creditsAdded: result.credits_added ?? 0,
+      totalCredits: result.new_balance ?? 0,
     });
   } catch (error: any) {
     console.error("Razorpay verify-payment error:", error);
 
     return NextResponse.json(
       { error: error?.message || "Payment verification failed." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
