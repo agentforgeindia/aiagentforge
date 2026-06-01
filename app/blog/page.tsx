@@ -83,7 +83,16 @@ const CATEGORY_ACCENT: Record<string, { from: string; to: string; chip: string; 
   Jewellery: { from: "from-amber-400", to: "to-rose-500", chip: "bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-500/15 dark:text-amber-200 dark:border-amber-400/30", ring: "ring-amber-400" },
   Productography: { from: "from-violet-500", to: "to-fuchsia-500", chip: "bg-violet-50 text-violet-700 border-violet-300 dark:bg-violet-500/15 dark:text-violet-200 dark:border-violet-400/30", ring: "ring-violet-400" },
   Guide: { from: "from-emerald-400", to: "to-cyan-500", chip: "bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-200 dark:border-emerald-400/30", ring: "ring-emerald-400" },
+  // "Announcement" category exists in BlogPost type but wasn't in
+  // CATEGORIES filter chips — adding the accent here so the
+  // featured-card render doesn't crash on undefined access.
+  Announcement: { from: "from-rose-400", to: "to-purple-500", chip: "bg-rose-50 text-rose-700 border-rose-300 dark:bg-rose-500/15 dark:text-rose-200 dark:border-rose-400/30", ring: "ring-rose-400" },
 };
+
+/** Defensive lookup — fall back to All if a future category lands without an entry. */
+function accentFor(category: string) {
+  return CATEGORY_ACCENT[category] ?? CATEGORY_ACCENT.All;
+}
 
 const CATEGORIES = ["All", "Textile", "Jewellery", "Productography", "Guide"] as const;
 type Category = (typeof CATEGORIES)[number];
@@ -200,7 +209,7 @@ export default function BlogIndexPage() {
                   <BlogThumbnail cfg={featured.thumbnail} title={featured.title} />
                 ) : (
                   <div
-                    className={`flex h-full items-center justify-center bg-gradient-to-br ${CATEGORY_ACCENT[featured.category].from} ${CATEGORY_ACCENT[featured.category].to} p-10 md:p-14`}
+                    className={`flex h-full items-center justify-center bg-gradient-to-br ${accentFor(featured.category).from} ${accentFor(featured.category).to} p-10 md:p-14`}
                   >
                     <div className="text-7xl drop-shadow-lg md:text-8xl">{featured.heroEmoji}</div>
                   </div>
@@ -215,7 +224,7 @@ export default function BlogIndexPage() {
                 <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold">
                   <span
                     className={`rounded-full border px-2.5 py-0.5 ${
-                      CATEGORY_ACCENT[featured.category].chip
+                      accentFor(featured.category).chip
                     }`}
                   >
                     {featured.category}
@@ -303,7 +312,7 @@ export default function BlogIndexPage() {
 // ArticleCard — uniform, balanced, clean
 // ============================================================
 function ArticleCard({ post }: { post: BlogPost }) {
-  const accent = CATEGORY_ACCENT[post.category];
+  const accent = accentFor(post.category);
   return (
     <Link
       href={`/blog/${post.slug}`}
