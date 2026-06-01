@@ -1472,30 +1472,31 @@ export const BLOG_POSTS: BlogPost[] = [
   },
 
   // ============================================================
-  // AGENTFORGE JOURNEY SERIES — Founder's perspective
-  // Author: Gurpreet Singh Soni, CEO & Founder
+  // AGENTFORGE JOURNEY SERIES — Founder + Team perspective
+  // Pre-launch announcement posts leading up to 3 June 2026.
   // ============================================================
 
   {
     slug: "why-i-built-agentforge-founders-letter",
     title: "Why I Built AgentForge: A Founder's Letter to Every Indian Seller",
     description:
-      "Gurpreet Singh Soni, CEO & Founder of AgentForge AI, shares the real story behind building India's first AI-powered catalogue platform — the pain he saw, the gap nobody was filling, and why he quit a comfortable path to build it.",
+      "The real, unedited origin story of AgentForge AI — how a request for shirt mockups from Bhavin at Shree Ganesh Textile in Bhiwandi became India's first AI catalogue platform built for textile, jewellery and D2C sellers.",
     excerpt:
-      "I watched my friend spend ₹6 lakh on a single season's photoshoots for his saree business — and still lose to competitors who shipped faster. That moment is why AgentForge exists.",
+      "It did not start in a boardroom. It started with one shirt manufacturer in Bhiwandi asking for mockups he could not afford to shoot. That single conversation is why AgentForge exists.",
     keywords: [
       "AgentForge founder story",
-      "Gurpreet Singh Soni AgentForge",
-      "why AgentForge was built",
-      "Indian AI startup founder",
-      "AI for Indian textile sellers",
       "AgentForge origin story",
+      "Indian AI startup founder",
+      "why AgentForge was built",
+      "AI for Indian textile sellers",
+      "Bhiwandi textile AI",
+      "Shree Ganesh Textile mockups",
       "Indian D2C AI platform",
     ],
     category: "Announcement",
-    author: "Gurpreet Singh Soni",
-    publishedAt: "2026-01-15T00:00:00.000Z",
-    readMinutes: 7,
+    author: "AgentForge Founder",
+    publishedAt: "2026-04-05T00:00:00.000Z",
+    readMinutes: 6,
     heroEmoji: "✍️",
     thumbnail: {
       headline: "A Founder's",
@@ -1504,53 +1505,66 @@ export const BLOG_POSTS: BlogPost[] = [
       gradientFrom: "#1e3a5f",
       gradientTo: "#0ea5e9",
       icon: "✍️",
-      statsRow: ["Why We Built This", "The Problem We Saw", "The Mission"],
+      statsRow: ["The Real Story", "Bhiwandi to India", "Built for Sellers"],
     },
     ctaLabel: "See What We Built",
     ctaHref: "/",
     body: [
       {
         type: "p",
-        text: "I want to tell you something I have never written down publicly before. The real reason I built AgentForge is not in any pitch deck. It starts with a phone call from a friend in Surat.",
+        text: "Before I write a single feature page or pitch deck, I want every Indian seller reading this to know the real story behind AgentForge. It did not start in a boardroom. It started with one shirt manufacturer in Bhiwandi who could not afford the mockups he needed.",
+      },
+      { type: "h2", text: "The conversation that started everything" },
+      {
+        type: "p",
+        text: "Bhavin runs Shree Ganesh Textile in Bhiwandi. Men's shirts — formal, casual, party-wear, full sleeves, half sleeves, every collar and every cut. The kind of operation that survives on speed: design, sample, drop, repeat. A few months ago, he was looking for someone who could give him good mockups — visuals he could send to wholesalers on WhatsApp the same day a fabric arrived. Not next week. Not after a model shoot. Same day.",
       },
       {
         type: "p",
-        text: "His name is Rajiv. He runs a mid-size saree wholesale operation — 40 to 60 designs per month, a team of 12, clients across 11 states on WhatsApp. In late 2024, he called me frustrated. He had just paid ₹6.2 lakh for a single season's photoshoots. Model fees, MUA, studio rental, photographer, logistics, post-production — all of it. And then he told me the part that hit hardest: by the time the photos arrived, two of his best-performing designs had already been copied by a competitor who saw them at a trade show. He lost the first-mover advantage because his own catalogue took 19 days to produce.",
-      },
-      { type: "h2", text: "The gap that nobody was filling" },
-      {
-        type: "p",
-        text: "I spent the next three months talking to textile sellers, jewellery manufacturers, D2C founders and Meesho resellers across Surat, Jaipur, Ludhiana, Coimbatore and Delhi. The story was the same everywhere. The photoshoot bottleneck was bleeding money, killing speed, and systematically favouring only the brands with deep capital — not the brands with the best designs.",
+        text: "The quotes he was getting back were impossible for a mid-sized shirt manufacturer to absorb. Studio fees, model bookings, post-production rounds, repeat shoots if the colour was slightly off. For a category where margins are tight and drops happen weekly, a ₹40,000–₹80,000 photoshoot per collection is not a marketing expense. It is a barrier.",
       },
       {
         type: "p",
-        text: "I looked at existing AI image tools. Every single one was built for Western markets — they did not know what a saree drape looked like, they had no concept of article code overlays for wholesale, and their output looked wrong on Indian fabrics and skin tones. There was a real, urgent, India-specific problem with no India-first solution.",
+        text: "He told me, very simply: 'Aisi koi cheez honi chahiye jo seedhe fabric ki photo se mockup bana de. Bana do.' That was the brief. One sentence. From one shirt manufacturer who knew exactly what the industry needed and could not find it anywhere.",
       },
-      { type: "quote", text: "The best designs in India were losing to inferior designs that had better photography. That is not a fair fight. That is a capital problem dressed as a creative problem." },
-      { type: "h2", text: "What I set out to build" },
+      { type: "h2", text: "Bhavin's problem is everyone's problem" },
       {
         type: "p",
-        text: "AgentForge was not built to be another generic AI tool. From day one, the brief was narrow and specific: build something that a Surat saree manufacturer, a Jaipur jewellery wholesaler, and a Tirupur knitwear factory can all open on Monday morning and use without training. Something that understands saree drapes, Indian bridal models, kundan settings, article code overlays, WhatsApp-square outputs and INR pricing. Not a Western product with Indian pricing slapped on it. An Indian product, built from scratch, for the way Indian sellers actually work.",
-      },
-      { type: "h2", text: "What we shipped in the first six months" },
-      {
-        type: "p",
-        text: "In the first six months after launch, AgentForge has processed over 4 lakh catalogue images for Indian brands. The average cost saving per brand is 87% compared to their previous photography spend. The average time from design lock to WhatsApp drop has gone from 5–7 days to under 2 hours.",
+        text: "I started showing early prototypes to other textile manufacturers across Bhiwandi, Surat, Ludhiana, Ahmedabad and Tirupur. Saree wholesalers. Kurti brands. Knitwear factories. The story was identical everywhere. Photography was the single biggest bottleneck between a designer's idea and a customer's WhatsApp screen. The brands with deep capital could ship daily. Everyone else lost orders waiting for photos.",
       },
       {
         type: "p",
-        text: "But the number I am most proud of is not a platform metric. It is the message I got from a Jaipur-based jewellery manufacturer in March 2026 — a second-generation family business that had never been able to afford a bridal campaign shoot. She used AgentForge to build her first-ever festive campaign in one afternoon. She said it was the first time in 22 years of business that her catalogue looked like it belonged next to a national brand.",
-      },
-      { type: "h2", text: "A note to every Indian seller reading this" },
-      {
-        type: "p",
-        text: "If you sell textiles, jewellery, home decor, cosmetics or any physical product — you deserve to look like a premium brand without paying a premium photography bill. Your designs, your craftsmanship, your customer relationships are what make your business. Photography should not be the bottleneck between your product and your customer's attention.",
+        text: "Then I looked at the jewellery side — bridal, daily-wear, kundan, gold. Same pattern. Then productography — cosmetics, perfume, home decor, electronics. Same pattern. Same gap. Indian sellers were not losing to better products. They were losing to better photography budgets.",
       },
       {
         type: "p",
-        text: "That is why AgentForge exists. And we are just getting started.",
+        text: "Existing AI image tools were not the answer. They were built for Western catalogues, Western fabrics, Western faces. They did not understand a saree drape. They did not know what an article code overlay was. They did not have a WhatsApp 1080×1080 preset because their builders did not know WhatsApp is how Indian wholesale actually moves. There was a real, urgent, India-specific gap with no India-first solution.",
       },
-      { type: "quote", text: "— Gurpreet Singh Soni, CEO & Founder, AgentForge AI" },
+      { type: "quote", text: "The best designs in India were losing to inferior designs that had bigger photography budgets. That is not a fair fight. That is a capital problem dressed as a creative problem." },
+      { type: "h2", text: "What we set out to build" },
+      {
+        type: "p",
+        text: "AgentForge is not a generic AI tool with an Indian flag on it. From day one, the brief was narrow and specific — build something that a Bhiwandi shirt manufacturer, a Surat saree wholesaler, a Jaipur jewellery brand and a Bangalore D2C founder can all open on Monday morning and use without training. Something that understands men's shirt fits, saree drapes, kundan settings, perfume bottle lighting, article code overlays, WhatsApp-square outputs and INR pricing. Built from scratch, for the way Indian sellers actually work.",
+      },
+      { type: "h2", text: "What's launching on 3 June 2026" },
+      {
+        type: "p",
+        text: "On 3 June 2026, AgentForge AI goes live for every Indian seller. Three industry-specific studios — TextilePrints to Mockup AI, Jewellery AI Studio, and Productography AI. Each one trained, prompted and presented for one specific kind of Indian product. Upload, generate, done. The same workflow a shirt drop in Bhiwandi needs is the same workflow a saree drop in Surat needs is the same workflow a bridal jewellery campaign in Jaipur needs.",
+      },
+      {
+        type: "p",
+        text: "First 100 credits are free on signup. No card. No commitment. The fastest way to see what AgentForge can do for your business is to try one image in the next ten minutes.",
+      },
+      { type: "h2", text: "A promise to every Indian seller reading this" },
+      {
+        type: "p",
+        text: "If you sell textiles, jewellery, home decor, cosmetics or any physical product in India — you deserve to look like a premium brand without paying a premium photography bill. Your designs, your craftsmanship, your customer relationships are what make your business. Photography should not be the bottleneck between your product and your customer's attention.",
+      },
+      {
+        type: "p",
+        text: "AgentForge is built to remove that bottleneck. India ke business ko speed dene aaye hain hum — full stop. That is why this exists. That is who this is for. And we are just getting started.",
+      },
+      { type: "quote", text: "— The AgentForge Founder" },
     ],
   },
 
@@ -1558,20 +1572,20 @@ export const BLOG_POSTS: BlogPost[] = [
     slug: "agentforge-launch-indias-first-ai-catalogue-platform",
     title: "AgentForge Is Live: India's First AI Catalogue Platform for Textile & Jewellery",
     description:
-      "AgentForge AI officially launches as India's first AI-powered catalogue generation platform built specifically for textile manufacturers, jewellery brands and D2C sellers. Founder Gurpreet Singh Soni announces the platform, its features and the vision behind it.",
+      "AgentForge AI officially launches on 3 June 2026 as India's first AI-powered catalogue generation platform built specifically for textile manufacturers, jewellery brands and D2C sellers — with TextilePrints to Mockup AI, Jewellery AI Studio and Productography AI from day one.",
     excerpt:
-      "Today, we are officially open to every Indian textile manufacturer, jewellery brand and D2C seller. No waitlist. No beta. AgentForge is live — and your first 100 credits are free.",
+      "3 June 2026 — AgentForge is officially open to every Indian textile manufacturer, jewellery brand and D2C seller. No waitlist. No beta. Three industry studios from day one — and your first 100 credits are free.",
     keywords: [
       "AgentForge AI launch",
       "India AI catalogue platform launch",
       "AgentForge textile jewellery AI",
       "AI product photography India launch",
-      "Gurpreet Singh Soni AgentForge launch",
       "Indian AI startup launch 2026",
+      "AgentForge 3 June launch",
     ],
     category: "Announcement",
-    author: "Gurpreet Singh Soni",
-    publishedAt: "2026-02-01T00:00:00.000Z",
+    author: "AgentForge Team",
+    publishedAt: "2026-06-03T00:00:00.000Z",
     readMinutes: 5,
     heroEmoji: "🚀",
     thumbnail: {
@@ -1588,7 +1602,7 @@ export const BLOG_POSTS: BlogPost[] = [
     body: [
       {
         type: "p",
-        text: "Today is a day I have been building toward for over a year. AgentForge AI is officially live — and it is open to every Indian textile manufacturer, jewellery brand, D2C seller, Meesho reseller, and ecommerce operator who has ever been held back by a photography bill.",
+        text: "Today, 3 June 2026, is the day we have been building toward. AgentForge AI is officially live — and it is open to every Indian textile manufacturer, jewellery brand, D2C seller, Meesho reseller, Amazon India operator, and WhatsApp wholesaler who has ever been held back by a photography bill.",
       },
       { type: "h2", text: "What AgentForge does" },
       {
@@ -1620,155 +1634,87 @@ export const BLOG_POSTS: BlogPost[] = [
         type: "p",
         text: "Sign up at aiagentforge.in. Your first 100 credits are free — no credit card, no commitment. Generate your first AI catalogue image in the next 10 minutes. Welcome to AgentForge.",
       },
-      { type: "quote", text: "— Gurpreet Singh Soni, CEO & Founder, AgentForge AI" },
-    ],
-  },
-
-  {
-    slug: "agentforge-first-10000-images-what-we-learned",
-    title: "After 10,000 AI Catalogue Images: What Indian Sellers Actually Need",
-    description:
-      "AgentForge CEO Gurpreet Singh Soni shares the real data and honest lessons from the platform's first 10,000 AI catalogue images — which categories work best, what sellers ask for most, and what we are building next.",
-    excerpt:
-      "We have now generated over 10,000 AI catalogue images for Indian brands. Here is the honest data on what works, what surprised us, and what we are fixing based on real seller feedback.",
-    keywords: [
-      "AgentForge 10000 images milestone",
-      "AI catalogue India learnings",
-      "AgentForge product update",
-      "Indian seller AI photography data",
-      "Gurpreet Singh Soni AgentForge update",
-      "AI textile jewellery India results",
-    ],
-    category: "Announcement",
-    author: "Gurpreet Singh Soni",
-    publishedAt: "2026-03-10T00:00:00.000Z",
-    readMinutes: 6,
-    heroEmoji: "📈",
-    thumbnail: {
-      headline: "10,000 Images.",
-      subline: "What We Learned.",
-      badge: "Platform Milestone",
-      gradientFrom: "#059669",
-      gradientTo: "#0891b2",
-      icon: "📈",
-      statsRow: ["10,000+ Images", "Real Data", "Honest Lessons"],
-    },
-    ctaLabel: "Try AgentForge Free",
-    ctaHref: "/signup",
-    body: [
-      {
-        type: "p",
-        text: "We have crossed 10,000 AI catalogue images generated on AgentForge. I want to share what the data actually tells us — not the polished marketing version, but the honest founder's view of what is working, what surprised us, and what we are building next.",
-      },
-      { type: "h2", text: "Which categories are driving volume" },
-      { type: "ul", items: [
-        "Saree mockups — 34% of all generations (Surat, Varanasi, Kanjeevaram sellers)",
-        "Kurti and salwar kameez — 22%",
-        "Jewellery (bridal + daily-wear) — 19%",
-        "Productography (cosmetics, perfume, home decor) — 15%",
-        "Kidswear and menswear — 10%",
-      ]},
-      {
-        type: "p",
-        text: "Saree leads by a significant margin. The demand signal from Surat and Varanasi is the strongest we have seen. Sellers there are generating 20–50 images per day once they get set up.",
-      },
-      { type: "h2", text: "What surprised us" },
-      { type: "h3", text: "1. WhatsApp is the primary output destination — not Instagram" },
-      {
-        type: "p",
-        text: "We expected Instagram and marketplace sellers to dominate. Instead, 67% of all downloads are the 1080×1080 WhatsApp square format. Indian wholesale still runs on WhatsApp groups, and the speed of AI catalogue directly translates into more drops per day and more enquiries per week.",
-      },
-      { type: "h3", text: "2. Article code overlay is non-negotiable" },
-      {
-        type: "p",
-        text: "The single most-requested feature from day one has been article code + company watermark on every image. Sellers do not want to add this manually after generation. We have now made it a one-time saved setting — enter once, it appears on every output automatically.",
-      },
-      { type: "h3", text: "3. Festive timing drives usage spikes" },
-      {
-        type: "p",
-        text: "Usage spiked 340% in the 10 days before Holi and 280% in the week before Gudi Padwa. Sellers are using AgentForge to compress their festive launch cycles from weeks to days. This tells us that festive readiness is one of the highest-value use cases we should double down on.",
-      },
-      { type: "h2", text: "What we are fixing based on feedback" },
-      { type: "ul", items: [
-        "Pallu placement accuracy for drape-heavy sarees — shipping in next update",
-        "Faster bulk processing — 50-image queue now processes in parallel",
-        "Hindi language support in the dashboard UI — in development",
-        "Mobile-optimised upload flow — many sellers use phones, not laptops",
-      ]},
-      { type: "h2", text: "What is coming next" },
-      {
-        type: "p",
-        text: "We are building three features that the data clearly demands: a dedicated festive pack with seasonal backdrops updated every month, a bulk catalogue download with ZIP + article-code naming, and a direct WhatsApp Business API integration so sellers can push their catalogue images directly to their groups from within AgentForge.",
-      },
-      { type: "quote", text: "10,000 images is a milestone but it is not a destination. The real number we are chasing is 1 crore — and at the current growth rate, that is not far." },
-      { type: "quote", text: "— Gurpreet Singh Soni, CEO & Founder, AgentForge AI" },
+      { type: "quote", text: "— The AgentForge Team" },
     ],
   },
 
   {
     slug: "agentforge-platform-update-may-2026",
-    title: "AgentForge Platform Update: Faster Generation, Festive Packs & Hindi UI",
+    title: "What's Launching on Day One: The AgentForge AI Feature Stack",
     description:
-      "AgentForge's biggest platform update yet — faster image generation, Indian festive backdrop packs, Hindi dashboard, mobile-optimised upload and WhatsApp-direct integration. Full details from Founder Gurpreet Singh Soni.",
+      "A preview of every feature shipping on AgentForge AI from day one — TextilePrints to Mockup AI, Jewellery AI Studio, Productography AI, Festive Backdrop Packs, Hindi UI, WhatsApp-square outputs, article code overlays, and an India-first credit pricing model.",
     excerpt:
-      "Our biggest update since launch. Faster AI generation, a new Festive Pack updated every month, Hindi dashboard UI, mobile upload redesign, and direct WhatsApp Business integration — all shipping this month.",
+      "Launching 3 June 2026. Three industry-specific AI studios, festive backdrop packs, Hindi UI, WhatsApp-ready outputs, article code overlays, and INR-first pricing — here is the full Day-One feature stack.",
     keywords: [
-      "AgentForge platform update May 2026",
-      "AgentForge new features",
-      "AI catalogue update India",
+      "AgentForge launch features",
+      "AgentForge day one stack",
+      "AI catalogue India features",
       "AgentForge Hindi UI",
       "AgentForge festive pack",
-      "Gurpreet Singh Soni product update",
       "AgentForge WhatsApp integration",
+      "India AI textile jewellery launch",
     ],
     category: "Announcement",
-    author: "Gurpreet Singh Soni",
-    publishedAt: "2026-05-01T00:00:00.000Z",
+    author: "AgentForge Team",
+    publishedAt: "2026-05-10T00:00:00.000Z",
     readMinutes: 5,
     heroEmoji: "⚡",
     thumbnail: {
-      headline: "Faster.",
-      subline: "Smarter. Better.",
-      badge: "Platform Update",
+      headline: "Day One.",
+      subline: "Feature Stack.",
+      badge: "Launch Preview",
       gradientFrom: "#6d28d9",
       gradientTo: "#db2777",
       icon: "⚡",
-      statsRow: ["2x Faster", "Festive Packs", "Hindi UI"],
+      statsRow: ["3 AI Studios", "Hindi UI", "WhatsApp Ready"],
     },
-    ctaLabel: "See What's New",
+    ctaLabel: "Get Early Access",
     ctaHref: "/signup",
     body: [
       {
         type: "p",
-        text: "This is the update I have been most excited to ship since we launched. Over the past 90 days, we collected feedback from 4,000+ active sellers on AgentForge. Today, we are shipping the five changes they asked for most — all at once.",
+        text: "On 3 June 2026, AgentForge AI goes live. This is not a beta. Not a waitlist. Every feature on this page is shipping on day one — built and tested across Indian textile, jewellery and D2C catalogues. This post is the complete preview of what every seller signing up on launch day will get.",
       },
-      { type: "h2", text: "1. Generation speed: 2x faster" },
+      { type: "h2", text: "1. Three industry-specific AI studios — not one generic tool" },
       {
         type: "p",
-        text: "We rebuilt our inference pipeline from scratch. Single-image generation now completes in 25–35 seconds (down from 55–70 seconds). Bulk generation for 50-image catalogues has dropped from 45 minutes to under 20 minutes. This is the single biggest quality-of-life improvement for sellers doing daily drops.",
+        text: "AgentForge is not one AI that pretends to do everything. It is three purpose-built studios. TextilePrints to Mockup AI for sarees, kurtis, kurtas, men's shirts, lehengas, kidswear and home textiles. Jewellery AI Studio for bridal, gold, diamond, kundan and daily-wear. Productography AI for cosmetics, perfume, watches, electronics, food packaging and home decor. Each studio is trained and prompted for its specific category — not retrofitted from a Western template.",
       },
-      { type: "h2", text: "2. Festive Backdrop Packs — updated every month" },
+      { type: "h2", text: "2. WhatsApp-ready outputs out of the box" },
       {
         type: "p",
-        text: "Every month, we curate and ship a new Festive Pack with 8–12 backdrops designed around the upcoming Indian festival calendar. May 2026 pack includes: Eid al-Adha, Rakshabandhan preview, and Independence Day themes. Packs are available to all Pro Creator and Empire subscribers — no extra charge.",
+        text: "Every catalogue image generates in 1080×1080 WhatsApp square by default, with 9:16 Story and white-background marketplace variants ready in one click. Indian wholesale still runs on WhatsApp groups — our outputs are designed for that reality, not for stock-photo websites.",
       },
-      { type: "h2", text: "3. Hindi dashboard UI" },
+      { type: "h2", text: "3. Article code + brand overlay — set once, auto-applied" },
       {
         type: "p",
-        text: "The full AgentForge dashboard is now available in Hindi. Every label, instruction, prompt and error message has been translated by our in-house team — not machine-translated. Sellers who found the English UI difficult to navigate can now switch to Hindi in one click from Settings.",
+        text: "Wholesale sellers asked for this constantly during testing. Save your article code format, brand name, WhatsApp number and price label once. Every generated image carries them automatically. No manual editing per drop.",
       },
-      { type: "h2", text: "4. Mobile-optimised upload" },
+      { type: "h2", text: "4. Festive Backdrop Packs — updated monthly" },
       {
         type: "p",
-        text: "62% of AgentForge sessions come from mobile devices. The upload flow has been completely redesigned for phones — larger tap targets, camera-direct capture, and instant crop preview before generation. You can now go from phone camera to finished catalogue image in under 2 minutes on mobile.",
+        text: "On launch day we ship the June 2026 Festive Pack with backdrops designed for Eid al-Adha and Rakshabandhan preview campaigns. A new pack drops every month — included free for Pro Creator and Empire subscribers. Compress your festive launch from weeks to the same evening the design is approved.",
       },
-      { type: "h2", text: "5. WhatsApp Business direct push" },
+      { type: "h2", text: "5. Hindi dashboard UI" },
       {
         type: "p",
-        text: "This is the feature sellers have been asking for since day one. AgentForge now integrates directly with WhatsApp Business API. After generation, you can push your catalogue images directly to your WhatsApp Business groups — without downloading, switching apps or manual uploading. One click from AgentForge to your buyers.",
+        text: "The full AgentForge dashboard is available in Hindi from day one. Every label, prompt and error message has been translated by our in-house team — not machine-translated. Sellers in Bhiwandi, Surat, Jaipur, Ludhiana and Tirupur can switch the entire interface to Hindi in one click from Settings.",
       },
-      { type: "quote", text: "Every feature in this update came directly from seller feedback. You told us what you needed — we built it. That is the only product roadmap we follow." },
-      { type: "quote", text: "— Gurpreet Singh Soni, CEO & Founder, AgentForge AI" },
+      { type: "h2", text: "6. Mobile-first upload flow" },
+      {
+        type: "p",
+        text: "Our pre-launch testing showed most Indian sellers operate from a phone — not a laptop. The upload flow is built mobile-first: larger tap targets, camera-direct capture, instant crop preview before generation. From phone camera to finished catalogue image in under 2 minutes.",
+      },
+      { type: "h2", text: "7. INR pricing, GST invoicing, Razorpay payments" },
+      { type: "ul", items: [
+        "Starter — ₹1,999/month — 1,800 credits — ~120 images",
+        "Pro Creator — ₹9,999/month — 12,000 credits — ~800 images",
+        "Empire — ₹39,999/month — 50,000 credits — 3,000+ images",
+        "Free tier — 100 credits on signup — no card required",
+        "All plans GST-invoiced. Razorpay UPI / cards / netbanking.",
+      ]},
+      { type: "quote", text: "Every feature in this stack came from real Indian seller feedback — Bhiwandi shirt manufacturers, Surat saree wholesalers, Jaipur jewellers and Bangalore D2C founders. You told us what you needed. We built it. That is the only product roadmap we follow." },
+      { type: "quote", text: "— The AgentForge Team" },
     ],
   },
 
@@ -1776,21 +1722,21 @@ export const BLOG_POSTS: BlogPost[] = [
     slug: "agentforge-vision-every-indian-seller-premium-brand",
     title: "The AgentForge Vision: Making Every Indian Seller Look Like a Premium Brand",
     description:
-      "AgentForge Founder Gurpreet Singh Soni lays out the long-term vision — a world where every Indian seller, regardless of size or capital, has access to the same visual quality as India's largest retail brands.",
+      "AgentForge AI lays out the vision launching on 3 June 2026 — a world where every Indian seller, regardless of size or capital, has access to the same visual quality as India's largest retail brands. India ke business ki growth ke liye banaya gaya.",
     excerpt:
-      "Tanishq has a 200-person creative team. Fabindia has a dedicated photography studio. Most Indian sellers have a phone and a WhatsApp group. We are building the infrastructure that closes that gap — for good.",
+      "Tanishq has a 200-person creative team. Fabindia has a dedicated photography studio. Most Indian sellers have a phone and a WhatsApp group. AgentForge is built to close that gap — and we are launching 3 June 2026.",
     keywords: [
       "AgentForge vision 2026",
       "AI for Indian small business",
-      "Gurpreet Singh Soni vision",
       "AgentForge long term plan",
       "Indian seller AI future",
       "democratising visual content India",
       "AgentForge roadmap",
+      "India business growth AI",
     ],
     category: "Announcement",
-    author: "Gurpreet Singh Soni",
-    publishedAt: "2026-05-15T00:00:00.000Z",
+    author: "AgentForge Team",
+    publishedAt: "2026-05-20T00:00:00.000Z",
     readMinutes: 6,
     heroEmoji: "🎯",
     thumbnail: {
@@ -1846,7 +1792,7 @@ export const BLOG_POSTS: BlogPost[] = [
         text: "If you sell a physical product in India and you have not tried AgentForge — try it today. Your first 100 credits are free. Generate your first AI catalogue image in the next 10 minutes. If it saves you money, time, or a missed festive deadline — tell someone. That word of mouth is the only marketing that has ever mattered to us.",
       },
       { type: "quote", text: "We are building for the India that is — not the India that looks good in a pitch deck. And we are just getting started." },
-      { type: "quote", text: "— Gurpreet Singh Soni, CEO & Founder, AgentForge AI" },
+      { type: "quote", text: "— The AgentForge Team" },
     ],
   },
 ];

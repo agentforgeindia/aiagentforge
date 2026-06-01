@@ -302,9 +302,12 @@ export default function RootLayout({
           `}
         </Script>
 
-        {/* Microsoft Clarity — free heatmaps + session recording */}
+        {/* Microsoft Clarity — free heatmaps + session recording.
+            lazyOnload: Clarity is pure observability — it should never
+            compete with the user's first interaction. Loading after
+            the page is idle protects INP (Interaction to Next Paint). */}
         {process.env.NEXT_PUBLIC_CLARITY_ID && (
-          <Script id="microsoft-clarity" strategy="afterInteractive">
+          <Script id="microsoft-clarity" strategy="lazyOnload">
             {`
               (function(c,l,a,r,i,t,y){
                   c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -325,7 +328,11 @@ export default function RootLayout({
   </AuthProvider>
 </ThemeProvider>
 
-        <Script id="facebook-pixel" strategy="afterInteractive">
+        {/* Meta (Facebook) Pixel — lazyOnload for the same reason.
+            PageView still fires after the page is idle, which is
+            fine for attribution. Custom events from track() queue
+            via dataLayer / window.fbq and replay once loaded. */}
+        <Script id="facebook-pixel" strategy="lazyOnload">
           {`
             !function(f,b,e,v,n,t,s)
             {if(f.fbq)return;n=f.fbq=function(){n.callMethod?

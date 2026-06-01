@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
+import { getStoredUtm, clearStoredUtm } from "@/lib/utmAttribution";
 import {
   BadgeCheck,
   ChevronRight,
@@ -59,6 +60,9 @@ export default function SignupPage() {
   async function ensureUserProfile(userId: string, userEmail?: string | null, userName?: string | null) {
     const fullName = userName?.trim() || name.trim() || userEmail?.split("@")[0] || "Creator";
 
+    // Pick up first-touch attribution captured by UtmCapture.
+    const utm = getStoredUtm();
+
     const { error } = await supabase.from("profiles").upsert(
       {
         id: userId,
@@ -66,6 +70,14 @@ export default function SignupPage() {
         full_name: fullName,
         credits: 100,
         plan: "free",
+        utm_source: utm.utm_source ?? null,
+        utm_medium: utm.utm_medium ?? null,
+        utm_campaign: utm.utm_campaign ?? null,
+        utm_content: utm.utm_content ?? null,
+        utm_term: utm.utm_term ?? null,
+        referrer: utm.referrer ?? null,
+        landing_path: utm.landing_path ?? null,
+        first_seen_at: utm.first_seen_at ?? null,
       },
       { onConflict: "id" },
     );
@@ -76,6 +88,8 @@ export default function SignupPage() {
       return false;
     }
 
+    // One-shot — don't attribute the next user on the same device.
+    clearStoredUtm();
     return true;
   }
 

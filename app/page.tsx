@@ -2,14 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "./components/ThemeProvider";
 import {
   Activity,
   BadgeCheck,
   Check,
-  ChevronLeft,
   ChevronRight,
   Download,
   Gem,
@@ -21,46 +21,18 @@ import {
   Wand2,
   X as XIcon,
 } from "lucide-react";
-import {
-  FaFacebookF,
-  FaInstagram,
-  FaLinkedinIn,
-  FaPinterestP,
-  FaXTwitter,
-  FaYoutube,
-} from "react-icons/fa6";
-import type { IconType } from "react-icons";
-import LaunchOfferPopup from "@/app/components/LaunchOfferPopup";
+// LaunchOfferPopup is mounted globally in LayoutClient — no need to import here.
 import TrustBadges from "@/app/components/TrustBadges";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
-type SocialPlatform = {
-  name: string;
-  handle: string;
-  displayName: string;
-  url: string;
-  Icon: IconType;
-  headerGradient: string;
-  iconColor: string;
-  cta: string;
-  /**
-   * "fb"        → Facebook Page Plugin iframe.
-   * "twitter"   → Twitter widgets.js timeline.
-   * "pinterest" → Pinterest pinit.js profile widget.
-   * "instagram" → Instagram official blockquote embed (embeds.js).
-   * "youtube"   → YouTube uploads playlist iframe.
-   * "linkedin"  → LinkedIn official Profile Badge widget.
-   * "none"      → styled fallback CTA card.
-   */
-  embed:
-    | { kind: "fb"; pageHref: string }
-    | { kind: "twitter"; handle: string }
-    | { kind: "pinterest"; user: string; profileUrl: string }
-    | { kind: "instagram"; permalink: string }
-    | { kind: "youtube"; uploadsPlaylistId: string }
-    | { kind: "linkedin"; vanity: string; profileUrl: string }
-    | { kind: "none"; tagline: string };
-};
+// Below-the-fold social slider — heavy because it pulls in 4
+// third-party embed scripts. Dynamic-import keeps it out of the
+// homepage's initial JS chunk; the IntersectionObserver inside
+// the component then waits until it scrolls near the viewport.
+const HomeSocialSection = dynamic(
+  () => import("./components/HomeSocialSection"),
+  { ssr: true, loading: () => <div className="h-[600px]" /> },
+);
 
 type Agent = {
   title: string;
@@ -90,11 +62,13 @@ export default function Home() {
   const counterVisible =
     liveCount !== null && liveCount >= COUNTER_FLOOR;
 
-  // Fetch real stats once on mount + refresh every 60s while page
-  // is open. Falls back gracefully if the endpoint fails — the
-  // section just stays hidden.
+  // Fetch real stats on mount + refresh every 60 s, but ONLY while
+  // the tab is visible. A background tab firing setInterval keeps
+  // the JS thread busy and hurts INP when the user returns. The
+  // visibilitychange listener pauses + resumes the timer.
   useEffect(() => {
     let active = true;
+    let interval: number | null = null;
 
     async function load() {
       try {
@@ -102,22 +76,39 @@ export default function Home() {
         if (!res.ok) return;
         const data = await res.json();
         if (!active) return;
-        if (typeof data?.total === "number") {
-          setLiveCount(data.total);
-        }
-        if (typeof data?.last24h === "number") {
-          setLast24h(data.last24h);
-        }
+        if (typeof data?.total === "number") setLiveCount(data.total);
+        if (typeof data?.last24h === "number") setLast24h(data.last24h);
       } catch {
         // swallow — section stays hidden on network errors.
       }
     }
 
+    function start() {
+      if (interval !== null) return;
+      interval = window.setInterval(load, 60_000);
+    }
+    function stop() {
+      if (interval !== null) {
+        window.clearInterval(interval);
+        interval = null;
+      }
+    }
+    function onVis() {
+      if (document.visibilityState === "visible") {
+        load();
+        start();
+      } else {
+        stop();
+      }
+    }
+
     load();
-    const interval = window.setInterval(load, 60_000);
+    start();
+    document.addEventListener("visibilitychange", onVis);
     return () => {
       active = false;
-      window.clearInterval(interval);
+      stop();
+      document.removeEventListener("visibilitychange", onVis);
     };
   }, []);
 
@@ -167,172 +158,9 @@ export default function Home() {
     return <SprayCan className="h-5 w-5 text-violet-500" />;
   };
 
-  const socialPlatforms: SocialPlatform[] = useMemo(
-    () => [
-      {
-        name: "Instagram",
-        handle: "@agentforgeindia",
-        displayName: "AgentForge India",
-        url: "https://www.instagram.com/agentforgeindia/",
-        Icon: FaInstagram,
-        headerGradient:
-          "bg-[linear-gradient(135deg,#f59e0b_0%,#ec4899_45%,#8b5cf6_100%)]",
-        iconColor: "text-white",
-        cta: "Open Instagram profile",
-        embed: {
-          kind: "instagram",
-          permalink:
-            "https://www.instagram.com/agentforgeindia/?utm_source=ig_embed&utm_campaign=loading",
-        },
-      },
-      {
-        name: "YouTube",
-        handle: "@agentforgeindia",
-        displayName: "AgentForge India",
-        url: "https://www.youtube.com/@agentforgeindia",
-        Icon: FaYoutube,
-        headerGradient: "bg-[linear-gradient(135deg,#FF0000_0%,#b91c1c_100%)]",
-        iconColor: "text-white",
-        cta: "Open YouTube channel",
-        // Uploads playlist id = channel id with first 2 chars swapped from "UC" → "UU"
-        // Channel ID: UCtA6G7quYS8CGnB6YxfGBng  →  Uploads: UUtA6G7quYS8CGnB6YxfGBng
-        embed: { kind: "youtube", uploadsPlaylistId: "UUtA6G7quYS8CGnB6YxfGBng" },
-      },
-      {
-        name: "Pinterest",
-        handle: "agentforgeindia",
-        displayName: "AgentForge India",
-        url: "https://in.pinterest.com/agentforgeindia/",
-        Icon: FaPinterestP,
-        headerGradient: "bg-[linear-gradient(135deg,#E60023_0%,#9a0019_100%)]",
-        iconColor: "text-white",
-        cta: "Explore on Pinterest",
-        embed: {
-          kind: "pinterest",
-          user: "agentforgeindia",
-          profileUrl: "https://in.pinterest.com/agentforgeindia/",
-        },
-      },
-      {
-        name: "Facebook",
-        handle: "Agentforgeindia",
-        displayName: "AgentForge India",
-        url: "https://facebook.com/Agentforgeindia",
-        Icon: FaFacebookF,
-        headerGradient: "bg-[linear-gradient(135deg,#1877F2_0%,#0b5ed7_100%)]",
-        iconColor: "text-white",
-        cta: "Visit Facebook page",
-        embed: { kind: "fb", pageHref: "https://www.facebook.com/Agentforgeindia" },
-      },
-    ],
-    [],
-  );
-
-  const socialSliderRef = useRef<HTMLDivElement>(null);
-  const [activeSocialSlide, setActiveSocialSlide] = useState(0);
-  const [socialPaused, setSocialPaused] = useState(false);
-
-  // Load Twitter widgets.js once and re-scan whenever the slider mounts.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const scriptId = "twitter-wjs";
-    const reload = () => (window as any).twttr?.widgets?.load?.();
-    if (document.getElementById(scriptId)) {
-      reload();
-      return;
-    }
-    const s = document.createElement("script");
-    s.id = scriptId;
-    s.src = "https://platform.twitter.com/widgets.js";
-    s.async = true;
-    s.onload = reload;
-    document.body.appendChild(s);
-  }, []);
-
-  // Load Pinterest pinit.js once.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const scriptId = "pinterest-pinit";
-    if (document.getElementById(scriptId)) {
-      (window as any).PinUtils?.build?.();
-      return;
-    }
-    const s = document.createElement("script");
-    s.id = scriptId;
-    s.src = "https://assets.pinterest.com/js/pinit.js";
-    s.async = true;
-    s.setAttribute("data-pin-build", "doBuild");
-    s.onload = () => (window as any).doBuild?.();
-    document.body.appendChild(s);
-  }, []);
-
-  // Load Instagram embeds.js once and re-process whenever the slider mounts.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const scriptId = "instagram-embeds";
-    const process = () => (window as any).instgrm?.Embeds?.process?.();
-    if (document.getElementById(scriptId)) {
-      process();
-      return;
-    }
-    const s = document.createElement("script");
-    s.id = scriptId;
-    s.src = "https://www.instagram.com/embed.js";
-    s.async = true;
-    s.onload = process;
-    document.body.appendChild(s);
-  }, []);
-
-  // Load LinkedIn Profile Badge widget. Script auto-renders on load. If
-  // already loaded (e.g. navigating back), re-trigger the render manually.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const scriptId = "linkedin-profile-badge";
-    const render = () => {
-      // platform.linkedin.com/badges/js/profile.js exposes IN.parse
-      (window as any).IN?.parse?.();
-      (window as any).LIRenderAll?.();
-    };
-    if (document.getElementById(scriptId)) {
-      // Slight delay to let React commit the badge DOM nodes
-      window.setTimeout(render, 60);
-      return;
-    }
-    const s = document.createElement("script");
-    s.id = scriptId;
-    s.src = "https://platform.linkedin.com/badges/js/profile.js";
-    s.async = true;
-    s.defer = true;
-    s.onload = () => window.setTimeout(render, 60);
-    document.body.appendChild(s);
-  }, []);
-
-  useEffect(() => {
-    if (socialPaused) return;
-    const id = window.setInterval(() => {
-      setActiveSocialSlide((prev) => (prev + 1) % socialPlatforms.length);
-    }, 5200);
-    return () => window.clearInterval(id);
-  }, [socialPaused, socialPlatforms.length]);
-
-  useEffect(() => {
-    const container = socialSliderRef.current;
-    if (!container) return;
-    const track = container.firstElementChild as HTMLElement | null;
-    const target = track?.children[activeSocialSlide] as HTMLElement | undefined;
-    if (!target) return;
-    const rect = target.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
-    const left = container.scrollLeft + (rect.left - containerRect.left);
-    container.scrollTo({ left, behavior: "smooth" });
-  }, [activeSocialSlide]);
-
-  const stepSocial = (dir: -1 | 1) => {
-    setActiveSocialSlide((prev) => {
-      const next = (prev + dir + socialPlatforms.length) % socialPlatforms.length;
-      return next;
-    });
-  };
+  // The entire social slider — state, refs, embed-script gating
+  // and auto-rotation — now lives inside HomeSocialSection, which
+  // is dynamic-imported at the top of this file.
 
   useEffect(() => {
     let active = true;
@@ -365,7 +193,9 @@ export default function Home() {
 
  return (
   <>
-    <LaunchOfferPopup />
+    {/* LaunchOfferPopup is already rendered globally by LayoutClient.
+        Removing the duplicate instance here saves an extra mount +
+        two useEffects on every homepage paint. */}
 
     <main className={`relative min-h-screen overflow-hidden ${bg}`}>
 
@@ -382,32 +212,18 @@ export default function Home() {
         }}
       />
 
-      {/* Floating Doodles (popup style — full spread) */}
+      {/* Floating doodles — kept to 8 (down from 17) to reduce
+          continuous repaint cost. Each animated element forces
+          paint+composite every frame, hurting INP on weaker phones. */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        {/* Top band */}
         <div className="float-slow absolute left-[6%] top-[6%] text-4xl opacity-70 sm:text-5xl">✨</div>
         <div className="float-medium absolute right-[8%] top-[10%] text-4xl opacity-70 sm:text-5xl">💎</div>
-        <div className="float-fast absolute left-[22%] top-[14%] text-2xl opacity-60 sm:text-3xl">✦</div>
-        <div className="float-medium absolute right-[24%] top-[6%] text-3xl opacity-65 sm:text-4xl">🪄</div>
-        <div className="float-slow absolute left-[42%] top-[3%] text-2xl opacity-55 sm:text-3xl">✧</div>
-        <div className="float-fast absolute right-[42%] top-[18%] text-3xl opacity-65 sm:text-4xl">🌟</div>
-
-        {/* Hero side accents */}
         <div className="float-medium absolute left-[3%] top-[28%] text-3xl opacity-60 sm:text-4xl">👕</div>
         <div className="float-slow absolute right-[4%] top-[32%] text-3xl opacity-60 sm:text-4xl">💍</div>
         <div className="float-fast absolute left-[8%] top-[44%] text-3xl opacity-55 sm:text-4xl">📸</div>
-        <div className="float-medium absolute right-[6%] top-[46%] text-3xl opacity-55 sm:text-4xl">🎨</div>
-
-        {/* Middle band */}
-        <div className="float-slow absolute left-[35%] top-[52%] text-2xl opacity-50 sm:text-3xl">⚡</div>
-        <div className="float-medium absolute right-[30%] top-[58%] text-2xl opacity-55 sm:text-3xl">🔮</div>
         <div className="float-fast absolute left-[14%] top-[62%] text-3xl opacity-55 sm:text-4xl">🚀</div>
         <div className="float-slow absolute right-[14%] top-[66%] text-3xl opacity-55 sm:text-4xl">🎁</div>
-
-        {/* Lower band */}
-        <div className="float-fast absolute left-[20%] top-[78%] text-2xl opacity-55 sm:text-3xl">✦</div>
         <div className="float-medium absolute right-[18%] top-[82%] text-3xl opacity-60 sm:text-4xl">✨</div>
-        <div className="float-slow absolute left-[48%] top-[88%] text-2xl opacity-50 sm:text-3xl">💫</div>
       </div>
 
       <div className="relative z-10">
@@ -1094,306 +910,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-5">
-          <div className="mb-5 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-600">
-                Live on socials
-              </p>
-              <h2 className="mt-1 text-2xl font-black sm:text-3xl">
-                Follow AgentForge across the web
-              </h2>
-              <p className={`mt-1 text-sm ${muted}`}>
-                Tap any dashboard to open our profile in a new tab.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2 self-end sm:self-auto">
-              <button
-                type="button"
-                aria-label="Previous social"
-                onClick={() => stepSocial(-1)}
-                className={`flex h-10 w-10 items-center justify-center rounded-full border transition hover:scale-105 ${
-                  darkMode
-                    ? "border-white/15 bg-white/[0.06] text-white"
-                    : "border-black/10 bg-white text-black shadow-sm"
-                }`}
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <button
-                type="button"
-                aria-label="Next social"
-                onClick={() => stepSocial(1)}
-                className={`flex h-10 w-10 items-center justify-center rounded-full border transition hover:scale-105 ${
-                  darkMode
-                    ? "border-white/15 bg-white/[0.06] text-white"
-                    : "border-black/10 bg-white text-black shadow-sm"
-                }`}
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-
-          <div
-            ref={socialSliderRef}
-            onMouseEnter={() => setSocialPaused(true)}
-            onMouseLeave={() => setSocialPaused(false)}
-            onTouchStart={() => setSocialPaused(true)}
-            onTouchEnd={() => setSocialPaused(false)}
-            className="-mx-4 overflow-x-auto scroll-smooth px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            style={{ scrollSnapType: "x mandatory" }}
-          >
-            <div className="flex gap-4 pb-3">
-              {socialPlatforms.map((platform) => {
-                const Icon = platform.Icon;
-                return (
-                  <div
-                    key={platform.name}
-                    style={{ scrollSnapAlign: "start" }}
-                    className={`group relative flex w-[85vw] shrink-0 flex-col overflow-hidden rounded-[1.5rem] border shadow-xl transition hover:-translate-y-1 hover:shadow-2xl sm:w-[calc((100%-1rem)/2)] lg:w-[calc((100%-2rem)/3)] ${
-                      darkMode
-                        ? "border-white/10 bg-white/[0.04] shadow-black/40"
-                        : "border-black/10 bg-white shadow-cyan-500/10"
-                    }`}
-                  >
-                    {/* Header / browser bar */}
-                    <a
-                      href={platform.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`relative block h-24 ${platform.headerGradient}`}
-                    >
-                      <div className="absolute left-3 top-3 flex gap-1.5">
-                        <span className="h-2.5 w-2.5 rounded-full bg-white/60" />
-                        <span className="h-2.5 w-2.5 rounded-full bg-white/60" />
-                        <span className="h-2.5 w-2.5 rounded-full bg-white/60" />
-                      </div>
-                      <div className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 backdrop-blur">
-                        <Icon className={`h-5 w-5 ${platform.iconColor}`} />
-                      </div>
-                      <div className="absolute -bottom-7 left-4 flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border-4 border-white bg-white shadow-lg dark:border-[#0b1220]">
-                        <Image
-                          src="/af-logo.png"
-                          alt="AgentForge"
-                          width={56}
-                          height={56}
-                          sizes="56px"
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                    </a>
-
-                    {/* Profile row */}
-                    <a
-                      href={platform.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block px-4 pt-9"
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <p className="truncate text-sm font-black">{platform.displayName}</p>
-                        <BadgeCheck className="h-4 w-4 shrink-0 text-cyan-500" />
-                      </div>
-                      <p className={`truncate text-[11px] font-bold ${muted}`}>
-                        {platform.handle} · {platform.name}
-                      </p>
-                    </a>
-
-                    {/* Live embed area */}
-                    <div className={`relative mx-4 mt-3 overflow-hidden rounded-2xl border ${
-                      darkMode ? "border-white/10 bg-white/[0.04]" : "border-black/5 bg-white"
-                    }`}>
-                      {platform.embed.kind === "fb" && (
-                        <iframe
-                          title={`${platform.name} page`}
-                          src={`https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(
-                            platform.embed.pageHref,
-                          )}&tabs=timeline&width=340&height=360&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=true&appId`}
-                          width="340"
-                          height="360"
-                          loading="lazy"
-                          allow="encrypted-media"
-                          className="block h-[360px] w-full border-0"
-                        />
-                      )}
-
-                      {platform.embed.kind === "twitter" && (
-                        <div className={`h-[360px] overflow-y-auto overflow-x-hidden ${darkMode ? "bg-black" : "bg-white"} [scrollbar-width:thin]`}>
-                          <a
-                            className="twitter-timeline"
-                            data-height="360"
-                            data-theme={darkMode ? "dark" : "light"}
-                            data-chrome="noheader nofooter transparent"
-                            data-tweet-limit="3"
-                            href={`https://twitter.com/${platform.embed.handle}?ref_src=twsrc%5Etfw`}
-                          >
-                            {/* Fallback content shown while widgets.js loads or if it fails */}
-                            <div className={`flex h-[360px] flex-col items-center justify-center gap-3 p-6 text-center ${darkMode ? "text-white" : "text-black"}`}>
-                              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-black text-white shadow-lg">
-                                <FaXTwitter className="h-7 w-7" />
-                              </div>
-                              <p className="text-sm font-black">Loading latest posts…</p>
-                              <p className={`text-xs ${muted}`}>
-                                @{platform.embed.handle}
-                              </p>
-                              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-black px-3 py-1.5 text-[11px] font-black text-white">
-                                View on X →
-                              </span>
-                            </div>
-                          </a>
-                        </div>
-                      )}
-
-                      {platform.embed.kind === "pinterest" && (
-                        <div className="flex h-[360px] items-start justify-center overflow-auto bg-white p-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                          <a
-                            data-pin-do="embedUser"
-                            data-pin-board-width="300"
-                            data-pin-scale-height="340"
-                            data-pin-scale-width="80"
-                            href={platform.embed.profileUrl}
-                          >
-                            View on Pinterest
-                          </a>
-                        </div>
-                      )}
-
-                      {platform.embed.kind === "instagram" && (
-                        <div className="flex h-[360px] items-start justify-center overflow-auto bg-white p-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                          <blockquote
-                            className="instagram-media"
-                            data-instgrm-permalink={platform.embed.permalink}
-                            data-instgrm-version="14"
-                            style={{
-                              background: "#FFF",
-                              border: 0,
-                              borderRadius: 3,
-                              margin: 1,
-                              maxWidth: 540,
-                              minWidth: 280,
-                              padding: 0,
-                              width: "calc(100% - 2px)",
-                            }}
-                          >
-                            <a
-                              href={platform.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              View profile on Instagram
-                            </a>
-                          </blockquote>
-                        </div>
-                      )}
-
-                      {platform.embed.kind === "youtube" && (
-                        <iframe
-                          title={`${platform.name} channel`}
-                          src={`https://www.youtube.com/embed/videoseries?list=${platform.embed.uploadsPlaylistId}&rel=0&modestbranding=1`}
-                          loading="lazy"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          className="block h-[360px] w-full border-0"
-                        />
-                      )}
-
-                      {platform.embed.kind === "linkedin" && (
-                        <div className={`flex h-[360px] items-start justify-center overflow-auto p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${darkMode ? "bg-[#0a0f1c]" : "bg-white"}`}>
-                          {/* Official LinkedIn Profile Badge — loaded by platform.linkedin.com/badges/js/profile.js */}
-                          <div
-                            className="badge-base LI-profile-badge"
-                            data-locale="en_US"
-                            data-size="medium"
-                            data-theme={darkMode ? "dark" : "light"}
-                            data-type="VERTICAL"
-                            data-vanity={platform.embed.vanity}
-                            data-version="v1"
-                          >
-                            {/* Fallback content while badge loads or if blocked */}
-                            <div className="flex h-full flex-col items-center justify-center gap-3 p-4 text-center">
-                              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0A66C2] text-white shadow-lg">
-                                <FaLinkedinIn className="h-6 w-6" />
-                              </div>
-                              <p className="text-sm font-black">{platform.displayName}</p>
-                              <p className={`text-xs ${muted}`}>Loading LinkedIn profile…</p>
-                              <a
-                                className="badge-base__link LI-simple-link mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#0A66C2] px-3 py-1.5 text-[11px] font-black text-white"
-                                href={platform.embed.profileUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                View on LinkedIn →
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {platform.embed.kind === "none" && (
-                        <a
-                          href={platform.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`group flex h-[360px] flex-col items-center justify-center gap-3 p-6 text-center transition-all duration-300 hover:scale-[1.02] ${
-                            darkMode ? "bg-white/[0.04] hover:bg-white/[0.06]" : "bg-white hover:bg-slate-50"
-                          }`}
-                        >
-                          <div className={`flex h-16 w-16 items-center justify-center rounded-2xl text-white ${platform.headerGradient} shadow-lg`}>
-                            <platform.Icon className="h-8 w-8" />
-                          </div>
-                          <p className="text-sm font-black">
-                            {platform.displayName} on {platform.name}
-                          </p>
-                          <p className={`max-w-[260px] text-xs leading-5 ${muted}`}>
-                            {platform.embed.tagline}
-                          </p>
-                          <span className={`mt-1 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-black text-white ${platform.headerGradient}`}>
-                            {platform.cta} →
-                          </span>
-                        </a>
-                      )}
-                    </div>
-
-                    {/* CTA */}
-                    <a
-                      href={platform.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-4 flex items-center justify-between gap-3 px-4 pb-4"
-                    >
-                      <span className={`text-[11px] font-bold ${muted}`}>
-                        Live · {platform.name}
-                      </span>
-                      <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-black text-white transition group-hover:opacity-95 ${platform.headerGradient}`}>
-                        {platform.cta}
-                        <ChevronRight className="h-3 w-3" />
-                      </span>
-                    </a>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Dots */}
-          <div className="mt-4 flex items-center justify-center gap-1.5">
-            {socialPlatforms.map((p, i) => (
-              <button
-                key={p.name}
-                type="button"
-                aria-label={`Go to ${p.name}`}
-                onClick={() => setActiveSocialSlide(i)}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === activeSocialSlide
-                    ? "w-6 bg-cyan-500"
-                    : darkMode ? "w-1.5 bg-white/30" : "w-1.5 bg-black/20"
-                }`}
-              />
-            ))}
-          </div>
-        </section>
+        <HomeSocialSection darkMode={darkMode} muted={muted} />
 
       </div>
   

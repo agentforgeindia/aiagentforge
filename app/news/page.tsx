@@ -36,10 +36,16 @@ function BlogThumbnail({ cfg }: { cfg: BlogThumbnailConfig }) {
       </div>
 
       <div className="relative flex items-center gap-1.5">
-        <div className="flex h-5 w-5 items-center justify-center rounded-md bg-white/90 shadow">
-          <span className="text-[10px] font-black text-blue-600">AF</span>
+        <div className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-md bg-white/95 shadow">
+          <Image
+            src="/af-logo.png"
+            alt="AgentForge AI"
+            width={24}
+            height={24}
+            className="h-full w-full object-contain"
+          />
         </div>
-        <span className="text-[10px] font-black uppercase tracking-widest text-white/80">AgentForge AI</span>
+        <span className="text-[10px] font-black uppercase tracking-widest text-white/85">AgentForge AI</span>
       </div>
 
       <div className="relative">

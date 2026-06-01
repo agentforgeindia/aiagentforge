@@ -665,12 +665,30 @@ export default function ProductographyPage() {
     return () => window.clearInterval(interval);
   }, [loading]);
 
-  // Hero product slider — auto-rotate every 4s
+  // Hero product slider — auto-rotate every 4 s, paused on
+  // hidden tabs so we don't burn the main thread in the background.
   useEffect(() => {
-    const interval = window.setInterval(() => {
-      setHeroSlide((current) => (current + 1) % HERO_PRODUCT_SLIDES.length);
-    }, 4000);
-    return () => window.clearInterval(interval);
+    let interval: number | null = null;
+    const start = () => {
+      if (interval !== null) return;
+      interval = window.setInterval(() => {
+        setHeroSlide((current) => (current + 1) % HERO_PRODUCT_SLIDES.length);
+      }, 4000);
+    };
+    const stop = () => {
+      if (interval !== null) {
+        window.clearInterval(interval);
+        interval = null;
+      }
+    };
+    const onVis = () =>
+      document.visibilityState === "visible" ? start() : stop();
+    start();
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, []);
 
   // ============================================================

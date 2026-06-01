@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { getStoredUtm, clearStoredUtm } from "@/lib/utmAttribution";
 
 export default function AuthCallback() {
   const router = useRouter();
@@ -32,6 +33,10 @@ export default function AuthCallback() {
               .single();
 
             if (!existing) {
+              // Pick up the first-touch attribution captured by
+              // UtmCapture on the visitor's landing page.
+              const utm = getStoredUtm();
+
               await supabase.from("profiles").upsert(
                 {
                   id: userId,
@@ -42,9 +47,21 @@ export default function AuthCallback() {
                     session.user.email?.split("@")[0] ||
                     "Creator",
                   credits: 100,
+                  utm_source: utm.utm_source ?? null,
+                  utm_medium: utm.utm_medium ?? null,
+                  utm_campaign: utm.utm_campaign ?? null,
+                  utm_content: utm.utm_content ?? null,
+                  utm_term: utm.utm_term ?? null,
+                  referrer: utm.referrer ?? null,
+                  landing_path: utm.landing_path ?? null,
+                  first_seen_at: utm.first_seen_at ?? null,
                 },
                 { onConflict: "id" },
               );
+
+              // One-shot — clear so the next user on the same
+              // device doesn't inherit this attribution.
+              clearStoredUtm();
             }
 
             subscription.unsubscribe();

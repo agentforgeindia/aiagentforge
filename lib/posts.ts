@@ -49,6 +49,8 @@ export type DbPost = {
   cta_href: string | null;
   keywords: string[];
   body: PostSection[];
+  /** Optional gradient card config — when set, takes priority over hero_image_url. */
+  thumbnail: BlogThumbnailConfig | null;
   status: PostStatus;
   published_at: string | null;
   created_at: string;
@@ -124,6 +126,7 @@ function dbToUnified(p: DbPost): UnifiedPost {
     author: p.author,
     heroImageUrl: p.hero_image_url,
     heroEmoji: p.hero_emoji ?? "📝",
+    thumbnail: p.thumbnail ?? undefined,
     publishedAt: p.published_at ?? p.created_at,
     readMinutes: p.read_minutes,
     ctaLabel: p.cta_label,

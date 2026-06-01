@@ -26,6 +26,7 @@ import {
   type PostType,
   type UpsertPostInput,
 } from "@/lib/posts";
+import type { BlogThumbnailConfig } from "@/app/blog/posts";
 import {
   ArrowDown,
   ArrowUp,
@@ -61,6 +62,7 @@ type FormState = {
   body: PostSection[];
   status: PostStatus;
   published_at: string | null;
+  thumbnail: BlogThumbnailConfig | null;
 };
 
 const SECTION_KINDS: { key: PostSection["type"]; label: string; Icon: typeof TypeIcon }[] = [
@@ -106,6 +108,7 @@ function dbToForm(p: DbPost): FormState {
     body: Array.isArray(p.body) ? p.body : [],
     status: p.status,
     published_at: p.published_at,
+    thumbnail: p.thumbnail ?? null,
   };
 }
 
@@ -127,6 +130,7 @@ function emptyForm(): FormState {
     body: [],
     status: "draft",
     published_at: null,
+    thumbnail: null,
   };
 }
 
@@ -137,7 +141,6 @@ export default function PostForm({ initial }: { initial?: DbPost }) {
   );
   const [slugLocked, setSlugLocked] = useState(Boolean(initial));
   const [saving, setSaving] = useState<"draft" | "publish" | null>(null);
-  const [heroUploading, setHeroUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isEdit = Boolean(initial);
@@ -157,18 +160,37 @@ export default function PostForm({ initial }: { initial?: DbPost }) {
     }));
   }
 
-  // ───────── Hero image ─────────
-  async function onHeroPick(file: File | null) {
-    if (!file) return;
-    setHeroUploading(true);
-    setError(null);
-    const { url, error: upErr } = await uploadPostImage(file);
-    setHeroUploading(false);
-    if (upErr || !url) {
-      setError(upErr ?? "Upload failed.");
-      return;
-    }
-    patch("hero_image_url", url);
+  // ───────── Thumbnail (gradient card) ─────────
+  function patchThumbnail(
+    update: Partial<BlogThumbnailConfig> | null,
+  ) {
+    setForm((f) => {
+      if (update === null) return { ...f, thumbnail: null };
+      const base: BlogThumbnailConfig = f.thumbnail ?? {
+        headline: "",
+        subline: "",
+        badge: "",
+        gradientFrom: "#06b6d4",
+        gradientTo: "#2563eb",
+        icon: "✨",
+        statsRow: [],
+      };
+      return { ...f, thumbnail: { ...base, ...update } };
+    });
+  }
+
+  function patchStat(i: number, value: string) {
+    setForm((f) => {
+      const current = f.thumbnail?.statsRow ?? [];
+      const next = [...current];
+      next[i] = value;
+      return {
+        ...f,
+        thumbnail: f.thumbnail
+          ? { ...f.thumbnail, statsRow: next }
+          : null,
+      };
+    });
   }
 
   // ───────── Body sections ─────────
@@ -248,6 +270,7 @@ export default function PostForm({ initial }: { initial?: DbPost }) {
       body: form.body,
       status: targetStatus,
       published_at: form.published_at,
+      thumbnail: form.thumbnail,
     };
 
     const { data, error: upErr } = await upsertPost(payload);
@@ -396,62 +419,156 @@ export default function PostForm({ initial }: { initial?: DbPost }) {
         </div>
       </section>
 
-      {/* Hero image */}
+      {/* Thumbnail card (gradient design) */}
       <section className="rounded-2xl border border-black/10 bg-white/85 p-5 dark:border-white/10 dark:bg-white/[0.06] sm:p-6">
-        <h2 className="text-sm font-black uppercase tracking-[0.18em] text-cyan-600">
-          Hero image
-        </h2>
-        <p className="mt-1 text-xs text-black/55 dark:text-white/55">
-          Max 5 MB · JPG, PNG, WebP, AVIF. If empty, the hero emoji is used.
-        </p>
-
-        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">
-          <div className="relative h-44 w-full overflow-hidden rounded-2xl border border-dashed border-black/15 bg-white/60 dark:border-white/10 dark:bg-white/[0.04] sm:w-72">
-            {form.hero_image_url ? (
-              <Image
-                src={form.hero_image_url}
-                alt="Hero preview"
-                fill
-                sizes="288px"
-                className="object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-5xl">
-                {form.hero_emoji}
-              </div>
-            )}
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-black uppercase tracking-[0.18em] text-cyan-600">
+              Thumbnail card
+            </h2>
+            <p className="mt-1 text-xs text-black/55 dark:text-white/55">
+              Designed gradient card shown on the /news list and at the top of the article — same style as other AgentForge posts.
+            </p>
           </div>
-
-          <div className="flex flex-col gap-2">
-            <label
-              className={`inline-flex cursor-pointer items-center gap-2 self-start rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-4 py-2 text-sm font-black text-white shadow-md transition hover:scale-105 ${
-                heroUploading ? "pointer-events-none opacity-70" : ""
-              }`}
+          {form.thumbnail ? (
+            <button
+              type="button"
+              onClick={() => patchThumbnail(null)}
+              className="self-start text-xs font-bold text-rose-500 hover:underline"
             >
-              {heroUploading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ImagePlus className="h-4 w-4" />
-              )}
-              {form.hero_image_url ? "Replace image" : "Upload image"}
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/avif"
-                className="hidden"
-                onChange={(e) => onHeroPick(e.target.files?.[0] ?? null)}
-              />
-            </label>
-            {form.hero_image_url && (
-              <button
-                type="button"
-                onClick={() => patch("hero_image_url", null)}
-                className="self-start text-xs font-bold text-rose-500 hover:underline"
-              >
-                Remove image
-              </button>
-            )}
-          </div>
+              Remove thumbnail
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() =>
+                patchThumbnail({
+                  headline: form.title.split(" ").slice(0, 2).join(" ") || "Headline",
+                  subline: form.title.split(" ").slice(2).join(" ") || "Subline",
+                  badge: form.category.toUpperCase(),
+                  gradientFrom: "#06b6d4",
+                  gradientTo: "#2563eb",
+                  icon: form.hero_emoji || "✨",
+                  statsRow: [],
+                })
+              }
+              className="self-start rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-3 py-1.5 text-xs font-black text-white shadow"
+            >
+              + Add thumbnail
+            </button>
+          )}
         </div>
+
+        {form.thumbnail && (
+          <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_320px]">
+            {/* Editor */}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Headline (line 1)" full>
+                <input
+                  type="text"
+                  value={form.thumbnail.headline}
+                  onChange={(e) => patchThumbnail({ headline: e.target.value })}
+                  placeholder="Why We Built"
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="Subline (line 2)" full>
+                <input
+                  type="text"
+                  value={form.thumbnail.subline}
+                  onChange={(e) => patchThumbnail({ subline: e.target.value })}
+                  placeholder="AgentForge AI"
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="Badge text">
+                <input
+                  type="text"
+                  value={form.thumbnail.badge}
+                  onChange={(e) => patchThumbnail({ badge: e.target.value })}
+                  placeholder="ORIGIN STORY"
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="Icon (emoji)">
+                <input
+                  type="text"
+                  value={form.thumbnail.icon}
+                  onChange={(e) => patchThumbnail({ icon: e.target.value })}
+                  placeholder="✍️"
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="Gradient — from">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={form.thumbnail.gradientFrom}
+                    onChange={(e) => patchThumbnail({ gradientFrom: e.target.value })}
+                    className="h-10 w-12 cursor-pointer rounded-md border border-black/10"
+                  />
+                  <input
+                    type="text"
+                    value={form.thumbnail.gradientFrom}
+                    onChange={(e) => patchThumbnail({ gradientFrom: e.target.value })}
+                    className={inputCls}
+                  />
+                </div>
+              </Field>
+              <Field label="Gradient — to">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={form.thumbnail.gradientTo}
+                    onChange={(e) => patchThumbnail({ gradientTo: e.target.value })}
+                    className="h-10 w-12 cursor-pointer rounded-md border border-black/10"
+                  />
+                  <input
+                    type="text"
+                    value={form.thumbnail.gradientTo}
+                    onChange={(e) => patchThumbnail({ gradientTo: e.target.value })}
+                    className={inputCls}
+                  />
+                </div>
+              </Field>
+              <Field label="Stat 1 (optional)">
+                <input
+                  type="text"
+                  value={form.thumbnail.statsRow?.[0] ?? ""}
+                  onChange={(e) => patchStat(0, e.target.value)}
+                  placeholder="The Vision"
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="Stat 2 (optional)">
+                <input
+                  type="text"
+                  value={form.thumbnail.statsRow?.[1] ?? ""}
+                  onChange={(e) => patchStat(1, e.target.value)}
+                  placeholder="The Problem"
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="Stat 3 (optional)" full>
+                <input
+                  type="text"
+                  value={form.thumbnail.statsRow?.[2] ?? ""}
+                  onChange={(e) => patchStat(2, e.target.value)}
+                  placeholder="The Mission"
+                  className={inputCls}
+                />
+              </Field>
+            </div>
+
+            {/* Live preview */}
+            <div className="flex flex-col gap-2">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-black/50 dark:text-white/50">
+                Live preview
+              </p>
+              <ThumbnailPreview cfg={form.thumbnail} />
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Body sections */}
@@ -819,6 +936,68 @@ function ImageEditor({
         placeholder="Caption (optional, shown under the image)"
         className={inputCls}
       />
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────
+// Thumbnail live preview — mirrors BlogThumbnail in /news + /blog
+// ────────────────────────────────────────────────────────────
+function ThumbnailPreview({ cfg }: { cfg: BlogThumbnailConfig }) {
+  const stats = (cfg.statsRow ?? []).filter((s) => s.trim() !== "");
+  return (
+    <div className="aspect-[16/10] w-full overflow-hidden rounded-2xl border border-black/10 shadow-md dark:border-white/10">
+      <div
+        className="relative flex h-full w-full flex-col justify-between overflow-hidden p-4"
+        style={{ background: `linear-gradient(135deg, ${cfg.gradientFrom}, ${cfg.gradientTo})` }}
+      >
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
+            backgroundSize: "22px 22px",
+          }}
+        />
+        <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/20 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-white/15 blur-2xl" />
+
+        <div className="relative flex items-center justify-between">
+          <span className="inline-flex items-center rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-black/80 shadow">
+            {cfg.badge || "BADGE"}
+          </span>
+          <span className="text-3xl drop-shadow-lg">{cfg.icon || "✨"}</span>
+        </div>
+
+        <div className="relative flex items-center gap-1.5">
+          <div className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-md bg-white/95 shadow">
+            <Image src="/af-logo.png" alt="AgentForge AI" width={24} height={24} className="h-full w-full object-contain" />
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-widest text-white/85">
+            AgentForge AI
+          </span>
+        </div>
+
+        <div className="relative">
+          <p className="text-xl font-black leading-tight tracking-tight text-white drop-shadow">
+            {cfg.headline || "Headline"}
+            <span className="block text-white/80">{cfg.subline || "Subline"}</span>
+          </p>
+        </div>
+
+        {stats.length > 0 && (
+          <div className="relative flex flex-wrap gap-1.5">
+            {stats.map((s, i) => (
+              <span
+                key={`${s}-${i}`}
+                className="inline-flex items-center rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm"
+              >
+                {s}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

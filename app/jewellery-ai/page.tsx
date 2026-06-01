@@ -684,12 +684,31 @@ export default function JewelleryAIPage() {
   const [generatedOutputUrl, setGeneratedOutputUrl] = useState("");
   const [heroSlide, setHeroSlide] = useState(0);
 
-  // Hero jewellery slider — auto-rotate every 4s
+  // Hero jewellery slider — auto-rotate every 4 s, but pause when
+  // the tab is hidden. A background tab firing setInterval keeps
+  // the JS thread busy on every wake and hurts INP on return.
   useEffect(() => {
-    const interval = window.setInterval(() => {
-      setHeroSlide((current) => (current + 1) % HERO_JEWEL_SLIDES.length);
-    }, 4000);
-    return () => window.clearInterval(interval);
+    let interval: number | null = null;
+    const start = () => {
+      if (interval !== null) return;
+      interval = window.setInterval(() => {
+        setHeroSlide((current) => (current + 1) % HERO_JEWEL_SLIDES.length);
+      }, 4000);
+    };
+    const stop = () => {
+      if (interval !== null) {
+        window.clearInterval(interval);
+        interval = null;
+      }
+    };
+    const onVis = () =>
+      document.visibilityState === "visible" ? start() : stop();
+    start();
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, []);
 
   const [jewelleryType, setJewelleryType] = useState("Ring");
