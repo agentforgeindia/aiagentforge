@@ -69,22 +69,18 @@ async function fetchLeadFromGraph(leadgenId: string): Promise<{
   raw: unknown;
 } | null> {
   const token = process.env.META_PAGE_ACCESS_TOKEN;
-  if (!token) {
-    console.error("[meta-lead] META_PAGE_ACCESS_TOKEN missing");
-    return null;
-  }
-  const url = `https://graph.facebook.com/v19.0/${leadgenId}?access_token=${encodeURIComponent(
-    token,
-  )}`;
-  const res = await fetch(url);
-  if (!res.ok) {
-    console.error(
-      "[meta-lead] Graph fetch failed:",
-      res.status,
-      await res.text().catch(() => ""),
-    );
-    return null;
-  }
+console.log("[meta-lead] leadgenId:", leadgenId);
+console.log("[meta-lead] token present:", !!token);
+
+const url = `https://graph.facebook.com/v25.0/${leadgenId}?fields=created_time,id,ad_id,form_id,field_data&access_token=${encodeURIComponent(token || "")}`;
+
+const res = await fetch(url);
+const lead = await res.json();
+
+if (!res.ok) {
+  console.error("[meta-lead] Graph fetch failed:", res.status, lead);
+  return null;
+}
   const data = (await res.json()) as {
     field_data?: { name: string; values: string[] }[];
   };
