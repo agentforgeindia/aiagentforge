@@ -68,8 +68,8 @@ export default function InvoicePage() {
         return;
       }
 
-      // 2. Read payment + buyer profile in parallel.
-      const [pRes, prRes] = await Promise.all([
+      // 2. Read payment in parallel with the caller's own profile.
+      const [pRes, prRes, permRes] = await Promise.all([
         supabase
           .from("payments")
           .select(
@@ -82,6 +82,9 @@ export default function InvoicePage() {
           .select("id, email, full_name")
           .eq("id", sess.session.user.id)
           .maybeSingle(),
+        // Caller's role permissions — used to allow admins with
+        // invoices.view_all to read any bill, not just their own.
+        supabase.rpc("current_user_permissions"),
       ]);
 
       if (pRes.error) {
@@ -94,15 +97,41 @@ export default function InvoicePage() {
         setLoading(false);
         return;
       }
-      // RLS should already prevent foreign access, but verify
-      // for clarity in the error message.
-      if (pRes.data.user_id !== sess.session.user.id) {
+
+      const callerPerms = (permRes.data as string[] | null) ?? [];
+      const isAdminWithViewAll =
+        callerPerms.includes("*") ||
+        callerPerms.includes("invoices.view_all") ||
+        callerPerms.includes("invoices.*");
+
+      // Owner can always see their bill. Otherwise admin with
+      // invoices.view_all can see anyone's.
+      if (
+        pRes.data.user_id !== sess.session.user.id &&
+        !isAdminWithViewAll
+      ) {
         setError("This bill belongs to a different account.");
         setLoading(false);
         return;
       }
+
+      // If admin is viewing someone else's bill, fetch THEIR
+      // profile (not the caller's) for the buyer row.
+      let buyerProfile = prRes.data as Profile | null;
+      if (
+        pRes.data.user_id !== sess.session.user.id &&
+        isAdminWithViewAll
+      ) {
+        const { data: ownerProfile } = await supabase
+          .from("profiles")
+          .select("id, email, full_name")
+          .eq("id", pRes.data.user_id)
+          .maybeSingle();
+        buyerProfile = (ownerProfile ?? null) as Profile | null;
+      }
+
       setPayment(pRes.data as Payment);
-      setProfile((prRes.data ?? null) as Profile | null);
+      setProfile(buyerProfile);
       setLoading(false);
     })();
   }, [paymentId]);

@@ -4,9 +4,10 @@
 // /admin/leads — corporate sales pipeline.
 // ============================================================
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Plus, RefreshCw, Search, ShieldCheck, UserPlus, X } from "lucide-react";
+import { ChevronRight, Plus, RefreshCw, Search, ShieldCheck, UserPlus, X } from "lucide-react";
 import AdminShell, {
   adminCardCls,
   adminInputCls,
@@ -404,7 +405,10 @@ export default function AdminLeadsPage() {
                 key={r.id}
                 className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4"
               >
-                <div className="min-w-0 flex-1">
+                <Link
+                  href={`/admin/leads/${r.id}`}
+                  className="min-w-0 flex-1 group"
+                >
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusChip status={r.status} />
                     <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
@@ -414,7 +418,7 @@ export default function AdminLeadsPage() {
                       {formatDate(r.created_at)}
                     </span>
                   </div>
-                  <p className="mt-1 truncate text-sm font-bold">
+                  <p className="mt-1 truncate text-sm font-bold group-hover:text-indigo-600 dark:group-hover:text-indigo-300">
                     {r.name}
                     {r.business_name && (
                       <span className={`ml-2 text-xs font-normal ${adminMutedCls}`}>
@@ -425,16 +429,24 @@ export default function AdminLeadsPage() {
                   <p className={`mt-0.5 truncate text-xs ${adminMutedCls}`}>
                     {[r.phone, r.email, r.city].filter(Boolean).join(" · ") || "—"}
                   </p>
+                </Link>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={r.status}
+                    onChange={(e) => updateStatus(r.id, e.target.value)}
+                    className={`${adminInputCls} sm:max-w-[160px]`}
+                  >
+                    {STATUSES.map((s) => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </select>
+                  <Link
+                    href={`/admin/leads/${r.id}`}
+                    className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
                 </div>
-                <select
-                  value={r.status}
-                  onChange={(e) => updateStatus(r.id, e.target.value)}
-                  className={`${adminInputCls} sm:max-w-[160px]`}
-                >
-                  {STATUSES.map((s) => (
-                    <option key={s.value} value={s.value}>{s.label}</option>
-                  ))}
-                </select>
               </li>
             ))}
           </ul>
