@@ -95,6 +95,15 @@ export default function LeadsCsvImportModal({
     };
   }, [open]);
 
+  // Memo MUST be declared before any early return — React enforces
+  // a stable hook order on every render. Putting useMemo after
+  // `if (!open) return null` was triggering "rendered more hooks
+  // than during the previous render."
+  const summary = useMemo(() => {
+    if (!parsed) return null;
+    return `${parsed.rows.length} row${parsed.rows.length === 1 ? "" : "s"} detected · ${parsed.headers.length} columns`;
+  }, [parsed]);
+
   if (!open) return null;
 
   async function handleFile(file: File) {
@@ -230,11 +239,6 @@ export default function LeadsCsvImportModal({
     setResult({ inserted, skipped, errors });
     if (inserted > 0) onImported(inserted);
   }
-
-  const summary = useMemo(() => {
-    if (!parsed) return null;
-    return `${parsed.rows.length} row${parsed.rows.length === 1 ? "" : "s"} detected · ${parsed.headers.length} columns`;
-  }, [parsed]);
 
   return (
     <div

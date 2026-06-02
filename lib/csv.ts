@@ -12,8 +12,11 @@ export function parseCsv(text: string): {
   headers: string[];
   rows: string[][];
 } {
-  // Normalise line endings.
-  const t = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  // Normalise: strip BOM (Excel adds one), normalise line endings.
+  const t = text
+    .replace(/^﻿/, "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n");
   const lines = t.split("\n").filter((l) => l.length > 0);
   if (lines.length === 0) return { headers: [], rows: [] };
 
