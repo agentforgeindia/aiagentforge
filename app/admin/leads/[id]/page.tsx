@@ -6,9 +6,9 @@
 // ============================================================
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Phone, ShieldCheck, Send, Trash2 } from "lucide-react";
+import { CheckCircle2, Phone, ShieldCheck, Send, Trash2 } from "lucide-react";
 import AdminShell, {
   adminCardCls,
   adminInputCls,
@@ -72,14 +72,29 @@ const ACTIVITY_TYPES = [
 
 export default function AdminLeadDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const leadId = params?.id;
   const { loading: pLoading, has, email } = useAdminPermissions();
 
   const canView = has("leads.view");
   const canEdit = has("leads.edit");
+  const canDelete = has("leads.delete");
 
   const [lead, setLead] = useState<Lead | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [tasks, setTasks] = useState<Array<{
+    id: string;
+    title: string;
+    status: string;
+    priority: string;
+    due_at: string | null;
+    assigned_to_email: string | null;
+  }>>([]);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDue, setNewTaskDue] = useState("");
+  const [savingTask, setSavingTask] = useState(false);
+  const canCreateTask = has("tasks.create");
+  const canEditTask = has("tasks.edit");
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -94,7 +109,7 @@ export default function AdminLeadDetailPage() {
     if (!canView || !leadId) return;
     setLoading(true);
     (async () => {
-      const [{ data: l }, { data: a }] = await Promise.all([
+      const [{ data: l }, { data: a }, { data: tk }] = await Promise.all([
         supabase.from("leads").select("*").eq("id", leadId).maybeSingle(),
         supabase
           .from("lead_activities")
@@ -103,9 +118,16 @@ export default function AdminLeadDetailPage() {
           )
           .eq("lead_id", leadId)
           .order("created_at", { ascending: false }),
+        supabase
+          .from("tasks")
+          .select("id, title, status, priority, due_at, assigned_to_email")
+          .eq("related_lead_id", leadId)
+          .order("due_at", { ascending: true, nullsFirst: false })
+          .order("created_at", { ascending: false }),
       ]);
       setLead(l as Lead | null);
       setActivities((a ?? []) as Activity[]);
+      setTasks((tk ?? []) as typeof tasks);
       setLoading(false);
     })();
   }, [canView, leadId, refreshKey]);
@@ -144,6 +166,60 @@ export default function AdminLeadDetailPage() {
     setActSummary("");
     setActOutcome("");
     setRefreshKey((k) => k + 1);
+  }
+
+  async function addTask() {
+    if (!leadId || !newTaskTitle.trim()) return;
+    setSavingTask(true);
+    const { data: sess } = await supabase.auth.getSession();
+    const created_by = sess.session?.user?.id ?? null;
+    const { error } = await supabase.from("tasks").insert({
+      title: newTaskTitle.trim(),
+      type: "follow_up",
+      status: "pending",
+      priority: "normal",
+      related_lead_id: leadId,
+      due_at: newTaskDue ? new Date(newTaskDue).toISOString() : null,
+      created_by,
+    });
+    setSavingTask(false);
+    if (error) {
+      alert(`Failed: ${error.message}`);
+      return;
+    }
+    setNewTaskTitle("");
+    setNewTaskDue("");
+    setRefreshKey((k) => k + 1);
+  }
+
+  async function toggleTask(id: string, current: string) {
+    const next = current === "completed" ? "pending" : "completed";
+    const { error } = await supabase.from("tasks").update({ status: next }).eq("id", id);
+    if (error) {
+      alert(`Failed: ${error.message}`);
+      return;
+    }
+    setRefreshKey((k) => k + 1);
+  }
+
+  async function deleteWholeLead() {
+    if (!leadId || !lead) return;
+    const ok = confirm(
+      `Permanently delete "${lead.name}"?\n\nThis removes the lead row and its activity log. There is no undo.`,
+    );
+    if (!ok) return;
+    const { error } = await supabase.from("leads").delete().eq("id", leadId);
+    if (error) {
+      alert(`Failed: ${error.message}`);
+      return;
+    }
+    await supabase.rpc("log_admin_action", {
+      p_action: "leads.delete",
+      p_target_type: "lead",
+      p_target_id: leadId,
+      p_details: { name: lead.name, source: lead.source },
+    });
+    router.push("/admin/leads");
   }
 
   async function deleteActivity(id: string) {
@@ -196,6 +272,18 @@ export default function AdminLeadDetailPage() {
       title={lead?.name ?? "Loading…"}
       subtitle={subtitle}
       email={email}
+      actions={
+        canDelete && lead ? (
+          <button
+            type="button"
+            onClick={deleteWholeLead}
+            className="inline-flex items-center gap-1.5 rounded-md border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 transition hover:bg-rose-100 dark:border-rose-700/40 dark:bg-rose-500/15 dark:text-rose-300 dark:hover:bg-rose-500/25"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete lead
+          </button>
+        ) : null
+      }
     >
       {loading ? (
         <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
@@ -417,6 +505,102 @@ export default function AdminLeadDetailPage() {
                     </div>
                   </li>
                 ))
+              )}
+            </ul>
+          </section>
+
+          {/* Tasks linked to this lead */}
+          <section className={`${adminCardCls} p-4`}>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+              Tasks
+            </p>
+
+            {canCreateTask && (
+              <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_180px_auto]">
+                <input
+                  type="text"
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  placeholder="What needs doing for this lead?"
+                  className={adminInputCls}
+                />
+                <input
+                  type="date"
+                  value={newTaskDue}
+                  onChange={(e) => setNewTaskDue(e.target.value)}
+                  className={adminInputCls}
+                />
+                <button
+                  type="button"
+                  onClick={addTask}
+                  disabled={savingTask || !newTaskTitle.trim()}
+                  className={adminPrimaryBtnCls}
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  {savingTask ? "Saving…" : "Add"}
+                </button>
+              </div>
+            )}
+
+            <ul className="mt-4 space-y-2">
+              {tasks.length === 0 ? (
+                <li className={`rounded-md border border-dashed border-slate-200 p-4 text-center text-sm dark:border-slate-700 ${adminMutedCls}`}>
+                  No tasks linked to this lead yet.
+                </li>
+              ) : (
+                tasks.map((t) => {
+                  const done = t.status === "completed";
+                  return (
+                    <li
+                      key={t.id}
+                      className="flex items-start gap-3 rounded-md border border-slate-200 bg-slate-50/50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900/40"
+                    >
+                      {canEditTask ? (
+                        <button
+                          type="button"
+                          onClick={() => toggleTask(t.id, t.status)}
+                          className={`mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition ${
+                            done
+                              ? "border-emerald-500 bg-emerald-500 text-white"
+                              : "border-slate-300 hover:border-emerald-500 dark:border-slate-600"
+                          }`}
+                        >
+                          {done && <CheckCircle2 className="h-3 w-3" />}
+                        </button>
+                      ) : (
+                        <span
+                          className={`mt-1 inline-block h-3 w-3 shrink-0 rounded-full ${
+                            done ? "bg-emerald-500" : "bg-slate-200 dark:bg-slate-700"
+                          }`}
+                        />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className={
+                            done
+                              ? "text-slate-500 line-through dark:text-slate-500"
+                              : "font-bold"
+                          }
+                        >
+                          {t.title}
+                        </p>
+                        <div className={`mt-0.5 flex flex-wrap items-center gap-2 text-[11px] ${adminMutedCls}`}>
+                          <span className="uppercase tracking-[0.14em]">
+                            {t.priority}
+                          </span>
+                          {t.due_at && (
+                            <span>
+                              Due {formatDate(t.due_at)}
+                            </span>
+                          )}
+                          {t.assigned_to_email && (
+                            <span>👤 {t.assigned_to_email}</span>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })
               )}
             </ul>
           </section>

@@ -14,12 +14,14 @@ import {
   RefreshCw,
   Search,
   ShieldCheck,
+  Trash2,
   Upload,
   UserPlus,
   X,
 } from "lucide-react";
 import { buildCsv, downloadCsv } from "@/lib/csv";
 import LeadsCsvImportModal from "./LeadsCsvImportModal";
+import { useAdminPermissions } from "../AdminPermissions";
 import AdminShell, {
   adminCardCls,
   adminInputCls,
@@ -86,6 +88,10 @@ export default function AdminLeadsPage() {
   const isAdmin = authEmail
     ? ADMIN_EMAILS.map((e) => e.toLowerCase()).includes(authEmail.toLowerCase())
     : false;
+
+  // Pull permissions so we can hide Delete from sales-tier admins.
+  const { has } = useAdminPermissions();
+  const canDelete = has("leads.delete");
 
   const [rows, setRows] = useState<LeadRow[]>([]);
   const [loadingRows, setLoadingRows] = useState(true);
@@ -252,6 +258,26 @@ export default function AdminLeadsPage() {
       alert(`Failed: ${error.message}`);
       return;
     }
+    setRefreshKey((k) => k + 1);
+  }
+
+  async function deleteLead(id: string, name: string) {
+    const ok = confirm(
+      `Delete "${name}"? This removes the lead row and its activity log permanently — there is no undo.`,
+    );
+    if (!ok) return;
+    const { error } = await supabase.from("leads").delete().eq("id", id);
+    if (error) {
+      alert(`Failed: ${error.message}`);
+      return;
+    }
+    // Audit it so the founder can trace deletes.
+    await supabase.rpc("log_admin_action", {
+      p_action: "leads.delete",
+      p_target_type: "lead",
+      p_target_id: id,
+      p_details: { name },
+    });
     setRefreshKey((k) => k + 1);
   }
 
@@ -513,6 +539,16 @@ export default function AdminLeadsPage() {
                       <option key={s.value} value={s.value}>{s.label}</option>
                     ))}
                   </select>
+                  {canDelete && (
+                    <button
+                      type="button"
+                      onClick={() => deleteLead(r.id, r.name)}
+                      title="Delete lead"
+                      className="rounded-md p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/15"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
                   <Link
                     href={`/admin/leads/${r.id}`}
                     className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"

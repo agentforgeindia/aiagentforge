@@ -6,8 +6,11 @@
 
 import Link from "next/link";
 import {
+  CalendarClock,
+  CheckSquare,
   ClipboardList,
   FileText,
+  LayoutDashboard,
   MessageSquare,
   Receipt,
   ShieldCheck,
@@ -29,6 +32,13 @@ type Tile = {
 
 const TILES: Tile[] = [
   {
+    href: "/admin/dashboard",
+    label: "War Room",
+    description: "Today's revenue, signups, pipeline, alerts.",
+    icon: <LayoutDashboard className="h-4 w-4" />,
+    perm: "dashboard.view",
+  },
+  {
     href: "/admin/customers",
     label: "Customers",
     description: "Signed-up users, plans, balances, notes.",
@@ -43,11 +53,25 @@ const TILES: Tile[] = [
     perm: "leads.view",
   },
   {
+    href: "/admin/tasks",
+    label: "Tasks",
+    description: "Follow-ups, demos, payment reminders.",
+    icon: <CheckSquare className="h-4 w-4" />,
+    perm: "tasks.view",
+  },
+  {
     href: "/admin/invoices",
     label: "Invoices",
     description: "Every paid order, search and download bills.",
     icon: <Receipt className="h-4 w-4" />,
     perm: "invoices.view_all",
+  },
+  {
+    href: "/admin/subscriptions",
+    label: "Subscriptions",
+    description: "Plan validity, renewals due, expired accounts.",
+    icon: <CalendarClock className="h-4 w-4" />,
+    perm: "subscriptions.view",
   },
   {
     href: "/admin/team",

@@ -28,9 +28,12 @@ type CustomerRow = {
   plan: string | null;
   updated_at: string | null;
   created_at: string | null;
+  health_score: number | null;
+  health_status: string | null;
 };
 
 type PlanFilter = "all" | "Starter" | "Pro Creator" | "Empire" | "Free";
+type HealthFilter = "all" | "healthy" | "active" | "at_risk" | "churn_risk" | "churned";
 
 export default function AdminCustomersPage() {
   const [loadingAuth, setLoadingAuth] = useState(true);
@@ -44,6 +47,7 @@ export default function AdminCustomersPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const [planFilter, setPlanFilter] = useState<PlanFilter>("all");
+  const [healthFilter, setHealthFilter] = useState<HealthFilter>("all");
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -69,7 +73,9 @@ export default function AdminCustomersPage() {
     (async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, email, full_name, credits, plan, updated_at, created_at")
+        .select(
+          "id, email, full_name, credits, plan, updated_at, created_at, health_score, health_status",
+        )
         .order("updated_at", { ascending: false })
         .limit(500);
       if (!error && data) setRows(data as CustomerRow[]);
@@ -84,13 +90,16 @@ export default function AdminCustomersPage() {
         const effectivePlan = r.plan ?? "Free";
         if (effectivePlan !== planFilter) return false;
       }
+      if (healthFilter !== "all") {
+        if ((r.health_status ?? "") !== healthFilter) return false;
+      }
       if (q) {
         const hay = `${r.email ?? ""} ${r.full_name ?? ""}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [rows, planFilter, search]);
+  }, [rows, planFilter, healthFilter, search]);
 
   const stats = useMemo(() => {
     const total = rows.length;
@@ -148,13 +157,25 @@ export default function AdminCustomersPage() {
         <select
           value={planFilter}
           onChange={(e) => setPlanFilter(e.target.value as PlanFilter)}
-          className={`${adminInputCls} sm:max-w-[180px]`}
+          className={`${adminInputCls} sm:max-w-[160px]`}
         >
           <option value="all">All plans</option>
           <option value="Free">Free</option>
           <option value="Starter">Starter</option>
           <option value="Pro Creator">Pro Creator</option>
           <option value="Empire">Empire</option>
+        </select>
+        <select
+          value={healthFilter}
+          onChange={(e) => setHealthFilter(e.target.value as HealthFilter)}
+          className={`${adminInputCls} sm:max-w-[160px]`}
+        >
+          <option value="all">All health</option>
+          <option value="healthy">Healthy</option>
+          <option value="active">Active</option>
+          <option value="at_risk">At risk</option>
+          <option value="churn_risk">Churn risk</option>
+          <option value="churned">Churned</option>
         </select>
       </div>
 
@@ -182,6 +203,7 @@ export default function AdminCustomersPage() {
                         {r.full_name?.trim() || r.email || "—"}
                       </p>
                       <PlanChip plan={r.plan} />
+                      <HealthChip status={r.health_status} score={r.health_score} />
                     </div>
                     <p className={`mt-0.5 truncate text-xs ${adminMutedCls}`}>
                       {r.email ?? "(no email)"}
@@ -225,6 +247,45 @@ function PlanChip({ plan }: { plan: string | null }) {
       className={`inline-flex shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] ${cls}`}
     >
       {effective}
+    </span>
+  );
+}
+
+const HEALTH_STYLES: Record<string, string> = {
+  healthy:    "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  active:     "bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300",
+  at_risk:    "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+  churn_risk: "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300",
+  churned:    "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
+};
+
+const HEALTH_LABELS: Record<string, string> = {
+  healthy:    "Healthy",
+  active:     "Active",
+  at_risk:    "At risk",
+  churn_risk: "Churn risk",
+  churned:    "Churned",
+};
+
+function HealthChip({
+  status,
+  score,
+}: {
+  status: string | null;
+  score: number | null;
+}) {
+  if (!status) return null;
+  const cls = HEALTH_STYLES[status] ?? HEALTH_STYLES.churned;
+  const label = HEALTH_LABELS[status] ?? status;
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] ${cls}`}
+      title={`Health score: ${score ?? "—"} / 100`}
+    >
+      {label}
+      {score !== null && (
+        <span className="font-mono opacity-80">{score}</span>
+      )}
     </span>
   );
 }
