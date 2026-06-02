@@ -17,7 +17,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { CheckCircle2, Plus, Send, ShieldCheck, Tag, Trash2 } from "lucide-react";
+import { CheckCircle2, ExternalLink, Plus, Send, ShieldCheck, Tag, Trash2, UserPlus } from "lucide-react";
+import Link from "next/link";
 import { useAdminPermissions } from "../../AdminPermissions";
 import AdminShell, {
   adminCardCls,
@@ -138,6 +139,60 @@ export default function AdminCustomerDetailPage() {
   const canCreateTask = has("tasks.create");
   const canEditTask = has("tasks.edit");
   const canExtendSub = has("subscriptions.extend");
+  const canAddLead = has("leads.add");
+
+  // Lead linkage — populated from find_lead_for_profile RPC.
+  // Null means "no lead yet, show promote button".
+  const [linkedLeadId, setLinkedLeadId] = useState<string | null>(null);
+  const [promotingLead, setPromotingLead] = useState(false);
+
+  async function promoteToLead() {
+    if (!profile) return;
+    if (!confirm(`Promote ${profile.full_name?.trim() || profile.email} to a sales lead?`)) return;
+    setPromotingLead(true);
+    const { data: sess } = await supabase.auth.getSession();
+    const created_by = sess.session?.user?.id ?? null;
+
+    const payload: Record<string, unknown> = {
+      name: profile.full_name?.trim() || profile.email || "Unknown",
+      email: profile.email,
+      source: profile.utm_source || "website",
+      source_detail: profile.utm_campaign
+        ? `campaign:${profile.utm_campaign}`
+        : "Promoted from signup",
+      status: "new",
+      notes: `Promoted from signed-up customer.${
+        profile.utm_source
+          ? `\nLanded via ${profile.utm_source}` +
+            (profile.utm_campaign ? ` · ${profile.utm_campaign}` : "")
+          : ""
+      }`,
+      converted_user_id: profile.id,
+      utm_source:   profile.utm_source   ?? null,
+      utm_medium:   profile.utm_medium   ?? null,
+      utm_campaign: profile.utm_campaign ?? null,
+      utm_content:  profile.utm_content  ?? null,
+      utm_term:     profile.utm_term     ?? null,
+      created_by,
+    };
+    const { data, error } = await supabase
+      .from("leads")
+      .insert(payload)
+      .select("id")
+      .single();
+    setPromotingLead(false);
+    if (error) {
+      alert(`Failed: ${error.message}`);
+      return;
+    }
+    await supabase.rpc("log_admin_action", {
+      p_action: "leads.add",
+      p_target_type: "lead",
+      p_target_id: data.id,
+      p_details: { source: "promote_from_customer", user_id: profile.id },
+    });
+    setLinkedLeadId(data.id);
+  }
 
   async function extendSubscription(days: number) {
     if (!userId) return;
@@ -243,6 +298,15 @@ export default function AdminCustomerDetailPage() {
         if (h && typeof h === "object" && !("error" in (h as object))) {
           setHealth(h as Health);
         }
+
+        // Check for an existing lead row that maps to this customer
+        // (either via converted_user_id or matching email). Drives
+        // the Promote-to-lead button visibility.
+        const { data: leadId } = await supabase.rpc(
+          "find_lead_for_profile",
+          { p_user_id: userId },
+        );
+        setLinkedLeadId((leadId as string | null) ?? null);
       }
 
       setLoading(false);
@@ -382,6 +446,43 @@ export default function AdminCustomerDetailPage() {
               />
             </dl>
           </section>
+
+          {/* Lead linkage — Promote to lead button OR View linked lead */}
+          {canAddLead && (
+            <section className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-[#11141a]">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                    Sales lead
+                  </p>
+                  <p className={`mt-0.5 text-xs ${adminMutedCls}`}>
+                    {linkedLeadId
+                      ? "This customer is already tracked as a lead."
+                      : "Add this customer to the sales pipeline."}
+                  </p>
+                </div>
+                {linkedLeadId ? (
+                  <Link
+                    href={`/admin/leads/${linkedLeadId}`}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    View lead
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={promoteToLead}
+                    disabled={promotingLead}
+                    className="inline-flex items-center gap-1.5 rounded-md bg-slate-900 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-slate-800 disabled:opacity-50 dark:bg-indigo-600 dark:hover:bg-indigo-500"
+                  >
+                    <UserPlus className="h-3.5 w-3.5" />
+                    {promotingLead ? "Promoting…" : "Promote to lead"}
+                  </button>
+                )}
+              </div>
+            </section>
+          )}
 
           {/* Customer health */}
           {health && <HealthPanel h={health} />}

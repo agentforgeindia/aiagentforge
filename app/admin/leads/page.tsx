@@ -92,6 +92,7 @@ export default function AdminLeadsPage() {
   // Pull permissions so we can hide Delete from sales-tier admins.
   const { has } = useAdminPermissions();
   const canDelete = has("leads.delete");
+  const canAddLead = has("leads.add");
 
   const [rows, setRows] = useState<LeadRow[]>([]);
   const [loadingRows, setLoadingRows] = useState(true);
@@ -100,6 +101,24 @@ export default function AdminLeadsPage() {
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+
+  // Top-level view tabs — "Pipeline" (the leads table itself) vs
+  // "Free signups" (virtual leads pulled from profiles).
+  const [topView, setTopView] = useState<"pipeline" | "signups">("pipeline");
+  const [signupRows, setSignupRows] = useState<{
+    id: string;
+    email: string | null;
+    full_name: string | null;
+    created_at: string;
+    credits: number;
+    utm_source: string | null;
+    utm_campaign: string | null;
+    utm_medium: string | null;
+    has_phone: boolean;
+    last_activity_at: string | null;
+  }[]>([]);
+  const [loadingSignups, setLoadingSignups] = useState(false);
+  const [convertingId, setConvertingId] = useState<string | null>(null);
 
   // Auto-opens when ?new=1 is in the URL — drives the AdminShell
   // "+ New lead" quick button. We read window.location directly
@@ -258,6 +277,63 @@ export default function AdminLeadsPage() {
       alert(`Failed: ${error.message}`);
       return;
     }
+    setRefreshKey((k) => k + 1);
+  }
+
+  // Load Free signups when that tab is activated or refresh fires.
+  useEffect(() => {
+    if (!isAdmin || topView !== "signups") return;
+    setLoadingSignups(true);
+    (async () => {
+      const { data, error } = await supabase.rpc("free_signups", {
+        p_limit: 200,
+        p_days: 90,
+      });
+      if (!error && Array.isArray(data)) {
+        setSignupRows(data as typeof signupRows);
+      }
+      setLoadingSignups(false);
+    })();
+  }, [isAdmin, topView, refreshKey]);
+
+  async function convertSignup(s: typeof signupRows[number]) {
+    if (!s.email) {
+      alert("This signup has no email — cannot promote.");
+      return;
+    }
+    if (!confirm(`Promote ${s.full_name?.trim() || s.email} to a sales lead?`)) {
+      return;
+    }
+    setConvertingId(s.id);
+    const { data: sess } = await supabase.auth.getSession();
+    const created_by = sess.session?.user?.id ?? null;
+    const payload = {
+      name: s.full_name?.trim() || s.email,
+      email: s.email,
+      source: s.utm_source || "website",
+      source_detail: s.utm_campaign
+        ? `campaign:${s.utm_campaign}`
+        : "Promoted from free signup",
+      status: "new",
+      notes: "Promoted from free signup.",
+      converted_user_id: s.id,
+      utm_source: s.utm_source ?? null,
+      utm_medium: s.utm_medium ?? null,
+      utm_campaign: s.utm_campaign ?? null,
+      created_by,
+    };
+    const { error } = await supabase.from("leads").insert(payload);
+    setConvertingId(null);
+    if (error) {
+      alert(`Failed: ${error.message}`);
+      return;
+    }
+    await supabase.rpc("log_admin_action", {
+      p_action: "leads.add",
+      p_target_type: "lead",
+      p_target_id: s.id,
+      p_details: { source: "convert_free_signup" },
+    });
     setRefreshKey((k) => k + 1);
   }
 
@@ -453,7 +529,117 @@ export default function AdminLeadsPage() {
         </section>
       )}
 
+      {/* Top tabs — Pipeline (regular leads) vs Free signups */}
+      <div className="mb-3 flex flex-wrap gap-1.5">
+        <button
+          type="button"
+          onClick={() => setTopView("pipeline")}
+          className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-bold transition ${
+            topView === "pipeline"
+              ? "bg-slate-900 text-white dark:bg-indigo-600"
+              : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+          }`}
+        >
+          Pipeline
+          <span className={`rounded px-1 text-[10px] tabular-nums ${
+            topView === "pipeline" ? "bg-white/20" : "bg-slate-200 dark:bg-slate-700"
+          }`}>
+            {rows.length}
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setTopView("signups")}
+          className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-bold transition ${
+            topView === "signups"
+              ? "bg-slate-900 text-white dark:bg-indigo-600"
+              : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+          }`}
+        >
+          Free signups
+          {signupRows.length > 0 && (
+            <span className={`rounded px-1 text-[10px] tabular-nums ${
+              topView === "signups" ? "bg-white/20" : "bg-slate-200 dark:bg-slate-700"
+            }`}>
+              {signupRows.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Free-signups view — virtual leads pulled from profiles */}
+      {topView === "signups" && (
+        <div className={`${adminCardCls}`}>
+          {loadingSignups ? (
+            <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
+          ) : signupRows.length === 0 ? (
+            <p className={`p-8 text-center text-sm ${adminMutedCls}`}>
+              No free-tier signups in the last 90 days that aren't already
+              in the pipeline. Nice — your sales follow-up is up to date.
+            </p>
+          ) : (
+            <ul className="divide-y divide-slate-200 dark:divide-slate-800">
+              {signupRows.map((s) => (
+                <li
+                  key={s.id}
+                  className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-md bg-sky-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
+                        Free signup
+                      </span>
+                      {s.has_phone && (
+                        <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                          Phone shared · warm
+                        </span>
+                      )}
+                      {s.last_activity_at && (
+                        <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                          Generated content
+                        </span>
+                      )}
+                      <span className={`text-[11px] ${adminMutedCls}`}>
+                        {formatDate(s.created_at)}
+                      </span>
+                    </div>
+                    <p className="mt-1 truncate text-sm font-bold">
+                      {s.full_name?.trim() || s.email}
+                    </p>
+                    <p className={`mt-0.5 truncate text-xs ${adminMutedCls}`}>
+                      {s.email}
+                      {s.utm_source && ` · via ${s.utm_source}`}
+                      {s.utm_campaign && ` / ${s.utm_campaign}`}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {canAddLead && (
+                      <button
+                        type="button"
+                        onClick={() => convertSignup(s)}
+                        disabled={convertingId === s.id}
+                        className="inline-flex items-center gap-1.5 rounded-md bg-slate-900 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-slate-800 disabled:opacity-50 dark:bg-indigo-600 dark:hover:bg-indigo-500"
+                      >
+                        <UserPlus className="h-3.5 w-3.5" />
+                        {convertingId === s.id ? "Promoting…" : "Convert"}
+                      </button>
+                    )}
+                    <Link
+                      href={`/admin/customers/${s.id}`}
+                      className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
       {/* Filters */}
+      {topView === "pipeline" && (
       <div className={`${adminCardCls} flex flex-col gap-2 p-3 sm:flex-row`}>
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
@@ -486,8 +672,10 @@ export default function AdminLeadsPage() {
           ))}
         </select>
       </div>
+      )}
 
-      {/* List */}
+      {/* List — only shown on the Pipeline tab */}
+      {topView === "pipeline" && (
       <div className={`${adminCardCls} mt-4`}>
         {loadingRows ? (
           <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
@@ -561,6 +749,7 @@ export default function AdminLeadsPage() {
           </ul>
         )}
       </div>
+      )}
 
       {/* Bulk CSV import modal — opens via the toolbar button */}
       <LeadsCsvImportModal
