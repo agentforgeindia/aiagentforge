@@ -6,6 +6,7 @@
 
 import Link from "next/link";
 import {
+  ClipboardList,
   FileText,
   MessageSquare,
   Receipt,
@@ -68,6 +69,13 @@ const TILES: Tile[] = [
     description: "Customer reviews on the homepage.",
     icon: <MessageSquare className="h-4 w-4" />,
     perm: "testimonials.manage",
+  },
+  {
+    href: "/admin/audit",
+    label: "Audit log",
+    description: "Every sensitive action — refunds, role changes, manual edits.",
+    icon: <ClipboardList className="h-4 w-4" />,
+    perm: "audit.view",
   },
 ];
 

@@ -4,30 +4,21 @@
 // AdminShell — shared chrome for every /admin page.
 // ============================================================
 // Provides:
-//   • Top bar with logo, admin label, signed-in email
+//   • Top bar with logo, admin label, email user-menu with Sign out,
+//     and a permission-gated "+ New Lead" quick button.
 //   • Breadcrumb back navigation (Admin / Section / Page)
-//   • Optional right-hand actions slot
+//   • Optional right-hand actions slot per page
 //   • Consistent corporate styling — slate/indigo, no gradients,
 //     no emoji decoration, tight spacing.
-//
-// Usage:
-//   <AdminShell
-//     breadcrumbs={[
-//       { label: "Customers", href: "/admin/customers" },
-//       { label: profile.full_name ?? profile.email },
-//     ]}
-//     title="Bhavin Joshi"
-//     subtitle="Pro Creator · 12,000 credits"
-//     actions={<Button>Edit</Button>}
-//   >
-//     ...page content...
-//   </AdminShell>
 // ============================================================
 
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ChevronRight, LogOut } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, LogOut, Plus } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useAdminPermissions } from "./AdminPermissions";
 
 export type Crumb = { label: string; href?: string };
 
@@ -47,9 +38,10 @@ export default function AdminShell({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const { role, has, email: ctxEmail } = useAdminPermissions();
+  const effectiveEmail = email ?? ctxEmail ?? null;
+
   const goBack = () => {
-    // If browser history has a previous admin page, use it.
-    // Otherwise fall back to the parent breadcrumb or /admin.
     if (typeof window !== "undefined" && window.history.length > 1) {
       router.back();
       return;
@@ -65,8 +57,8 @@ export default function AdminShell({
     <main className="min-h-screen bg-[#f7f8fb] text-slate-900 dark:bg-[#0b0d12] dark:text-slate-100">
       {/* Top bar */}
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-[#0b0d12]/85">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-          <Link href="/admin" className="flex items-center gap-2 min-w-0">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
+          <Link href="/admin" className="flex min-w-0 items-center gap-2">
             <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-700">
               <Image
                 src="/af-logo.png"
@@ -86,20 +78,26 @@ export default function AdminShell({
             </div>
           </Link>
 
-          {email && (
-            <div className="hidden items-center gap-3 sm:flex">
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                {email}
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {has("leads.add") && (
+              <Link
+                href="/admin/leads?new=1"
+                className="inline-flex items-center gap-1.5 rounded-md bg-slate-900 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800 dark:bg-indigo-600 dark:hover:bg-indigo-500"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">New lead</span>
+              </Link>
+            )}
+            {effectiveEmail && (
+              <UserMenu email={effectiveEmail} role={role} />
+            )}
+          </div>
         </div>
       </header>
 
       {/* Breadcrumb + title bar */}
       <div className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-[#0e1117]">
         <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-6">
-          {/* Breadcrumb */}
           <nav className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 dark:text-slate-400">
             <button
               type="button"
@@ -118,7 +116,10 @@ export default function AdminShell({
               Admin
             </Link>
             {breadcrumbs.map((c, i) => (
-              <span key={`${c.label}-${i}`} className="flex items-center gap-1.5">
+              <span
+                key={`${c.label}-${i}`}
+                className="flex items-center gap-1.5"
+              >
                 <ChevronRight className="h-3 w-3" />
                 {c.href ? (
                   <Link
@@ -136,7 +137,6 @@ export default function AdminShell({
             ))}
           </nav>
 
-          {/* Title + actions */}
           <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <h1 className="truncate text-xl font-bold tracking-tight sm:text-2xl">
@@ -155,11 +155,99 @@ export default function AdminShell({
         </div>
       </div>
 
-      {/* Page body */}
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
         {children}
       </div>
     </main>
+  );
+}
+
+// ────────────────────────────────────────────────────────────
+// User menu — click email → dropdown with role + Sign out
+// ────────────────────────────────────────────────────────────
+
+function UserMenu({ email, role }: { email: string; role: string | null }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Close on outside click + Escape
+  useEffect(() => {
+    if (!open) return;
+    function onDoc(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  async function signOut() {
+    setSigningOut(true);
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.error("[admin] signOut failed:", e);
+    } finally {
+      setSigningOut(false);
+      router.replace("/login");
+    }
+  }
+
+  // Render first 2 letters of the email as a small avatar.
+  const initials = email.slice(0, 2).toUpperCase();
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        <span className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-slate-700 to-slate-900 text-[10px] font-bold text-white dark:from-indigo-500 dark:to-indigo-700">
+          {initials}
+        </span>
+        <span className="hidden max-w-[180px] truncate sm:inline">{email}</span>
+        <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 mt-2 w-64 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-[#11141a]"
+        >
+          <div className="border-b border-slate-200 px-3 py-2.5 dark:border-slate-800">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+              Signed in
+            </p>
+            <p className="mt-0.5 truncate text-sm font-bold">{email}</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Role: <span className="font-bold">{role ?? "—"}</span>
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={signOut}
+            disabled={signingOut}
+            className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-rose-600 transition hover:bg-rose-50 disabled:opacity-50 dark:text-rose-300 dark:hover:bg-rose-500/10"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            {signingOut ? "Signing out…" : "Sign out"}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
