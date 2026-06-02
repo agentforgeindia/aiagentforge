@@ -33,8 +33,12 @@ export default function LayoutClient({
   // chat or popup — so the browser's "Save as PDF" produces a clean,
   // single-page document.
   const isInvoicePage = pathname.startsWith("/invoice");
+  // Admin panel uses its own AdminShell — site navbar/footer would
+  // overlap and break layout.
+  const isAdminPage = pathname.startsWith("/admin");
 
-  const hideChrome = isWorkshopPage || isAuthPage || isInvoicePage;
+  const hideChrome =
+    isWorkshopPage || isAuthPage || isInvoicePage || isAdminPage;
 
   return (
     <>
