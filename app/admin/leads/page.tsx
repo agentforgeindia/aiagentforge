@@ -5,7 +5,6 @@
 // ============================================================
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { ChevronRight, Plus, RefreshCw, Search, ShieldCheck, UserPlus, X } from "lucide-react";
@@ -85,11 +84,15 @@ export default function AdminLeadsPage() {
   const [search, setSearch] = useState("");
 
   // Auto-opens when ?new=1 is in the URL — drives the AdminShell
-  // "+ New lead" quick button.
-  const searchParams = useSearchParams();
-  const [showForm, setShowForm] = useState(
-    () => searchParams?.get("new") === "1",
-  );
+  // "+ New lead" quick button. We read window.location directly
+  // (instead of useSearchParams) to avoid Next.js 16's Suspense
+  // boundary requirement during static prerender.
+  const [showForm, setShowForm] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("new") === "1") setShowForm(true);
+  }, []);
   const [draft, setDraft] = useState<Partial<LeadRow>>({
     name: "",
     email: "",
