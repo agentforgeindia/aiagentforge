@@ -442,7 +442,7 @@ export default function AdminLeadDetailPage() {
                 </>
               )}
             </dl>
-            {lead.raw_payload && (
+            {Boolean(lead.raw_payload) && (
               <details className="mt-3">
                 <summary className={`cursor-pointer text-[11px] font-bold uppercase tracking-[0.14em] ${adminMutedCls}`}>
                   Raw webhook payload

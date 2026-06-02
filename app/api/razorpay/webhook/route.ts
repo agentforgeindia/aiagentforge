@@ -93,7 +93,10 @@ export async function POST(request: Request) {
     // Single atomic, idempotent RPC — same one used by verify-payment.
     // If Razorpay retries this webhook (or verify-payment ran first),
     // the ON CONFLICT in the SQL function makes it a safe no-op.
-    // See sql/payments-fix.sql for the function definition.
+    // Billing snapshot is not available on the webhook path
+    // (Meta-style server-to-server delivery has no client form),
+    // but ON CONFLICT means the verify-payment route always wins
+    // when both fire.
     const { data, error } = await supabaseAdmin.rpc(
       "add_credits_for_payment",
       {
@@ -104,6 +107,12 @@ export async function POST(request: Request) {
         p_razorpay_order_id: razorpayOrderId,
         p_razorpay_payment_id: razorpayPaymentId,
         p_razorpay_signature: signature,
+        p_billing_name:    null,
+        p_billing_phone:   null,
+        p_billing_email:   null,
+        p_billing_company: null,
+        p_billing_address: null,
+        p_billing_gstin:   null,
       },
     );
 

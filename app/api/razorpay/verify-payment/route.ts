@@ -57,6 +57,15 @@ export async function POST(request: Request) {
       amount,
       credits,
       userId,
+      // Optional billing snapshot collected by the billing-details
+      // modal on the client. Stored verbatim on the payment row
+      // so the bill is reproducible later.
+      billing_name,
+      billing_phone,
+      billing_email,
+      billing_company,
+      billing_address,
+      billing_gstin,
     } = body;
 
     if (
@@ -104,7 +113,7 @@ export async function POST(request: Request) {
     const supabaseAdmin = getSupabaseAdmin();
 
     // Single atomic, idempotent RPC.
-    // See sql/payments-fix.sql for the function definition.
+    // See sql/payments-fix.sql + sql/billing-snapshot.sql.
     const { data, error } = await supabaseAdmin.rpc(
       "add_credits_for_payment",
       {
@@ -115,6 +124,12 @@ export async function POST(request: Request) {
         p_razorpay_order_id: razorpay_order_id,
         p_razorpay_payment_id: razorpay_payment_id,
         p_razorpay_signature: razorpay_signature,
+        p_billing_name:    billing_name    ?? null,
+        p_billing_phone:   billing_phone   ?? null,
+        p_billing_email:   billing_email   ?? null,
+        p_billing_company: billing_company ?? null,
+        p_billing_address: billing_address ?? null,
+        p_billing_gstin:   billing_gstin   ?? null,
       },
     );
 
