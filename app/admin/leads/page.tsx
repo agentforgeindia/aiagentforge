@@ -7,7 +7,19 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { ChevronRight, Plus, RefreshCw, Search, ShieldCheck, UserPlus, X } from "lucide-react";
+import {
+  ChevronRight,
+  Download,
+  Plus,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  Upload,
+  UserPlus,
+  X,
+} from "lucide-react";
+import { buildCsv, downloadCsv } from "@/lib/csv";
+import LeadsCsvImportModal from "./LeadsCsvImportModal";
 import AdminShell, {
   adminCardCls,
   adminInputCls,
@@ -93,6 +105,39 @@ export default function AdminLeadsPage() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("new") === "1") setShowForm(true);
   }, []);
+
+  // Bulk-import + export modal state
+  const [showImport, setShowImport] = useState(false);
+
+  function exportFilteredAsCsv() {
+    const headers = [
+      "created_at",
+      "name",
+      "phone",
+      "email",
+      "business_name",
+      "city",
+      "source",
+      "source_detail",
+      "status",
+      "notes",
+    ];
+    const rows = filtered.map((r) => [
+      r.created_at,
+      r.name,
+      r.phone,
+      r.email,
+      r.business_name,
+      r.city,
+      r.source,
+      r.source_detail,
+      r.status,
+      r.notes,
+    ]);
+    const csv = buildCsv(headers, rows);
+    const ts = new Date().toISOString().slice(0, 10);
+    downloadCsv(`agentforge-leads-${ts}.csv`, csv);
+  }
   const [draft, setDraft] = useState<Partial<LeadRow>>({
     name: "",
     email: "",
@@ -243,6 +288,25 @@ export default function AdminLeadsPage() {
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Refresh
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowImport(true)}
+            className={adminSecondaryBtnCls}
+            title="Import leads from a CSV (Meta Ads, Google Ads, Excel)"
+          >
+            <Upload className="h-3.5 w-3.5" />
+            Import CSV
+          </button>
+          <button
+            type="button"
+            onClick={exportFilteredAsCsv}
+            disabled={filtered.length === 0}
+            className={adminSecondaryBtnCls}
+            title="Download the filtered leads as a CSV"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Export
           </button>
           <button
             type="button"
@@ -461,6 +525,13 @@ export default function AdminLeadsPage() {
           </ul>
         )}
       </div>
+
+      {/* Bulk CSV import modal — opens via the toolbar button */}
+      <LeadsCsvImportModal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        onImported={() => setRefreshKey((k) => k + 1)}
+      />
     </AdminShell>
   );
 }
