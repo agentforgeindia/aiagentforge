@@ -14,11 +14,7 @@ import AdminShell, {
   adminMutedCls,
   adminSecondaryBtnCls,
 } from "../AdminShell";
-
-const ADMIN_EMAILS: string[] = [
-  "info@aiagentforge.in",
-  "info.agentforge@gmail.com",
-];
+import { useAdminPermissions } from "../AdminPermissions";
 
 type CustomerRow = {
   id: string;
@@ -36,11 +32,15 @@ type PlanFilter = "all" | "Starter" | "Pro Creator" | "Empire" | "Free";
 type HealthFilter = "all" | "healthy" | "active" | "at_risk" | "churn_risk" | "churned";
 
 export default function AdminCustomersPage() {
-  const [loadingAuth, setLoadingAuth] = useState(true);
-  const [authEmail, setAuthEmail] = useState<string | null>(null);
-  const isAdmin = authEmail
-    ? ADMIN_EMAILS.map((e) => e.toLowerCase()).includes(authEmail.toLowerCase())
-    : false;
+  // RBAC-driven access — no hard-coded email allowlist. Roles +
+  // permissions live in admin_roles / admin_users.
+  const {
+    loading: loadingAuth,
+    isAdmin,
+    email: authEmail,
+    has,
+  } = useAdminPermissions();
+  const canViewCustomers = has("customers.view");
 
   const [rows, setRows] = useState<CustomerRow[]>([]);
   const [loadingRows, setLoadingRows] = useState(true);
@@ -51,24 +51,7 @@ export default function AdminCustomersPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    let active = true;
-    (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!active) return;
-      setAuthEmail(data.session?.user?.email ?? null);
-      setLoadingAuth(false);
-    })();
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_e, s) => setAuthEmail(s?.user?.email ?? null),
-    );
-    return () => {
-      active = false;
-      listener.subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isAdmin) return;
+    if (!canViewCustomers) return;
     setLoadingRows(true);
     (async () => {
       const { data, error } = await supabase
@@ -81,7 +64,7 @@ export default function AdminCustomersPage() {
       if (!error && data) setRows(data as CustomerRow[]);
       setLoadingRows(false);
     })();
-  }, [isAdmin, refreshKey]);
+  }, [canViewCustomers, refreshKey]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -114,12 +97,15 @@ export default function AdminCustomersPage() {
       </main>
     );
   }
-  if (!authEmail || !isAdmin) {
+  if (!authEmail || !isAdmin || !canViewCustomers) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] px-6 dark:bg-[#0b0d12]">
         <div className="max-w-md rounded-lg border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-[#11141a]">
           <ShieldCheck className="mx-auto h-8 w-8 text-rose-500" />
           <h1 className="mt-3 text-base font-bold">Access denied</h1>
+          <p className="mt-1 text-xs text-slate-500">
+            Your role does not include the <code>customers.view</code> permission.
+          </p>
         </div>
       </main>
     );

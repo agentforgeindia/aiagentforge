@@ -1,43 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useTheme } from "@/app/components/ThemeProvider";
-import { supabase } from "@/lib/supabase";
 import { ShieldCheck, ArrowLeft } from "lucide-react";
 import PostForm from "../PostForm";
-
-// Mirrors ADMIN_EMAILS in app/admin/posts/page.tsx + admin_users seed in
-// sql/posts.sql. Replace / extend in all three places when adding admins.
-const ADMIN_EMAILS: string[] = [
-  "info@aiagentforge.in",
-  "info.agentforge@gmail.com",
-];
+import { useAdminPermissions } from "../../AdminPermissions";
 
 export default function AdminNewPostPage() {
   const { darkMode } = useTheme();
-  const [loadingAuth, setLoadingAuth] = useState(true);
-  const [authEmail, setAuthEmail] = useState<string | null>(null);
-  const isAdmin = authEmail
-    ? ADMIN_EMAILS.map((e) => e.toLowerCase()).includes(authEmail.toLowerCase())
-    : false;
-
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!active) return;
-      setAuthEmail(data.session?.user?.email ?? null);
-      setLoadingAuth(false);
-    })();
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => setAuthEmail(session?.user?.email ?? null),
-    );
-    return () => {
-      active = false;
-      listener.subscription.unsubscribe();
-    };
-  }, []);
+  // RBAC: roles + permissions come from admin_users / admin_roles.
+  const {
+    loading: loadingAuth,
+    isAdmin,
+    has,
+  } = useAdminPermissions();
+  const canPublish = has("content.publish");
 
   const bg = darkMode ? "bg-[#070b14] text-white" : "bg-[#fff8e8] text-[#111827]";
   const muted = darkMode ? "text-white/60" : "text-black/55";
@@ -50,14 +27,18 @@ export default function AdminNewPostPage() {
     );
   }
 
-  if (!isAdmin) {
+  if (!isAdmin || !canPublish) {
     return (
       <main className={`flex min-h-screen items-center justify-center px-6 ${bg}`}>
         <div className="max-w-md rounded-3xl border border-black/10 bg-white/85 p-8 text-center dark:border-white/10 dark:bg-white/[0.06]">
           <ShieldCheck className="mx-auto h-10 w-10 text-rose-500" />
-          <h1 className="mt-3 text-xl font-black">Admin access required</h1>
+          <h1 className="mt-3 text-xl font-black">Access denied</h1>
           <p className={`mt-2 text-sm ${muted}`}>
-            Sign in with an admin email to create posts.
+            Your role does not include the{" "}
+            <code className="rounded bg-black/5 px-1 py-0.5 text-xs dark:bg-white/10">
+              content.publish
+            </code>{" "}
+            permission.
           </p>
         </div>
       </main>

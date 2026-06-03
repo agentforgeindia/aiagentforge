@@ -8,7 +8,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { CheckCircle2, Phone, ShieldCheck, Send, Trash2 } from "lucide-react";
+import {
+  CalendarClock,
+  CheckCircle2,
+  Phone,
+  Send,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
 import AdminShell, {
   adminCardCls,
   adminInputCls,
@@ -105,6 +112,58 @@ export default function AdminLeadDetailPage() {
   const [actOutcome, setActOutcome] = useState("");
   const [savingAct, setSavingAct] = useState(false);
 
+  // ── Pipeline-section locally-controlled drafts ───────────────
+  // Reason: typing into an input that calls patchLead() on every
+  // keystroke fires a DB UPDATE + refetch per character, which
+  // (a) is wasteful and (b) loses keystrokes because the controlled
+  // value snaps back to whatever the slow fetch returns. We keep the
+  // input local and only commit on blur.
+  const [draftRevenue, setDraftRevenue] = useState<string>("");
+  const [draftNextAction, setDraftNextAction] = useState<string>("");
+  const [draftLostReason, setDraftLostReason] = useState<string>("");
+
+  // Hydrate drafts whenever a *different* lead loads. We intentionally
+  // do NOT depend on the whole `lead` object — that would clobber
+  // half-typed user input every time we refetch the lead.
+  useEffect(() => {
+    if (!lead) return;
+    setDraftRevenue(
+      lead.expected_revenue !== null ? String(lead.expected_revenue) : "",
+    );
+    setDraftNextAction(
+      lead.next_action_at ? lead.next_action_at.slice(0, 10) : "",
+    );
+    setDraftLostReason(lead.lost_reason ?? "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lead?.id]);
+
+  // ── Followup mini-form (creates a follow-up task) ────────────
+  const [fuType, setFuType] = useState<"call" | "whatsapp" | "email" | "meeting">(
+    "call",
+  );
+  const [fuWhen, setFuWhen] = useState<string>("");
+  const [fuNote, setFuNote] = useState<string>("");
+  const [savingFu, setSavingFu] = useState(false);
+
+  // Today (YYYY-MM-DD) for date-input `min` — stops the calendar
+  // from accepting nonsense years like 0020 that triggered the
+  // "03-06-0020" bug.
+  const todayIso = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  // Cap follow-ups at 2 years out — anything further is almost
+  // certainly a typo.
+  const maxIso = useMemo(() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 2);
+    return d.toISOString().slice(0, 10);
+  }, []);
+  // For the datetime-local field on Followup we need the same min
+  // but in YYYY-MM-DDTHH:mm form.
+  const nowLocal = useMemo(() => {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+  }, []);
+
   useEffect(() => {
     if (!canView || !leadId) return;
     setLoading(true);
@@ -189,6 +248,80 @@ export default function AdminLeadDetailPage() {
     }
     setNewTaskTitle("");
     setNewTaskDue("");
+    setRefreshKey((k) => k + 1);
+  }
+
+  // Commit-on-blur saves for pipeline fields (see draft state above).
+  async function saveRevenueIfChanged() {
+    if (!lead || !canEdit) return;
+    const trimmed = draftRevenue.trim();
+    const next = trimmed === "" ? null : Number(trimmed);
+    if (next !== null && Number.isNaN(next)) return; // ignore garbage
+    if (next === lead.expected_revenue) return;       // no-op
+    await patchLead({ expected_revenue: next });
+  }
+  async function saveNextActionIfChanged() {
+    if (!lead || !canEdit) return;
+    // Empty string clears it; otherwise convert YYYY-MM-DD to ISO.
+    const next = draftNextAction
+      ? new Date(draftNextAction + "T00:00:00").toISOString()
+      : null;
+    const current = lead.next_action_at;
+    // Compare on the date portion to avoid TZ noise.
+    const same =
+      (next?.slice(0, 10) ?? "") === (current?.slice(0, 10) ?? "");
+    if (same) return;
+    await patchLead({ next_action_at: next });
+  }
+  async function saveLostReasonIfChanged() {
+    if (!lead || !canEdit) return;
+    const next = draftLostReason.trim() || null;
+    if (next === (lead.lost_reason ?? null)) return;
+    await patchLead({ lost_reason: next });
+  }
+
+  // Create a follow-up task and (optionally) move next_action_at
+  // forward to the new due date if it's sooner than what's there.
+  async function scheduleFollowup() {
+    if (!leadId || !canCreateTask || !fuWhen) return;
+    setSavingFu(true);
+    const { data: sess } = await supabase.auth.getSession();
+    const created_by = sess.session?.user?.id ?? null;
+    const dueIso = new Date(fuWhen).toISOString();
+    const label = fuType.charAt(0).toUpperCase() + fuType.slice(1);
+    const title = `${label} follow-up${fuNote.trim() ? `: ${fuNote.trim()}` : ""}`;
+
+    const { error: tErr } = await supabase.from("tasks").insert({
+      title,
+      type: "follow_up",
+      status: "pending",
+      priority: "normal",
+      related_lead_id: leadId,
+      due_at: dueIso,
+      created_by,
+    });
+    if (tErr) {
+      setSavingFu(false);
+      alert(`Failed: ${tErr.message}`);
+      return;
+    }
+
+    // Surface the soonest scheduled follow-up on the lead row so the
+    // pipeline view / dashboard can sort by it.
+    const currentNext = lead?.next_action_at
+      ? new Date(lead.next_action_at).getTime()
+      : null;
+    if (currentNext === null || new Date(dueIso).getTime() < currentNext) {
+      await supabase
+        .from("leads")
+        .update({ next_action_at: dueIso })
+        .eq("id", leadId);
+    }
+
+    setSavingFu(false);
+    setFuWhen("");
+    setFuNote("");
+    setFuType("call");
     setRefreshKey((k) => k + 1);
   }
 
@@ -351,20 +484,18 @@ export default function AdminLeadDetailPage() {
                   </span>
                   <input
                     type="date"
-                    value={
-                      lead.next_action_at
-                        ? lead.next_action_at.slice(0, 10)
-                        : ""
-                    }
-                    onChange={(e) =>
-                      patchLead({
-                        next_action_at: e.target.value
-                          ? new Date(e.target.value).toISOString()
-                          : null,
-                      })
-                    }
+                    value={draftNextAction}
+                    min={todayIso}
+                    max={maxIso}
+                    onChange={(e) => setDraftNextAction(e.target.value)}
+                    onBlur={saveNextActionIfChanged}
                     className={adminInputCls}
                   />
+                  {draftNextAction && (
+                    <p className={`mt-1 text-[11px] ${adminMutedCls}`}>
+                      {formatNiceDate(draftNextAction)}
+                    </p>
+                  )}
                 </label>
                 <label className="block">
                   <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
@@ -372,14 +503,17 @@ export default function AdminLeadDetailPage() {
                   </span>
                   <input
                     type="number"
-                    value={lead.expected_revenue ?? ""}
-                    onChange={(e) =>
-                      patchLead({
-                        expected_revenue: e.target.value
-                          ? Number(e.target.value)
-                          : null,
-                      })
-                    }
+                    inputMode="numeric"
+                    value={draftRevenue}
+                    onChange={(e) => setDraftRevenue(e.target.value)}
+                    onBlur={saveRevenueIfChanged}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        (e.target as HTMLInputElement).blur();
+                      }
+                    }}
+                    placeholder="0"
                     className={adminInputCls}
                   />
                 </label>
@@ -391,13 +525,82 @@ export default function AdminLeadDetailPage() {
                   </span>
                   <input
                     type="text"
-                    value={lead.lost_reason ?? ""}
-                    onChange={(e) => patchLead({ lost_reason: e.target.value })}
+                    value={draftLostReason}
+                    onChange={(e) => setDraftLostReason(e.target.value)}
+                    onBlur={saveLostReasonIfChanged}
                     placeholder="e.g. budget, competitor, no response"
                     className={adminInputCls}
                   />
                 </label>
               )}
+            </section>
+          )}
+
+          {/* Followup — quick-schedule a follow-up task tied to this lead */}
+          {canCreateTask && (
+            <section className={`${adminCardCls} p-4`}>
+              <div className="flex items-center gap-2">
+                <CalendarClock className="h-4 w-4 text-indigo-500" />
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                  Schedule follow-up
+                </p>
+              </div>
+
+              {lead.next_action_at && (
+                <p className={`mt-2 text-xs ${adminMutedCls}`}>
+                  Next action on this lead:{" "}
+                  <span className="font-bold text-slate-800 dark:text-slate-100">
+                    {formatNiceDate(lead.next_action_at)}
+                  </span>
+                </p>
+              )}
+
+              <div className="mt-3 grid gap-2 sm:grid-cols-[140px_220px_1fr_auto]">
+                <select
+                  value={fuType}
+                  onChange={(e) =>
+                    setFuType(
+                      e.target.value as "call" | "whatsapp" | "email" | "meeting",
+                    )
+                  }
+                  className={adminInputCls}
+                >
+                  <option value="call">Call</option>
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="email">Email</option>
+                  <option value="meeting">Meeting</option>
+                </select>
+                <input
+                  type="datetime-local"
+                  value={fuWhen}
+                  min={nowLocal}
+                  onChange={(e) => setFuWhen(e.target.value)}
+                  className={adminInputCls}
+                />
+                <input
+                  type="text"
+                  value={fuNote}
+                  onChange={(e) => setFuNote(e.target.value)}
+                  placeholder="Optional note (e.g. send pricing PDF first)"
+                  className={adminInputCls}
+                />
+                <button
+                  type="button"
+                  onClick={scheduleFollowup}
+                  disabled={savingFu || !fuWhen}
+                  className={adminPrimaryBtnCls}
+                >
+                  <CalendarClock className="h-3.5 w-3.5" />
+                  {savingFu ? "Scheduling…" : "Schedule"}
+                </button>
+              </div>
+              <p className={`mt-2 text-[11px] ${adminMutedCls}`}>
+                Saved as a Task. Visible under Tasks below and on{" "}
+                <code className="rounded bg-slate-100 px-1 dark:bg-slate-800">
+                  /admin/tasks
+                </code>
+                .
+              </p>
             </section>
           )}
 
@@ -689,6 +892,38 @@ function formatDate(iso: string) {
     month: "short",
     year: "numeric",
   });
+}
+
+/**
+ * Friendlier date — "Tomorrow", "Friday, 12 Jun", "in 3 days · 12 Jun 2026".
+ * Accepts a YYYY-MM-DD string or an ISO timestamp.
+ */
+function formatNiceDate(input: string) {
+  // Normalise "YYYY-MM-DD" to local midnight so day-diff math is clean.
+  const d = input.length === 10 ? new Date(input + "T00:00:00") : new Date(input);
+  if (Number.isNaN(d.getTime())) return input;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(d);
+  target.setHours(0, 0, 0, 0);
+  const days = Math.round(
+    (target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
+  const niceDate = d.toLocaleDateString("en-IN", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
+  if (days === 0) return `Today · ${niceDate}`;
+  if (days === 1) return `Tomorrow · ${niceDate}`;
+  if (days === -1) return `Yesterday · ${niceDate}`;
+  if (days > 1 && days <= 14) return `In ${days} days · ${niceDate}`;
+  if (days < -1 && days >= -14) return `${Math.abs(days)} days ago · ${niceDate}`;
+  return niceDate;
 }
 
 function formatDateTime(iso: string) {

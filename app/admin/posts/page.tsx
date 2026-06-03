@@ -23,13 +23,7 @@ import {
   ShieldCheck,
   Trash2,
 } from "lucide-react";
-
-// Admin allowlist — single source of truth for admin gating.
-// Mirrors the admin_users table seeded in sql/posts.sql.
-const ADMIN_EMAILS: string[] = [
-  "info@aiagentforge.in",
-  "info.agentforge@gmail.com",
-];
+import { useAdminPermissions } from "../AdminPermissions";
 
 type StatusFilter = PostStatus | "all";
 type TypeFilter = PostType | "all";
@@ -38,11 +32,15 @@ export default function AdminPostsPage() {
   const router = useRouter();
   const { darkMode } = useTheme();
 
-  const [loadingAuth, setLoadingAuth] = useState(true);
-  const [authEmail, setAuthEmail] = useState<string | null>(null);
-  const isAdmin = authEmail
-    ? ADMIN_EMAILS.map((e) => e.toLowerCase()).includes(authEmail.toLowerCase())
-    : false;
+  // RBAC-driven access — uses admin_roles / admin_users, not a
+  // hard-coded email allowlist.
+  const {
+    loading: loadingAuth,
+    isAdmin,
+    email: authEmail,
+    has,
+  } = useAdminPermissions();
+  const canViewContent = has("content.view");
 
   const [items, setItems] = useState<DbPost[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
@@ -52,27 +50,9 @@ export default function AdminPostsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
 
-  // Auth bootstrap
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!active) return;
-      setAuthEmail(data.session?.user?.email ?? null);
-      setLoadingAuth(false);
-    })();
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => setAuthEmail(session?.user?.email ?? null),
-    );
-    return () => {
-      active = false;
-      listener.subscription.unsubscribe();
-    };
-  }, []);
-
   // Load posts (admin-side; RLS lets admins see drafts too)
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!canViewContent) return;
     setLoadingItems(true);
     (async () => {
       const { data, error } = await supabase
@@ -82,7 +62,7 @@ export default function AdminPostsPage() {
       if (!error && data) setItems(data as DbPost[]);
       setLoadingItems(false);
     })();
-  }, [isAdmin, refreshKey]);
+  }, [canViewContent, refreshKey]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -154,19 +134,19 @@ export default function AdminPostsPage() {
     );
   }
 
-  if (!isAdmin) {
+  if (!isAdmin || !canViewContent) {
     return (
       <main className={`flex min-h-screen items-center justify-center px-6 ${bg}`}>
         <div className={`max-w-md rounded-3xl border p-8 text-center ${card}`}>
           <ShieldCheck className="mx-auto h-10 w-10 text-rose-500" />
           <h1 className="mt-3 text-xl font-black">Access denied</h1>
           <p className={`mt-2 text-sm ${muted}`}>
-            Your account ({authEmail}) is not on the admin allowlist. Add it to{" "}
+            Your role ({authEmail}) does not include the{" "}
             <code className="rounded bg-black/5 px-1 py-0.5 text-xs dark:bg-white/10">
-              ADMIN_EMAILS
+              content.view
             </code>{" "}
-            in <code className="text-xs">app/admin/posts/page.tsx</code> and the{" "}
-            <code className="text-xs">admin_users</code> table.
+            permission. Ask a founder/admin to grant it via{" "}
+            <code className="text-xs">/admin/team</code>.
           </p>
         </div>
       </main>

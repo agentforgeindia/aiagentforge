@@ -38,6 +38,10 @@ type Payment = {
   billing_company: string | null;
   billing_address: string | null;
   billing_gstin: string | null;
+  // Refund fields (added by sql/refunds.sql).
+  refund_amount: number | null;
+  refund_reason: string | null;
+  refunded_at: string | null;
 };
 
 type Profile = {
@@ -73,7 +77,7 @@ export default function InvoicePage() {
         supabase
           .from("payments")
           .select(
-            "id, user_id, plan, amount, credits_added, status, razorpay_order_id, razorpay_payment_id, created_at, billing_name, billing_phone, billing_email, billing_company, billing_address, billing_gstin",
+            "id, user_id, plan, amount, credits_added, status, razorpay_order_id, razorpay_payment_id, created_at, billing_name, billing_phone, billing_email, billing_company, billing_address, billing_gstin, refund_amount, refund_reason, refunded_at",
           )
           .eq("id", paymentId)
           .maybeSingle(),
@@ -339,6 +343,37 @@ export default function InvoicePage() {
                 </tfoot>
               </table>
             </section>
+
+            {/* Refund stamp — shown above the thank-you note when
+                the payment has been wholly or partially refunded. */}
+            {(payment.status === "refunded" ||
+              payment.status === "partially_refunded") && (
+              <section className="mt-6 rounded-2xl border-2 border-rose-300 bg-rose-50 p-4 text-rose-800">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-lg font-black uppercase tracking-[0.16em]">
+                    {payment.status === "refunded"
+                      ? "Refunded"
+                      : "Partially refunded"}
+                  </p>
+                  {payment.refunded_at && (
+                    <p className="text-xs">
+                      On {formatDate(payment.refunded_at)}
+                    </p>
+                  )}
+                </div>
+                {payment.refund_amount !== null && (
+                  <p className="mt-1 text-sm font-bold">
+                    Amount refunded: ₹
+                    {Number(payment.refund_amount).toLocaleString("en-IN")}
+                  </p>
+                )}
+                {payment.refund_reason && (
+                  <p className="mt-1 text-xs italic">
+                    Reason: {payment.refund_reason}
+                  </p>
+                )}
+              </section>
+            )}
 
             {/* Notes */}
             <section className="mt-8 rounded-2xl border border-cyan-200/60 bg-cyan-50/60 p-4 text-xs leading-6 text-black/65">

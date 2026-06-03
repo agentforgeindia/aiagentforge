@@ -30,11 +30,6 @@ import AdminShell, {
 import AddPastPaymentModal from "./AddPastPaymentModal";
 import RefundPaymentModal, { type RefundablePayment } from "./RefundPaymentModal";
 
-const ADMIN_EMAILS: string[] = [
-  "info@aiagentforge.in",
-  "info.agentforge@gmail.com",
-];
-
 type Profile = {
   id: string;
   email: string | null;
@@ -113,11 +108,9 @@ export default function AdminCustomerDetailPage() {
   const params = useParams<{ id: string }>();
   const userId = params?.id;
 
-  const [loadingAuth, setLoadingAuth] = useState(true);
-  const [authEmail, setAuthEmail] = useState<string | null>(null);
-  const isAdmin = authEmail
-    ? ADMIN_EMAILS.map((e) => e.toLowerCase()).includes(authEmail.toLowerCase())
-    : false;
+  // RBAC-driven access via the shared hook (already destructured
+  // further down for `has`). We re-destructure here for the email +
+  // loading flags the page renders.
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -135,7 +128,13 @@ export default function AdminCustomerDetailPage() {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDue, setNewTaskDue] = useState("");
   const [savingTask, setSavingTask] = useState(false);
-  const { has } = useAdminPermissions();
+  const {
+    has,
+    loading: loadingAuth,
+    isAdmin,
+    email: authEmail,
+  } = useAdminPermissions();
+  const canViewCustomers = has("customers.view");
   const canCreateTask = has("tasks.create");
   const canEditTask = has("tasks.edit");
   const canExtendSub = has("subscriptions.extend");
@@ -228,25 +227,11 @@ export default function AdminCustomerDetailPage() {
   const [refundTarget, setRefundTarget] = useState<RefundablePayment | null>(null);
   const canRefund = has("invoices.refund");
 
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!active) return;
-      setAuthEmail(data.session?.user?.email ?? null);
-      setLoadingAuth(false);
-    })();
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_e, s) => setAuthEmail(s?.user?.email ?? null),
-    );
-    return () => {
-      active = false;
-      listener.subscription.unsubscribe();
-    };
-  }, []);
+  // Session / email tracking is owned by useAdminPermissions, so no
+  // duplicate listener here.
 
   useEffect(() => {
-    if (!isAdmin || !userId) return;
+    if (!canViewCustomers || !userId) return;
     setLoading(true);
     (async () => {
       const [{ data: pr }, { data: nt }, { data: py }, { data: ct }, { data: tk }] = await Promise.all([
@@ -311,7 +296,7 @@ export default function AdminCustomerDetailPage() {
 
       setLoading(false);
     })();
-  }, [isAdmin, userId, refreshKey]);
+  }, [canViewCustomers, userId, refreshKey]);
 
   const totalSpent = useMemo(
     () => payments.filter((p) => p.status === "paid").reduce((a, p) => a + Number(p.amount), 0),
@@ -391,12 +376,15 @@ export default function AdminCustomerDetailPage() {
       </main>
     );
   }
-  if (!isAdmin) {
+  if (!authEmail || !isAdmin || !canViewCustomers) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] px-6 dark:bg-[#0b0d12]">
         <div className="max-w-md rounded-lg border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-[#11141a]">
           <ShieldCheck className="mx-auto h-8 w-8 text-rose-500" />
           <h1 className="mt-3 text-base font-bold">Access denied</h1>
+          <p className="mt-1 text-xs text-slate-500">
+            Your role does not include the <code>customers.view</code> permission.
+          </p>
         </div>
       </main>
     );

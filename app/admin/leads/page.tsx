@@ -30,11 +30,6 @@ import AdminShell, {
   adminSecondaryBtnCls,
 } from "../AdminShell";
 
-const ADMIN_EMAILS: string[] = [
-  "info@aiagentforge.in",
-  "info.agentforge@gmail.com",
-];
-
 type LeadRow = {
   id: string;
   name: string;
@@ -72,6 +67,26 @@ const STATUSES = [
   { value: "lost",      label: "Lost" },
 ];
 
+// Coarser pipeline "stages" surfaced as quick-filter pills above
+// the table. Each pill maps to one or more raw statuses so that
+// the sales team can slice by intent without thinking about every
+// granular status name.
+type StageId = "all" | "not_connected" | "connected" | "hot" | "won" | "lost";
+const STAGES: { value: StageId; label: string; statuses: string[] }[] = [
+  { value: "all",           label: "All",           statuses: [] }, // [] = no filter
+  { value: "not_connected", label: "Not connected", statuses: ["new"] },
+  { value: "connected",     label: "Connected",     statuses: ["contacted", "qualified"] },
+  { value: "hot",           label: "Hot",           statuses: ["demo", "trial"] },
+  { value: "won",           label: "Won",           statuses: ["converted"] },
+  { value: "lost",          label: "Lost",          statuses: ["lost"] },
+];
+
+function matchesStage(stage: StageId, leadStatus: string): boolean {
+  const s = STAGES.find((x) => x.value === stage);
+  if (!s || s.statuses.length === 0) return true;
+  return s.statuses.includes(leadStatus);
+}
+
 const STATUS_STYLES: Record<string, string> = {
   new:       "bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300",
   contacted: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
@@ -83,14 +98,16 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function AdminLeadsPage() {
-  const [loadingAuth, setLoadingAuth] = useState(true);
-  const [authEmail, setAuthEmail] = useState<string | null>(null);
-  const isAdmin = authEmail
-    ? ADMIN_EMAILS.map((e) => e.toLowerCase()).includes(authEmail.toLowerCase())
-    : false;
-
-  // Pull permissions so we can hide Delete from sales-tier admins.
-  const { has } = useAdminPermissions();
+  // Single source of truth — RBAC hook checks the DB-driven role +
+  // permission list. No more hard-coded email allowlist (which used
+  // to block every non-founder, including the new sales role).
+  const {
+    loading: loadingAuth,
+    isAdmin,
+    email: authEmail,
+    has,
+  } = useAdminPermissions();
+  const canViewLeads = has("leads.view");
   const canDelete = has("leads.delete");
   const canAddLead = has("leads.add");
 
@@ -100,6 +117,8 @@ export default function AdminLeadsPage() {
 
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  // Quick stage pill (groups statuses into intuitive buckets).
+  const [stageFilter, setStageFilter] = useState<StageId>("all");
   const [search, setSearch] = useState("");
 
   // Top-level view tabs — "Pipeline" (the leads table itself) vs
@@ -176,25 +195,12 @@ export default function AdminLeadsPage() {
   });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!active) return;
-      setAuthEmail(data.session?.user?.email ?? null);
-      setLoadingAuth(false);
-    })();
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_e, s) => setAuthEmail(s?.user?.email ?? null),
-    );
-    return () => {
-      active = false;
-      listener.subscription.unsubscribe();
-    };
-  }, []);
+  // Note: session + email tracking now comes from useAdminPermissions
+  // (it owns the supabase.auth.onAuthStateChange listener for the
+  // entire admin shell), so we don't duplicate that here.
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!canViewLeads) return;
     setLoadingRows(true);
     (async () => {
       const { data, error } = await supabase
@@ -205,11 +211,12 @@ export default function AdminLeadsPage() {
       if (!error && data) setRows(data as LeadRow[]);
       setLoadingRows(false);
     })();
-  }, [isAdmin, refreshKey]);
+  }, [canViewLeads, refreshKey]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
+      if (!matchesStage(stageFilter, r.status)) return false;
       if (sourceFilter !== "all" && r.source !== sourceFilter) return false;
       if (statusFilter !== "all" && r.status !== statusFilter) return false;
       if (q) {
@@ -218,7 +225,31 @@ export default function AdminLeadsPage() {
       }
       return true;
     });
-  }, [rows, sourceFilter, statusFilter, search]);
+  }, [rows, stageFilter, sourceFilter, statusFilter, search]);
+
+  // Per-stage counts shown in the pill badges. Always counts the
+  // base `rows` (not filtered) so the pill always shows the total
+  // for that bucket regardless of current source/search filter.
+  const stageCounts = useMemo(() => {
+    const out: Record<StageId, number> = {
+      all: rows.length,
+      not_connected: 0,
+      connected: 0,
+      hot: 0,
+      won: 0,
+      lost: 0,
+    };
+    for (const r of rows) {
+      for (const s of STAGES) {
+        if (s.value === "all") continue;
+        if (s.statuses.includes(r.status)) {
+          out[s.value]++;
+          break;
+        }
+      }
+    }
+    return out;
+  }, [rows]);
 
   const stats = useMemo(() => {
     const byStatus: Record<string, number> = {};
@@ -282,7 +313,7 @@ export default function AdminLeadsPage() {
 
   // Load Free signups when that tab is activated or refresh fires.
   useEffect(() => {
-    if (!isAdmin || topView !== "signups") return;
+    if (!canViewLeads || topView !== "signups") return;
     setLoadingSignups(true);
     (async () => {
       const { data, error } = await supabase.rpc("free_signups", {
@@ -294,7 +325,7 @@ export default function AdminLeadsPage() {
       }
       setLoadingSignups(false);
     })();
-  }, [isAdmin, topView, refreshKey]);
+  }, [canViewLeads, topView, refreshKey]);
 
   async function convertSignup(s: typeof signupRows[number]) {
     if (!s.email) {
@@ -364,12 +395,15 @@ export default function AdminLeadsPage() {
       </main>
     );
   }
-  if (!authEmail || !isAdmin) {
+  if (!authEmail || !isAdmin || !canViewLeads) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] px-6 dark:bg-[#0b0d12]">
         <div className="max-w-md rounded-lg border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-[#11141a]">
           <ShieldCheck className="mx-auto h-8 w-8 text-rose-500" />
           <h1 className="mt-3 text-base font-bold">Access denied</h1>
+          <p className="mt-1 text-xs text-slate-500">
+            Your role does not include the <code>leads.view</code> permission.
+          </p>
         </div>
       </main>
     );
@@ -635,6 +669,39 @@ export default function AdminLeadsPage() {
               ))}
             </ul>
           )}
+        </div>
+      )}
+
+      {/* Stage filter pills — quick slice by sales-intent bucket */}
+      {topView === "pipeline" && (
+        <div className="mb-3 flex flex-wrap items-center gap-1.5">
+          {STAGES.map((s) => {
+            const active = stageFilter === s.value;
+            const count = stageCounts[s.value];
+            return (
+              <button
+                key={s.value}
+                type="button"
+                onClick={() => setStageFilter(s.value)}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold transition ${
+                  active
+                    ? "border-slate-900 bg-slate-900 text-white dark:border-indigo-500 dark:bg-indigo-600"
+                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-600"
+                }`}
+              >
+                {s.label}
+                <span
+                  className={`min-w-[20px] rounded-full px-1.5 text-[10px] tabular-nums ${
+                    active
+                      ? "bg-white/20"
+                      : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
 

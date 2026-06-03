@@ -21,16 +21,7 @@ import {
   Trash2,
   X as XIcon,
 } from "lucide-react";
-
-/* ────────────────────────────────────────────────────────────────
-   ADMIN EMAILS — only these users can access this page.
-   👉 Replace the placeholder below with your real login email.
-   You can add multiple admins by adding more strings to this array.
-   ──────────────────────────────────────────────────────────────── */
-const ADMIN_EMAILS: string[] = [
-  "info@aiagentforge.in",
-  "info.agentforge@gmail.com", // 👈 REPLACE THIS with your admin email
-];
+import { useAdminPermissions } from "../AdminPermissions";
 
 type AgentType = "textile" | "jewellery" | "productography";
 type Status = "pending" | "approved" | "rejected";
@@ -66,11 +57,14 @@ export default function AdminTestimonialsPage() {
   const router = useRouter();
   const { darkMode } = useTheme();
 
-  const [loadingAuth, setLoadingAuth] = useState(true);
-  const [authEmail, setAuthEmail] = useState<string | null>(null);
-  const isAdmin = authEmail
-    ? ADMIN_EMAILS.map((e) => e.toLowerCase()).includes(authEmail.toLowerCase())
-    : false;
+  // RBAC: roles + permissions from admin_users / admin_roles.
+  const {
+    loading: loadingAuth,
+    isAdmin,
+    email: authEmail,
+    has,
+  } = useAdminPermissions();
+  const canManage = has("testimonials.manage");
 
   const [items, setItems] = useState<AdminTestimonial[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
@@ -82,26 +76,11 @@ export default function AdminTestimonialsPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
-  /* ─────────────── Auth check ─────────────── */
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!active) return;
-      const email = session?.user?.email ?? null;
-      setAuthEmail(email);
-      setLoadingAuth(false);
-    })();
-    return () => {
-      active = false;
-    };
-  }, []);
+  // Session + email tracking owned by useAdminPermissions.
 
   /* ─────────────── Fetch testimonials ─────────────── */
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!canManage) return;
     let active = true;
     setLoadingItems(true);
     (async () => {
@@ -122,7 +101,7 @@ export default function AdminTestimonialsPage() {
     return () => {
       active = false;
     };
-  }, [isAdmin, refreshKey]);
+  }, [canManage, refreshKey]);
 
   /* ─────────────── Filters ─────────────── */
   const filtered = useMemo(() => {
@@ -250,18 +229,21 @@ export default function AdminTestimonialsPage() {
     );
   }
 
-  if (!isAdmin) {
+  if (!isAdmin || !canManage) {
     return (
       <div className={`flex min-h-screen items-center justify-center px-4 ${bg}`}>
         <div className={`max-w-md rounded-[1.75rem] border p-8 text-center shadow-xl ${card}`}>
           <ShieldCheck className="mx-auto mb-3 h-10 w-10 text-rose-500" />
           <h1 className="text-2xl font-black">Access denied</h1>
           <p className={`mt-2 text-sm ${muted}`}>
-            <span className="font-bold">{authEmail}</span> is not in the admin allow-list.
+            <span className="font-bold">{authEmail}</span> ka role{" "}
+            <code className="rounded bg-black/5 px-1 py-0.5 text-xs dark:bg-white/10">
+              testimonials.manage
+            </code>{" "}
+            permission allow nahi karta.
           </p>
           <p className={`mt-2 text-[11px] ${muted}`}>
-            To grant access, add your email to <code>ADMIN_EMAILS</code> at the top of{" "}
-            <code>app/admin/testimonials/page.tsx</code>.
+            Founder/admin se request karo <code>/admin/team</code> mein role update karne ke liye.
           </p>
           <Link
             href="/"

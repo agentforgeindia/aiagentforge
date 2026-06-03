@@ -144,10 +144,28 @@ export default function LeadsCsvImportModal({
     const { headers, rows } = parsed;
     const detail = campaignTag.trim() || `csv:${filename}`;
 
-    // Build payloads with auto-mapping.
+    // Meta's lead export CSV prefixes some values with single-char
+    // tags: "p:+919876543210" for phone, "l:1787710298875402" for
+    // lead_id, etc. Strip these before storing so the data is clean.
+    const stripMetaPrefix = (v: string | null): string | null => {
+      if (!v) return null;
+      const trimmed = v.trim();
+      // Only strip if the second char is ":" and the first is one of
+      // the known Meta tags — avoids eating real values like "f:abc".
+      if (
+        trimmed.length > 2 &&
+        trimmed[1] === ":" &&
+        /^[plefca]$/i.test(trimmed[0])
+      ) {
+        return trimmed.slice(2).trim();
+      }
+      return trimmed;
+    };
+
+    // Build payloads with auto-mapping + prefix cleanup.
     const payloads = rows
       .map((r) => {
-        const name =
+        const name = stripMetaPrefix(
           pickField(r, headers, ["full_name", "name"]) ||
           [
             pickField(r, headers, ["first_name"]),
@@ -155,23 +173,32 @@ export default function LeadsCsvImportModal({
           ]
             .filter(Boolean)
             .join(" ") ||
-          "(no name)";
-        const phone =
+          "(no name)"
+        )!;
+        const phone = stripMetaPrefix(
           pickField(r, headers, [
             "phone_number", "phone", "mobile", "mobile_number", "contact_number",
-          ]) || null;
-        const email = pickField(r, headers, ["email", "email_address"]) || null;
-        const business =
+          ]) || null,
+        );
+        const email = stripMetaPrefix(
+          pickField(r, headers, ["email", "email_address"]) || null,
+        );
+        const business = stripMetaPrefix(
           pickField(r, headers, [
             "company_name", "business", "business_name", "company",
-          ]) || null;
-        const city = pickField(r, headers, ["city", "town", "location"]) || null;
-        const notes =
-          pickField(r, headers, ["notes", "message", "comments"]) || null;
-        const externalId =
+          ]) || null,
+        );
+        const city = stripMetaPrefix(
+          pickField(r, headers, ["city", "town", "location"]) || null,
+        );
+        const notes = stripMetaPrefix(
+          pickField(r, headers, ["notes", "message", "comments"]) || null,
+        );
+        const externalId = stripMetaPrefix(
           pickField(r, headers, [
             "lead_id", "external_id", "id", "leadgen_id",
-          ]) || null;
+          ]) || null,
+        );
 
         // Skip rows with nothing useful.
         if (!name && !phone && !email) return null;
