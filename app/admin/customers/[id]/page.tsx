@@ -29,6 +29,7 @@ import AdminShell, {
 } from "../../AdminShell";
 import AddPastPaymentModal from "./AddPastPaymentModal";
 import RefundPaymentModal, { type RefundablePayment } from "./RefundPaymentModal";
+import QuickContactButtons from "../../QuickContactButtons";
 
 type Profile = {
   id: string;
@@ -433,6 +434,14 @@ export default function AdminCustomerDetailPage() {
                 value={profile.created_at ? formatDate(profile.created_at) : "—"}
               />
             </dl>
+            <div className="mt-3">
+              <QuickContactButtons
+                phone={null /* customers table has no phone column — wire later when billing_phone is denormalised */}
+                email={profile.email}
+                emailSubject={`AgentForge — ${profile.full_name?.trim() || ""}`.trim()}
+                emailBody={`Hi ${profile.full_name?.split(" ")[0] ?? ""},\n\n`}
+              />
+            </div>
           </section>
 
           {/* Lead linkage — Promote to lead button OR View linked lead */}

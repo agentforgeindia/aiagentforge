@@ -124,6 +124,10 @@ export default function AdminLeadsPage() {
   // Top-level view tabs — "Pipeline" (the leads table itself) vs
   // "Free signups" (virtual leads pulled from profiles).
   const [topView, setTopView] = useState<"pipeline" | "signups">("pipeline");
+
+  // Bulk-action multi-select state. Each entry is a lead id.
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkStatus, setBulkStatus] = useState("");
   const [signupRows, setSignupRows] = useState<{
     id: string;
     email: string | null;
@@ -365,6 +369,69 @@ export default function AdminLeadsPage() {
       p_target_id: s.id,
       p_details: { source: "convert_free_signup" },
     });
+    setRefreshKey((k) => k + 1);
+  }
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  function selectAllFiltered() {
+    setSelected(new Set(filtered.map((r) => r.id)));
+  }
+  function clearSelection() {
+    setSelected(new Set());
+  }
+
+  async function bulkSetStatus() {
+    if (!bulkStatus || selected.size === 0) return;
+    const ids = Array.from(selected);
+    if (!confirm(`Update ${ids.length} lead(s) to "${bulkStatus}"?`)) return;
+    const { error } = await supabase
+      .from("leads")
+      .update({ status: bulkStatus })
+      .in("id", ids);
+    if (error) {
+      alert(`Failed: ${error.message}`);
+      return;
+    }
+    await supabase.rpc("log_admin_action", {
+      p_action: "leads.bulk_status",
+      p_target_type: "leads",
+      p_target_id: null,
+      p_details: { count: ids.length, new_status: bulkStatus },
+    });
+    clearSelection();
+    setBulkStatus("");
+    setRefreshKey((k) => k + 1);
+  }
+
+  async function bulkDelete() {
+    if (!canDelete) return;
+    if (selected.size === 0) return;
+    const ids = Array.from(selected);
+    if (
+      !confirm(
+        `Permanently delete ${ids.length} lead(s) and their activity log? There is no undo.`,
+      )
+    )
+      return;
+    const { error } = await supabase.from("leads").delete().in("id", ids);
+    if (error) {
+      alert(`Failed: ${error.message}`);
+      return;
+    }
+    await supabase.rpc("log_admin_action", {
+      p_action: "leads.bulk_delete",
+      p_target_type: "leads",
+      p_target_id: null,
+      p_details: { count: ids.length },
+    });
+    clearSelection();
     setRefreshKey((k) => k + 1);
   }
 
@@ -741,6 +808,50 @@ export default function AdminLeadsPage() {
       </div>
       )}
 
+      {/* Bulk action bar — appears only when rows are selected */}
+      {topView === "pipeline" && selected.size > 0 && (
+        <div className={`${adminCardCls} mt-4 flex flex-wrap items-center gap-2 p-3`}>
+          <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+            {selected.size} selected
+          </span>
+          <select
+            value={bulkStatus}
+            onChange={(e) => setBulkStatus(e.target.value)}
+            className={`${adminInputCls} sm:max-w-[180px]`}
+          >
+            <option value="">Set status to…</option>
+            {STATUSES.map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={bulkSetStatus}
+            disabled={!bulkStatus}
+            className={adminPrimaryBtnCls}
+          >
+            Apply
+          </button>
+          {canDelete && (
+            <button
+              type="button"
+              onClick={bulkDelete}
+              className="inline-flex items-center gap-1.5 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-bold text-rose-700 transition hover:bg-rose-100 dark:border-rose-700/40 dark:bg-rose-500/15 dark:text-rose-300 dark:hover:bg-rose-500/25"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={clearSelection}
+            className={adminSecondaryBtnCls}
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
       {/* List — only shown on the Pipeline tab */}
       {topView === "pipeline" && (
       <div className={`${adminCardCls} mt-4`}>
@@ -754,11 +865,37 @@ export default function AdminLeadsPage() {
           </p>
         ) : (
           <ul className="divide-y divide-slate-200 dark:divide-slate-800">
+            {filtered.length > 0 && (
+              <li className="border-b border-slate-200 bg-slate-50 px-4 py-2 dark:border-slate-800 dark:bg-slate-900/40">
+                <label className="inline-flex items-center gap-2 text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                  <input
+                    type="checkbox"
+                    checked={
+                      selected.size > 0 &&
+                      filtered.every((r) => selected.has(r.id))
+                    }
+                    onChange={(e) => {
+                      if (e.target.checked) selectAllFiltered();
+                      else clearSelection();
+                    }}
+                    className="h-3.5 w-3.5"
+                  />
+                  Select all {filtered.length} in view
+                </label>
+              </li>
+            )}
             {filtered.map((r) => (
               <li
                 key={r.id}
                 className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4"
               >
+                <input
+                  type="checkbox"
+                  checked={selected.has(r.id)}
+                  onChange={() => toggleSelect(r.id)}
+                  className="mt-1 h-3.5 w-3.5 shrink-0 sm:mt-0"
+                  onClick={(e) => e.stopPropagation()}
+                />
                 <Link
                   href={`/admin/leads/${r.id}`}
                   className="min-w-0 flex-1 group"

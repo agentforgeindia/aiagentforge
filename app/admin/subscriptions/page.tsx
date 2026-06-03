@@ -17,6 +17,7 @@ import {
   CalendarPlus,
   CheckSquare,
   ChevronRight,
+  Download,
   RefreshCw,
   Search,
   ShieldCheck,
@@ -28,6 +29,7 @@ import AdminShell, {
   adminSecondaryBtnCls,
 } from "../AdminShell";
 import { useAdminPermissions } from "../AdminPermissions";
+import { buildCsv, downloadCsv } from "@/lib/csv";
 
 type Sub = {
   id: string;
@@ -179,14 +181,37 @@ export default function AdminSubscriptionsPage() {
       subtitle={`${stats.active} active · ${stats.expiring} expiring this week · ${stats.expired} expired`}
       email={email}
       actions={
-        <button
-          type="button"
-          onClick={() => setRefreshKey((k) => k + 1)}
-          className={adminSecondaryBtnCls}
-        >
-          <RefreshCw className="h-3.5 w-3.5" />
-          Refresh
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={() => setRefreshKey((k) => k + 1)}
+            className={adminSecondaryBtnCls}
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Refresh
+          </button>
+          <button
+            type="button"
+            disabled={filtered.length === 0}
+            onClick={() => {
+              const headers = [
+                "email","full_name","plan","credits",
+                "plan_purchased_at","plan_expires_at","status",
+              ];
+              const csvRows = filtered.map((r) => [
+                r.email, r.full_name, r.plan, r.credits,
+                r.plan_purchased_at, r.plan_expires_at, bucket(r),
+              ]);
+              const ts = new Date().toISOString().slice(0, 10);
+              downloadCsv(`agentforge-subscriptions-${ts}.csv`, buildCsv(headers, csvRows));
+            }}
+            className={adminSecondaryBtnCls}
+            title="Download the filtered subscriptions as a CSV"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Export
+          </button>
+        </>
       }
     >
       {/* View tabs */}

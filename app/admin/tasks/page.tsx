@@ -17,6 +17,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   CheckCircle2,
+  Download,
   Plus,
   RefreshCw,
   Search,
@@ -32,6 +33,7 @@ import AdminShell, {
   adminSecondaryBtnCls,
 } from "../AdminShell";
 import { useAdminPermissions } from "../AdminPermissions";
+import { buildCsv, downloadCsv } from "@/lib/csv";
 
 type Task = {
   id: string;
@@ -267,6 +269,27 @@ export default function AdminTasksPage() {
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Refresh
+          </button>
+          <button
+            type="button"
+            disabled={filtered.length === 0}
+            onClick={() => {
+              const headers = [
+                "created_at","title","type","priority","status",
+                "assigned_to","due_at","completed_at","notes",
+              ];
+              const csvRows = filtered.map((r) => [
+                r.created_at, r.title, r.type, r.priority, r.status,
+                r.assigned_to_email, r.due_at, r.completed_at, r.description,
+              ]);
+              const ts = new Date().toISOString().slice(0, 10);
+              downloadCsv(`agentforge-tasks-${ts}.csv`, buildCsv(headers, csvRows));
+            }}
+            className={adminSecondaryBtnCls}
+            title="Download the filtered tasks as a CSV"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Export
           </button>
           {canCreate && (
             <button

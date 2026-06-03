@@ -17,6 +17,7 @@ import AdminShell, {
   adminSecondaryBtnCls,
 } from "../AdminShell";
 import { useAdminPermissions } from "../AdminPermissions";
+import { buildCsv, downloadCsv } from "@/lib/csv";
 
 type Row = {
   id: string;
@@ -150,14 +151,37 @@ export default function AdminInvoicesPage() {
       }`}
       email={email}
       actions={
-        <button
-          type="button"
-          onClick={() => setRefreshKey((k) => k + 1)}
-          className={adminSecondaryBtnCls}
-        >
-          <RefreshCw className="h-3.5 w-3.5" />
-          Refresh
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={() => setRefreshKey((k) => k + 1)}
+            className={adminSecondaryBtnCls}
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Refresh
+          </button>
+          <button
+            type="button"
+            disabled={filtered.length === 0}
+            onClick={() => {
+              const headers = [
+                "date","plan","amount","credits_added","status",
+                "buyer_name","buyer_email","buyer_phone","razorpay_payment_id",
+              ];
+              const csvRows = filtered.map((r) => [
+                r.created_at, r.plan, r.amount, r.credits_added, r.status,
+                r.billing_name, r.billing_email, r.billing_phone, r.razorpay_payment_id,
+              ]);
+              const ts = new Date().toISOString().slice(0, 10);
+              downloadCsv(`agentforge-invoices-${ts}.csv`, buildCsv(headers, csvRows));
+            }}
+            className={adminSecondaryBtnCls}
+            title="Download the filtered invoices as a CSV"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Export
+          </button>
+        </>
       }
     >
       {/* Filters */}

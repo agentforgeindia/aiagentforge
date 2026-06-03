@@ -9,8 +9,10 @@ import {
   CalendarClock,
   CheckSquare,
   ClipboardList,
+  Coins,
   FileText,
   LayoutDashboard,
+  Mail,
   MessageSquare,
   Receipt,
   ShieldCheck,
@@ -60,6 +62,13 @@ const TILES: Tile[] = [
     perm: "tasks.view",
   },
   {
+    href: "/admin/email",
+    label: "Email",
+    description: "Templates, automation queue, test sends.",
+    icon: <Mail className="h-4 w-4" />,
+    perm: "email.view",
+  },
+  {
     href: "/admin/invoices",
     label: "Invoices",
     description: "Every paid order, search and download bills.",
@@ -72,6 +81,13 @@ const TILES: Tile[] = [
     description: "Plan validity, renewals due, expired accounts.",
     icon: <CalendarClock className="h-4 w-4" />,
     perm: "subscriptions.view",
+  },
+  {
+    href: "/admin/ai-costs",
+    label: "AI Costs",
+    description: "API spend per agent, top consumers, margin analysis.",
+    icon: <Coins className="h-4 w-4" />,
+    perm: "ai_costs.view",
   },
   {
     href: "/admin/team",

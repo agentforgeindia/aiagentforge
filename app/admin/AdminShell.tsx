@@ -16,9 +16,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ChevronDown, ChevronRight, LogOut, Plus } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, LogOut, Plus, Search } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAdminPermissions } from "./AdminPermissions";
+import NotificationsBell from "./NotificationsBell";
+import CommandPalette from "./CommandPalette";
 
 export type Crumb = { label: string; href?: string };
 
@@ -79,6 +81,28 @@ export default function AdminShell({
           </Link>
 
           <div className="flex items-center gap-2">
+            {/* Search hint — clicking dispatches Cmd+K. */}
+            <button
+              type="button"
+              onClick={() => {
+                const ev = new KeyboardEvent("keydown", {
+                  key: "k",
+                  ctrlKey: !navigator.platform.toLowerCase().includes("mac"),
+                  metaKey: navigator.platform.toLowerCase().includes("mac"),
+                  bubbles: true,
+                });
+                document.dispatchEvent(ev);
+              }}
+              className="hidden items-center gap-2 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-500 transition hover:border-slate-300 hover:text-slate-700 sm:inline-flex dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+              title="Open command palette"
+            >
+              <Search className="h-3.5 w-3.5" />
+              Search
+              <kbd className="ml-1 rounded border border-slate-300 bg-slate-100 px-1 py-0.5 text-[10px] font-bold text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                ⌘K
+              </kbd>
+            </button>
+
             {has("leads.add") && (
               <Link
                 href="/admin/leads?new=1"
@@ -88,6 +112,7 @@ export default function AdminShell({
                 <span className="hidden sm:inline">New lead</span>
               </Link>
             )}
+            {effectiveEmail && <NotificationsBell />}
             {effectiveEmail && (
               <UserMenu email={effectiveEmail} role={role} />
             )}
@@ -158,6 +183,9 @@ export default function AdminShell({
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
         {children}
       </div>
+
+      {/* Global Cmd+K palette — single instance, listens at document level. */}
+      <CommandPalette />
     </main>
   );
 }

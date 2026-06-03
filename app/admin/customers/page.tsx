@@ -7,13 +7,14 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { ChevronRight, RefreshCw, Search, ShieldCheck } from "lucide-react";
+import { ChevronRight, Download, RefreshCw, Search, ShieldCheck } from "lucide-react";
 import AdminShell, {
   adminCardCls,
   adminInputCls,
   adminMutedCls,
   adminSecondaryBtnCls,
 } from "../AdminShell";
+import { buildCsv, downloadCsv } from "@/lib/csv";
 import { useAdminPermissions } from "../AdminPermissions";
 
 type CustomerRow = {
@@ -118,14 +119,37 @@ export default function AdminCustomersPage() {
       subtitle={`${stats.total} total · ${stats.paying} on a paid plan`}
       email={authEmail}
       actions={
-        <button
-          type="button"
-          onClick={() => setRefreshKey((k) => k + 1)}
-          className={adminSecondaryBtnCls}
-        >
-          <RefreshCw className="h-3.5 w-3.5" />
-          Refresh
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={() => setRefreshKey((k) => k + 1)}
+            className={adminSecondaryBtnCls}
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Refresh
+          </button>
+          <button
+            type="button"
+            disabled={filtered.length === 0}
+            onClick={() => {
+              const headers = [
+                "joined_at","email","full_name","plan","credits",
+                "health_status","health_score",
+              ];
+              const csvRows = filtered.map((r) => [
+                r.created_at, r.email, r.full_name, r.plan, r.credits,
+                r.health_status, r.health_score,
+              ]);
+              const ts = new Date().toISOString().slice(0, 10);
+              downloadCsv(`agentforge-customers-${ts}.csv`, buildCsv(headers, csvRows));
+            }}
+            className={adminSecondaryBtnCls}
+            title="Download the filtered customers as a CSV"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Export
+          </button>
+        </>
       }
     >
       {/* Filters */}
