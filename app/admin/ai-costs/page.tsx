@@ -108,14 +108,14 @@ export default function AdminAiCostsPage() {
         }),
     );
     promises.push(
-      supabase
-        .from("ai_cost_settings")
-        .update({
-          usd_to_inr_rate: Number(usdRate),
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", 1),
-    );
+  supabase
+    .from("ai_cost_settings")
+    .update({
+      usd_to_inr_rate: Number(usdRate),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", 1) as any,
+);
     const results = await Promise.all(promises);
     const err = results.find((r) => r.error);
     setSavingCatalogue(false);
