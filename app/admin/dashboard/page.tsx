@@ -18,15 +18,20 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   AlertTriangle,
+  Bot,
   CalendarClock,
   CreditCard,
+  DollarSign,
   Flame,
+  Gem,
   ListChecks,
   RefreshCw,
   ShieldCheck,
+  Ticket,
   TrendingUp,
   UserPlus,
   Users,
+  Zap,
 } from "lucide-react";
 import AdminShell, {
   adminCardCls,
@@ -58,6 +63,9 @@ type Metrics = {
     overdue_tasks: number;
   };
   credits: { used_today: number; used_week: number; used_month: number };
+  ai: { gens_today: number; gens_month: number; failed_today: number; queued_now: number };
+  finance: { revenue_month: number; expenses_month: number; net_profit_month: number };
+  support: { open_tickets: number; urgent_tickets: number };
   plans: { plan: string; count: number }[];
   lead_sources: { source: string; count: number }[];
   daily_revenue: { d: string; amount: number }[];
@@ -250,6 +258,26 @@ export default function AdminDashboardPage() {
             </Group>
           </section>
 
+          {/* AI + Finance + Support row */}
+          <section className="grid gap-3 lg:grid-cols-3">
+            <Group title="AI Operations" href="/admin/ai-operations">
+              <Line label="Generations today" value={data.ai?.gens_today ?? 0} tone="indigo" icon={<Zap className="h-3 w-3" />} />
+              <Line label="This month"        value={data.ai?.gens_month ?? 0} />
+              <Line label="Failed today"      value={data.ai?.failed_today ?? 0} tone={( data.ai?.failed_today ?? 0) > 0 ? "rose" : undefined} />
+              <Line label="Queue"             value={data.ai?.queued_now ?? 0}   tone={(data.ai?.queued_now ?? 0) > 5 ? "amber" : undefined} />
+            </Group>
+            <Group title="Finance" href="/admin/finance">
+              <Line label="Revenue month"  value={data.finance?.revenue_month ?? 0}   tone="emerald" icon={<DollarSign className="h-3 w-3" />} format="inr" />
+              <Line label="Expenses month" value={data.finance?.expenses_month ?? 0}  tone="rose"    format="inr" />
+              <Line label="Net profit"     value={data.finance?.net_profit_month ?? 0} tone={(data.finance?.net_profit_month ?? 0) >= 0 ? "emerald" : "rose"} format="inr" />
+            </Group>
+            <Group title="Support" href="/admin/support-center">
+              <Line label="Open tickets"   value={data.support?.open_tickets ?? 0}  tone={(data.support?.open_tickets ?? 0) > 0 ? "amber" : undefined} icon={<Ticket className="h-3 w-3" />} />
+              <Line label="Urgent"         value={data.support?.urgent_tickets ?? 0} tone={(data.support?.urgent_tickets ?? 0) > 0 ? "rose" : undefined} />
+              <Line label="Credits used today" value={data.credits.used_today} icon={<Gem className="h-3 w-3" />} />
+            </Group>
+          </section>
+
           {/* Customer health distribution */}
           {data.health && data.health.length > 0 && (
             <section className={`${adminCardCls} p-4`}>
@@ -408,11 +436,13 @@ function Line({
   value,
   icon,
   tone,
+  format,
 }: {
   label: string;
   value: number;
   icon?: React.ReactNode;
   tone?: "emerald" | "rose" | "amber" | "sky" | "indigo";
+  format?: "inr";
 }) {
   const t =
     tone === "emerald" ? "text-emerald-600 dark:text-emerald-300" :
@@ -421,6 +451,9 @@ function Line({
     tone === "sky"     ? "text-sky-600 dark:text-sky-300" :
     tone === "indigo"  ? "text-indigo-600 dark:text-indigo-300" :
                          "text-slate-700 dark:text-slate-200";
+  const display = format === "inr"
+    ? `₹${Math.abs(value).toLocaleString("en-IN")}`
+    : value.toLocaleString("en-IN");
   return (
     <li className="flex items-center justify-between gap-3">
       <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
@@ -428,7 +461,7 @@ function Line({
         {label}
       </span>
       <span className={`tabular-nums font-bold ${t}`}>
-        {value.toLocaleString("en-IN")}
+        {display}
       </span>
     </li>
   );
