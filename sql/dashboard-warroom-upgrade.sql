@@ -91,7 +91,7 @@ begin
     from public.leads where status in ('qualified','demo','trial');
 
   select count(*) into v_open_tasks    from public.tasks where status not in ('done','cancelled');
-  select count(*) into v_overdue_tasks from public.tasks where status not in ('done','cancelled') and due_date < now();
+  select count(*) into v_overdue_tasks from public.tasks where status not in ('done','cancelled') and due_at < now();
 
   begin
     if p_actor_email is not null then
