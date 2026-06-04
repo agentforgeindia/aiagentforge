@@ -6,6 +6,8 @@
 
 import Link from "next/link";
 import {
+  BookOpen,
+  Bot,
   CalendarClock,
   CheckSquare,
   ClipboardList,
@@ -13,10 +15,12 @@ import {
   FileText,
   Gem,
   LayoutDashboard,
+  Link2,
   Mail,
   Megaphone,
   MessageSquare,
   Receipt,
+  Settings,
   ShieldCheck,
   ShieldQuestion,
   Ticket,
@@ -38,125 +42,35 @@ type Tile = {
 };
 
 const TILES: Tile[] = [
-  {
-    href: "/admin/dashboard",
-    label: "War Room",
-    description: "Today's revenue, signups, pipeline, alerts.",
-    icon: <LayoutDashboard className="h-4 w-4" />,
-    perm: "dashboard.view",
-  },
-  {
-    href: "/admin/customers",
-    label: "Customers",
-    description: "Signed-up users, plans, balances, notes.",
-    icon: <Users className="h-4 w-4" />,
-    perm: "customers.view",
-  },
-  {
-    href: "/admin/leads",
-    label: "Leads",
-    description: "Inbound prospects from ads and outreach.",
-    icon: <UserPlus className="h-4 w-4" />,
-    perm: "leads.view",
-  },
-  {
-    href: "/admin/tasks",
-    label: "Tasks",
-    description: "Follow-ups, demos, payment reminders.",
-    icon: <CheckSquare className="h-4 w-4" />,
-    perm: "tasks.view",
-  },
-  {
-    href: "/admin/email",
-    label: "Email",
-    description: "Templates, automation queue, test sends.",
-    icon: <Mail className="h-4 w-4" />,
-    perm: "email.view",
-  },
-  {
-    href: "/admin/invoices",
-    label: "Invoices",
-    description: "Every paid order, search and download bills.",
-    icon: <Receipt className="h-4 w-4" />,
-    perm: "invoices.view_all",
-  },
-  {
-    href: "/admin/subscriptions",
-    label: "Subscriptions",
-    description: "Plan validity, renewals due, expired accounts.",
-    icon: <CalendarClock className="h-4 w-4" />,
-    perm: "subscriptions.view",
-  },
-  {
-    href: "/admin/ai-costs",
-    label: "AI Costs",
-    description: "API spend per agent, top consumers, margin analysis.",
-    icon: <Coins className="h-4 w-4" />,
-    perm: "ai_costs.view",
-  },
-  {
-    href: "/admin/team",
-    label: "Team",
-    description: "Manage admins and roles.",
-    icon: <ShieldQuestion className="h-4 w-4" />,
-    perm: "team.view",
-  },
-  {
-    href: "/admin/posts",
-    label: "Content",
-    description: "Blog, news and product updates.",
-    icon: <FileText className="h-4 w-4" />,
-    perm: "content.view",
-  },
-  {
-    href: "/admin/testimonials",
-    label: "Testimonials",
-    description: "Customer reviews on the homepage.",
-    icon: <MessageSquare className="h-4 w-4" />,
-    perm: "testimonials.manage",
-  },
-  {
-    href: "/admin/support-center",
-    label: "Support",
-    description: "Customer tickets — billing, generation, refunds.",
-    icon: <Ticket className="h-4 w-4" />,
-    perm: "support.view",
-  },
-  {
-    href: "/admin/marketing",
-    label: "Marketing",
-    description: "Meta leads, Google leads, campaign performance, email stats.",
-    icon: <Megaphone className="h-4 w-4" />,
-    perm: "marketing.view",
-  },
-  {
-    href: "/admin/ai-operations",
-    label: "AI Operations",
-    description: "Generations, failures, credits consumed, agent performance.",
-    icon: <Zap className="h-4 w-4" />,
-    perm: "ai_ops.view",
-  },
-  {
-    href: "/admin/credits-center",
-    label: "Credits",
-    description: "Balances, purchased, consumed, refunds, manual adjustments.",
-    icon: <Gem className="h-4 w-4" />,
-    perm: "credits.view",
-  },
-  {
-    href: "/admin/finance",
-    label: "Finance",
-    description: "Revenue, expenses, hosting, ads spend, net profit.",
-    icon: <Wallet className="h-4 w-4" />,
-    perm: "finance.view",
-  },
-  {
-    href: "/admin/audit",
-    label: "Audit log",
-    description: "Every sensitive action — refunds, role changes, manual edits.",
-    icon: <ClipboardList className="h-4 w-4" />,
-    perm: "audit.view",
-  },
+  // ── CRM ─────────────────────────────────────────────────────
+  { href: "/admin/dashboard",      label: "War Room",       description: "Revenue, signups, pipeline, alerts — all at a glance.",   icon: <LayoutDashboard className="h-4 w-4" />, perm: "dashboard.view" },
+  { href: "/admin/customers",      label: "Customers",      description: "Signed-up users, plans, balances, notes.",                icon: <Users className="h-4 w-4" />,          perm: "customers.view" },
+  { href: "/admin/leads",          label: "Leads",          description: "Inbound prospects from ads and outreach.",                icon: <UserPlus className="h-4 w-4" />,        perm: "leads.view" },
+  { href: "/admin/tasks",          label: "Tasks",          description: "Follow-ups, demos, payment reminders.",                   icon: <CheckSquare className="h-4 w-4" />,     perm: "tasks.view" },
+  // ── Marketing ────────────────────────────────────────────────
+  { href: "/admin/email",          label: "Email",          description: "Templates, automation queue, test sends.",                icon: <Mail className="h-4 w-4" />,            perm: "email.view" },
+  { href: "/admin/marketing",      label: "Marketing",      description: "Meta leads, Google leads, campaign performance.",        icon: <Megaphone className="h-4 w-4" />,       perm: "marketing.view" },
+  // ── Finance ──────────────────────────────────────────────────
+  { href: "/admin/invoices",       label: "Invoices",       description: "Every paid order, search and download bills.",           icon: <Receipt className="h-4 w-4" />,         perm: "invoices.view_all" },
+  { href: "/admin/subscriptions",  label: "Subscriptions",  description: "Plan validity, renewals due, expired accounts.",         icon: <CalendarClock className="h-4 w-4" />,   perm: "subscriptions.view" },
+  { href: "/admin/credits-center", label: "Credits",        description: "Balances, purchased, consumed, manual adjustments.",    icon: <Gem className="h-4 w-4" />,             perm: "credits.view" },
+  { href: "/admin/finance",        label: "Finance",        description: "Revenue, expenses, hosting, ads spend, net profit.",     icon: <Wallet className="h-4 w-4" />,          perm: "finance.view" },
+  // ── AI ───────────────────────────────────────────────────────
+  { href: "/admin/agents",         label: "Agents",         description: "Enable/disable AI agents, set credits, prompt version.", icon: <Bot className="h-4 w-4" />,             perm: "agents.view" },
+  { href: "/admin/ai-operations",  label: "AI Operations",  description: "Generations, failures, credits consumed, performance.",  icon: <Zap className="h-4 w-4" />,             perm: "ai_ops.view" },
+  { href: "/admin/ai-costs",       label: "AI Costs",       description: "API spend per agent, top consumers, margin analysis.",   icon: <Coins className="h-4 w-4" />,           perm: "ai_costs.view" },
+  // ── Support ──────────────────────────────────────────────────
+  { href: "/admin/support-center", label: "Support",        description: "Customer tickets — billing, generation, refunds.",       icon: <Ticket className="h-4 w-4" />,          perm: "support.view" },
+  // ── Team ─────────────────────────────────────────────────────
+  { href: "/admin/team",           label: "Team",           description: "Manage admins and roles.",                               icon: <ShieldQuestion className="h-4 w-4" />,  perm: "team.view" },
+  { href: "/admin/knowledge-base", label: "Knowledge Base", description: "SOPs, sales scripts, support docs, training material.", icon: <BookOpen className="h-4 w-4" />,        perm: "kb.view" },
+  // ── Content ──────────────────────────────────────────────────
+  { href: "/admin/posts",          label: "Content",        description: "Blog, news and product updates.",                        icon: <FileText className="h-4 w-4" />,        perm: "content.view" },
+  { href: "/admin/testimonials",   label: "Testimonials",   description: "Customer reviews on the homepage.",                     icon: <MessageSquare className="h-4 w-4" />,   perm: "testimonials.manage" },
+  // ── System ───────────────────────────────────────────────────
+  { href: "/admin/integrations",   label: "Integrations",   description: "Connection status — Meta, Google, Razorpay, FAL, n8n.", icon: <Link2 className="h-4 w-4" />,           perm: "settings.view" },
+  { href: "/admin/settings",       label: "Settings",       description: "Company info, plans, credits, notification config.",    icon: <Settings className="h-4 w-4" />,        perm: "settings.view" },
+  { href: "/admin/audit",          label: "Audit Log",      description: "Every sensitive action — refunds, role changes, edits.",icon: <ClipboardList className="h-4 w-4" />,  perm: "audit.view" },
 ];
 
 export default function AdminHomePage() {
