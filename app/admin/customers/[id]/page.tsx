@@ -756,6 +756,9 @@ export default function AdminCustomerDetailPage() {
             )}
           </section>
 
+          {/* Customer Timeline */}
+          <CustomerTimeline userId={userId} />
+
           {/* Credit history — last 10 */}
           <section className={`${adminCardCls} p-4`}>
             <SectionTitle>Recent credit movement</SectionTitle>
@@ -813,6 +816,94 @@ export default function AdminCustomerDetailPage() {
         payment={refundTarget}
       />
     </AdminShell>
+  );
+}
+
+// ────────────────────────────────────────────────────────────
+// Customer Timeline Component
+// ────────────────────────────────────────────────────────────
+
+type TimelineEvent = {
+  ts: string;
+  type: string;
+  icon: string;
+  title: string;
+  body: string;
+};
+
+const TIMELINE_ICONS: Record<string, string> = {
+  signup: "👤", payment: "💰", credit: "💎",
+  support: "🎫", generation: "🤖", ai: "🤖",
+};
+
+const TIMELINE_COLORS: Record<string, string> = {
+  signup:     "border-blue-400 bg-blue-50 dark:bg-blue-500/10",
+  payment:    "border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10",
+  credit:     "border-purple-400 bg-purple-50 dark:bg-purple-500/10",
+  support:    "border-amber-400 bg-amber-50 dark:bg-amber-500/10",
+  generation: "border-indigo-400 bg-indigo-50 dark:bg-indigo-500/10",
+};
+
+function CustomerTimeline({ userId }: { userId: string | null }) {
+  const [events, setEvents] = useState<TimelineEvent[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  async function load() {
+    if (!userId) return;
+    setLoading(true);
+    const { data } = await supabase.rpc("customer_timeline", { p_user_id: userId, p_limit: 40 });
+    setEvents((data as TimelineEvent[]) ?? []);
+    setLoading(false);
+  }
+
+  function toggle() {
+    if (!open) load();
+    setOpen((s) => !s);
+  }
+
+  return (
+    <section className={`${adminCardCls} overflow-hidden`}>
+      <button
+        type="button"
+        onClick={toggle}
+        className="flex w-full items-center justify-between p-4 text-left"
+      >
+        <h2 className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+          Customer Timeline
+        </h2>
+        <span className="text-[11px] text-slate-400">{open ? "▲ Hide" : "▼ Show"}</span>
+      </button>
+
+      {open && (
+        <div className="border-t border-slate-100 px-4 pb-4 dark:border-slate-800">
+          {loading ? (
+            <p className="py-4 text-center text-xs text-slate-400">Loading…</p>
+          ) : events.length === 0 ? (
+            <p className="py-4 text-center text-xs text-slate-400">No events yet.</p>
+          ) : (
+            <ol className="mt-3 space-y-2">
+              {events.map((e, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs dark:bg-slate-800">
+                    {TIMELINE_ICONS[e.type] ?? "📌"}
+                  </div>
+                  <div className={`flex-1 rounded-lg border-l-2 px-3 py-2 text-xs ${TIMELINE_COLORS[e.type] ?? "border-slate-300 bg-slate-50 dark:bg-slate-800"}`}>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="font-bold">{e.title}</p>
+                      <p className="shrink-0 text-[10px] text-slate-400">
+                        {new Date(e.ts).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" })}
+                      </p>
+                    </div>
+                    {e.body && <p className="mt-0.5 text-slate-500 dark:text-slate-400">{e.body}</p>}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      )}
+    </section>
   );
 }
 

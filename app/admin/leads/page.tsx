@@ -10,6 +10,8 @@ import { supabase } from "@/lib/supabase";
 import {
   ChevronRight,
   Download,
+  Kanban,
+  List,
   Plus,
   RefreshCw,
   Search,
@@ -21,6 +23,7 @@ import {
 } from "lucide-react";
 import { buildCsv, downloadCsv } from "@/lib/csv";
 import LeadsCsvImportModal from "./LeadsCsvImportModal";
+import PipelineView from "./PipelineView";
 import { useAdminPermissions } from "../AdminPermissions";
 import AdminShell, {
   adminCardCls,
@@ -124,6 +127,7 @@ export default function AdminLeadsPage() {
   // Top-level view tabs — "Pipeline" (the leads table itself) vs
   // "Free signups" (virtual leads pulled from profiles).
   const [topView, setTopView] = useState<"pipeline" | "signups">("pipeline");
+  const [viewMode, setViewMode] = useState<"table" | "kanban">("table");
 
   // Bulk-action multi-select state. Each entry is a lead id.
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -511,6 +515,24 @@ export default function AdminLeadsPage() {
             <Download className="h-3.5 w-3.5" />
             Export
           </button>
+          <div className="flex rounded-md border border-slate-200 dark:border-slate-700">
+            <button
+              type="button"
+              onClick={() => setViewMode("table")}
+              className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-l-md transition ${viewMode === "table" ? "bg-slate-900 text-white dark:bg-indigo-600" : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"}`}
+            >
+              <List className="h-3.5 w-3.5" />
+              Table
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("kanban")}
+              className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-r-md transition ${viewMode === "kanban" ? "bg-slate-900 text-white dark:bg-indigo-600" : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"}`}
+            >
+              <Kanban className="h-3.5 w-3.5" />
+              Pipeline
+            </button>
+          </div>
           <button
             type="button"
             onClick={() => setShowForm((s) => !s)}
@@ -628,6 +650,17 @@ export default function AdminLeadsPage() {
             </button>
           </div>
         </section>
+      )}
+
+      {/* Kanban Pipeline View */}
+      {viewMode === "kanban" && topView === "pipeline" && (
+        <div className="mb-4">
+          <PipelineView
+            leads={rows}
+            canManage={has("leads.add")}
+            onStatusChange={() => setRefreshKey((k) => k + 1)}
+          />
+        </div>
       )}
 
       {/* Top tabs — Pipeline (regular leads) vs Free signups */}
