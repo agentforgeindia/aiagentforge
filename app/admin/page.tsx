@@ -11,6 +11,7 @@ import {
   ClipboardList,
   Coins,
   FileText,
+  Gem,
   LayoutDashboard,
   Mail,
   MessageSquare,
@@ -19,6 +20,8 @@ import {
   ShieldQuestion,
   Users,
   UserPlus,
+  Wallet,
+  Zap,
 } from "lucide-react";
 import AdminShell, { adminCardCls, adminMutedCls } from "./AdminShell";
 import { useAdminPermissions } from "./AdminPermissions";
@@ -109,6 +112,27 @@ const TILES: Tile[] = [
     description: "Customer reviews on the homepage.",
     icon: <MessageSquare className="h-4 w-4" />,
     perm: "testimonials.manage",
+  },
+  {
+    href: "/admin/ai-operations",
+    label: "AI Operations",
+    description: "Generations, failures, credits consumed, agent performance.",
+    icon: <Zap className="h-4 w-4" />,
+    perm: "ai_ops.view",
+  },
+  {
+    href: "/admin/credits-center",
+    label: "Credits",
+    description: "Balances, purchased, consumed, refunds, manual adjustments.",
+    icon: <Gem className="h-4 w-4" />,
+    perm: "credits.view",
+  },
+  {
+    href: "/admin/finance",
+    label: "Finance",
+    description: "Revenue, expenses, hosting, ads spend, net profit.",
+    icon: <Wallet className="h-4 w-4" />,
+    perm: "finance.view",
   },
   {
     href: "/admin/audit",
