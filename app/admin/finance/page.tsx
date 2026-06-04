@@ -69,6 +69,10 @@ export default function FinancePage() {
   const [fNotes, setFNotes] = useState("");
   const [fSaving, setFSaving] = useState(false);
 
+  // Cost sync
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
+
   useEffect(() => {
     if (!canView) return;
     setLoading(true);
@@ -109,6 +113,33 @@ export default function FinancePage() {
     setRefreshKey((k) => k + 1);
   }
 
+  async function syncCosts() {
+    setSyncing(true);
+    setSyncMsg(null);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const res = await fetch("/api/admin/expenses/sync", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${sess.session?.access_token}` },
+      });
+      const json = await res.json();
+      if (json.ok) {
+        const ok = json.results.filter((r: any) => r.ok).map((r: any) => r.provider);
+        const skipped = json.results.filter((r: any) => !r.ok).map((r: any) => `${r.provider} (${r.note})`);
+        setSyncMsg(
+          `Synced: ${ok.join(", ") || "none"}.` +
+          (skipped.length ? ` Skipped: ${skipped.join("; ")}` : "")
+        );
+        setRefreshKey((k) => k + 1);
+      } else {
+        setSyncMsg(json.error ?? "Sync failed.");
+      }
+    } catch {
+      setSyncMsg("Network error.");
+    }
+    setSyncing(false);
+  }
+
   if (pLoading) return <Loading />;
   if (!canView) return <Denied />;
 
@@ -130,6 +161,18 @@ export default function FinancePage() {
               Add Expense
             </button>
           )}
+          {canEdit && (
+            <button
+              type="button"
+              onClick={syncCosts}
+              disabled={syncing}
+              className={adminSecondaryBtnCls}
+              title="Pull Meta Ads, OpenAI and FAL costs into expenses"
+            >
+              <Bot className={`h-3.5 w-3.5 ${syncing ? "animate-pulse" : ""}`} />
+              {syncing ? "Syncing…" : "Sync Costs"}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setRefreshKey((k) => k + 1)}
@@ -147,6 +190,13 @@ export default function FinancePage() {
         <p className="p-6 text-center text-sm text-rose-600">{data?.error ?? "No data"}</p>
       ) : (
         <div className="space-y-4">
+          {/* Sync result banner */}
+          {syncMsg && (
+            <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-xs text-indigo-800 dark:border-indigo-700/40 dark:bg-indigo-500/10 dark:text-indigo-200">
+              {syncMsg}
+            </div>
+          )}
+
           {/* Add expense form */}
           {showForm && canEdit && (
             <section className={`${adminCardCls} p-4`}>

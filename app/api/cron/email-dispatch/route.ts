@@ -347,6 +347,21 @@ export async function POST(req: Request) {
   const scan = await scanAndEnqueue(admin);
   const dispatch = await dispatchQueued(admin, 50);
 
+  // ── Daily cost sync (Meta Ads / OpenAI / FAL → finance_expenses) ──
+  // Fire-and-forget; failures here must not break the email cron.
+  try {
+    const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://aiagentforge.in";
+    const secret = (process.env.CRON_SECRET ?? "").trim();
+    if (secret) {
+      await fetch(`${base}/api/admin/expenses/sync`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${secret}` },
+      });
+    }
+  } catch (e) {
+    console.error("[cron] expense sync error:", e);
+  }
+
   // ── Daily founder report (9 PM IST = 15:30 UTC) ──────────────
   const hourUTC = new Date().getUTCHours();
   const founderEmail = process.env.FOUNDER_EMAIL ?? "info.agentforge@gmail.com";
