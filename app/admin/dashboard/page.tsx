@@ -82,26 +82,24 @@ export default function AdminDashboardPage() {
   const { loading: pLoading, has, email } = useAdminPermissions();
   const canView = has("dashboard.view");
 
-  const [data, setData] = useState<Metrics | null>(null);
+  const [data, setData]             = useState<Metrics | null>(null);
+  const [insights, setInsights]     = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError]           = useState<string | null>(null);
 
   useEffect(() => {
     if (!canView) return;
     setLoadingData(true);
     setError(null);
     (async () => {
-      const { data: m, error: e } = await supabase.rpc(
-        "dashboard_metrics",
-        { p_actor_email: email ?? null },
-      );
-      if (e) {
-        setError(e.message);
-        setData(null);
-      } else {
-        setData(m as Metrics);
-      }
+      const [{ data: m, error: e }, { data: ins }] = await Promise.all([
+        supabase.rpc("dashboard_metrics", { p_actor_email: email ?? null }),
+        supabase.rpc("ai_business_insights"),
+      ]);
+      if (e) { setError(e.message); setData(null); }
+      else { setData(m as Metrics); }
+      setInsights((ins as any)?.insights ?? []);
       setLoadingData(false);
     })();
   }, [canView, refreshKey, email]);
@@ -356,6 +354,42 @@ export default function AdminDashboardPage() {
             </div>
           </section>
 
+          {/* AI Business Intelligence */}
+          {insights.length > 0 && (
+            <section className={adminCardCls}>
+              <div className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+                <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                  🤖 AI Business Intelligence
+                  <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
+                    {insights.length} insight{insights.length > 1 ? "s" : ""}
+                  </span>
+                </p>
+              </div>
+              <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+                {insights.map((ins: any, i: number) => (
+                  <Link key={i} href={ins.target ?? "#"} className="flex items-start gap-3 px-4 py-3 transition hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                    <span className="mt-0.5 text-lg">{ins.icon}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className={`text-sm font-bold ${
+                        ins.severity === "critical" ? "text-rose-700 dark:text-rose-300" :
+                        ins.severity === "warning"  ? "text-amber-700 dark:text-amber-300" :
+                        ins.severity === "success"  ? "text-emerald-700 dark:text-emerald-300" :
+                        "text-slate-700 dark:text-slate-200"
+                      }`}>{ins.title}</p>
+                      <p className={`text-xs ${adminMutedCls}`}>{ins.body}</p>
+                    </div>
+                    <span className={`mt-1 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                      ins.severity === "critical" ? "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300" :
+                      ins.severity === "warning"  ? "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300" :
+                      ins.severity === "success"  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" :
+                      "bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300"
+                    }`}>{ins.severity}</span>
+                  </Link>
+                ))}
+              </ul>
+            </section>
+          )}
+
           {/* Quick actions row */}
           <section className={`${adminCardCls} p-4`}>
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
@@ -363,8 +397,9 @@ export default function AdminDashboardPage() {
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <QuickLink href="/admin/leads?new=1" label="Add lead" />
+              <QuickLink href="/admin/sales" label="Sales Command" />
               <QuickLink href="/admin/tasks" label="View tasks" />
-              <QuickLink href="/admin/subscriptions?view=expiring" label="Expiring subscriptions" />
+              <QuickLink href="/admin/subscriptions?view=expiring" label="Expiring subs" />
               <QuickLink href="/admin/invoices" label="Invoices" />
               <QuickLink href="/admin/customers" label="Customers" />
             </div>

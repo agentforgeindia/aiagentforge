@@ -8,6 +8,7 @@ import Link from "next/link";
 import {
   BookOpen,
   Bot,
+  Briefcase,
   CalendarClock,
   CheckSquare,
   ClipboardList,
@@ -15,6 +16,7 @@ import {
   Coins,
   FileText,
   Gem,
+  GitPullRequest,
   LayoutDashboard,
   Link2,
   Mail,
@@ -28,6 +30,7 @@ import {
   Target,
   Ticket,
   Trophy,
+  UserCog,
   Users,
   UserPlus,
   Wallet,
@@ -51,6 +54,7 @@ const TILES: Tile[] = [
   { href: "/admin/customers",      label: "Customers",      description: "Signed-up users, plans, balances, notes.",                icon: <Users className="h-4 w-4" />,          perm: "customers.view" },
   { href: "/admin/leads",          label: "Leads",          description: "Inbound prospects from ads and outreach.",                icon: <UserPlus className="h-4 w-4" />,        perm: "leads.view" },
   { href: "/admin/sales",          label: "Sales Command",  description: "Calling queue, hot leads, followups, missed leads.",     icon: <Phone className="h-4 w-4" />,           perm: "leads.view" },
+  { href: "/admin/deals",          label: "Deals",          description: "Formal deal pipeline — proposals, negotiations, closures.", icon: <Briefcase className="h-4 w-4" />,       perm: "leads.view" },
   { href: "/admin/tasks",          label: "Tasks",          description: "Follow-ups, demos, payment reminders.",                   icon: <CheckSquare className="h-4 w-4" />,     perm: "tasks.view" },
   // ── Marketing ────────────────────────────────────────────────
   { href: "/admin/email",          label: "Email",          description: "Templates, automation queue, test sends.",                icon: <Mail className="h-4 w-4" />,            perm: "email.view" },
@@ -72,10 +76,12 @@ const TILES: Tile[] = [
   { href: "/admin/team",            label: "Team",           description: "Manage admins and roles.",                               icon: <ShieldQuestion className="h-4 w-4" />,  perm: "team.view" },
   { href: "/admin/team/attendance", label: "Attendance",     description: "Check-ins, session time, work logs, monthly summary.",   icon: <Clock className="h-4 w-4" />,           perm: "team.view" },
   { href: "/admin/knowledge-base",  label: "Knowledge Base", description: "SOPs, sales scripts, support docs, training material.", icon: <BookOpen className="h-4 w-4" />,        perm: "kb.view" },
+  { href: "/admin/hr",              label: "HR",             description: "Employees, salary records, leave management.",            icon: <UserCog className="h-4 w-4" />,         perm: "hr.view" },
   // ── Content ──────────────────────────────────────────────────
   { href: "/admin/posts",          label: "Content",        description: "Blog, news and product updates.",                        icon: <FileText className="h-4 w-4" />,        perm: "content.view" },
   { href: "/admin/testimonials",   label: "Testimonials",   description: "Customer reviews on the homepage.",                     icon: <MessageSquare className="h-4 w-4" />,   perm: "testimonials.manage" },
   // ── System ───────────────────────────────────────────────────
+  { href: "/admin/automation",      label: "Automation",     description: "If-then rules — auto-assign, email, notify on events.",  icon: <GitPullRequest className="h-4 w-4" />,  perm: "settings.view" },
   { href: "/admin/integrations",   label: "Integrations",   description: "Connection status — Meta, Google, Razorpay, FAL, n8n.", icon: <Link2 className="h-4 w-4" />,           perm: "settings.view" },
   { href: "/admin/settings",       label: "Settings",       description: "Company info, plans, credits, notification config.",    icon: <Settings className="h-4 w-4" />,        perm: "settings.view" },
   { href: "/admin/audit",          label: "Audit Log",      description: "Every sensitive action — refunds, role changes, edits.",icon: <ClipboardList className="h-4 w-4" />,  perm: "audit.view" },

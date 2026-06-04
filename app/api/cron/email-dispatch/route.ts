@@ -347,6 +347,45 @@ export async function POST(req: Request) {
   const scan = await scanAndEnqueue(admin);
   const dispatch = await dispatchQueued(admin, 50);
 
+  // ── Daily founder report (9 PM IST = 15:30 UTC) ──────────────
+  const hourUTC = new Date().getUTCHours();
+  const founderEmail = process.env.FOUNDER_EMAIL ?? "info.agentforge@gmail.com";
+  if (hourUTC >= 15 && hourUTC <= 16 && founderEmail) {
+    try {
+      const { data: metrics } = await admin.rpc("daily_report_metrics");
+      if (metrics && !metrics.error) {
+        const today = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
+        const payload = {
+          date:             today,
+          revenue_today:    (metrics.revenue_today ?? 0).toLocaleString("en-IN"),
+          revenue_week:     (metrics.revenue_week ?? 0).toLocaleString("en-IN"),
+          new_signups:      metrics.new_signups ?? 0,
+          new_leads:        metrics.new_leads ?? 0,
+          paid_today:       metrics.paid_today ?? 0,
+          gens_today:       metrics.gens_today ?? 0,
+          failed_today:     metrics.failed_today ?? 0,
+          failed_color:     (metrics.failed_today ?? 0) > 0 ? "#dc2626" : "#16a34a",
+          credits_used:     (metrics.credits_used ?? 0).toLocaleString("en-IN"),
+          open_tickets:     metrics.open_tickets ?? 0,
+          pending_followups:metrics.pending_followups ?? 0,
+          expiring_7d:      metrics.expiring_7d ?? 0,
+          top_agent:        metrics.top_agent ?? "—",
+        };
+        const dedupeKey = `daily_report:founder:${new Date().toISOString().slice(0, 10)}`;
+        await admin.rpc("enqueue_email", {
+          p_slug: "daily_report",
+          p_recipient: founderEmail,
+          p_user_id: null,
+          p_payload: payload,
+          p_scheduled_at: new Date().toISOString(),
+          p_dedupe_key: dedupeKey,
+        });
+      }
+    } catch (e) {
+      console.error("[cron] daily report error:", e);
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     dry_run_mode: isDryRun(),

@@ -3,7 +3,7 @@
 // /admin/finance — Revenue, expenses, and net profit.
 
 import { useEffect, useState } from "react";
-import { RefreshCw, ShieldCheck, TrendingUp, Minus, DollarSign, Plus, Trash2 } from "lucide-react";
+import { RefreshCw, ShieldCheck, TrendingUp, Minus, DollarSign, Plus, Trash2, Bot } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import AdminShell, {
   adminCardCls,
@@ -55,8 +55,9 @@ export default function FinancePage() {
   const canView = has("finance.view");
   const canEdit = has("finance.edit");
 
-  const [data, setData] = useState<Metrics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData]           = useState<Metrics | null>(null);
+  const [agentData, setAgentData] = useState<any | null>(null);
+  const [loading, setLoading]     = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Add expense form
@@ -72,8 +73,12 @@ export default function FinancePage() {
     if (!canView) return;
     setLoading(true);
     (async () => {
-      const { data: m } = await supabase.rpc("finance_metrics");
+      const [{ data: m }, { data: a }] = await Promise.all([
+        supabase.rpc("finance_metrics"),
+        supabase.rpc("revenue_by_agent"),
+      ]);
       setData(m as Metrics);
+      setAgentData(a);
       setLoading(false);
     })();
   }, [canView, refreshKey]);
@@ -272,6 +277,45 @@ export default function FinancePage() {
               </div>
             </div>
           </section>
+
+          {/* Revenue by Agent */}
+          {agentData?.agents && agentData.agents.length > 0 && (
+            <section className={`${adminCardCls} p-4`}>
+              <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                <Bot className="h-3.5 w-3.5" />
+                Revenue Attribution by AI Agent (This Month)
+              </p>
+              <p className={`mt-1 text-[11px] ${adminMutedCls}`}>
+                Based on credit consumption × revenue per credit (₹{Number(agentData.revenue_per_credit ?? 0).toFixed(2)}/credit)
+              </p>
+              <div className="mt-4 space-y-3">
+                {agentData.agents.filter((a: any) => a.agent_slug !== 'other').map((a: any) => {
+                  const maxRev = Math.max(1, ...agentData.agents.map((x: any) => x.revenue_month));
+                  const w = Math.round((a.revenue_month / maxRev) * 100);
+                  const AGENT_NAMES: Record<string, string> = {
+                    jewellery: "💎 Jewellery AI", textile: "🧵 Textile AI",
+                    productography: "📸 Productography AI", "social-ads": "📢 Social Ads",
+                    ugc: "🎬 UGC Forge", trendforge: "📈 TrendForge",
+                  };
+                  return (
+                    <div key={a.agent_slug}>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium">{AGENT_NAMES[a.agent_slug] ?? a.agent_slug}</span>
+                        <div className="flex items-center gap-3 tabular-nums">
+                          <span className={adminMutedCls}>{a.credits_month?.toLocaleString("en-IN")} credits</span>
+                          <span className="font-bold text-emerald-600 dark:text-emerald-300">₹{Number(a.revenue_month ?? 0).toLocaleString("en-IN")}</span>
+                          <span className={`text-[10px] ${adminMutedCls}`}>{a.share_pct}%</span>
+                        </div>
+                      </div>
+                      <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                        <div className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-indigo-700" style={{ width: `${w}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
           {/* Recent expenses table */}
           <section className={`${adminCardCls} overflow-hidden`}>
