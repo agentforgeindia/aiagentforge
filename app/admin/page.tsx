@@ -11,6 +11,7 @@ import {
   CalendarClock,
   CheckSquare,
   ClipboardList,
+  Clock,
   Coins,
   FileText,
   Gem,
@@ -62,8 +63,9 @@ const TILES: Tile[] = [
   // ── Support ──────────────────────────────────────────────────
   { href: "/admin/support-center", label: "Support",        description: "Customer tickets — billing, generation, refunds.",       icon: <Ticket className="h-4 w-4" />,          perm: "support.view" },
   // ── Team ─────────────────────────────────────────────────────
-  { href: "/admin/team",           label: "Team",           description: "Manage admins and roles.",                               icon: <ShieldQuestion className="h-4 w-4" />,  perm: "team.view" },
-  { href: "/admin/knowledge-base", label: "Knowledge Base", description: "SOPs, sales scripts, support docs, training material.", icon: <BookOpen className="h-4 w-4" />,        perm: "kb.view" },
+  { href: "/admin/team",            label: "Team",           description: "Manage admins and roles.",                               icon: <ShieldQuestion className="h-4 w-4" />,  perm: "team.view" },
+  { href: "/admin/team/attendance", label: "Attendance",     description: "Check-ins, session time, work logs, monthly summary.",   icon: <Clock className="h-4 w-4" />,           perm: "team.view" },
+  { href: "/admin/knowledge-base",  label: "Knowledge Base", description: "SOPs, sales scripts, support docs, training material.", icon: <BookOpen className="h-4 w-4" />,        perm: "kb.view" },
   // ── Content ──────────────────────────────────────────────────
   { href: "/admin/posts",          label: "Content",        description: "Blog, news and product updates.",                        icon: <FileText className="h-4 w-4" />,        perm: "content.view" },
   { href: "/admin/testimonials",   label: "Testimonials",   description: "Customer reviews on the homepage.",                     icon: <MessageSquare className="h-4 w-4" />,   perm: "testimonials.manage" },

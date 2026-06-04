@@ -16,11 +16,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ChevronDown, ChevronRight, LogOut, Plus, Search } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Clock, LogOut, Plus, Search } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAdminPermissions } from "./AdminPermissions";
 import NotificationsBell from "./NotificationsBell";
 import CommandPalette from "./CommandPalette";
+import AttendanceTimer from "./AttendanceTimer";
 
 export type Crumb = { label: string; href?: string };
 
@@ -81,6 +82,8 @@ export default function AdminShell({
           </Link>
 
           <div className="flex items-center gap-2">
+            {/* Attendance Timer */}
+            {effectiveEmail && <AttendanceTimer email={effectiveEmail} />}
             {/* Search hint — clicking dispatches Cmd+K. */}
             <button
               type="button"
