@@ -162,11 +162,11 @@ export default function AiOperationsPage() {
             </dl>
           </section>
 
-          {/* Per-agent breakdown */}
+          {/* AI Agent Health Monitor */}
           <section className={`${adminCardCls} overflow-hidden`}>
             <div className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                Agent Performance
+                🤖 AI Agent Health Monitor
               </p>
             </div>
             {data.by_agent.length === 0 ? (
@@ -175,7 +175,7 @@ export default function AiOperationsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-slate-800">
-                    {["Agent", "Total", "Completed", "Failed", "Today", "Fail %"].map((h) => (
+                    {["Agent", "Status", "Total", "Success", "Failed", "Today", "Success %", "Fail %"].map((h) => (
                       <th
                         key={h}
                         className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400"
@@ -186,11 +186,15 @@ export default function AiOperationsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {data.by_agent.map((a) => (
+                  {data.by_agent.map((a) => {
+                    const successPct = a.total > 0 ? Math.round((a.completed / a.total) * 100) : 0;
+                    const health = a.failure_pct <= 2 ? "🟢" : a.failure_pct <= 10 ? "🟡" : "🔴";
+                    return (
                     <tr key={a.agent_slug} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                       <td className="px-4 py-2.5 font-medium">
                         {AGENT_LABELS[a.agent_slug] ?? a.agent_slug}
                       </td>
+                      <td className="px-4 py-2.5 text-base">{health}</td>
                       <td className="px-4 py-2.5 tabular-nums">{a.total.toLocaleString("en-IN")}</td>
                       <td className="px-4 py-2.5 tabular-nums text-emerald-600 dark:text-emerald-300">
                         {a.completed.toLocaleString("en-IN")}
@@ -212,8 +216,22 @@ export default function AiOperationsPage() {
                           {a.failure_pct}%
                         </span>
                       </td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                            <div
+                              className="h-full rounded-full bg-emerald-500"
+                              style={{ width: `${successPct}%` }}
+                            />
+                          </div>
+                          <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-300">
+                            {successPct}%
+                          </span>
+                        </div>
+                      </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             )}

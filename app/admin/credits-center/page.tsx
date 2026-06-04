@@ -231,27 +231,51 @@ export default function CreditsCenterPage() {
             <div className={`${adminCardCls} overflow-hidden`}>
               <div className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                  Recent Transactions
+                  Credit Ledger — Latest 30
                 </p>
               </div>
-              <ul className="max-h-72 divide-y divide-slate-100 overflow-y-auto dark:divide-slate-800">
-                {data.recent_txns.map((t) => (
-                  <li key={t.id} className="flex items-center justify-between gap-3 px-4 py-2">
-                    <div className="min-w-0">
-                      <p className="truncate text-[11px] font-medium">{t.email ?? t.user_id.slice(0, 8)}</p>
-                      <p className={`text-[11px] ${adminMutedCls}`}>{t.reason}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className={`text-xs font-bold tabular-nums ${t.delta > 0 ? "text-emerald-600 dark:text-emerald-300" : "text-rose-600 dark:text-rose-300"}`}>
-                        {t.delta > 0 ? "+" : ""}{t.delta.toLocaleString("en-IN")}
-                      </p>
-                      <p className={`text-[10px] ${adminMutedCls}`}>
-                        {new Date(t.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-100 dark:border-slate-800">
+                      <th className="px-4 py-2 text-left text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Date</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">User</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Description</th>
+                      <th className="px-4 py-2 text-right text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Amount</th>
+                      <th className="px-4 py-2 text-right text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Balance</th>
+                    </tr>
+                  </thead>
+                  <tbody className="max-h-80 divide-y divide-slate-100 dark:divide-slate-800">
+                    {data.recent_txns.map((t) => {
+                      const isCredit = t.delta > 0;
+                      const reasonLabel = t.reason
+                        .replace(/_/g, " ")
+                        .replace(/generate$/, "generation")
+                        .replace(/^refund:?/, "Refund —")
+                        .replace(/^manual/, "Manual adjustment");
+                      return (
+                        <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                          <td className={`px-4 py-2 ${adminMutedCls}`}>
+                            {new Date(t.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                          </td>
+                          <td className="max-w-[120px] px-4 py-2">
+                            <p className="truncate font-medium">{t.email ?? t.user_id.slice(0, 8)}</p>
+                          </td>
+                          <td className="max-w-[160px] px-4 py-2">
+                            <p className="truncate capitalize">{reasonLabel}</p>
+                          </td>
+                          <td className={`px-4 py-2 text-right font-bold tabular-nums ${isCredit ? "text-emerald-600 dark:text-emerald-300" : "text-rose-600 dark:text-rose-300"}`}>
+                            {isCredit ? "+" : ""}{t.delta.toLocaleString("en-IN")}
+                          </td>
+                          <td className={`px-4 py-2 text-right tabular-nums ${adminMutedCls}`}>
+                            {t.balance_after.toLocaleString("en-IN")}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </section>
 
