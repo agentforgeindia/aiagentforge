@@ -103,6 +103,14 @@ const TIPS: Record<string, Tip> = {
       "Daily chart se usage trend dekho.",
     ],
   },
+  "WhatsApp Inbox": {
+    what: "Customer ke WhatsApp messages yahan aate hain — AI pehle se reply draft kar deta hai.",
+    steps: [
+      "Left mein conversation chuno.",
+      "AI ka draft reply box mein pehle se bhara hota hai — edit karke 'Send' dabao.",
+      "Auto-reply chahiye to WHATSAPP_AUTO_REPLY=true set karo (tab AI khud bhej dega).",
+    ],
+  },
   "AI Assistant": {
     what: "Teen AI tools — call summary, sales coaching, aur WhatsApp reply draft. Bas text paste karo.",
     steps: [

@@ -21,6 +21,7 @@ import {
   Link2,
   Mail,
   Megaphone,
+  MessageCircle,
   MessageSquare,
   Phone,
   Receipt,
@@ -72,6 +73,7 @@ const TILES: Tile[] = [
   { href: "/admin/ai-assistant",   label: "AI Assistant",   description: "Meeting summaries, sales coaching, WhatsApp reply drafts.", icon: <Sparkles className="h-4 w-4" />,        perm: "dashboard.view" },
   // ── Support ──────────────────────────────────────────────────
   { href: "/admin/support-center", label: "Support",        description: "Customer tickets — billing, generation, refunds.",       icon: <Ticket className="h-4 w-4" />,          perm: "support.view" },
+  { href: "/admin/whatsapp",       label: "WhatsApp Inbox", description: "Live customer chats, AI-drafted replies, send.",         icon: <MessageCircle className="h-4 w-4" />,   perm: "support.view" },
   // ── Team ─────────────────────────────────────────────────────
   { href: "/admin/incentives",      label: "Incentives",     description: "Commission rules, monthly targets, achievement tracking.", icon: <Target className="h-4 w-4" />,        perm: "incentives.view" },
   { href: "/admin/leaderboard",     label: "Leaderboard",    description: "Sales rankings, attendance, tasks — badges & medals.",  icon: <Trophy className="h-4 w-4" />,          perm: "team.view" },
