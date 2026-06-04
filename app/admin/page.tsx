@@ -26,6 +26,7 @@ import {
   Receipt,
   Settings,
   ShieldCheck,
+  Sparkles,
   ShieldQuestion,
   Target,
   Ticket,
@@ -68,6 +69,7 @@ const TILES: Tile[] = [
   { href: "/admin/agents",         label: "Agents",         description: "Enable/disable AI agents, set credits, prompt version.", icon: <Bot className="h-4 w-4" />,             perm: "agents.view" },
   { href: "/admin/ai-operations",  label: "AI Operations",  description: "Generations, failures, credits consumed, performance.",  icon: <Zap className="h-4 w-4" />,             perm: "ai_ops.view" },
   { href: "/admin/ai-costs",       label: "AI Costs",       description: "API spend per agent, top consumers, margin analysis.",   icon: <Coins className="h-4 w-4" />,           perm: "ai_costs.view" },
+  { href: "/admin/ai-assistant",   label: "AI Assistant",   description: "Meeting summaries, sales coaching, WhatsApp reply drafts.", icon: <Sparkles className="h-4 w-4" />,        perm: "dashboard.view" },
   // ── Support ──────────────────────────────────────────────────
   { href: "/admin/support-center", label: "Support",        description: "Customer tickets — billing, generation, refunds.",       icon: <Ticket className="h-4 w-4" />,          perm: "support.view" },
   // ── Team ─────────────────────────────────────────────────────

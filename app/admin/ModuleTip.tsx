@@ -103,6 +103,14 @@ const TIPS: Record<string, Tip> = {
       "Daily chart se usage trend dekho.",
     ],
   },
+  "AI Assistant": {
+    what: "Teen AI tools — call summary, sales coaching, aur WhatsApp reply draft. Bas text paste karo.",
+    steps: [
+      "Meeting Summary: call transcript paste karo → structured summary + follow-up message milega.",
+      "Sales Coach: call notes daalo → score + improvement tips milenge.",
+      "WhatsApp Assistant: customer ka message paste karo → ready reply milega, Copy karke bhej do.",
+    ],
+  },
   "AI Costs": {
     what: "Har agent ka API kharcha aur per-customer margin.",
     steps: [
