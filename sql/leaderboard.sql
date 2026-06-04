@@ -3,6 +3,12 @@
 -- Run this in Supabase SQL Editor.
 -- ============================================================
 
+-- ── Ensure leads.assigned_to exists (sales rep ownership) ────
+alter table public.leads
+  add column if not exists assigned_to text;
+
+create index if not exists leads_assigned_idx on public.leads (assigned_to);
+
 -- ── Badges table ─────────────────────────────────────────────
 create table if not exists public.member_badges (
   id           uuid primary key default gen_random_uuid(),
@@ -98,18 +104,18 @@ begin
     'tasks_board', (
       select coalesce(jsonb_agg(jsonb_build_object(
         'rank',         row_number() over (order by done_count desc),
-        'member_email', assigned_to,
+        'member_email', assigned_to_email,
         'done',         done_count,
         'pending',      pending_count
       ) order by done_count desc), '[]')
       from (
-        select assigned_to,
+        select assigned_to_email,
                count(*) filter (where status = 'done')::int    as done_count,
                count(*) filter (where status != 'done')::int   as pending_count
           from public.tasks
          where created_at::date between v_m_start and v_m_end
-           and assigned_to is not null
-         group by assigned_to
+           and assigned_to_email is not null
+         group by assigned_to_email
       ) x
     )
   );

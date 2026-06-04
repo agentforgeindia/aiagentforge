@@ -58,17 +58,17 @@ create trigger support_tickets_notify
 create or replace function public.notify_on_task_assigned()
 returns trigger language plpgsql security definer as $$
 begin
-  if (tg_op = 'INSERT' or (tg_op = 'UPDATE' and old.assigned_to is distinct from new.assigned_to))
-    and new.assigned_to is not null
+  if (tg_op = 'INSERT' or (tg_op = 'UPDATE' and old.assigned_to_email is distinct from new.assigned_to_email))
+    and new.assigned_to_email is not null
   then
     perform public.create_notification(
       'task.assigned',
       'Task assigned: ' || new.title,
-      'Assigned to ' || new.assigned_to,
+      'Assigned to ' || new.assigned_to_email,
       '/admin/tasks',
       'info',
       'tasks.view',
-      new.assigned_to
+      new.assigned_to_email
     );
   end if;
   return new;

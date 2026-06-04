@@ -98,7 +98,7 @@ begin
       select count(*) into v_my_open_tasks
         from public.tasks
         where status not in ('done','cancelled')
-          and lower(assigned_to) = lower(p_actor_email);
+          and lower(assigned_to_email) = lower(p_actor_email);
     else
       v_my_open_tasks := 0;
     end if;
