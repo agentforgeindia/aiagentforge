@@ -96,11 +96,18 @@ begin
   ),
   daily as (
     select coalesce(jsonb_agg(jsonb_build_object(
-      'd',         to_char(dd, 'YYYY-MM-DD'),
-      'total',     coalesce(cnt, 0),
-      'failed',    coalesce(failed, 0)
-    ) order by dd), '[]'::jsonb) as data
-    from generate_series(v_today - 29, v_today, '1 day'::interval)::date dd
+      'd',      to_char(days.dd, 'YYYY-MM-DD'),
+      'total',  coalesce(cnt, 0),
+      'failed', coalesce(failed, 0)
+    ) order by days.dd), '[]'::jsonb) as data
+    from (
+      select d::date as dd
+      from generate_series(
+        (v_today - 29)::timestamp,
+        v_today::timestamp,
+        interval '1 day'
+      ) d
+    ) days
     left join (
       select created_at::date as d,
              count(*)::int as cnt,
@@ -108,7 +115,7 @@ begin
         from public.generations
        where created_at::date >= v_today - 29
        group by 1
-    ) x on x.d = dd
+    ) x on x.d = days.dd
   )
   select jsonb_build_object(
     'totals',       row_to_json(t)::jsonb,

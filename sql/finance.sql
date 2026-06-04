@@ -103,11 +103,14 @@ begin
       'expense', coalesce(exp, 0),
       'profit',  coalesce(rev, 0) - coalesce(exp, 0)
     ) order by mo), '[]'::jsonb) as data
-    from generate_series(
-      date_trunc('month', current_date - interval '5 months')::date,
-      date_trunc('month', current_date)::date,
-      '1 month'::interval
-    )::date mo
+    from (
+      select d::date as mo
+      from generate_series(
+        date_trunc('month', current_date - interval '5 months'),
+        date_trunc('month', current_date),
+        interval '1 month'
+      ) d
+    ) months(mo)
     left join (
       select date_trunc('month', created_at)::date as m, sum(amount)::numeric(14,2) as rev
         from public.payments where status = 'paid' group by 1
