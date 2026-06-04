@@ -25,61 +25,61 @@ begin
   -- Source scoring
   if v_lead.source in ('google', 'facebook', 'instagram') then
     v_score := v_score + 20;
-    v_reasons := v_reasons || 'Paid ad lead (+20)';
+    v_reasons := array_append(v_reasons, 'Paid ad lead (+20)');
   elsif v_lead.source = 'referral' then
     v_score := v_score + 30;
-    v_reasons := v_reasons || 'Referral lead (+30)';
+    v_reasons := array_append(v_reasons, 'Referral lead (+30)');
   elsif v_lead.source = 'website' then
     v_score := v_score + 15;
-    v_reasons := v_reasons || 'Website inquiry (+15)';
+    v_reasons := array_append(v_reasons, 'Website inquiry (+15)');
   else
     v_score := v_score + 5;
-    v_reasons := v_reasons || 'Other source (+5)';
+    v_reasons := array_append(v_reasons, 'Other source (+5)');
   end if;
 
   -- Status scoring
   case v_lead.status
-    when 'qualified' then v_score := v_score + 20; v_reasons := v_reasons || 'Qualified (+20)';
-    when 'demo'      then v_score := v_score + 30; v_reasons := v_reasons || 'Demo scheduled (+30)';
-    when 'trial'     then v_score := v_score + 40; v_reasons := v_reasons || 'Demo done (+40)';
-    when 'contacted' then v_score := v_score + 10; v_reasons := v_reasons || 'Contacted (+10)';
+    when 'qualified' then v_score := v_score + 20; v_reasons := array_append(v_reasons, 'Qualified (+20)');
+    when 'demo'      then v_score := v_score + 30; v_reasons := array_append(v_reasons, 'Demo scheduled (+30)');
+    when 'trial'     then v_score := v_score + 40; v_reasons := array_append(v_reasons, 'Demo done (+40)');
+    when 'contacted' then v_score := v_score + 10; v_reasons := array_append(v_reasons, 'Contacted (+10)');
     else null;
   end case;
 
   -- Has phone
   if v_lead.phone is not null then
     v_score := v_score + 10;
-    v_reasons := v_reasons || 'Has phone (+10)';
+    v_reasons := array_append(v_reasons, 'Has phone (+10)');
   end if;
 
   -- Has email
   if v_lead.email is not null then
     v_score := v_score + 10;
-    v_reasons := v_reasons || 'Has email (+10)';
+    v_reasons := array_append(v_reasons, 'Has email (+10)');
   end if;
 
   -- Has business name
   if v_lead.business_name is not null then
     v_score := v_score + 10;
-    v_reasons := v_reasons || 'Has business (+10)';
+    v_reasons := array_append(v_reasons, 'Has business (+10)');
   end if;
 
   -- Recency — newer leads score higher
   if v_lead.created_at >= now() - interval '3 days' then
     v_score := v_score + 15;
-    v_reasons := v_reasons || 'Fresh lead 3d (+15)';
+    v_reasons := array_append(v_reasons, 'Fresh lead 3d (+15)');
   elsif v_lead.created_at >= now() - interval '7 days' then
     v_score := v_score + 8;
-    v_reasons := v_reasons || 'Recent lead 7d (+8)';
+    v_reasons := array_append(v_reasons, 'Recent lead 7d (+8)');
   elsif v_lead.created_at < now() - interval '30 days' then
     v_score := v_score - 15;
-    v_reasons := v_reasons || 'Old lead 30d+ (-15)';
+    v_reasons := array_append(v_reasons, 'Old lead 30d+ (-15)');
   end if;
 
   -- Tags — high-intent keywords
   if v_lead.tags && ARRAY['urgent','hot','interested','price asked'] then
     v_score := v_score + 20;
-    v_reasons := v_reasons || 'Hot tag (+20)';
+    v_reasons := array_append(v_reasons, 'Hot tag (+20)');
   end if;
 
   -- Cap at 100
