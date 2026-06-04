@@ -45,6 +45,8 @@ type LeadRow = {
   status: string;
   notes: string | null;
   tags: string[];
+  score: number;
+  score_reasons: string[];
   created_at: string;
 };
 
