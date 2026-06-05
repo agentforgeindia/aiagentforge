@@ -14,6 +14,7 @@ const ROLES = [
   { slug: "ai-operator", label: "AI Operator" },
   { slug: "designer", label: "Designer" },
   { slug: "developer", label: "Developer" },
+  { slug: "hr-executive", label: "HR Executive" },
 ];
 
 function ApplyForm() {

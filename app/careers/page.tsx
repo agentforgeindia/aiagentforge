@@ -12,12 +12,22 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
-type Role = { id: string; title: string; slug: string; description: string | null; is_open: boolean };
+type Role = {
+  id: string; title: string; slug: string; description: string | null; is_open: boolean;
+  openings?: number; work_type?: string; location?: string | null;
+};
+
+const WORK_TYPE: Record<string, { label: string; cls: string }> = {
+  wfh:    { label: "🏠 Work From Home", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" },
+  remote: { label: "🌐 Remote",         cls: "bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300" },
+  hybrid: { label: "🔀 Hybrid",         cls: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300" },
+  office: { label: "🏢 Office",         cls: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" },
+};
 
 const ROLE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
   telecaller: PhoneIcon, "sales-executive": Briefcase, "support-executive": Headphones,
   "marketing-executive": Megaphone, "content-creator": Clapperboard, "ai-operator": Bot,
-  designer: Palette, developer: Code2,
+  designer: Palette, developer: Code2, "hr-executive": GraduationCap,
 };
 
 // ── Decorative doodles (inline SVG) ──
@@ -65,11 +75,13 @@ export default function AcademyPage() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("recruitment_roles").select("*").eq("is_open", true).order("title");
+      const { data } = await supabase.from("recruitment_roles").select("*").eq("is_open", true).order("openings", { ascending: false });
       setRoles((data as Role[]) ?? []);
       setLoading(false);
     })();
   }, []);
+
+  const totalOpenings = roles.reduce((s, r) => s + (r.openings ?? 0), 0);
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
@@ -134,7 +146,11 @@ export default function AcademyPage() {
         {/* Roles */}
         <div className="mt-20 text-center">
           <p className="text-[11px] font-black uppercase tracking-[0.3em] text-cyan-600">Open Positions</p>
-          <h2 className="mt-2 text-2xl font-black sm:text-3xl">Pick your role &amp; start learning</h2>
+          <h2 className="mt-2 text-2xl font-black sm:text-3xl">
+            {totalOpenings > 0 ? (
+              <><span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">{totalOpenings}+ openings</span> — pick your role</>
+            ) : "Pick your role & start learning"}
+          </h2>
         </div>
         {loading ? (
           <p className="mt-6 text-center text-sm text-black/50 dark:text-white/50">Loading…</p>
@@ -146,17 +162,29 @@ export default function AcademyPage() {
               const Ic = ROLE_ICON[r.slug] ?? Circle;
               return (
                 <Link key={r.id} href={`/careers/learn?role=${r.slug}`}
-                  className="group flex items-center justify-between rounded-2xl border border-cyan-200/40 bg-white/80 p-5 shadow-md shadow-cyan-200/10 backdrop-blur transition hover:scale-[1.02] hover:border-cyan-400 hover:shadow-cyan-300/30 dark:border-cyan-400/20 dark:bg-white/[0.05] dark:hover:border-cyan-400">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-md">
-                      <Ic className="h-6 w-6" />
-                    </span>
-                    <div>
-                      <p className="text-sm font-black">{r.title}</p>
-                      <p className="text-[11px] font-bold text-black/50 dark:text-white/50">Learn → Apply → Test</p>
+                  className="group rounded-2xl border border-cyan-200/40 bg-white/80 p-5 shadow-md shadow-cyan-200/10 backdrop-blur transition hover:scale-[1.02] hover:border-cyan-400 hover:shadow-cyan-300/30 dark:border-cyan-400/20 dark:bg-white/[0.05] dark:hover:border-cyan-400">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-md">
+                        <Ic className="h-6 w-6" />
+                      </span>
+                      <div>
+                        <p className="text-sm font-black">{r.title}</p>
+                        {(r.openings ?? 0) > 0 && (
+                          <p className="text-[11px] font-black text-cyan-600 dark:text-cyan-300">{r.openings} opening{(r.openings ?? 0) > 1 ? "s" : ""}</p>
+                        )}
+                      </div>
                     </div>
+                    <span className="text-xl font-black text-cyan-600 transition group-hover:translate-x-1 dark:text-cyan-300">→</span>
                   </div>
-                  <span className="text-xl font-black text-cyan-600 transition group-hover:translate-x-1 dark:text-cyan-300">→</span>
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                    {r.work_type && (
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${(WORK_TYPE[r.work_type] ?? WORK_TYPE.office).cls}`}>
+                        {(WORK_TYPE[r.work_type] ?? WORK_TYPE.office).label}
+                      </span>
+                    )}
+                    <span className="text-[11px] font-bold text-black/40 dark:text-white/40">Learn → Apply → Test</span>
+                  </div>
                 </Link>
               );
             })}

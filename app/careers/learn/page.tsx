@@ -18,7 +18,7 @@ const ROLE_LABEL: Record<string, string> = {
   telecaller: "Telecaller", "sales-executive": "Sales Executive",
   "support-executive": "Support Executive", "marketing-executive": "Marketing Executive",
   "content-creator": "Content Creator", "ai-operator": "AI Operator",
-  designer: "Designer", developer: "Developer",
+  designer: "Designer", developer: "Developer", "hr-executive": "HR Executive",
 };
 
 // Company pages every candidate should read first.

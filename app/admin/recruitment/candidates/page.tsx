@@ -38,7 +38,7 @@ const STAGE_LABEL: Record<string, string> = {
   selected: "Selected", offer_sent: "Offer Sent", offer_accepted: "Offer Accepted",
   hired: "Hired", rejected: "Rejected", talent_pool: "Talent Pool",
 };
-const ROLES = ["telecaller","sales-executive","support-executive","marketing-executive","content-creator","ai-operator","designer","developer"];
+const ROLES = ["telecaller","sales-executive","support-executive","marketing-executive","content-creator","ai-operator","designer","developer","hr-executive"];
 
 export default function CandidatesPage() {
   const { loading: pLoading, has, email } = useAdminPermissions();
