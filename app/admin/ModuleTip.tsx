@@ -127,6 +127,38 @@ const TIPS: Record<string, Tip> = {
       "Auto-reply chahiye to WHATSAPP_AUTO_REPLY=true set karo (tab AI khud bhej dega).",
     ],
   },
+  "Generation Log": {
+    what: "Har ek AI generation ka detailed record — kaun, kaunsa agent, status, aur company ko kitna cost pada.",
+    steps: [
+      "Agent ya Status se filter karo.",
+      "Upar-right total estimated cost dikhta hai.",
+      "Failed generations dhundh ke problem jaldi pakdo.",
+    ],
+  },
+  "Error Logs": {
+    what: "System ki saari failures ek jagah — payment, webhook, generation, API errors.",
+    steps: [
+      "Unresolved errors pe focus karo (red).",
+      "Category se filter karo — Payment errors sabse important.",
+      "Theek hone pe 'Resolve' dabake hatao.",
+    ],
+  },
+  "Approvals": {
+    what: "Team discount/refund/expense request raise karti hai — manager/founder approve ya reject karta hai.",
+    steps: [
+      "'New Request' se request banao (type + amount).",
+      "Manager Pending tab mein Approve/Reject karta hai.",
+      "Har decision note ke saath record hota hai.",
+    ],
+  },
+  "Refund & Dispute Center": {
+    what: "Saare refund requests, disputes aur chargebacks track karo — reason + approval ke saath.",
+    steps: [
+      "'New Request' se refund/dispute log karo.",
+      "Approve → phir 'Mark Processed' jab paisa wapas ho.",
+      "Open Amount batata hai kitna refund pending hai.",
+    ],
+  },
   "AI Assistant": {
     what: "Teen AI tools — call summary, sales coaching, aur WhatsApp reply draft. Bas text paste karo.",
     steps: [

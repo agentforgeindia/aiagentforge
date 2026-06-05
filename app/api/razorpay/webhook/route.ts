@@ -118,6 +118,13 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error("[razorpay-webhook] add_credits_for_payment failed:", error);
+      try {
+        await supabaseAdmin.rpc("log_error", {
+          p_category: "payment", p_source: "razorpay-webhook",
+          p_message: error.message || "add_credits_for_payment failed",
+          p_details: { error }, p_user_id: null,
+        });
+      } catch { /* logging must not block */ }
       return NextResponse.json(
         { error: error.message || "Could not credit account." },
         { status: 500 },
