@@ -34,21 +34,44 @@ const ROLE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
 function Doodles() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-      <svg className="absolute left-4 top-24 h-12 w-24 text-cyan-400/50" viewBox="0 0 100 40" fill="none">
-        <path d="M2 20 Q 15 2, 28 20 T 54 20 T 80 20 T 98 20" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      {/* Graduation cap — top left */}
+      <svg className="absolute left-6 top-20 h-16 w-16 text-cyan-400/35" viewBox="0 0 64 64" fill="none">
+        <path d="M32 10 L58 24 L32 38 L6 24 Z" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" fill="currentColor" opacity="0.2" />
+        <path d="M48 30 L48 46 C48 46 40 54 32 54 C24 54 16 46 16 46 L16 30" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="58" y1="24" x2="58" y2="38" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
       </svg>
-      <svg className="absolute right-8 top-16 h-10 w-10 text-purple-400/60 animate-pulse" viewBox="0 0 24 24" fill="currentColor">
+      {/* Star sparkle — top right, pulsing */}
+      <svg className="absolute right-8 top-16 h-10 w-10 text-purple-400/50 animate-pulse" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" />
       </svg>
-      <svg className="absolute left-10 top-1/2 h-16 w-16 text-blue-400/30" viewBox="0 0 64 64" fill="none">
-        <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="3" strokeDasharray="6 8" />
+      {/* Open book — mid left */}
+      <svg className="absolute left-8 top-1/2 h-16 w-20 text-blue-400/25" viewBox="0 0 80 64" fill="none">
+        <path d="M40 12 C40 12 24 8 8 12 L8 54 C24 50 40 54 40 54" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M40 12 C40 12 56 8 72 12 L72 54 C56 50 40 54 40 54" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="40" y1="12" x2="40" y2="54" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
       </svg>
-      <svg className="absolute bottom-24 right-10 h-14 w-20 text-cyan-400/40" viewBox="0 0 80 50" fill="none">
-        <path d="M4 40 Q 40 4, 72 28" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-        <path d="M62 18 L74 28 L60 34" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      {/* Home/WFH — right side */}
+      <svg className="absolute right-10 top-1/3 h-14 w-14 text-emerald-400/30" viewBox="0 0 56 56" fill="none">
+        <path d="M6 28 L28 8 L50 28" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M12 28 L12 48 L44 48 L44 28" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="22" y="34" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="2.5" />
       </svg>
-      <svg className="absolute bottom-40 left-6 h-12 w-12 text-purple-400/40" viewBox="0 0 40 40" fill="currentColor">
-        {[6, 18, 30].map((y) => [6, 18, 30].map((x) => <circle key={`${x}-${y}`} cx={x} cy={y} r="2.5" />))}
+      {/* Rupee coin — bottom left */}
+      <svg className="absolute bottom-36 left-8 h-14 w-14 text-amber-400/30" viewBox="0 0 56 56" fill="none">
+        <circle cx="28" cy="28" r="22" stroke="currentColor" strokeWidth="3" />
+        <text x="19" y="36" fontSize="20" fontWeight="900" fill="currentColor" fontFamily="serif">₹</text>
+      </svg>
+      {/* Dot grid — bottom right */}
+      <svg className="absolute bottom-24 right-8 h-14 w-14 text-purple-400/30" viewBox="0 0 42 42" fill="currentColor">
+        {[7,21,35].map(y => [7,21,35].map(x => <circle key={`${x}${y}`} cx={x} cy={y} r="2.5" />))}
+      </svg>
+      {/* Wavy line — bottom */}
+      <svg className="absolute bottom-48 right-4 h-10 w-28 text-cyan-400/30" viewBox="0 0 120 40" fill="none">
+        <path d="M2 20 Q 18 4, 34 20 T 66 20 T 98 20" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      </svg>
+      {/* Small star — mid scattered */}
+      <svg className="absolute right-1/4 top-1/4 h-7 w-7 text-cyan-400/30" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" />
       </svg>
     </div>
   );
