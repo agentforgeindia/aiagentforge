@@ -3,11 +3,13 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import t, { Lang } from "@/lib/translations";
 
+type Translations = typeof t["en"];
+
 type LanguageContextType = {
   lang: Lang;
   setLang: (l: Lang) => void;
   toggleLang: () => void;
-  T: typeof t["en"];
+  T: Translations;
 };
 
 const LanguageContext = createContext<LanguageContextType>({

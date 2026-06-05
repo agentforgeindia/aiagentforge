@@ -194,6 +194,6 @@ const t = {
       email: "Email Support",
     },
   },
-} as const;
+};
 
 export default t;
