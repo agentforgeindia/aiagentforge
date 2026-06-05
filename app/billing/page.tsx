@@ -584,6 +584,19 @@ export default function BillingPage() {
               <p className={`relative mt-3 text-xs leading-5 ${muted}`}>
                 Standard image generation uses 15 credits. Premium styles may use more.
               </p>
+
+              {/* Rewards link */}
+              <a href="/rewards"
+                className="relative mt-4 flex items-center justify-between gap-2 rounded-2xl border border-emerald-300/50 bg-emerald-50/70 px-4 py-3 transition hover:scale-[1.01] dark:border-emerald-400/20 dark:bg-emerald-500/10">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🎁</span>
+                  <div>
+                    <p className="text-xs font-black text-emerald-800 dark:text-emerald-300">Earn free credits</p>
+                    <p className="text-[11px] font-medium text-emerald-700/80 dark:text-emerald-400/70">Refer a friend → 50 credits each signup</p>
+                  </div>
+                </div>
+                <span className="text-emerald-600 dark:text-emerald-300">→</span>
+              </a>
             </div>
 
             {/* Current plan */}

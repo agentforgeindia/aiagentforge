@@ -62,6 +62,16 @@ export default function AuthCallback() {
               // One-shot — clear so the next user on the same
               // device doesn't inherit this attribution.
               clearStoredUtm();
+
+              // Referral reward — if this signup used someone's link,
+              // grant the referrer 50 credits + this user a 25 bonus.
+              try {
+                const refCode = localStorage.getItem("af_ref_code");
+                if (refCode) {
+                  await supabase.rpc("process_referral", { p_ref_code: refCode });
+                  localStorage.removeItem("af_ref_code");
+                }
+              } catch { /* ignore referral errors */ }
             }
 
             subscription.unsubscribe();
