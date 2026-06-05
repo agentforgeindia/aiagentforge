@@ -38,10 +38,11 @@ export async function fetchMetaAds(): Promise<Result> {
 }
 
 // ── GA4 (Data API via service account) ───────────────────────
+let ga4LastError = "";
 async function ga4AccessToken(): Promise<string | null> {
   const email = process.env.GA4_SA_EMAIL?.trim();
   let key = process.env.GA4_SA_PRIVATE_KEY?.trim();
-  if (!email || !key) return null;
+  if (!email || !key) { ga4LastError = "missing email/key"; return null; }
   key = key.replace(/\\n/g, "\n");
   try {
     const now = Math.floor(Date.now() / 1000);
@@ -64,15 +65,16 @@ async function ga4AccessToken(): Promise<string | null> {
       signal: AbortSignal.timeout(8000),
     });
     const json = await res.json();
+    if (!json.access_token) ga4LastError = json.error_description || json.error || "no access_token";
     return json.access_token ?? null;
-  } catch { return null; }
+  } catch (e) { ga4LastError = e instanceof Error ? e.message : "signing/network error"; return null; }
 }
 
 export async function fetchGA4(): Promise<Result> {
   const prop = process.env.GA4_PROPERTY_ID?.trim();
   if (!prop || !process.env.GA4_SA_EMAIL) return { configured: false, note: "Set GA4_PROPERTY_ID + GA4_SA_EMAIL + GA4_SA_PRIVATE_KEY" };
   const token = await ga4AccessToken();
-  if (!token) return { configured: true, note: "GA4 auth failed — check service account" };
+  if (!token) return { configured: true, note: `GA4 auth failed: ${ga4LastError}` };
   try {
     const base = `https://analyticsdata.googleapis.com/v1beta/properties/${prop}:runReport`;
     const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
