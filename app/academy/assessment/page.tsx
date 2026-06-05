@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Clock, CheckCircle, Loader2, AlertCircle, ChevronRight, ChevronLeft, Trophy } from "lucide-react";
@@ -25,7 +25,7 @@ const TOPIC_COLORS: Record<string, string> = {
 
 const TOTAL_TIME = 30 * 60; // 30 minutes
 
-export default function AcademyAssessmentPage() {
+function AssessmentInner() {
   const params = useSearchParams();
   const router = useRouter();
   const candidateId = params.get("id") || "";
@@ -222,5 +222,13 @@ export default function AcademyAssessmentPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AcademyAssessmentPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-[60vh] items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent" /></div>}>
+      <AssessmentInner />
+    </Suspense>
   );
 }
