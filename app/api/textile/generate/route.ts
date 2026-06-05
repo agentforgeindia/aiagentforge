@@ -26,6 +26,7 @@ import { NextResponse } from "next/server";
 
 import { requireUser } from "@/lib/serverAuth";
 import { isAgentForgeHostedUrl } from "@/lib/uploadValidation";
+import { isAgentEnabled } from "@/lib/agentEnabled";
 
 export const runtime = "nodejs";
 
@@ -105,6 +106,10 @@ export async function POST(request: Request) {
   const userOrResp = await requireUser(request);
   if (userOrResp instanceof Response) return userOrResp;
   const user = userOrResp;
+
+  if (!(await isAgentEnabled("textile"))) {
+    return NextResponse.json({ error: "Textile AI is temporarily disabled. Please try again later." }, { status: 403 });
+  }
 
   if (!webhookUrl || !/^https?:\/\//i.test(webhookUrl)) {
     return bad(

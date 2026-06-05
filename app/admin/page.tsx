@@ -183,8 +183,18 @@ export default function AdminHomePage() {
         </p>
       ) : (
         <div className="space-y-7">
+          {/* Sticky section nav — click to jump */}
+          <nav className="sticky top-14 z-20 -mx-4 mb-1 flex flex-wrap gap-1.5 border-b border-slate-200 bg-[#f7f8fb]/90 px-4 py-2.5 backdrop-blur dark:border-slate-800 dark:bg-[#0b0d12]/90 sm:-mx-6 sm:px-6">
+            {grouped.map((section) => (
+              <a key={section.group} href={`#sec-${section.group.replace(/\s+/g, "-")}`}
+                className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-bold text-slate-600 transition hover:border-indigo-400 hover:text-indigo-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-indigo-500">
+                {section.group}
+              </a>
+            ))}
+          </nav>
+
           {grouped.map((section) => (
-            <section key={section.group}>
+            <section key={section.group} id={`sec-${section.group.replace(/\s+/g, "-")}`} className="scroll-mt-28">
               <div className="mb-2.5 flex items-center gap-3">
                 <h2 className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
                   {section.group}

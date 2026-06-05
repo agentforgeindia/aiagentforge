@@ -17,6 +17,7 @@
 import { NextResponse } from "next/server";
 
 import { requireUser } from "@/lib/serverAuth";
+import { isAgentEnabled } from "@/lib/agentEnabled";
 import { isAgentForgeHostedUrl } from "@/lib/uploadValidation";
 
 export const runtime = "nodejs";
@@ -84,6 +85,10 @@ export async function POST(request: Request) {
   const userOrResp = await requireUser(request);
   if (userOrResp instanceof Response) return userOrResp;
   const user = userOrResp;
+
+  if (!(await isAgentEnabled("productography"))) {
+    return NextResponse.json({ error: "Productography AI is temporarily disabled. Please try again later." }, { status: 403 });
+  }
 
   if (!webhookUrl || !/^https?:\/\//i.test(webhookUrl)) {
     return bad(

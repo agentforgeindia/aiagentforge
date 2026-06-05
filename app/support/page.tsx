@@ -30,6 +30,7 @@ import {
   FaYoutube,
 } from "react-icons/fa6";
 import type { IconType } from "react-icons";
+import SupportTicketForm from "@/app/components/SupportTicketForm";
 
 /* ─────────────────────────── Data ─────────────────────────── */
 
@@ -556,6 +557,11 @@ export default function SupportPage() {
             from YouTube, filter by agent, per-video schema). We
             keep this compact CTA here so users on /support still
             discover the learning content. */}
+        {/* Raise a ticket */}
+        <section id="raise-ticket" className="mx-auto max-w-5xl px-4 py-8 sm:px-5 sm:py-12">
+          <SupportTicketForm />
+        </section>
+
         <section className="mx-auto max-w-5xl px-4 py-8 sm:px-5 sm:py-12">
           <div
             className={`relative overflow-hidden rounded-[2rem] border-2 border-cyan-400/40 p-7 shadow-2xl shadow-cyan-500/20 backdrop-blur-xl md:p-10 ${card}`}

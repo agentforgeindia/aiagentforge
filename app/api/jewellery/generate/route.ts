@@ -29,6 +29,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/serverAuth";
+import { isAgentEnabled } from "@/lib/agentEnabled";
 import { deductCredits, refundCredits } from "@/lib/creditsServer";
 import {
   firstUntrustedUrl,
@@ -153,6 +154,7 @@ async function createGenerationRows(body: Body, userId: string) {
             id: body.generation_id,
             user_id: userId,
             status: "pending",
+            agent_type: "jewellery",
           },
         ]
       : body.items.map((item) => ({
@@ -160,6 +162,7 @@ async function createGenerationRows(body: Body, userId: string) {
           user_id: userId,
           status: "pending",
           batch_id: body.batch_id ?? null,
+          agent_type: "jewellery",
         }));
 
   const response = await fetch(`${supabaseUrl}/rest/v1/generations`, {
@@ -189,6 +192,11 @@ export async function POST(request: NextRequest) {
   const userOrResp = await requireUser(request);
   if (userOrResp instanceof Response) return userOrResp;
   const user = userOrResp;
+
+  // 1b. Agent kill-switch — blocked from /admin/agents.
+  if (!(await isAgentEnabled("jewellery"))) {
+    return NextResponse.json({ error: "Jewellery AI is temporarily disabled. Please try again later." }, { status: 403 });
+  }
 
   // 2. Parse + validate body.
   let raw: unknown;
