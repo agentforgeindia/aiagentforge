@@ -119,6 +119,14 @@ const TIPS: Record<string, Tip> = {
       "Done hone pe status update karo.",
     ],
   },
+  "Analytics": {
+    what: "Meta Ads, Google Analytics aur Microsoft Clarity ka data ek jagah — last 7 days.",
+    steps: [
+      "Upar gradient buttons se direct dashboard kholo.",
+      "Meta token hai to ad spend/clicks/CTR yahin dikhega.",
+      "GA4 + Clarity ke liye keys env mein daalni hongi (founder).",
+    ],
+  },
   "Marketing Center": {
     what: "Leads kahan se aa rahe hain (Meta/Google) aur email campaigns ka performance.",
     steps: [

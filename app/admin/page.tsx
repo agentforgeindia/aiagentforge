@@ -8,6 +8,7 @@ import Link from "next/link";
 import {
   AlertTriangle,
   BadgeCheck,
+  BarChart3,
   BookOpen,
   Bot,
   Briefcase,
@@ -84,6 +85,7 @@ const TILES: Tile[] = [
   // ── Marketing ────────────────────────────────────────────────
   { group: "Marketing", href: "/admin/email",          label: "Email",          description: "Templates, automation queue, test sends.",                icon: <Mail className="h-4 w-4" />,            perm: "email.view" },
   { group: "Marketing", href: "/admin/marketing",      label: "Marketing",      description: "Meta leads, Google leads, campaign performance.",        icon: <Megaphone className="h-4 w-4" />,       perm: "marketing.view" },
+  { group: "Marketing", href: "/admin/analytics",      label: "Analytics",      description: "Meta Ads, Google Analytics, Clarity — all in one.",      icon: <BarChart3 className="h-4 w-4" />,       perm: "marketing.view" },
   { group: "Marketing", href: "/admin/affiliates",     label: "Affiliates",     description: "Referral partners, commissions, payouts.",                icon: <Handshake className="h-4 w-4" />,       perm: "affiliates.view" },
 
   // ── Finance ──────────────────────────────────────────────────
