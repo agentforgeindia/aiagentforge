@@ -55,6 +55,14 @@ const TIPS: Record<string, Tip> = {
       "'New lead' se manually add karo.",
     ],
   },
+  "Daily Caller Reports": {
+    what: "Har caller apne din ke numbers bharta hai — supervisor poori team ka total dekhta hai.",
+    steps: [
+      "Apne calls/demos/hot leads/paid bharke 'Save My Report' dabao.",
+      "Supervisor ko upar team totals + har caller ki row dikhti hai.",
+      "Date change karke purane din ke reports dekho.",
+    ],
+  },
   "Sales Command Center": {
     what: "Calling team ka daily kaam yahan se — kis lead ko abhi call karna hai.",
     steps: [
