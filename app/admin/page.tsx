@@ -114,6 +114,7 @@ const TILES: Tile[] = [
   { group: "People & Hiring", href: "/admin/leaderboard",     label: "Leaderboard",    description: "Sales rankings, attendance, tasks — badges & medals.",  icon: <Trophy className="h-4 w-4" />,          perm: "team.view" },
   { group: "People & Hiring", href: "/admin/hr",              label: "HR",             description: "Employees, salary records, leave management.",            icon: <UserCog className="h-4 w-4" />,         perm: "hr.view" },
   { group: "People & Hiring", href: "/admin/recruitment",     label: "Hiring OS",      description: "No-resume hiring — candidates, assessments, pipeline.",   icon: <GraduationCap className="h-4 w-4" />,   perm: "hr.view" },
+  { group: "People & Hiring", href: "/admin/academy",         label: "Learn & Earn Academy", description: "WFH candidates — registration, training, assessment, payroll.", icon: <BookOpen className="h-4 w-4" />, perm: "hr.view" },
   { group: "People & Hiring", href: "/admin/knowledge-base",  label: "Knowledge Base", description: "SOPs, sales scripts, support docs, training material.", icon: <BookOpen className="h-4 w-4" />,        perm: "kb.view" },
 
   // ── Content ──────────────────────────────────────────────────
