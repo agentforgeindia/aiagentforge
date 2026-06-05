@@ -55,6 +55,22 @@ const TIPS: Record<string, Tip> = {
       "'New lead' se manually add karo.",
     ],
   },
+  "🏆 Sales War Room": {
+    what: "Poori sales team ek jagah — ranks, sales, incentives, kudos. Ek dusre ko appreciate karo!",
+    steps: [
+      "Top 10 agents dikhte hain, 'Show all' se baaki.",
+      "Kisi ko ❤️ dabake kudos do (appreciation).",
+      "Emergency mein 'Ping Head Office' se founder/admin ko direct alert bhejo.",
+    ],
+  },
+  "Help & Rules": {
+    what: "Apne role ke rules + backend tips. Kuch samajh nahi aaya to AI se pucho.",
+    steps: [
+      "Upar apne role ke rules padho.",
+      "AI Help box mein koi bhi sawaal type karo — step-by-step jawab milega.",
+      "Quick buttons se common sawaal seedha pucho.",
+    ],
+  },
   "AgentForge Caller GPT": {
     what: "Live call ke beech — customer ne jo kaha type karo, AI turant ready-to-speak reply deta hai.",
     steps: [

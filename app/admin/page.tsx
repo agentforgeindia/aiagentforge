@@ -22,6 +22,7 @@ import {
   GitPullRequest,
   GraduationCap,
   Handshake,
+  HelpCircle,
   LayoutDashboard,
   Link2,
   Mail,
@@ -75,6 +76,7 @@ const TILES: Tile[] = [
   { group: "Sales & CRM", href: "/admin/sales",          label: "Sales Command",  description: "Calling queue, hot leads, followups, missed leads.",     icon: <Phone className="h-4 w-4" />,           perm: "leads.view" },
   { group: "Sales & CRM", href: "/admin/caller-reports", label: "Caller Reports", description: "Daily calling numbers — calls, demos, hot leads, paid.",  icon: <PhoneCall className="h-4 w-4" />,       perm: "leads.view" },
   { group: "Sales & CRM", href: "/admin/caller-gpt",     label: "Caller GPT",     description: "Live AI calling assistant — instant objection replies.", icon: <Sparkles className="h-4 w-4" />,        perm: "leads.view" },
+  { group: "Sales & CRM", href: "/admin/sales-room",     label: "Sales War Room", description: "Team ranks, sales, incentives, kudos, achievers, targets.", icon: <Trophy className="h-4 w-4" />,         perm: "leads.view" },
   { group: "Sales & CRM", href: "/admin/deals",          label: "Deals",          description: "Formal deal pipeline — proposals, negotiations, closures.", icon: <Briefcase className="h-4 w-4" />,       perm: "leads.view" },
   { group: "Sales & CRM", href: "/admin/tasks",          label: "Tasks",          description: "Follow-ups, demos, payment reminders.",                   icon: <CheckSquare className="h-4 w-4" />,     perm: "tasks.view" },
 
@@ -121,6 +123,7 @@ const TILES: Tile[] = [
   { group: "System", href: "/admin/settings",       label: "Settings",       description: "Company info, plans, credits, notification config.",    icon: <Settings className="h-4 w-4" />,        perm: "settings.view" },
   { group: "System", href: "/admin/error-logs",      label: "Error Logs",     description: "System failures — generation, API, webhook, payment.",   icon: <AlertTriangle className="h-4 w-4" />,   perm: "audit.view" },
   { group: "System", href: "/admin/audit",          label: "Audit Log",      description: "Every sensitive action — refunds, role changes, edits.",icon: <ClipboardList className="h-4 w-4" />,  perm: "audit.view" },
+  { group: "System", href: "/admin/help",            label: "Help & Rules",   description: "Your role's rules, backend tips + AI help assistant.",   icon: <HelpCircle className="h-4 w-4" />,      perm: "leads.view" },
 ];
 
 export default function AdminHomePage() {
