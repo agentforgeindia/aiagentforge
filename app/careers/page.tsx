@@ -4,14 +4,18 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import {
+  FileText, GraduationCap, BrainCircuit, PartyPopper,
+  Phone, Briefcase, Headphones, Megaphone, Clapperboard, Bot, Palette, Code2, Circle,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type Role = { id: string; title: string; slug: string; description: string | null; is_open: boolean };
 
-const ROLE_EMOJI: Record<string, string> = {
-  telecaller: "📞", "sales-executive": "💼", "support-executive": "🎧",
-  "marketing-executive": "📢", "content-creator": "🎬", "ai-operator": "🤖",
-  designer: "🎨", developer: "💻",
+const ROLE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
+  telecaller: Phone, "sales-executive": Briefcase, "support-executive": Headphones,
+  "marketing-executive": Megaphone, "content-creator": Clapperboard, "ai-operator": Bot,
+  designer: Palette, developer: Code2,
 };
 
 export default function CareersPage() {
@@ -52,14 +56,16 @@ export default function CareersPage() {
         {/* Steps */}
         <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
-            { icon: "📝", label: "Apply" },
-            { icon: "🎓", label: "Learn" },
-            { icon: "🧠", label: "Take Test" },
-            { icon: "🎉", label: "Get Hired" },
+            { Icon: FileText,      label: "Apply" },
+            { Icon: GraduationCap, label: "Learn" },
+            { Icon: BrainCircuit,  label: "Take Test" },
+            { Icon: PartyPopper,   label: "Get Hired" },
           ].map((s, i) => (
             <div key={i} className="rounded-2xl border border-cyan-200/40 bg-white/80 p-5 text-center shadow-md shadow-cyan-200/20 backdrop-blur dark:border-cyan-400/20 dark:bg-white/[0.05]">
-              <div className="text-3xl">{s.icon}</div>
-              <p className="mt-2 text-xs font-black uppercase tracking-wider text-black/70 dark:text-white/70">{s.label}</p>
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-md">
+                <s.Icon className="h-6 w-6" />
+              </div>
+              <p className="mt-3 text-xs font-black uppercase tracking-wider text-black/70 dark:text-white/70">{s.label}</p>
             </div>
           ))}
         </div>
@@ -80,7 +86,9 @@ export default function CareersPage() {
               <Link key={r.id} href={`/careers/apply?role=${r.slug}`}
                 className="group flex items-center justify-between rounded-2xl border border-cyan-200/40 bg-white/80 p-5 shadow-md shadow-cyan-200/10 backdrop-blur transition hover:scale-[1.02] hover:border-cyan-400 hover:shadow-cyan-300/30 dark:border-cyan-400/20 dark:bg-white/[0.05] dark:hover:border-cyan-400">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-2xl shadow-md">{ROLE_EMOJI[r.slug] ?? "🔹"}</span>
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-md">
+                    {(() => { const Ic = ROLE_ICON[r.slug] ?? Circle; return <Ic className="h-6 w-6" />; })()}
+                  </span>
                   <div>
                     <p className="text-sm font-black">{r.title}</p>
                     <p className="text-[11px] font-bold text-black/50 dark:text-white/50">Apply &amp; take assessment</p>

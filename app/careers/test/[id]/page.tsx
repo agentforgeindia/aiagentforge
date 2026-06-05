@@ -14,7 +14,7 @@ const MAX_WARNINGS = 3;
 export default function TestPage() {
   const { id } = useParams<{ id: string }>();
 
-  const [phase, setPhase]     = useState<"intro" | "loading" | "test" | "result" | "error">("intro");
+  const [phase, setPhase]     = useState<"intro" | "loading" | "test" | "result" | "error" | "received">("intro");
   const [questions, setQuestions] = useState<Q[]>([]);
   const [idx, setIdx]         = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
@@ -35,7 +35,11 @@ export default function TestPage() {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ candidate_id: id }),
     });
     const json = await res.json();
-    if (!json.ok) { setError(json.error ?? "Could not load test."); setPhase("error"); return; }
+    if (!json.ok) {
+      // No questions for this role → application is still received, not an error.
+      if ((json.error ?? "").toLowerCase().includes("no questions")) { setPhase("received"); return; }
+      setError(json.error ?? "Could not load test."); setPhase("error"); return;
+    }
     setQuestions(json.questions);
     setIdx(0);
     setTimeLeft(json.questions[0]?.time ?? 45);
@@ -127,6 +131,24 @@ export default function TestPage() {
   }
 
   if (phase === "loading") return <Shell><p className="py-10 text-center text-sm text-slate-500">Please wait…</p></Shell>;
+
+  if (phase === "received") {
+    return (
+      <Shell>
+        <div className="py-6 text-center">
+          <p className="text-5xl">✅</p>
+          <h1 className="mt-3 text-2xl font-black">
+            Application <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">Received!</span>
+          </h1>
+          <p className="mt-2 text-sm font-medium text-black/60 dark:text-white/60">
+            Thank you for applying to AgentForge. Hamari team aapki application review karke
+            jald hi aapse WhatsApp/call par contact karegi.
+          </p>
+          <p className="mt-4 text-[11px] font-bold text-black/40 dark:text-white/40">Aap ye window band kar sakte hain.</p>
+        </div>
+      </Shell>
+    );
+  }
 
   if (phase === "error") {
     return <Shell><div className="py-8 text-center"><p className="text-3xl">😕</p><p className="mt-3 text-sm font-medium text-rose-600">{error}</p></div></Shell>;
