@@ -20,6 +20,7 @@ import {
   FileText,
   Gem,
   GitPullRequest,
+  GraduationCap,
   Handshake,
   LayoutDashboard,
   Link2,
@@ -91,6 +92,7 @@ const TILES: Tile[] = [
   { href: "/admin/team/attendance", label: "Attendance",     description: "Check-ins, session time, work logs, monthly summary.",   icon: <Clock className="h-4 w-4" />,           perm: "team.view" },
   { href: "/admin/knowledge-base",  label: "Knowledge Base", description: "SOPs, sales scripts, support docs, training material.", icon: <BookOpen className="h-4 w-4" />,        perm: "kb.view" },
   { href: "/admin/hr",              label: "HR",             description: "Employees, salary records, leave management.",            icon: <UserCog className="h-4 w-4" />,         perm: "hr.view" },
+  { href: "/admin/recruitment",     label: "Hiring OS",      description: "No-resume hiring — candidates, assessments, pipeline.",   icon: <GraduationCap className="h-4 w-4" />,   perm: "hr.view" },
   // ── Content ──────────────────────────────────────────────────
   { href: "/admin/posts",          label: "Content",        description: "Blog, news and product updates.",                        icon: <FileText className="h-4 w-4" />,        perm: "content.view" },
   { href: "/admin/testimonials",   label: "Testimonials",   description: "Customer reviews on the homepage.",                     icon: <MessageSquare className="h-4 w-4" />,   perm: "testimonials.manage" },

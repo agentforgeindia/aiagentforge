@@ -223,6 +223,30 @@ const TIPS: Record<string, Tip> = {
       "'New Article' se naya SOP add karo — pin karke top pe rakho.",
     ],
   },
+  "Hiring OS": {
+    what: "No-resume hiring system — candidates apply, test dete hain, score ke basis pe hire hote hain.",
+    steps: [
+      "'Candidates' mein applicants ka pipeline manage karo (Applied → Hired).",
+      "'Questions' mein assessment ke MCQ banao (section + role wise).",
+      "Funnel aur leaderboard se best candidates pakdo.",
+    ],
+  },
+  "Candidates": {
+    what: "Har candidate ka pipeline — stage, scores, salary, AI recommendation.",
+    steps: [
+      "Stage dropdown se candidate ko aage badhao.",
+      "Card expand karke scores + expected/offered salary daalo (final auto-calculate).",
+      "Talent Pool tag se rejected candidates future ke liye save karo.",
+    ],
+  },
+  "Question Bank": {
+    what: "Assessment ke MCQ questions — section (basic/product/crm/sales) aur role wise.",
+    steps: [
+      "'Add Question' se MCQ banao — 4 options.",
+      "Green circle pe click karke correct answer set karo.",
+      "Section se filter karke manage karo.",
+    ],
+  },
   "HR Module": {
     what: "Employees, unki salary aur leave management.",
     steps: [
