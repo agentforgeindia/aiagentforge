@@ -163,12 +163,18 @@ export default function TestPage() {
             {result.passed ? "You Passed!" : "Keep Going!"}
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            {result.passed ? "Our team will reach out for the next round." : "You can retry — review the basics and try again."}
+            {result.passed ? "Ab apni details share karke interview ke liye aage badho." : "You can retry — review the basics and try again."}
           </p>
           <div className="mt-6 inline-flex items-baseline gap-1">
             <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-6xl font-black text-transparent">{result.total_score}</span>
             <span className="text-xl text-black/40 dark:text-white/40">%</span>
           </div>
+          {result.passed && (
+            <a href={`/careers/details/${id}`}
+              className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-emerald-500/30 transition hover:scale-105 active:scale-95">
+              Complete Your Details →
+            </a>
+          )}
         </div>
         <div className="mt-6 space-y-2">
           {Object.entries(result.section_scores).map(([sec, sc]) => (

@@ -20,6 +20,9 @@ type Candidate = {
   ai_recommendation: string | null;
   current_salary: number | null; expected_salary: number | null;
   offered_salary: number | null; pool_tag: string | null; notes: string | null;
+  address: string | null; locality: string | null; landmark: string | null;
+  latitude: number | null; longitude: number | null;
+  distance_km: number | null; details_completed: boolean | null;
   created_at: string;
 };
 
@@ -204,6 +207,20 @@ export default function CandidatesPage() {
                       </div>
                     </div>
                     {c.email && <p className={`mt-3 text-[11px] ${adminMutedCls}`}>📧 {c.email}</p>}
+                    {(c.address || c.landmark) && (
+                      <div className="mt-2 rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/40">
+                        <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${adminMutedCls}`}>Location</p>
+                        {c.address && <p className="mt-0.5 text-xs">{c.address}</p>}
+                        {c.locality && <p className={`text-[11px] ${adminMutedCls}`}>Area: {c.locality}</p>}
+                        {c.landmark && <p className={`text-[11px] ${adminMutedCls}`}>Landmark: {c.landmark}</p>}
+                        <div className="mt-1 flex items-center gap-3">
+                          {c.distance_km != null && <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-[11px] font-bold text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300">📍 {c.distance_km} km from office</span>}
+                          {c.latitude && c.longitude && (
+                            <a href={`https://www.google.com/maps?q=${c.latitude},${c.longitude}`} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-indigo-600 hover:underline dark:text-indigo-300">View on map →</a>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
