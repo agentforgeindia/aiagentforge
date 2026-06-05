@@ -31,7 +31,7 @@ INSERT INTO public.posts (
     {"type":"p","text":"Any individual in India with a smartphone and basic internet — fresher or experienced, any city or town. Minimum qualification: 10th pass. Minimum availability: 4 hours per day."},
     {"type":"h2","text":"How to apply"},
     {"type":"p","text":"Visit aiagentforge.in/careers. Select your preferred role. Complete the free training modules. Take the 30-minute assessment. Scoring 50% or above qualifies you for an interview call from the AgentForge team within 48 hours."},
-    {"type":"quote","text":"We are building India'\''s largest remote AI sales team. Every city, every town — talent is everywhere. AgentForge Academy is how we find it."}
+    {"type":"quote","text":"We are building India largest remote AI sales team. Every city, every town — talent is everywhere. AgentForge Academy is how we find it."}
   ]'::jsonb,
   '{"headline":"Academy Launch","subline":"WFH Jobs Open","badge":"Breaking News","gradientFrom":"#06b6d4","gradientTo":"#7c3aed","icon":"🎓","statsRow":["100 Seats","₹5K Basic","Free Training"]}'::jsonb,
   'published',
