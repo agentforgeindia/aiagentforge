@@ -2637,7 +2637,7 @@ export default function Home() {
                   </div>
                 )}
 
-                {items.length > 0 && (
+                {items.length > 1 && (
                   <div className="mt-4">
                     <div className="mb-2 flex items-center justify-between">
                       <p className="text-xs font-black uppercase tracking-widest text-cyan-600">
