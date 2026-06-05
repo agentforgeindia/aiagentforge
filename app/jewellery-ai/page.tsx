@@ -740,6 +740,10 @@ export default function JewelleryAIPage() {
   const [showSignupPopup, setShowSignupPopup] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [ratingGenerationId, setRatingGenerationId] = useState<string | undefined>();
+  // Gate download behind a review — user can VIEW the output freely,
+  // but the first Download click asks for a rating first.
+  const [reviewedResult, setReviewedResult] = useState(false);
+  const [downloadAfterReview, setDownloadAfterReview] = useState(false);
   const [showCongratsPopup, setShowCongratsPopup] = useState(false);
   const [congratsCredits, setCongratsCredits] = useState(0);
 
@@ -1405,6 +1409,17 @@ const applyLogoOverlay = async (
   }
 };
 
+// Gate: ask for a review before the first download. User keeps
+// viewing the output; after rating (or skip) the download proceeds.
+const requestDownload = () => {
+  if (!reviewedResult) {
+    setDownloadAfterReview(true);
+    setShowRatingModal(true);
+    return;
+  }
+  handleDownloadResult();
+};
+
 const handleDownloadResult = async () => {
   if (!generatedOutputUrl) return;
 
@@ -1892,12 +1907,18 @@ if (!response.ok) {
         <RatingFeedbackModal
           generationId={ratingGenerationId}
           agent="jewellery"
-          onClose={() => setShowRatingModal(false)}
+          onClose={() => {
+            setShowRatingModal(false);
+            setReviewedResult(true);
+            if (downloadAfterReview) { setDownloadAfterReview(false); handleDownloadResult(); }
+          }}
           onCreditsAwarded={(credits) => {
             setShowRatingModal(false);
+            setReviewedResult(true);
             setCongratsCredits(credits);
             setShowCongratsPopup(true);
             refreshProfile?.();
+            if (downloadAfterReview) { setDownloadAfterReview(false); handleDownloadResult(); }
           }}
         />
       )}
@@ -2693,7 +2714,7 @@ if (!response.ok) {
                           <div className="mt-4 grid grid-cols-2 gap-3">
                             <button
                               type="button"
-                              onClick={handleDownloadResult}
+                              onClick={requestDownload}
                               className="rounded-2xl bg-slate-950 px-4 py-3 text-sm font-black text-white transition hover:scale-[1.02] dark:bg-white dark:text-slate-950"
                             >
                               Download

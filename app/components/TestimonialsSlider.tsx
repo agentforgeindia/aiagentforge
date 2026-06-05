@@ -174,13 +174,47 @@ export default function TestimonialsSlider({
 
   /* ───────────── Submit form ───────────── */
 
-  const onPickImage = (e: ChangeEvent<HTMLInputElement>) => {
+  // Resize + compress an image client-side so uploads never exceed
+  // the storage limit. Max dimension 1280px, JPEG quality 0.8.
+  const compressImage = (file: File): Promise<File> =>
+    new Promise((resolve) => {
+      // Skip tiny files
+      if (file.size < 400 * 1024) return resolve(file);
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const MAX = 1280;
+        let { width, height } = img;
+        if (width > MAX || height > MAX) {
+          if (width >= height) { height = Math.round((height * MAX) / width); width = MAX; }
+          else { width = Math.round((width * MAX) / height); height = MAX; }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return resolve(file);
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return resolve(file);
+            resolve(new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" }));
+          },
+          "image/jpeg", 0.8,
+        );
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
+
+  const onPickImage = async (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    setFormImageFile(f);
+    const compressed = await compressImage(f);
+    setFormImageFile(compressed);
     const reader = new FileReader();
     reader.onload = () => setFormImagePreview(String(reader.result || ""));
-    reader.readAsDataURL(f);
+    reader.readAsDataURL(compressed);
   };
 
   const resetForm = () => {
@@ -429,7 +463,7 @@ export default function TestimonialsSlider({
       {/* Submit modal */}
       {showForm && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 px-4 backdrop-blur-md">
-          <div className="relative w-full max-w-lg overflow-hidden rounded-[1.75rem] border border-black/10 bg-white p-6 text-black shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-[#0b1220] dark:text-white sm:p-7">
+          <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[1.75rem] border border-black/10 bg-white p-6 text-black shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-[#0b1220] dark:text-white sm:p-7">
             <button
               type="button"
               onClick={() => {
@@ -537,7 +571,7 @@ export default function TestimonialsSlider({
 
               {formImagePreview && (
                 <div className="relative overflow-hidden rounded-xl border border-black/10 dark:border-white/10">
-                  <img src={formImagePreview} alt="Preview" className="block w-full object-cover" />
+                  <img src={formImagePreview} alt="Preview" className="mx-auto block max-h-[32vh] w-auto object-contain" />
                   <button
                     type="button"
                     onClick={() => {

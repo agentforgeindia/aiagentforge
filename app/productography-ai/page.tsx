@@ -495,6 +495,8 @@ export default function ProductographyPage() {
   const [showSignupPopup, setShowSignupPopup] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [ratingGenerationId, setRatingGenerationId] = useState<string | undefined>();
+  const [reviewedResult, setReviewedResult] = useState(false);
+  const [downloadAfterReview, setDownloadAfterReview] = useState(false);
   const [showCongratsPopup, setShowCongratsPopup] = useState(false);
   const [congratsCredits, setCongratsCredits] = useState(0);
   const [items, setItems] = useState<GenItem[]>([]);
@@ -1178,6 +1180,11 @@ export default function ProductographyPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const requestDownload = () => {
+    if (!reviewedResult) { setDownloadAfterReview(true); setShowRatingModal(true); return; }
+    handleDownloadResult();
   };
 
   const handleDownloadResult = async () => {
@@ -1979,7 +1986,7 @@ export default function ProductographyPage() {
                                 </div>
                               </div>
                               <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                                <button onClick={handleDownloadResult} className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-5 py-3 font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-105">
+                                <button onClick={requestDownload} className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-5 py-3 font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-105">
                                   <Download className="h-5 w-5" /> Download
                                 </button>
                                 <button onClick={handleNativeShare} className="flex items-center justify-center gap-2 rounded-2xl bg-blue-500 px-5 py-3 font-black text-white shadow-lg shadow-blue-500/20 transition hover:scale-105">
@@ -2049,12 +2056,18 @@ export default function ProductographyPage() {
         <RatingFeedbackModal
           generationId={ratingGenerationId}
           agent="productography"
-          onClose={() => setShowRatingModal(false)}
+          onClose={() => {
+            setShowRatingModal(false);
+            setReviewedResult(true);
+            if (downloadAfterReview) { setDownloadAfterReview(false); handleDownloadResult(); }
+          }}
           onCreditsAwarded={(credits) => {
             setShowRatingModal(false);
+            setReviewedResult(true);
             setCongratsCredits(credits);
             setShowCongratsPopup(true);
             refreshProfile();
+            if (downloadAfterReview) { setDownloadAfterReview(false); handleDownloadResult(); }
           }}
         />
       )}

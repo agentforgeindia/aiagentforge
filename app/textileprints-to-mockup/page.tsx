@@ -832,6 +832,8 @@ export default function Home() {
   const [phoneInput, setPhoneInput] = useState("");
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [ratingGenerationId, setRatingGenerationId] = useState<string | undefined>();
+  const [reviewedResult, setReviewedResult] = useState(false);
+  const [downloadAfterReview, setDownloadAfterReview] = useState(false);
   const [showCongratsPopup, setShowCongratsPopup] = useState(false);
   const [congratsCredits, setCongratsCredits] = useState(0);
 
@@ -2156,6 +2158,11 @@ export default function Home() {
   const whatsappLink = previewResult
     ? `https://wa.me/?text=${encodeURIComponent(`Generated with AgentForge\n${previewResult}`)}`
     : "#";
+
+  const requestDownload = () => {
+    if (!reviewedResult) { setDownloadAfterReview(true); setShowRatingModal(true); return; }
+    handleDownloadResult();
+  };
 
   const handleDownloadResult = async () => {
     if (!previewResult) return;
@@ -3492,7 +3499,7 @@ export default function Home() {
 
                             <div className="grid gap-3 sm:grid-cols-2">
                               <button
-                                onClick={handleDownloadResult}
+                                onClick={requestDownload}
                                 className="flex items-center justify-center gap-3 rounded-2xl bg-emerald-500 px-5 py-3 font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-105 active:scale-95"
                               >
                                 <span>Download HD</span>
@@ -3722,12 +3729,18 @@ export default function Home() {
         <RatingFeedbackModal
           generationId={ratingGenerationId}
           agent="textile"
-          onClose={() => setShowRatingModal(false)}
+          onClose={() => {
+            setShowRatingModal(false);
+            setReviewedResult(true);
+            if (downloadAfterReview) { setDownloadAfterReview(false); handleDownloadResult(); }
+          }}
           onCreditsAwarded={(credits) => {
             setShowRatingModal(false);
+            setReviewedResult(true);
             setCongratsCredits(credits);
             setShowCongratsPopup(true);
             refreshProfile();
+            if (downloadAfterReview) { setDownloadAfterReview(false); handleDownloadResult(); }
           }}
         />
       )}
