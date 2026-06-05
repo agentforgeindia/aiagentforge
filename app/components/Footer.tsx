@@ -43,7 +43,13 @@ const COMPANY_LINKS = [
   { label: "Supported Industries", href: "/supported-industries" },
   { label: "Support", href: "/support" },
   { label: "Pricing", href: "/pricing" },
-  { label: "Careers — We're Hiring", href: "/careers" },
+];
+
+const ACADEMY_LINKS = [
+  { label: "AgentForge Academy", href: "/careers" },
+  { label: "Learn & Earn", href: "/careers/learn?role=telecaller" },
+  { label: "Work With Us", href: "/careers" },
+  { label: "Apply Now", href: "/careers/apply" },
 ];
 
 const SEO_LINKS = [
@@ -163,7 +169,7 @@ export default function Footer() {
               ROW 2 — Link columns
               ============================================================ */}
           <div
-            className={`relative mt-7 grid gap-x-6 gap-y-7 border-t pt-7 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1.1fr_1fr_1fr] ${divider}`}
+            className={`relative mt-7 grid gap-x-6 gap-y-7 border-t pt-7 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.1fr_1fr_1fr] ${divider}`}
           >
             {/* Brand short description */}
             <div className="space-y-3">
@@ -179,6 +185,7 @@ export default function Footer() {
             </div>
 
             <LinkColumn title="AI Agents" links={AGENT_LINKS} heading={heading} linkBase={linkBase} />
+            <LinkColumn title="Academy" links={ACADEMY_LINKS} heading={heading} linkBase={linkBase} />
             <LinkColumn title="Company"   links={COMPANY_LINKS} heading={heading} linkBase={linkBase} />
             <LinkColumn title="Popular AI Tools" links={SEO_LINKS} heading={heading} linkBase={linkBase} />
             <LinkColumn title="Legal & Trust" links={LEGAL_LINKS} heading={heading} linkBase={linkBase} />
