@@ -86,11 +86,11 @@ function AssessmentInner() {
     if (loading || submitted) return;
     timerRef.current = setInterval(() => {
       setTimeLeft(t => {
-        if (t <= 1) { clearInterval(timerRef.current); handleSubmit(true); return 0; }
+        if (t <= 1) { if (timerRef.current) clearInterval(timerRef.current); handleSubmit(true); return 0; }
         return t - 1;
       });
     }, 1000);
-    return () => clearInterval(timerRef.current);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [loading, submitted, handleSubmit]);
 
   const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
