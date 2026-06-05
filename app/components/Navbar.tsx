@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "./ThemeProvider";
 import { useAuth } from "./AuthProvider";
+import { useLanguage } from "./LanguageProvider";
 import { supabase } from "@/lib/supabase";
 import { BadgeCheck } from "lucide-react";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
@@ -16,16 +17,7 @@ const agents = [
   { title: "Productography AI", desc: "Product photos → ad visuals", link: "/productography-ai", isNew: true },
 ];
 
-// Flow: Home → Gallery → Tutorials → News & Blog → Pricing → About → Support → Agents (dropdown)
-const navLinks = [
-  { label: "Home", href: "/" },
-  { label: "Gallery", href: "/gallery" },
-  { label: "Tutorials", href: "/tutorials" },
-  { label: "News & Blog", href: "/news" },
-  { label: "Pricing", href: "/pricing" },
-  { label: "About", href: "/about" },
-  { label: "Support", href: "/support" },
-];
+// navLinks are now built dynamically inside the component using T (translations)
 
 // Safe helper to get user initials from name or email
 function getInitials(name?: string | null, email?: string | null): string {
@@ -40,10 +32,21 @@ function getInitials(name?: string | null, email?: string | null): string {
 
 export default function Navbar() {
   const { darkMode, toggleTheme } = useTheme();
+  const { lang, toggleLang, T } = useLanguage();
   const { user: authUser, credits, profile } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const [showAgents, setShowAgents] = useState(false);
+
+  const navLinks = [
+    { label: T.nav.home, href: "/" },
+    { label: T.nav.gallery, href: "/gallery" },
+    { label: T.nav.tutorials, href: "/tutorials" },
+    { label: T.nav.newsBlog, href: "/news" },
+    { label: T.nav.pricing, href: "/pricing" },
+    { label: T.nav.about, href: "/about" },
+    { label: T.nav.support, href: "/support" },
+  ];
   const [showProfile, setShowProfile] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   // Mobile-only accordion state (separate from desktop dropdowns above)
@@ -141,7 +144,7 @@ export default function Navbar() {
       <p
         className={`truncate text-[8px] font-black uppercase tracking-[0.12em] leading-none sm:text-[9px] ${muted}`}
       >
-        Upload | Generate | Done
+        {T.nav.tagline}
       </p>
 
       <BadgeCheck className="h-3 w-3 shrink-0 fill-cyan-500 text-white" />
@@ -176,7 +179,7 @@ export default function Navbar() {
                   : `${muted} hover:bg-cyan-500/5 hover:text-cyan-500`
               }`}
             >
-              Agents
+              {T.nav.agents}
               <svg
                 className={`h-3.5 w-3.5 transition-transform duration-200 ${showAgents ? "rotate-180" : ""}`}
                 fill="none"
@@ -217,7 +220,7 @@ export default function Navbar() {
                     href="/agents"
                     className="flex items-center justify-between gap-2 text-xs font-black text-cyan-600 transition hover:text-cyan-500"
                   >
-                    <span>View All Agents + Coming Soon</span>
+                    <span>{T.nav.viewAllAgents}</span>
                     <span className="text-base">→</span>
                   </Link>
                 </div>
@@ -249,7 +252,7 @@ export default function Navbar() {
               href="/login"
               className="hidden h-10 items-center rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-5 text-sm font-black text-white shadow-lg shadow-cyan-500/20 transition-all duration-200 hover:shadow-cyan-500/30 hover:brightness-110 sm:inline-flex"
             >
-              Login
+              {T.nav.login}
             </Link>
           ) : (
             <div className="relative z-50 hidden sm:block" ref={profileRef}>
@@ -309,19 +312,19 @@ export default function Navbar() {
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-400/10 text-cyan-500">
                         <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" /></svg>
                       </div>
-                      My Profile
+                      {T.nav.myProfile}
                     </Link>
                     <Link href="/my-creations" className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-colors ${darkMode ? "hover:bg-white/8" : "hover:bg-cyan-50 text-black/80 hover:text-cyan-600"}`}>
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-400/10 text-blue-500">
                         <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" /></svg>
                       </div>
-                      My Creations
+                      {T.nav.myCreations}
                     </Link>
                     <Link href="/billing" className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-colors ${darkMode ? "hover:bg-white/8" : "hover:bg-cyan-50 text-black/80 hover:text-cyan-600"}`}>
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-400/10 text-emerald-500">
                         <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>
                       </div>
-                      Billing &amp; Credits
+                      {T.nav.billing}
                     </Link>
                   </div>
 
@@ -337,7 +340,7 @@ export default function Navbar() {
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-400/10">
                         <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
                       </div>
-                      Logout
+                      {T.nav.logout}
                     </button>
                   </div>
                 </div>
@@ -369,6 +372,22 @@ export default function Navbar() {
             >
               {darkMode ? "🌙" : "☀️"}
             </span>
+          </button>
+
+          {/* Language toggle */}
+          <button
+            type="button"
+            onClick={toggleLang}
+            aria-label="Toggle language"
+            className={`flex h-10 items-center gap-1 rounded-full px-3 text-xs font-black transition-all duration-200 ${
+              darkMode
+                ? "bg-white/15 text-white hover:bg-white/25"
+                : "bg-black/10 text-black hover:bg-black/15"
+            }`}
+          >
+            <span className={`transition-all ${lang === "en" ? "opacity-100" : "opacity-40"}`}>EN</span>
+            <span className={`mx-0.5 ${darkMode ? "text-white/30" : "text-black/20"}`}>|</span>
+            <span className={`transition-all ${lang === "hi" ? "opacity-100" : "opacity-40"}`}>हिं</span>
           </button>
 
           {/* Mobile menu button */}
@@ -464,7 +483,7 @@ export default function Navbar() {
                       href="/agents"
                       className="mt-1 flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black text-cyan-600 hover:bg-cyan-400/10"
                     >
-                      View All Agents + Coming Soon →
+                      {T.nav.viewAllAgents}
                     </Link>
                   </div>
                 )}
@@ -492,28 +511,28 @@ export default function Navbar() {
                     </div>
 
                     <Link href="/profile" className="block rounded-2xl px-4 py-3 hover:bg-cyan-400/10">
-                      My Profile
+                      {T.nav.myProfile}
                     </Link>
                     <Link href="/my-creations" className="block rounded-2xl px-4 py-3 hover:bg-cyan-400/10">
-                      My Creations
+                      {T.nav.myCreations}
                     </Link>
                     <Link href="/settings" className="block rounded-2xl px-4 py-3 hover:bg-cyan-400/10">
-                      Settings
+                      {T.nav.settings}
                     </Link>
                     <Link href="/billing" className="block rounded-2xl px-4 py-3 hover:bg-cyan-400/10">
-                      Billing &amp; Credits
+                      {T.nav.billing}
                     </Link>
                     <button
                       type="button"
                       onClick={handleLogout}
                       className="w-full rounded-2xl px-4 py-3 text-left text-red-500 hover:bg-red-500/10"
                     >
-                      Logout
+                      {T.nav.logout}
                     </button>
                   </>
                 ) : (
                   <Link href="/login" className="block rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 px-4 py-3 text-center font-black text-white">
-                    Login
+                    {T.nav.login}
                   </Link>
                 )}
               </div>
