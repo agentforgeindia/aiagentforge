@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 // ============================================================
-// /admin/leads — corporate sales pipeline.
+// /admin/leads â€” corporate sales pipeline.
 // ============================================================
 
 import Link from "next/link";
@@ -103,7 +103,7 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function AdminLeadsPage() {
-  // Single source of truth — RBAC hook checks the DB-driven role +
+  // Single source of truth â€” RBAC hook checks the DB-driven role +
   // permission list. No more hard-coded email allowlist (which used
   // to block every non-founder, including the new sales role).
   const {
@@ -126,7 +126,7 @@ export default function AdminLeadsPage() {
   const [stageFilter, setStageFilter] = useState<StageId>("all");
   const [search, setSearch] = useState("");
 
-  // Top-level view tabs — "Pipeline" (the leads table itself) vs
+  // Top-level view tabs â€” "Pipeline" (the leads table itself) vs
   // "Free signups" (virtual leads pulled from profiles).
   const [topView, setTopView] = useState<"pipeline" | "signups">("pipeline");
   const [viewMode, setViewMode] = useState<"table" | "kanban">("table");
@@ -149,7 +149,7 @@ export default function AdminLeadsPage() {
   const [loadingSignups, setLoadingSignups] = useState(false);
   const [convertingId, setConvertingId] = useState<string | null>(null);
 
-  // Auto-opens when ?new=1 is in the URL — drives the AdminShell
+  // Auto-opens when ?new=1 is in the URL â€” drives the AdminShell
   // "+ New lead" quick button. We read window.location directly
   // (instead of useSearchParams) to avoid Next.js 16's Suspense
   // boundary requirement during static prerender.
@@ -339,7 +339,7 @@ export default function AdminLeadsPage() {
 
   async function convertSignup(s: typeof signupRows[number]) {
     if (!s.email) {
-      alert("This signup has no email — cannot promote.");
+      alert("This signup has no email â€” cannot promote.");
       return;
     }
     if (!confirm(`Promote ${s.full_name?.trim() || s.email} to a sales lead?`)) {
@@ -443,7 +443,7 @@ export default function AdminLeadsPage() {
 
   async function deleteLead(id: string, name: string) {
     const ok = confirm(
-      `Delete "${name}"? This removes the lead row and its activity log permanently — there is no undo.`,
+      `Delete "${name}"? This removes the lead row and its activity log permanently â€” there is no undo.`,
     );
     if (!ok) return;
     const { error } = await supabase.from("leads").delete().eq("id", id);
@@ -464,7 +464,7 @@ export default function AdminLeadsPage() {
   if (loadingAuth) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">
-        Checking access…
+        Checking accessâ€¦
       </main>
     );
   }
@@ -484,9 +484,10 @@ export default function AdminLeadsPage() {
 
   return (
     <AdminShell
+      doodleType="leads"
       breadcrumbs={[{ label: "Leads" }]}
       title="Leads"
-      subtitle={`${stats.total} total · ${stats.open} open · ${stats.converted} converted`}
+      subtitle={`${stats.total} total Â· ${stats.open} open Â· ${stats.converted} converted`}
       email={authEmail}
       actions={
         <>
@@ -648,7 +649,7 @@ export default function AdminLeadsPage() {
               className={adminPrimaryBtnCls}
             >
               <UserPlus className="h-3.5 w-3.5" />
-              {saving ? "Saving…" : "Save lead"}
+              {saving ? "Savingâ€¦" : "Save lead"}
             </button>
           </div>
         </section>
@@ -665,7 +666,7 @@ export default function AdminLeadsPage() {
         </div>
       )}
 
-      {/* Top tabs — Pipeline (regular leads) vs Free signups */}
+      {/* Top tabs â€” Pipeline (regular leads) vs Free signups */}
       <div className="mb-3 flex flex-wrap gap-1.5">
         <button
           type="button"
@@ -703,15 +704,15 @@ export default function AdminLeadsPage() {
         </button>
       </div>
 
-      {/* Free-signups view — virtual leads pulled from profiles */}
+      {/* Free-signups view â€” virtual leads pulled from profiles */}
       {topView === "signups" && (
         <div className={`${adminCardCls}`}>
           {loadingSignups ? (
-            <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
+            <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
           ) : signupRows.length === 0 ? (
             <p className={`p-8 text-center text-sm ${adminMutedCls}`}>
               No free-tier signups in the last 90 days that aren't already
-              in the pipeline. Nice — your sales follow-up is up to date.
+              in the pipeline. Nice â€” your sales follow-up is up to date.
             </p>
           ) : (
             <ul className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -727,7 +728,7 @@ export default function AdminLeadsPage() {
                       </span>
                       {s.has_phone && (
                         <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
-                          Phone shared · warm
+                          Phone shared Â· warm
                         </span>
                       )}
                       {s.last_activity_at && (
@@ -744,7 +745,7 @@ export default function AdminLeadsPage() {
                     </p>
                     <p className={`mt-0.5 truncate text-xs ${adminMutedCls}`}>
                       {s.email}
-                      {s.utm_source && ` · via ${s.utm_source}`}
+                      {s.utm_source && ` Â· via ${s.utm_source}`}
                       {s.utm_campaign && ` / ${s.utm_campaign}`}
                     </p>
                   </div>
@@ -757,7 +758,7 @@ export default function AdminLeadsPage() {
                         className="inline-flex items-center gap-1.5 rounded-md bg-slate-900 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-slate-800 disabled:opacity-50 dark:bg-indigo-600 dark:hover:bg-indigo-500"
                       >
                         <UserPlus className="h-3.5 w-3.5" />
-                        {convertingId === s.id ? "Promoting…" : "Convert"}
+                        {convertingId === s.id ? "Promotingâ€¦" : "Convert"}
                       </button>
                     )}
                     <Link
@@ -774,7 +775,7 @@ export default function AdminLeadsPage() {
         </div>
       )}
 
-      {/* Stage filter pills — quick slice by sales-intent bucket */}
+      {/* Stage filter pills â€” quick slice by sales-intent bucket */}
       {topView === "pipeline" && (
         <div className="mb-3 flex flex-wrap items-center gap-1.5">
           {STAGES.map((s) => {
@@ -843,7 +844,7 @@ export default function AdminLeadsPage() {
       </div>
       )}
 
-      {/* Bulk action bar — appears only when rows are selected */}
+      {/* Bulk action bar â€” appears only when rows are selected */}
       {topView === "pipeline" && selected.size > 0 && (
         <div className={`${adminCardCls} mt-4 flex flex-wrap items-center gap-2 p-3`}>
           <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
@@ -854,7 +855,7 @@ export default function AdminLeadsPage() {
             onChange={(e) => setBulkStatus(e.target.value)}
             className={`${adminInputCls} sm:max-w-[180px]`}
           >
-            <option value="">Set status to…</option>
+            <option value="">Set status toâ€¦</option>
             {STATUSES.map((s) => (
               <option key={s.value} value={s.value}>{s.label}</option>
             ))}
@@ -887,15 +888,15 @@ export default function AdminLeadsPage() {
         </div>
       )}
 
-      {/* List — only shown on the Pipeline tab */}
+      {/* List â€” only shown on the Pipeline tab */}
       {topView === "pipeline" && (
       <div className={`${adminCardCls} mt-4`}>
         {loadingRows ? (
-          <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
+          <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
         ) : filtered.length === 0 ? (
           <p className={`p-8 text-center text-sm ${adminMutedCls}`}>
             {rows.length === 0
-              ? "No leads recorded yet. Use “New lead” to add one."
+              ? "No leads recorded yet. Use â€œNew leadâ€ to add one."
               : "No leads match the current filter."}
           </p>
         ) : (
@@ -948,12 +949,12 @@ export default function AdminLeadsPage() {
                     {r.name}
                     {r.business_name && (
                       <span className={`ml-2 text-xs font-normal ${adminMutedCls}`}>
-                        · {r.business_name}
+                        Â· {r.business_name}
                       </span>
                     )}
                   </p>
                   <p className={`mt-0.5 truncate text-xs ${adminMutedCls}`}>
-                    {[r.phone, r.email, r.city].filter(Boolean).join(" · ") || "—"}
+                    {[r.phone, r.email, r.city].filter(Boolean).join(" Â· ") || "â€”"}
                   </p>
                 </Link>
                 <div className="flex items-center gap-2">
@@ -990,7 +991,7 @@ export default function AdminLeadsPage() {
       </div>
       )}
 
-      {/* Bulk CSV import modal — opens via the toolbar button */}
+      {/* Bulk CSV import modal â€” opens via the toolbar button */}
       <LeadsCsvImportModal
         open={showImport}
         onClose={() => setShowImport(false)}
@@ -1043,3 +1044,4 @@ function formatDate(iso: string) {
     year: "numeric",
   });
 }
+

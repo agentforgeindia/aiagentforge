@@ -1,16 +1,16 @@
-"use client";
+﻿"use client";
 
 // ============================================================
-// /admin/dashboard — Founder War Room.
+// /admin/dashboard â€” Founder War Room.
 // ============================================================
 // One-trip read of public.dashboard_metrics() into a single JSON
 // blob. Page renders six panels:
-//   • Hero stats        — revenue today/yesterday/week/month + counts
-//   • 30-day revenue    — minimal SVG sparkline
-//   • Pipeline + tasks  — open leads, hot leads, open tasks, overdue
-//   • Subscriptions     — active / expiring 7d / expired
-//   • Plan + sources    — distribution lists
-//   • Alerts            — what needs attention right now
+//   â€¢ Hero stats        â€” revenue today/yesterday/week/month + counts
+//   â€¢ 30-day revenue    â€” minimal SVG sparkline
+//   â€¢ Pipeline + tasks  â€” open leads, hot leads, open tasks, overdue
+//   â€¢ Subscriptions     â€” active / expiring 7d / expired
+//   â€¢ Plan + sources    â€” distribution lists
+//   â€¢ Alerts            â€” what needs attention right now
 // ============================================================
 
 import Link from "next/link";
@@ -107,7 +107,7 @@ export default function AdminDashboardPage() {
   if (pLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">
-        Checking access…
+        Checking accessâ€¦
       </main>
     );
   }
@@ -138,6 +138,7 @@ export default function AdminDashboardPage() {
 
   return (
     <AdminShell
+      doodleType="dashboard"
       breadcrumbs={[{ label: "Dashboard" }]}
       title="War Room"
       subtitle={todayLabel}
@@ -154,7 +155,7 @@ export default function AdminDashboardPage() {
       }
     >
       {loadingData ? (
-        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
       ) : error ? (
         <div className={`${adminCardCls} p-6 text-center`}>
           <p className="text-sm font-bold text-rose-600">{error}</p>
@@ -172,13 +173,13 @@ export default function AdminDashboardPage() {
             </p>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
               {[
-                { label: "Revenue",          val: `₹${data.revenue.today.toLocaleString("en-IN")}`,        color: "text-emerald-400" },
+                { label: "Revenue",          val: `â‚¹${data.revenue.today.toLocaleString("en-IN")}`,        color: "text-emerald-400" },
                 { label: "New Leads",        val: data.counts.open_leads,                                  color: "text-sky-400" },
                 { label: "New Signups",      val: data.counts.signups_today,                                color: "text-blue-400" },
                 { label: "Paid Customers",   val: data.counts.new_payers_today,                             color: "text-indigo-400" },
                 { label: "Credits Used",     val: data.credits.used_today.toLocaleString("en-IN"),          color: "text-purple-400" },
                 { label: "AI Generations",   val: data.ai?.gens_today ?? 0,                                 color: "text-violet-400" },
-                { label: "Net Profit",       val: `₹${(data.finance?.net_profit_month ?? 0).toLocaleString("en-IN")}`, color: (data.finance?.net_profit_month ?? 0) >= 0 ? "text-emerald-400" : "text-rose-400" },
+                { label: "Net Profit",       val: `â‚¹${(data.finance?.net_profit_month ?? 0).toLocaleString("en-IN")}`, color: (data.finance?.net_profit_month ?? 0) >= 0 ? "text-emerald-400" : "text-rose-400" },
               ].map((s) => (
                 <div key={s.label} className="text-center">
                   <p className={`text-lg font-bold tabular-nums sm:text-xl ${s.color}`}>{s.val}</p>
@@ -210,19 +211,19 @@ export default function AdminDashboardPage() {
             </section>
           )}
 
-          {/* Hero — Revenue + Today's signal */}
+          {/* Hero â€” Revenue + Today's signal */}
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <BigStat
               label="Revenue today"
-              value={`₹${data.revenue.today.toLocaleString("en-IN")}`}
+              value={`â‚¹${data.revenue.today.toLocaleString("en-IN")}`}
               delta={trendLabel(data.revenue.today, data.revenue.yesterday)}
               icon={<TrendingUp className="h-4 w-4" />}
               tone="emerald"
             />
             <BigStat
               label="Revenue this month"
-              value={`₹${data.revenue.this_month.toLocaleString("en-IN")}`}
-              sub={`This week: ₹${data.revenue.this_week.toLocaleString("en-IN")}`}
+              value={`â‚¹${data.revenue.this_month.toLocaleString("en-IN")}`}
+              sub={`This week: â‚¹${data.revenue.this_week.toLocaleString("en-IN")}`}
               icon={<TrendingUp className="h-4 w-4" />}
             />
             <BigStat
@@ -245,17 +246,17 @@ export default function AdminDashboardPage() {
             <div className="flex items-end justify-between gap-3">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                  Daily revenue · last 30 days
+                  Daily revenue Â· last 30 days
                 </p>
                 <p className="mt-0.5 text-xl font-bold tabular-nums">
-                  ₹{data.revenue.lifetime.toLocaleString("en-IN")}{" "}
+                  â‚¹{data.revenue.lifetime.toLocaleString("en-IN")}{" "}
                   <span className={`text-xs font-medium ${adminMutedCls}`}>
                     lifetime
                   </span>
                 </p>
               </div>
               <p className={`text-[11px] ${adminMutedCls}`}>
-                Hover bars for daily ₹
+                Hover bars for daily â‚¹
               </p>
             </div>
             <Sparkbars points={data.daily_revenue} />
@@ -359,7 +360,7 @@ export default function AdminDashboardPage() {
             <section className={adminCardCls}>
               <div className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
                 <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                  🤖 AI Business Intelligence
+                  ðŸ¤– AI Business Intelligence
                   <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
                     {insights.length} insight{insights.length > 1 ? "s" : ""}
                   </span>
@@ -410,9 +411,9 @@ export default function AdminDashboardPage() {
   );
 }
 
-// ────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Presentational atoms
-// ────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function BigStat({
   label,
@@ -459,7 +460,7 @@ function BigStat({
               {delta}
             </span>
           )}
-          {delta && sub && " · "}
+          {delta && sub && " Â· "}
           {sub}
         </p>
       )}
@@ -510,7 +511,7 @@ function Line({
     tone === "indigo"  ? "text-indigo-600 dark:text-indigo-300" :
                          "text-slate-700 dark:text-slate-200";
   const display = format === "inr"
-    ? `₹${Math.abs(value).toLocaleString("en-IN")}`
+    ? `â‚¹${Math.abs(value).toLocaleString("en-IN")}`
     : value.toLocaleString("en-IN");
   return (
     <li className="flex items-center justify-between gap-3">
@@ -657,7 +658,7 @@ function Sparkbars({
         return (
           <div
             key={i}
-            title={`${p.d}: ₹${p.amount.toLocaleString("en-IN")}`}
+            title={`${p.d}: â‚¹${p.amount.toLocaleString("en-IN")}`}
             className="group flex-1 rounded-t bg-slate-200 transition hover:bg-indigo-500 dark:bg-slate-700"
             style={{ height: `${h}%` }}
           />
@@ -686,3 +687,4 @@ function trendLabel(now: number, prev: number): string {
   if (diff < 0) return `${diff}% vs yesterday`;
   return "flat vs yesterday";
 }
+

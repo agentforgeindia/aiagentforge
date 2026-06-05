@@ -1,16 +1,16 @@
-"use client";
+﻿"use client";
 
 // ============================================================
-// /admin/tasks — work item tracker for the team.
+// /admin/tasks â€” work item tracker for the team.
 // ============================================================
 // Each task has a title, type, priority, status, due date,
 // optional assignee, and optional link to a lead or customer.
 //
 // View modes:
-//   • Open      — anything not completed or cancelled
-//   • Mine      — open + assigned to me
-//   • Overdue   — open + due_at < now
-//   • Done      — completed
+//   â€¢ Open      â€” anything not completed or cancelled
+//   â€¢ Mine      â€” open + assigned to me
+//   â€¢ Overdue   â€” open + due_at < now
+//   â€¢ Done      â€” completed
 // ============================================================
 
 import { useEffect, useMemo, useState } from "react";
@@ -236,7 +236,7 @@ export default function AdminTasksPage() {
   if (pLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">
-        Checking access…
+        Checking accessâ€¦
       </main>
     );
   }
@@ -256,9 +256,10 @@ export default function AdminTasksPage() {
 
   return (
     <AdminShell
+      doodleType="tasks"
       breadcrumbs={[{ label: "Tasks" }]}
       title="Tasks"
-      subtitle={`${stats.open} open · ${stats.overdue} overdue · ${stats.mine} mine`}
+      subtitle={`${stats.open} open Â· ${stats.overdue} overdue Â· ${stats.mine} mine`}
       email={email}
       actions={
         <>
@@ -412,7 +413,7 @@ export default function AdminTasksPage() {
               disabled={saving}
               className={adminPrimaryBtnCls}
             >
-              {saving ? "Saving…" : "Save task"}
+              {saving ? "Savingâ€¦" : "Save task"}
             </button>
           </div>
         </section>
@@ -471,11 +472,11 @@ export default function AdminTasksPage() {
       {/* List */}
       <div className={`${adminCardCls} mt-4`}>
         {loadingRows ? (
-          <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
+          <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
         ) : filtered.length === 0 ? (
           <p className={`p-8 text-center text-sm ${adminMutedCls}`}>
             {tasks.length === 0
-              ? "No tasks yet. Click “New task” to add one."
+              ? "No tasks yet. Click â€œNew taskâ€ to add one."
               : "Nothing matches the current view."}
           </p>
         ) : (
@@ -595,7 +596,7 @@ function TaskRow({
         <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
           {task.assigned_to_email && (
             <span>
-              👤 {task.assigned_to_email}
+              ðŸ‘¤ {task.assigned_to_email}
               {task.assigned_to_email.toLowerCase() === (me ?? "").toLowerCase() && (
                 <span className="ml-1 rounded bg-indigo-100 px-1 text-[9px] font-bold uppercase tracking-[0.12em] text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300">
                   you
@@ -633,3 +634,4 @@ function formatDate(iso: string) {
     year: "numeric",
   });
 }
+

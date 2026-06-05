@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-// /admin/integrations — Connection status for all external services.
+// /admin/integrations â€” Connection status for all external services.
 
 import { useEffect, useState } from "react";
 import { ShieldCheck, RefreshCw, ExternalLink } from "lucide-react";
@@ -87,6 +87,7 @@ export default function IntegrationsPage() {
 
   return (
     <AdminShell
+      doodleType="settings"
       breadcrumbs={[{ label: "Integrations" }]}
       title="Integrations"
       subtitle="Connection status for all external services"
@@ -99,7 +100,7 @@ export default function IntegrationsPage() {
       }
     >
       {loading ? (
-        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Checking connections…</p>
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Checking connectionsâ€¦</p>
       ) : (
         <div className="space-y-4">
           {/* Summary */}
@@ -145,12 +146,12 @@ export default function IntegrationsPage() {
                     <div className="mt-3 flex flex-wrap gap-1">
                       {s.envVars.map((v) => (
                         <span key={v} className="rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                          {v.length > 24 ? v.slice(0, 24) + "…" : v}
+                          {v.length > 24 ? v.slice(0, 24) + "â€¦" : v}
                         </span>
                       ))}
                     </div>
                     <p className={`mt-2 text-[11px] font-bold ${s.connected ? "text-emerald-600 dark:text-emerald-300" : "text-rose-600 dark:text-rose-300"}`}>
-                      {s.connected ? "🟢 Connected" : "🔴 Disconnected"}
+                      {s.connected ? "ðŸŸ¢ Connected" : "ðŸ”´ Disconnected"}
                     </p>
                   </div>
                 ))}
@@ -164,7 +165,7 @@ export default function IntegrationsPage() {
 }
 
 function Loading() {
-  return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking access…</main>;
+  return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking accessâ€¦</main>;
 }
 function Denied() {
   return (
@@ -176,3 +177,4 @@ function Denied() {
     </main>
   );
 }
+

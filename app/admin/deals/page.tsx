@@ -103,6 +103,7 @@ export default function DealsPage() {
 
   return (
     <AdminShell
+      doodleType="leads"
       breadcrumbs={[{ label: "Deals" }]}
       title="Deals Pipeline"
       subtitle="Formal deal tracking â€” proposals, negotiations, closures"
@@ -234,5 +235,6 @@ function Denied()  {
     </main>
   );
 }
+
 
 

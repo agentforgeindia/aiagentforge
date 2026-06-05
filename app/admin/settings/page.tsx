@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-// /admin/settings — Company info, plans, credits, notifications config.
+// /admin/settings â€” Company info, plans, credits, notifications config.
 
 import { useEffect, useState } from "react";
 import { RefreshCw, ShieldCheck, Save } from "lucide-react";
@@ -29,11 +29,11 @@ const SETTING_GROUPS = [
     category: "plans",
     title: "Plan Pricing",
     keys: [
-      { key: "plans.starter.price",   label: "Starter Price (₹)",  type: "number" },
+      { key: "plans.starter.price",   label: "Starter Price (â‚¹)",  type: "number" },
       { key: "plans.starter.credits", label: "Starter Credits",    type: "number" },
-      { key: "plans.pro.price",       label: "Pro Price (₹)",      type: "number" },
+      { key: "plans.pro.price",       label: "Pro Price (â‚¹)",      type: "number" },
       { key: "plans.pro.credits",     label: "Pro Credits",        type: "number" },
-      { key: "plans.empire.price",    label: "Empire Price (₹)",   type: "number" },
+      { key: "plans.empire.price",    label: "Empire Price (â‚¹)",   type: "number" },
       { key: "plans.empire.credits",  label: "Empire Credits",     type: "number" },
     ],
   },
@@ -117,6 +117,7 @@ export default function SystemSettingsPage() {
 
   return (
     <AdminShell
+      doodleType="settings"
       breadcrumbs={[{ label: "Settings" }]}
       title="System Settings"
       subtitle="Company info, plans, credits, notifications"
@@ -126,7 +127,7 @@ export default function SystemSettingsPage() {
           {canManage && hasChanges && (
             <button type="button" onClick={saveAll} disabled={saving} className={adminPrimaryBtnCls}>
               <Save className="h-3.5 w-3.5" />
-              {saving ? "Saving…" : "Save All"}
+              {saving ? "Savingâ€¦" : "Save All"}
             </button>
           )}
           {saved && <span className="flex items-center text-xs font-bold text-emerald-600 dark:text-emerald-300">Saved!</span>}
@@ -138,7 +139,7 @@ export default function SystemSettingsPage() {
       }
     >
       {loading ? (
-        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading settings…</p>
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading settingsâ€¦</p>
       ) : (
         <div className="space-y-6">
           {SETTING_GROUPS.map((group) => (
@@ -155,7 +156,7 @@ export default function SystemSettingsPage() {
                   return (
                     <div key={s.key}>
                       <label className={`block text-[10px] font-bold uppercase tracking-[0.16em] ${adminMutedCls} ${isChanged ? "text-indigo-600 dark:text-indigo-300" : ""}`}>
-                        {s.label} {isChanged && "•"}
+                        {s.label} {isChanged && "â€¢"}
                       </label>
                       {s.type === "boolean" ? (
                         <select
@@ -195,7 +196,7 @@ export default function SystemSettingsPage() {
 }
 
 function Loading() {
-  return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking access…</main>;
+  return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking accessâ€¦</main>;
 }
 function Denied() {
   return (
@@ -207,3 +208,4 @@ function Denied() {
     </main>
   );
 }
+

@@ -145,6 +145,7 @@ export default function FinancePage() {
 
   return (
     <AdminShell
+      doodleType="finance"
       breadcrumbs={[{ label: "Finance" }]}
       title="Finance"
       subtitle="Revenue, expenses, and net profit"
@@ -464,5 +465,6 @@ function Denied() {
     </main>
   );
 }
+
 
 

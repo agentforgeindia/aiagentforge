@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 // ============================================================
-// /admin/customers — signed-up users with corporate styling.
+// /admin/customers â€” signed-up users with corporate styling.
 // ============================================================
 
 import Link from "next/link";
@@ -33,7 +33,7 @@ type PlanFilter = "all" | "Starter" | "Pro Creator" | "Empire" | "Free";
 type HealthFilter = "all" | "healthy" | "active" | "at_risk" | "churn_risk" | "churned";
 
 export default function AdminCustomersPage() {
-  // RBAC-driven access — no hard-coded email allowlist. Roles +
+  // RBAC-driven access â€” no hard-coded email allowlist. Roles +
   // permissions live in admin_roles / admin_users.
   const {
     loading: loadingAuth,
@@ -94,7 +94,7 @@ export default function AdminCustomersPage() {
   if (loadingAuth) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">
-        Checking access…
+        Checking accessâ€¦
       </main>
     );
   }
@@ -114,9 +114,10 @@ export default function AdminCustomersPage() {
 
   return (
     <AdminShell
+      doodleType="customers"
       breadcrumbs={[{ label: "Customers" }]}
       title="Customers"
-      subtitle={`${stats.total} total · ${stats.paying} on a paid plan`}
+      subtitle={`${stats.total} total Â· ${stats.paying} on a paid plan`}
       email={authEmail}
       actions={
         <>
@@ -192,7 +193,7 @@ export default function AdminCustomersPage() {
       {/* List */}
       <div className={`${adminCardCls} mt-4`}>
         {loadingRows ? (
-          <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
+          <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
         ) : filtered.length === 0 ? (
           <p className={`p-8 text-center text-sm ${adminMutedCls}`}>
             {rows.length === 0
@@ -210,7 +211,7 @@ export default function AdminCustomersPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="truncate text-sm font-bold">
-                        {r.full_name?.trim() || r.email || "—"}
+                        {r.full_name?.trim() || r.email || "â€”"}
                       </p>
                       <PlanChip plan={r.plan} />
                       <HealthChip status={r.health_status} score={r.health_score} />
@@ -290,7 +291,7 @@ function HealthChip({
   return (
     <span
       className={`inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] ${cls}`}
-      title={`Health score: ${score ?? "—"} / 100`}
+      title={`Health score: ${score ?? "â€”"} / 100`}
     >
       {label}
       {score !== null && (
@@ -299,3 +300,4 @@ function HealthChip({
     </span>
   );
 }
+

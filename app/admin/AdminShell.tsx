@@ -16,9 +16,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ChevronDown, ChevronRight, Clock, LogOut, Plus, Search } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Clock, LogOut, Plus, Search, Sun, Moon, User } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAdminPermissions } from "./AdminPermissions";
+import { useTheme } from "@/app/components/ThemeProvider";
 import NotificationsBell from "./NotificationsBell";
 import CommandPalette from "./CommandPalette";
 import AttendanceTimer from "./AttendanceTimer";
@@ -27,12 +28,115 @@ import MorningMotivation from "./MorningMotivation";
 
 export type Crumb = { label: string; href?: string };
 
+type DoodleType = "dashboard" | "leads" | "finance" | "team" | "analytics" | "tasks" | "customers" | "settings" | "general";
+
+function AdminDoodles({ type = "general" }: { type?: DoodleType }) {
+  const base = "pointer-events-none absolute inset-0 overflow-hidden";
+  return (
+    <div className={base} aria-hidden>
+      {/* Universal: dot grid top-right, subtle */}
+      <svg className="absolute right-4 top-4 h-24 w-24 text-slate-300/40 dark:text-slate-700/30" viewBox="0 0 60 60" fill="currentColor">
+        {[8,20,32,44,56].map(y => [8,20,32,44,56].map(x => <circle key={`${x}${y}`} cx={x} cy={y} r="1.5" />))}
+      </svg>
+
+      {/* Dashboard: bar chart bottom-left */}
+      {type === "dashboard" && <>
+        <svg className="absolute bottom-8 left-4 h-16 w-20 text-indigo-400/15 dark:text-indigo-400/10" viewBox="0 0 80 60" fill="none">
+          <rect x="4" y="30" width="12" height="26" rx="3" fill="currentColor" />
+          <rect x="22" y="18" width="12" height="38" rx="3" fill="currentColor" />
+          <rect x="40" y="8" width="12" height="48" rx="3" fill="currentColor" />
+          <rect x="58" y="22" width="12" height="34" rx="3" fill="currentColor" />
+        </svg>
+        <svg className="absolute right-8 bottom-16 h-10 w-10 text-amber-400/20 dark:text-amber-400/15 animate-pulse" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" />
+        </svg>
+      </>}
+
+      {/* Leads: funnel + arrow */}
+      {type === "leads" && <>
+        <svg className="absolute bottom-10 left-4 h-16 w-12 text-cyan-400/15 dark:text-cyan-400/10" viewBox="0 0 48 60" fill="none">
+          <path d="M4 4 L44 4 L30 24 L30 52 L18 52 L18 24 Z" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" fill="currentColor" opacity="0.3" />
+        </svg>
+        <svg className="absolute right-6 bottom-20 h-10 w-24 text-indigo-400/15 dark:text-indigo-400/10" viewBox="0 0 96 40" fill="none">
+          <path d="M4 20 L80 20" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+          <path d="M68 8 L84 20 L68 32" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </>}
+
+      {/* Finance: coin + trending */}
+      {type === "finance" && <>
+        <svg className="absolute bottom-8 left-4 h-16 w-16 text-amber-400/15 dark:text-amber-400/10" viewBox="0 0 60 60" fill="none">
+          <circle cx="30" cy="30" r="24" stroke="currentColor" strokeWidth="2.5" />
+          <text x="19" y="38" fontSize="22" fontWeight="900" fill="currentColor" fontFamily="serif">₹</text>
+        </svg>
+        <svg className="absolute right-6 bottom-14 h-12 w-24 text-emerald-400/15 dark:text-emerald-400/10" viewBox="0 0 96 48" fill="none">
+          <path d="M4 40 L24 28 L44 32 L64 16 L84 8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M76 4 L88 8 L84 20" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </>}
+
+      {/* Team: people */}
+      {type === "team" && <>
+        <svg className="absolute bottom-8 left-4 h-16 w-20 text-blue-400/15 dark:text-blue-400/10" viewBox="0 0 80 60" fill="none">
+          <circle cx="20" cy="16" r="10" stroke="currentColor" strokeWidth="2.5" />
+          <path d="M2 54 C2 40 38 40 38 54" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+          <circle cx="52" cy="16" r="10" stroke="currentColor" strokeWidth="2.5" />
+          <path d="M34 54 C34 40 70 40 70 54" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+      </>}
+
+      {/* Analytics: pie + bars */}
+      {type === "analytics" && <>
+        <svg className="absolute bottom-8 left-4 h-16 w-16 text-purple-400/15 dark:text-purple-400/10" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="2.5" strokeDasharray="50 100" />
+          <circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="2.5" strokeDasharray="30 100" strokeDashoffset="-50" opacity="0.5" />
+        </svg>
+      </>}
+
+      {/* Tasks: checklist */}
+      {type === "tasks" && <>
+        <svg className="absolute bottom-8 left-4 h-20 w-14 text-indigo-400/15 dark:text-indigo-400/10" viewBox="0 0 56 80" fill="none">
+          <rect x="4" y="4" width="48" height="72" rx="6" stroke="currentColor" strokeWidth="2.5" />
+          {[18,34,50].map((y, i) => <>
+            <circle key={`c${y}`} cx="16" cy={y} r="4" stroke="currentColor" strokeWidth="2" fill={i === 0 ? "currentColor" : "none"} opacity="0.6" />
+            <line key={`l${y}`} x1="26" y1={y} x2="46" y2={y} stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </>)}
+        </svg>
+      </>}
+
+      {/* Customers: person */}
+      {type === "customers" && <>
+        <svg className="absolute bottom-8 left-4 h-16 w-12 text-cyan-400/15 dark:text-cyan-400/10" viewBox="0 0 48 64" fill="none">
+          <circle cx="24" cy="14" r="10" stroke="currentColor" strokeWidth="2.5" />
+          <path d="M4 58 C4 44 44 44 44 58" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+      </>}
+
+      {/* Settings: gear */}
+      {type === "settings" && <>
+        <svg className="absolute bottom-8 left-4 h-16 w-16 text-slate-400/15 dark:text-slate-400/10" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="10" stroke="currentColor" strokeWidth="2.5" />
+          <circle cx="32" cy="32" r="24" stroke="currentColor" strokeWidth="2.5" strokeDasharray="6 8" />
+        </svg>
+      </>}
+
+      {/* General: wavy line */}
+      {type === "general" && <>
+        <svg className="absolute bottom-12 left-4 h-10 w-28 text-slate-300/30 dark:text-slate-700/20" viewBox="0 0 120 40" fill="none">
+          <path d="M2 20 Q 18 4, 34 20 T 66 20 T 98 20" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+      </>}
+    </div>
+  );
+}
+
 export default function AdminShell({
   breadcrumbs,
   title,
   subtitle,
   actions,
   email,
+  doodleType,
   children,
 }: {
   breadcrumbs: Crumb[];
@@ -40,10 +144,12 @@ export default function AdminShell({
   subtitle?: string;
   actions?: React.ReactNode;
   email?: string | null;
+  doodleType?: DoodleType;
   children: React.ReactNode;
 }) {
   const router = useRouter();
   const { role, has, email: ctxEmail } = useAdminPermissions();
+  const { darkMode, toggleTheme } = useTheme();
   const effectiveEmail = email ?? ctxEmail ?? null;
 
   const goBack = () => {
@@ -117,6 +223,23 @@ export default function AdminShell({
                 <span className="hidden sm:inline">New lead</span>
               </Link>
             )}
+            {/* Theme toggle */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+              aria-label="Toggle theme"
+            >
+              {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+            {/* My Profile link */}
+            <Link
+              href="/admin/my-profile"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+              aria-label="My Profile"
+            >
+              <User className="h-4 w-4" />
+            </Link>
             {effectiveEmail && <NotificationsBell />}
             {effectiveEmail && (
               <UserMenu email={effectiveEmail} role={role} />
@@ -186,9 +309,12 @@ export default function AdminShell({
       </div>
 
       <MorningMotivation />
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
-        <ModuleTip title={title} />
-        {children}
+      <div className="relative mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+        <AdminDoodles type={doodleType ?? "general"} />
+        <div className="relative z-10">
+          <ModuleTip title={title} />
+          {children}
+        </div>
       </div>
 
       {/* Global Cmd+K palette — single instance, listens at document level. */}

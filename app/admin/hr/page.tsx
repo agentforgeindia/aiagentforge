@@ -90,6 +90,7 @@ export default function HRPage() {
 
   return (
     <AdminShell
+      doodleType="team"
       breadcrumbs={[{ label: "HR" }]}
       title="HR Module"
       subtitle="Employees, salary records, and leave management"
@@ -285,5 +286,6 @@ function Denied()  {
     </main>
   );
 }
+
 
 
