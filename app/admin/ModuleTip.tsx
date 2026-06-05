@@ -15,6 +15,22 @@ type Tip = { what: string; steps: string[] };
 
 // Keyed by the AdminShell `title` prop (exact match).
 const TIPS: Record<string, Tip> = {
+  "Founder Command Center": {
+    what: "Sirf founder ke liye — live cash position, monthly goals aur team output ek jagah.",
+    steps: [
+      "Upar Live Numbers mein revenue, cash-in-bank, outstanding dekho.",
+      "'Set Targets' se is mahine ke revenue/customer/generation goals daalo.",
+      "Goal cards progress bar se batate hain target ke kitne paas ho.",
+    ],
+  },
+  "Affiliate Partners": {
+    what: "Referral partners manage karo — har ek ko unique link milti hai, sale pe commission.",
+    steps: [
+      "'Add Partner' se naya affiliate banao — link auto-generate hoti hai.",
+      "Link pe click karke copy karo, partner ko bhejo.",
+      "Earned/Paid columns se commission track karo.",
+    ],
+  },
   "War Room": {
     what: "Aapka daily dashboard — sab kuch ek nazar mein: aaj ka revenue, naye leads, signups, AI usage aur net profit.",
     steps: [

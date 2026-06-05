@@ -14,9 +14,11 @@ import {
   ClipboardList,
   Clock,
   Coins,
+  Crosshair,
   FileText,
   Gem,
   GitPullRequest,
+  Handshake,
   LayoutDashboard,
   Link2,
   Mail,
@@ -52,6 +54,7 @@ type Tile = {
 
 const TILES: Tile[] = [
   // ── CRM ─────────────────────────────────────────────────────
+  { href: "/admin/command",        label: "Command Center", description: "Founder cockpit — live numbers, goals, cash, team output.", icon: <Crosshair className="h-4 w-4" />,      perm: "dashboard.view" },
   { href: "/admin/dashboard",      label: "War Room",       description: "Revenue, signups, pipeline, alerts — all at a glance.",   icon: <LayoutDashboard className="h-4 w-4" />, perm: "dashboard.view" },
   { href: "/admin/customers",      label: "Customers",      description: "Signed-up users, plans, balances, notes.",                icon: <Users className="h-4 w-4" />,          perm: "customers.view" },
   { href: "/admin/leads",          label: "Leads",          description: "Inbound prospects from ads and outreach.",                icon: <UserPlus className="h-4 w-4" />,        perm: "leads.view" },
@@ -85,6 +88,7 @@ const TILES: Tile[] = [
   { href: "/admin/posts",          label: "Content",        description: "Blog, news and product updates.",                        icon: <FileText className="h-4 w-4" />,        perm: "content.view" },
   { href: "/admin/testimonials",   label: "Testimonials",   description: "Customer reviews on the homepage.",                     icon: <MessageSquare className="h-4 w-4" />,   perm: "testimonials.manage" },
   // ── System ───────────────────────────────────────────────────
+  { href: "/admin/affiliates",      label: "Affiliates",     description: "Referral partners, commissions, payouts.",                icon: <Handshake className="h-4 w-4" />,       perm: "affiliates.view" },
   { href: "/admin/automation",      label: "Automation",     description: "If-then rules — auto-assign, email, notify on events.",  icon: <GitPullRequest className="h-4 w-4" />,  perm: "settings.view" },
   { href: "/admin/integrations",   label: "Integrations",   description: "Connection status — Meta, Google, Razorpay, FAL, n8n.", icon: <Link2 className="h-4 w-4" />,           perm: "settings.view" },
   { href: "/admin/settings",       label: "Settings",       description: "Company info, plans, credits, notification config.",    icon: <Settings className="h-4 w-4" />,        perm: "settings.view" },

@@ -4,9 +4,9 @@
 // Business Cloud API webhook. Review AI drafts and send replies.
 
 import { useEffect, useState } from "react";
-import { RefreshCw, ShieldCheck, Send, Sparkles, MessageCircle } from "lucide-react";
+import { RefreshCw, ShieldCheck, Send, Sparkles, MessageCircle, Megaphone } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import AdminShell, { adminCardCls, adminMutedCls, adminSecondaryBtnCls } from "../AdminShell";
+import AdminShell, { adminCardCls, adminMutedCls, adminSecondaryBtnCls, adminPrimaryBtnCls, adminInputCls } from "../AdminShell";
 import { useAdminPermissions } from "../AdminPermissions";
 
 type Msg = {
@@ -34,6 +34,30 @@ export default function WhatsAppInboxPage() {
   const [loading, setLoading]   = useState(true);
   const [sending, setSending]   = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Broadcast composer
+  const [view, setView]       = useState<"inbox" | "broadcast">("inbox");
+  const [bTitle, setBTitle]   = useState("");
+  const [bMsg, setBMsg]       = useState("");
+  const [bAud, setBAud]       = useState<"leads" | "customers">("leads");
+  const [bSending, setBSending] = useState(false);
+  const [bResult, setBResult] = useState<string | null>(null);
+
+  async function sendBroadcast() {
+    if (!bTitle.trim() || !bMsg.trim()) return;
+    if (!confirm(`Send this broadcast to all ${bAud}? This sends real WhatsApp messages.`)) return;
+    setBSending(true); setBResult(null);
+    const { data: sess } = await supabase.auth.getSession();
+    const res = await fetch("/api/admin/ai/whatsapp-broadcast", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${sess.session?.access_token}` },
+      body: JSON.stringify({ title: bTitle, message: bMsg, audience: bAud }),
+    });
+    const json = await res.json();
+    setBSending(false);
+    if (json.ok) { setBResult(`Sent ${json.sent}/${json.total} · failed ${json.failed}`); setBTitle(""); setBMsg(""); }
+    else setBResult(json.error ?? "Failed");
+  }
 
   // Load threads
   useEffect(() => {
@@ -101,12 +125,57 @@ export default function WhatsAppInboxPage() {
       subtitle="Live customer chats — review AI drafts and reply"
       email={email}
       actions={
-        <button type="button" onClick={() => setRefreshKey((k) => k + 1)} className={adminSecondaryBtnCls}>
-          <RefreshCw className="h-3.5 w-3.5" />Refresh
-        </button>
+        <div className="flex gap-2">
+          <div className="flex rounded-md border border-slate-200 dark:border-slate-700">
+            <button type="button" onClick={() => setView("inbox")}
+              className={`flex items-center gap-1 rounded-l-md px-2.5 py-1.5 text-xs font-medium ${view === "inbox" ? "bg-slate-900 text-white dark:bg-indigo-600" : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
+              <MessageCircle className="h-3.5 w-3.5" />Inbox
+            </button>
+            <button type="button" onClick={() => setView("broadcast")}
+              className={`flex items-center gap-1 rounded-r-md px-2.5 py-1.5 text-xs font-medium ${view === "broadcast" ? "bg-slate-900 text-white dark:bg-indigo-600" : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
+              <Megaphone className="h-3.5 w-3.5" />Broadcast
+            </button>
+          </div>
+          <button type="button" onClick={() => setRefreshKey((k) => k + 1)} className={adminSecondaryBtnCls}>
+            <RefreshCw className="h-3.5 w-3.5" />
+          </button>
+        </div>
       }
     >
-      {loading ? (
+      {view === "broadcast" ? (
+        <div className="mx-auto max-w-2xl">
+          <section className={`${adminCardCls} p-5`}>
+            <p className="mb-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+              <Megaphone className="h-3.5 w-3.5" />Broadcast Message
+            </p>
+            <p className={`mb-4 text-[11px] ${adminMutedCls}`}>
+              Saare leads ya customers ko ek saath WhatsApp message bhejo. ⚠️ Real messages jaate hain — soch ke bhejo.
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className={`text-[10px] font-bold uppercase tracking-[0.14em] ${adminMutedCls}`}>Campaign Title (internal)</label>
+                <input className={`${adminInputCls} mt-1`} placeholder="e.g. Diwali Offer" value={bTitle} onChange={(e) => setBTitle(e.target.value)} />
+              </div>
+              <div>
+                <label className={`text-[10px] font-bold uppercase tracking-[0.14em] ${adminMutedCls}`}>Audience</label>
+                <select className={`${adminInputCls} mt-1`} value={bAud} onChange={(e) => setBAud(e.target.value as "leads" | "customers")}>
+                  <option value="leads">All Leads</option>
+                  <option value="customers">All Customers</option>
+                </select>
+              </div>
+              <div>
+                <label className={`text-[10px] font-bold uppercase tracking-[0.14em] ${adminMutedCls}`}>Message</label>
+                <textarea className={`${adminInputCls} mt-1`} rows={5} placeholder="Type your WhatsApp message…" value={bMsg} onChange={(e) => setBMsg(e.target.value)} />
+              </div>
+              {bResult && <p className="text-xs font-bold text-indigo-600 dark:text-indigo-300">{bResult}</p>}
+              <button type="button" onClick={sendBroadcast} disabled={bSending || !bTitle.trim() || !bMsg.trim()} className={`${adminPrimaryBtnCls} w-full justify-center`}>
+                <Send className={`h-3.5 w-3.5 ${bSending ? "animate-pulse" : ""}`} />
+                {bSending ? "Sending…" : `Send to all ${bAud}`}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : loading ? (
         <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
       ) : threads.length === 0 ? (
         <div className={`${adminCardCls} p-12 text-center`}>
