@@ -120,15 +120,22 @@ export default function AttendanceTimer({ email }: { email: string }) {
       }
     } catch { /* ignore */ }
 
+    // Only include relogin_reason when set — so check-in works even if
+    // the attendance-breaks.sql migration hasn't been run yet.
+    const payload: Record<string, unknown> = { member_email: email, member_name: name, work_notes: notes || null };
+    if (reloginReason) payload.relogin_reason = reloginReason;
+
     const { data, error } = await supabase
       .from("attendance_logs")
-      .insert({ member_email: email, member_name: name, work_notes: notes || null, relogin_reason: reloginReason })
+      .insert(payload)
       .select("id, check_in, work_notes")
       .single();
     if (!error && data) {
       setSession(data as ActiveSession);
       lastActivity.current = Date.now();
       setOpen(false);
+    } else if (error) {
+      alert("Check-in failed: " + error.message);
     }
     setLoading(false);
   }
