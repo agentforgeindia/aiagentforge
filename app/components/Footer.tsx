@@ -43,6 +43,7 @@ const COMPANY_LINKS = [
   { label: "Supported Industries", href: "/supported-industries" },
   { label: "Support", href: "/support" },
   { label: "Pricing", href: "/pricing" },
+  { label: "Careers — We're Hiring", href: "/careers" },
 ];
 
 const SEO_LINKS = [
