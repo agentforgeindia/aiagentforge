@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-// /admin/deals — Deals pipeline: formal deal tracking.
+// /admin/deals â€” Deals pipeline: formal deal tracking.
 
 import { useEffect, useState } from "react";
 import { RefreshCw, ShieldCheck, Plus, DollarSign, TrendingUp, X } from "lucide-react";
@@ -31,7 +31,7 @@ const STAGES = [
   { value: "qualification", label: "Qualification", color: "bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300",              bar: "bg-sky-400" },
   { value: "proposal",      label: "Proposal",      color: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",          bar: "bg-blue-500" },
   { value: "negotiation",   label: "Negotiation",   color: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",      bar: "bg-amber-500" },
-  { value: "closed_won",    label: "Closed Won ✓",  color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300", bar: "bg-emerald-500" },
+  { value: "closed_won",    label: "Closed Won âœ“",  color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300", bar: "bg-emerald-500" },
   { value: "closed_lost",   label: "Closed Lost",   color: "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300",          bar: "bg-rose-400" },
 ];
 
@@ -105,7 +105,7 @@ export default function DealsPage() {
     <AdminShell
       breadcrumbs={[{ label: "Deals" }]}
       title="Deals Pipeline"
-      subtitle="Formal deal tracking — proposals, negotiations, closures"
+      subtitle="Formal deal tracking â€” proposals, negotiations, closures"
       email={email}
       actions={
         <div className="flex gap-2">
@@ -118,11 +118,11 @@ export default function DealsPage() {
       <div className="mb-4 grid gap-3 sm:grid-cols-3">
         <div className={`${adminCardCls} p-4`}>
           <p className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] ${adminMutedCls}`}><TrendingUp className="h-3.5 w-3.5"/>Pipeline Value (Weighted)</p>
-          <p className="mt-1 text-2xl font-bold text-indigo-600 dark:text-indigo-300 tabular-nums">₹{Math.round(pipelineValue).toLocaleString("en-IN")}</p>
+          <p className="mt-1 text-2xl font-bold text-indigo-600 dark:text-indigo-300 tabular-nums">â‚¹{Math.round(pipelineValue).toLocaleString("en-IN")}</p>
         </div>
         <div className={`${adminCardCls} p-4`}>
           <p className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] ${adminMutedCls}`}><DollarSign className="h-3.5 w-3.5"/>Won</p>
-          <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">₹{wonValue.toLocaleString("en-IN")}</p>
+          <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">â‚¹{wonValue.toLocaleString("en-IN")}</p>
         </div>
         <div className={`${adminCardCls} p-4`}>
           <p className={`text-[10px] font-bold uppercase tracking-[0.18em] ${adminMutedCls}`}>Total Deals</p>
@@ -142,7 +142,7 @@ export default function DealsPage() {
             <input className={adminInputCls} placeholder="Company" value={fCompany} onChange={(e) => setFCompany(e.target.value)} />
             <input className={adminInputCls} placeholder="Contact name" value={fContact} onChange={(e) => setFContact(e.target.value)} />
             <input className={adminInputCls} placeholder="Phone" value={fPhone} onChange={(e) => setFPhone(e.target.value)} />
-            <input className={adminInputCls} placeholder="Deal value (₹)" type="number" value={fValue} onChange={(e) => setFValue(e.target.value)} />
+            <input className={adminInputCls} placeholder="Deal value (â‚¹)" type="number" value={fValue} onChange={(e) => setFValue(e.target.value)} />
             <select className={adminInputCls} value={fStage} onChange={(e) => setFStage(e.target.value)}>
               {STAGES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
@@ -150,7 +150,7 @@ export default function DealsPage() {
             <input className={adminInputCls} placeholder="Assigned to" value={fAssigned} onChange={(e) => setFAssigned(e.target.value)} />
             <input className={adminInputCls} type="date" value={fClose} onChange={(e) => setFClose(e.target.value)} />
             <textarea className={`${adminInputCls} sm:col-span-2 lg:col-span-3`} placeholder="Notes" rows={2} value={fNotes} onChange={(e) => setFNotes(e.target.value)} />
-            <button type="submit" disabled={fSaving} className={`${adminPrimaryBtnCls} lg:col-span-3 justify-center`}>{fSaving ? "Saving…" : "Create Deal"}</button>
+            <button type="submit" disabled={fSaving} className={`${adminPrimaryBtnCls} lg:col-span-3 justify-center`}>{fSaving ? "Savingâ€¦" : "Create Deal"}</button>
           </form>
         </section>
       )}
@@ -167,14 +167,14 @@ export default function DealsPage() {
 
       {/* Deals table */}
       {loading ? (
-        <p className={`py-8 text-center text-sm ${adminMutedCls}`}>Loading…</p>
+        <p className={`py-8 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
       ) : filtered.length === 0 ? (
         <div className={`${adminCardCls} p-12 text-center`}>
           <p className={`text-sm ${adminMutedCls}`}>No deals yet. Create your first deal!</p>
         </div>
       ) : (
         <section className={`${adminCardCls} overflow-hidden`}>
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100 dark:border-slate-800">
                 {["Deal", "Company", "Value", "Stage", "Prob", "Assigned", "Close Date", ""].map((h) => (
@@ -189,10 +189,10 @@ export default function DealsPage() {
                   <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                     <td className="px-4 py-2.5">
                       <p className="text-xs font-bold">{d.title}</p>
-                      {d.contact_name && <p className={`text-[11px] ${adminMutedCls}`}>{d.contact_name} {d.contact_phone && `· ${d.contact_phone}`}</p>}
+                      {d.contact_name && <p className={`text-[11px] ${adminMutedCls}`}>{d.contact_name} {d.contact_phone && `Â· ${d.contact_phone}`}</p>}
                     </td>
-                    <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{d.company ?? "—"}</td>
-                    <td className="px-4 py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">₹{d.value_inr.toLocaleString("en-IN")}</td>
+                    <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{d.company ?? "â€”"}</td>
+                    <td className="px-4 py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">â‚¹{d.value_inr.toLocaleString("en-IN")}</td>
                     <td className="px-4 py-2.5">
                       {canManage ? (
                         <select className={`rounded-md border border-slate-200 bg-white px-1.5 py-1 text-[11px] dark:border-slate-700 dark:bg-slate-900`} value={d.stage} onChange={(e) => moveStage(d.id, e.target.value)}>
@@ -210,21 +210,21 @@ export default function DealsPage() {
                         <span className={`text-[11px] ${adminMutedCls}`}>{d.probability}%</span>
                       </div>
                     </td>
-                    <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{d.assigned_to ?? "—"}</td>
-                    <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{d.close_date ? new Date(d.close_date).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}</td>
+                    <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{d.assigned_to ?? "â€”"}</td>
+                    <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{d.close_date ? new Date(d.close_date).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "â€”"}</td>
                     <td className="px-4 py-2.5" />
                   </tr>
                 );
               })}
             </tbody>
-          </table>
+          </table></div>
         </section>
       )}
     </AdminShell>
   );
 }
 
-function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking access…</main>; }
+function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking accessâ€¦</main>; }
 function Denied()  {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] px-6 dark:bg-[#0b0d12]">
@@ -234,3 +234,5 @@ function Denied()  {
     </main>
   );
 }
+
+

@@ -370,7 +370,7 @@ export default function GalleryPage() {
             </div>
 
             <div className="relative min-h-[360px] overflow-hidden p-4">
-              <div className="grid h-full min-h-[340px] grid-cols-2 gap-3">
+              <div className="grid h-full min-h-[200px] grid-cols-2 gap-3 sm:min-h-[340px]">
                 <div className="group relative row-span-2 overflow-hidden rounded-[1.6rem] bg-black/5">
                   <img
                     src="/gallery/textile/design-1.png"

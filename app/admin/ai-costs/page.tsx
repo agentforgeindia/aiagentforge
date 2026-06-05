@@ -1,14 +1,14 @@
-"use client";
+﻿"use client";
 
 // ============================================================
-// /admin/ai-costs — AI generation cost monitoring.
+// /admin/ai-costs â€” AI generation cost monitoring.
 // ============================================================
 // Founder/admin/accounts can see:
-//   • Spend today / week / month / lifetime (USD + INR)
-//   • Per-agent breakdown with failure rate
-//   • Top 10 customers (cost vs revenue → margin)
-//   • Daily spend trend last 30 days
-//   • Editable cost catalogue (per-agent USD cost) + USD↔INR rate
+//   â€¢ Spend today / week / month / lifetime (USD + INR)
+//   â€¢ Per-agent breakdown with failure rate
+//   â€¢ Top 10 customers (cost vs revenue â†’ margin)
+//   â€¢ Daily spend trend last 30 days
+//   â€¢ Editable cost catalogue (per-agent USD cost) + USDâ†”INR rate
 // ============================================================
 
 import Link from "next/link";
@@ -130,7 +130,7 @@ export default function AdminAiCostsPage() {
   if (pLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">
-        Checking access…
+        Checking accessâ€¦
       </main>
     );
   }
@@ -154,7 +154,7 @@ export default function AdminAiCostsPage() {
       title="AI generation costs"
       subtitle={
         data
-          ? `Today ₹${data.spend_inr.today.toLocaleString("en-IN")} · Month ₹${data.spend_inr.month.toLocaleString("en-IN")}`
+          ? `Today â‚¹${data.spend_inr.today.toLocaleString("en-IN")} Â· Month â‚¹${data.spend_inr.month.toLocaleString("en-IN")}`
           : undefined
       }
       email={email}
@@ -170,7 +170,7 @@ export default function AdminAiCostsPage() {
       }
     >
       {loading ? (
-        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
       ) : !data ? (
         <p className={`p-6 text-center text-sm ${adminMutedCls}`}>
           No metrics returned.
@@ -179,7 +179,7 @@ export default function AdminAiCostsPage() {
         <div className="space-y-4">
           {data.note && (
             <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-700/40 dark:bg-amber-500/10 dark:text-amber-200">
-              ⚠️ {data.note}
+              âš ï¸ {data.note}
             </div>
           )}
 
@@ -194,11 +194,11 @@ export default function AdminAiCostsPage() {
           {/* Daily spend */}
           <section className={`${adminCardCls} p-4`}>
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-              Daily spend · last 30 days
+              Daily spend Â· last 30 days
             </p>
             <Sparkbars points={data.daily} />
             <p className={`mt-3 text-[11px] ${adminMutedCls}`}>
-              USD-INR rate: ₹{data.usd_to_inr_rate.toFixed(2)} per $1
+              USD-INR rate: â‚¹{data.usd_to_inr_rate.toFixed(2)} per $1
             </p>
           </section>
 
@@ -212,14 +212,14 @@ export default function AdminAiCostsPage() {
                 No generations recorded yet.
               </p>
             ) : (
-              <table className="mt-3 w-full text-sm">
+              <div className="overflow-x-auto"><table className="mt-3 w-full text-sm">
                 <thead className="text-[10px] uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
                   <tr className="text-left">
                     <th className="py-1.5">Agent</th>
                     <th className="text-right">Total</th>
                     <th className="text-right">Success</th>
                     <th className="text-right">Failed</th>
-                    <th className="text-right">Cost (₹)</th>
+                    <th className="text-right">Cost (â‚¹)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -236,16 +236,16 @@ export default function AdminAiCostsPage() {
                         {a.failed.toLocaleString("en-IN")}
                       </td>
                       <td className="text-right font-bold tabular-nums">
-                        ₹{a.cost_inr.toLocaleString("en-IN")}
+                        â‚¹{a.cost_inr.toLocaleString("en-IN")}
                       </td>
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             )}
           </section>
 
-          {/* Top customers — margin analysis */}
+          {/* Top customers â€” margin analysis */}
           <section className={`${adminCardCls} p-4`}>
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
               Top 10 customers by generation volume
@@ -255,7 +255,7 @@ export default function AdminAiCostsPage() {
                 No customer-level cost data yet.
               </p>
             ) : (
-              <table className="mt-3 w-full text-sm">
+              <div className="overflow-x-auto"><table className="mt-3 w-full text-sm">
                 <thead className="text-[10px] uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
                   <tr className="text-left">
                     <th className="py-1.5">Customer</th>
@@ -273,17 +273,17 @@ export default function AdminAiCostsPage() {
                           href={`/admin/customers/${c.user_id}`}
                           className="font-bold hover:text-indigo-600 dark:hover:text-indigo-300"
                         >
-                          {c.full_name?.trim() || c.email || "—"}
+                          {c.full_name?.trim() || c.email || "â€”"}
                         </Link>
                       </td>
                       <td className="text-right tabular-nums">
                         {c.gens.toLocaleString("en-IN")}
                       </td>
                       <td className="text-right tabular-nums text-rose-600">
-                        ₹{c.cost_inr.toLocaleString("en-IN")}
+                        â‚¹{c.cost_inr.toLocaleString("en-IN")}
                       </td>
                       <td className="text-right tabular-nums text-emerald-600">
-                        ₹{c.revenue_inr.toLocaleString("en-IN")}
+                        â‚¹{c.revenue_inr.toLocaleString("en-IN")}
                       </td>
                       <td
                         className={`text-right font-bold tabular-nums ${
@@ -293,12 +293,12 @@ export default function AdminAiCostsPage() {
                         }`}
                       >
                         {c.margin_inr >= 0 ? "+" : ""}
-                        ₹{c.margin_inr.toLocaleString("en-IN")}
+                        â‚¹{c.margin_inr.toLocaleString("en-IN")}
                       </td>
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             )}
           </section>
 
@@ -306,7 +306,7 @@ export default function AdminAiCostsPage() {
           {data.failure.length > 0 && (
             <section className={`${adminCardCls} p-4`}>
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                Failure rate · last 30 days
+                Failure rate Â· last 30 days
               </p>
               <ul className="mt-3 space-y-2">
                 {data.failure.map((f) => (
@@ -376,7 +376,7 @@ export default function AdminAiCostsPage() {
                   className={adminPrimaryBtnCls}
                 >
                   <Save className="h-3.5 w-3.5" />
-                  {savingCatalogue ? "Saving…" : "Save"}
+                  {savingCatalogue ? "Savingâ€¦" : "Save"}
                 </button>
               )}
             </div>
@@ -426,7 +426,7 @@ export default function AdminAiCostsPage() {
                   />
                 ) : (
                   <p className="mt-1 text-base font-bold tabular-nums">
-                    ₹{usdRate.toFixed(2)}{" "}
+                    â‚¹{usdRate.toFixed(2)}{" "}
                     <span className={`text-xs ${adminMutedCls}`}>per $1</span>
                   </p>
                 )}
@@ -454,7 +454,7 @@ function SpendStat({
         {label}
       </p>
       <p className="mt-1 text-2xl font-bold tabular-nums">
-        ₹{inr.toLocaleString("en-IN")}
+        â‚¹{inr.toLocaleString("en-IN")}
       </p>
       <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
         ${usd.toFixed(2)}
@@ -476,7 +476,7 @@ function Sparkbars({
         return (
           <div
             key={i}
-            title={`${p.d}: ₹${p.cost_inr.toLocaleString("en-IN")}`}
+            title={`${p.d}: â‚¹${p.cost_inr.toLocaleString("en-IN")}`}
             className="group flex-1 rounded-t bg-slate-200 transition hover:bg-rose-500 dark:bg-slate-700"
             style={{ height: `${h}%` }}
           />
@@ -485,3 +485,5 @@ function Sparkbars({
     </div>
   );
 }
+
+

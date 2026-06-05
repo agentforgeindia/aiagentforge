@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-// /admin/command — Founder Command Center (founder only).
+// /admin/command â€” Founder Command Center (founder only).
 // Live numbers, monthly goals/targets, cash-in-bank, team productivity.
 
 import { useEffect, useState } from "react";
@@ -60,12 +60,12 @@ export default function CommandCenterPage() {
     setSaving(true);
     const month = new Date().toISOString().slice(0, 8) + "01";
     const { data: sess } = await supabase.auth.getSession();
-    // Cash in bank → system_settings
+    // Cash in bank â†’ system_settings
     await supabase.from("system_settings").upsert({
       key: "finance.cash_in_bank", value: Number(cash) || 0,
       updated_by: sess.session?.user?.id, updated_at: new Date().toISOString(),
     }, { onConflict: "key" });
-    // Goals → founder_goals
+    // Goals â†’ founder_goals
     await supabase.from("founder_goals").upsert({
       month,
       revenue_target: Number(revT) || 0,
@@ -93,27 +93,27 @@ export default function CommandCenterPage() {
       }
     >
       {loading ? (
-        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
       ) : !data || data.error ? (
         <p className="p-6 text-center text-sm text-rose-600">{data?.error ?? "No data"}</p>
       ) : (
         <div className="space-y-4">
-          {/* Live numbers — dark hero */}
+          {/* Live numbers â€” dark hero */}
           <section className="rounded-xl bg-gradient-to-br from-slate-900 to-[#0e1117] p-5">
             <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] text-indigo-300">Live Numbers</p>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-              <Hero label="Revenue Today"   value={`₹${data.live.revenue_today.toLocaleString("en-IN")}`} color="text-emerald-400" icon={<IndianRupee className="h-3.5 w-3.5" />} />
-              <Hero label="Revenue Month"   value={`₹${data.live.revenue_month.toLocaleString("en-IN")}`} color="text-emerald-400" icon={<TrendingUp className="h-3.5 w-3.5" />} />
-              <Hero label="Cash in Bank"    value={`₹${data.live.cash_in_bank.toLocaleString("en-IN")}`}  color="text-sky-400"     icon={<Wallet className="h-3.5 w-3.5" />} />
-              <Hero label="Outstanding"     value={`₹${data.live.outstanding.toLocaleString("en-IN")}`}   color="text-amber-400"   icon={<AlertCircle className="h-3.5 w-3.5" />} />
+              <Hero label="Revenue Today"   value={`â‚¹${data.live.revenue_today.toLocaleString("en-IN")}`} color="text-emerald-400" icon={<IndianRupee className="h-3.5 w-3.5" />} />
+              <Hero label="Revenue Month"   value={`â‚¹${data.live.revenue_month.toLocaleString("en-IN")}`} color="text-emerald-400" icon={<TrendingUp className="h-3.5 w-3.5" />} />
+              <Hero label="Cash in Bank"    value={`â‚¹${data.live.cash_in_bank.toLocaleString("en-IN")}`}  color="text-sky-400"     icon={<Wallet className="h-3.5 w-3.5" />} />
+              <Hero label="Outstanding"     value={`â‚¹${data.live.outstanding.toLocaleString("en-IN")}`}   color="text-amber-400"   icon={<AlertCircle className="h-3.5 w-3.5" />} />
               <Hero label="Active Subs"     value={data.live.active_subs}                                 color="text-violet-400" />
-              <Hero label="Lifetime"        value={`₹${data.live.lifetime_revenue.toLocaleString("en-IN")}`} color="text-white" />
+              <Hero label="Lifetime"        value={`â‚¹${data.live.lifetime_revenue.toLocaleString("en-IN")}`} color="text-white" />
             </div>
           </section>
 
           {/* Goals */}
           <section className="grid gap-4 lg:grid-cols-3">
-            <GoalCard label="Revenue Target"     actual={`₹${data.goals.revenue_actual.toLocaleString("en-IN")}`} target={`₹${data.goals.revenue_target.toLocaleString("en-IN")}`} pct={data.goals.revenue_pct} />
+            <GoalCard label="Revenue Target"     actual={`â‚¹${data.goals.revenue_actual.toLocaleString("en-IN")}`} target={`â‚¹${data.goals.revenue_target.toLocaleString("en-IN")}`} pct={data.goals.revenue_pct} />
             <GoalCard label="New Customers"      actual={String(data.goals.customers_actual)} target={String(data.goals.customers_target)} pct={data.goals.customers_pct} />
             <GoalCard label="AI Generations"     actual={data.goals.generations_actual.toLocaleString("en-IN")} target={data.goals.generations_target.toLocaleString("en-IN")} pct={data.goals.generations_pct} />
           </section>
@@ -124,13 +124,13 @@ export default function CommandCenterPage() {
               <Target className="h-3.5 w-3.5" />Set This Month's Targets &amp; Cash
             </p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Field label="Cash in Bank (₹)"      value={cash}  onChange={setCash} />
-              <Field label="Revenue Target (₹)"    value={revT}  onChange={setRevT} />
+              <Field label="Cash in Bank (â‚¹)"      value={cash}  onChange={setCash} />
+              <Field label="Revenue Target (â‚¹)"    value={revT}  onChange={setRevT} />
               <Field label="Customers Target"      value={custT} onChange={setCustT} />
               <Field label="Generations Target"    value={genT}  onChange={setGenT} />
             </div>
             <button type="button" onClick={saveTargets} disabled={saving} className={`${adminPrimaryBtnCls} mt-3`}>
-              <Save className="h-3.5 w-3.5" />{saving ? "Saving…" : "Save Targets"}
+              <Save className="h-3.5 w-3.5" />{saving ? "Savingâ€¦" : "Save Targets"}
             </button>
           </section>
 
@@ -142,7 +142,7 @@ export default function CommandCenterPage() {
             {data.team.length === 0 ? (
               <p className={`p-6 text-center text-sm ${adminMutedCls}`}>No lead activity yet.</p>
             ) : (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto"><table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-slate-800">
                     {["Member", "Leads Added", "Deals Won", "Conversion"].map((h) => (
@@ -165,7 +165,7 @@ export default function CommandCenterPage() {
                     );
                   })}
                 </tbody>
-              </table>
+              </table></div>
             )}
           </section>
         </div>
@@ -210,7 +210,7 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
   );
 }
 
-function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking access…</main>; }
+function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking accessâ€¦</main>; }
 function Denied()  {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] px-6 dark:bg-[#0b0d12]">
@@ -220,3 +220,5 @@ function Denied()  {
     </main>
   );
 }
+
+

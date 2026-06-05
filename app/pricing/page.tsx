@@ -348,7 +348,7 @@ router.push("/payment-success");
           </p>
 
           {/* Trust strip — savings focused */}
-          <div className={`mx-auto mt-8 grid max-w-2xl grid-cols-3 gap-2 rounded-2xl border px-3 py-3 text-center backdrop-blur sm:mt-10 sm:gap-4 sm:px-4 ${
+          <div className={`mx-auto mt-8 grid max-w-2xl grid-cols-1 gap-2 rounded-2xl border px-3 py-3 text-center backdrop-blur sm:grid-cols-3 sm:mt-10 sm:gap-4 sm:px-4 ${
             darkMode ? "border-white/10 bg-white/[0.05]" : "border-black/10 bg-white/70"
           }`}>
             <div>

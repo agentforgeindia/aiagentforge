@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-// /admin/hr — HR Module: employees, salary, leaves.
+// /admin/hr â€” HR Module: employees, salary, leaves.
 
 import { useEffect, useState } from "react";
 import { RefreshCw, ShieldCheck, Users, DollarSign, Calendar, Plus, X, Check } from "lucide-react";
@@ -109,7 +109,7 @@ export default function HRPage() {
         </div>
         <div className={`${adminCardCls} p-4`}>
           <p className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] ${adminMutedCls}`}><DollarSign className="h-3.5 w-3.5"/>Monthly Salary Bill</p>
-          <p className="mt-1 text-2xl font-bold text-rose-600 dark:text-rose-300 tabular-nums">₹{totalSalaryBill.toLocaleString("en-IN")}</p>
+          <p className="mt-1 text-2xl font-bold text-rose-600 dark:text-rose-300 tabular-nums">â‚¹{totalSalaryBill.toLocaleString("en-IN")}</p>
         </div>
         <div className={`${adminCardCls} p-4`}>
           <p className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] ${adminMutedCls}`}><Calendar className="h-3.5 w-3.5"/>Pending Leaves</p>
@@ -127,7 +127,7 @@ export default function HRPage() {
         ))}
       </div>
 
-      {loading ? <p className={`py-8 text-center text-sm ${adminMutedCls}`}>Loading…</p> : (
+      {loading ? <p className={`py-8 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p> : (
         <>
           {/* Employees Tab */}
           {tab === "Employees" && (
@@ -144,14 +144,14 @@ export default function HRPage() {
                     <input className={adminInputCls} placeholder="Role (e.g. sales)" value={fRole} onChange={(e) => setFRole(e.target.value)} />
                     <input className={adminInputCls} placeholder="Department" value={fDept} onChange={(e) => setFDept(e.target.value)} />
                     <input className={adminInputCls} placeholder="Joining date" type="date" value={fJoin} onChange={(e) => setFJoin(e.target.value)} />
-                    <input className={adminInputCls} placeholder="Base salary (₹)" type="number" value={fSalary} onChange={(e) => setFSalary(e.target.value)} />
+                    <input className={adminInputCls} placeholder="Base salary (â‚¹)" type="number" value={fSalary} onChange={(e) => setFSalary(e.target.value)} />
                     <input className={adminInputCls} placeholder="Phone" value={fPhone} onChange={(e) => setFPhone(e.target.value)} />
-                    <button type="submit" disabled={fSaving} className={`${adminPrimaryBtnCls} sm:col-span-2 justify-center`}>{fSaving ? "Saving…" : "Add Employee"}</button>
+                    <button type="submit" disabled={fSaving} className={`${adminPrimaryBtnCls} sm:col-span-2 justify-center`}>{fSaving ? "Savingâ€¦" : "Add Employee"}</button>
                   </form>
                 </section>
               )}
               <section className={`${adminCardCls} overflow-hidden`}>
-                <table className="w-full text-sm">
+                <div className="overflow-x-auto"><table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-100 dark:border-slate-800">
                       {["Name", "Role", "Department", "Joining Date", "Base Salary", "Status"].map((h) => (
@@ -167,9 +167,9 @@ export default function HRPage() {
                           <p className={`text-[11px] ${adminMutedCls}`}>{emp.email}</p>
                         </td>
                         <td className={`px-4 py-2.5 text-xs capitalize ${adminMutedCls}`}>{emp.role}</td>
-                        <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{emp.department ?? "—"}</td>
-                        <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{emp.joining_date ? new Date(emp.joining_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" }) : "—"}</td>
-                        <td className="px-4 py-2.5 text-xs font-bold tabular-nums">₹{emp.base_salary.toLocaleString("en-IN")}</td>
+                        <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{emp.department ?? "â€”"}</td>
+                        <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{emp.joining_date ? new Date(emp.joining_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" }) : "â€”"}</td>
+                        <td className="px-4 py-2.5 text-xs font-bold tabular-nums">â‚¹{emp.base_salary.toLocaleString("en-IN")}</td>
                         <td className="px-4 py-2.5">
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${emp.status === "active" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800"}`}>
                             {emp.status}
@@ -178,7 +178,7 @@ export default function HRPage() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </table></div>
                 {employees.length === 0 && <p className={`p-8 text-center text-sm ${adminMutedCls}`}>No employees added yet.</p>}
               </section>
             </>
@@ -187,7 +187,7 @@ export default function HRPage() {
           {/* Leaves Tab */}
           {tab === "Leaves" && (
             <section className={`${adminCardCls} overflow-hidden`}>
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto"><table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-slate-800">
                     {["Employee", "Type", "From", "To", "Days", "Reason", "Status", ""].map((h) => (
@@ -200,12 +200,12 @@ export default function HRPage() {
                     const emp = employees.find((e) => e.id === l.employee_id);
                     return (
                       <tr key={l.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                        <td className="px-4 py-2.5 text-xs font-medium">{emp?.full_name ?? "—"}</td>
+                        <td className="px-4 py-2.5 text-xs font-medium">{emp?.full_name ?? "â€”"}</td>
                         <td className="px-4 py-2.5"><span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-bold text-sky-700 dark:bg-sky-500/10 dark:text-sky-300 capitalize">{l.leave_type}</span></td>
                         <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{new Date(l.from_date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</td>
                         <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{new Date(l.to_date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</td>
                         <td className="px-4 py-2.5 text-xs font-bold tabular-nums">{l.days}d</td>
-                        <td className={`max-w-xs px-4 py-2.5 text-xs ${adminMutedCls}`}>{l.reason ?? "—"}</td>
+                        <td className={`max-w-xs px-4 py-2.5 text-xs ${adminMutedCls}`}>{l.reason ?? "â€”"}</td>
                         <td className="px-4 py-2.5">
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${l.status === "approved" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : l.status === "rejected" ? "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300" : "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"}`}>
                             {l.status}
@@ -223,7 +223,7 @@ export default function HRPage() {
                     );
                   })}
                 </tbody>
-              </table>
+              </table></div>
               {leaves.length === 0 && <p className={`p-8 text-center text-sm ${adminMutedCls}`}>No leave requests.</p>}
             </section>
           )}
@@ -231,7 +231,7 @@ export default function HRPage() {
           {/* Salary Tab */}
           {tab === "Salary" && (
             <section className={`${adminCardCls} overflow-hidden`}>
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto"><table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-slate-800">
                     {["Employee", "Month", "Base", "Incentive", "Deductions", "Net", "Status", ""].map((h) => (
@@ -244,12 +244,12 @@ export default function HRPage() {
                     const emp = employees.find((e) => e.id === s.employee_id);
                     return (
                       <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                        <td className="px-4 py-2.5 text-xs font-medium">{emp?.full_name ?? "—"}</td>
+                        <td className="px-4 py-2.5 text-xs font-medium">{emp?.full_name ?? "â€”"}</td>
                         <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{new Date(s.month).toLocaleDateString("en-IN", { month: "short", year: "2-digit" })}</td>
-                        <td className="px-4 py-2.5 text-xs tabular-nums">₹{s.base_salary.toLocaleString("en-IN")}</td>
-                        <td className="px-4 py-2.5 text-xs tabular-nums text-emerald-600 dark:text-emerald-300">₹{s.incentive.toLocaleString("en-IN")}</td>
-                        <td className="px-4 py-2.5 text-xs tabular-nums text-rose-600 dark:text-rose-300">-₹{s.deductions.toLocaleString("en-IN")}</td>
-                        <td className="px-4 py-2.5 text-xs font-bold tabular-nums">₹{s.net_salary.toLocaleString("en-IN")}</td>
+                        <td className="px-4 py-2.5 text-xs tabular-nums">â‚¹{s.base_salary.toLocaleString("en-IN")}</td>
+                        <td className="px-4 py-2.5 text-xs tabular-nums text-emerald-600 dark:text-emerald-300">â‚¹{s.incentive.toLocaleString("en-IN")}</td>
+                        <td className="px-4 py-2.5 text-xs tabular-nums text-rose-600 dark:text-rose-300">-â‚¹{s.deductions.toLocaleString("en-IN")}</td>
+                        <td className="px-4 py-2.5 text-xs font-bold tabular-nums">â‚¹{s.net_salary.toLocaleString("en-IN")}</td>
                         <td className="px-4 py-2.5">
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${s.paid ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"}`}>
                             {s.paid ? `Paid ${s.paid_on ? new Date(s.paid_on).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : ""}` : "Unpaid"}
@@ -264,7 +264,7 @@ export default function HRPage() {
                     );
                   })}
                 </tbody>
-              </table>
+              </table></div>
               {salaries.length === 0 && <p className={`p-8 text-center text-sm ${adminMutedCls}`}>No salary records. Add employees first.</p>}
             </section>
           )}
@@ -274,7 +274,7 @@ export default function HRPage() {
   );
 }
 
-function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking access…</main>; }
+function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking accessâ€¦</main>; }
 function Denied()  {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] px-6 dark:bg-[#0b0d12]">
@@ -285,3 +285,5 @@ function Denied()  {
     </main>
   );
 }
+
+

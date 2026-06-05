@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-// /admin/team/attendance — Full attendance dashboard for founder.
+// /admin/team/attendance â€” Full attendance dashboard for founder.
 
 import { useEffect, useState } from "react";
 import { RefreshCw, ShieldCheck, Users, Clock, Calendar, CheckCircle } from "lucide-react";
@@ -40,7 +40,7 @@ type Overview = {
 };
 
 function formatMins(mins: number): string {
-  if (!mins) return "—";
+  if (!mins) return "â€”";
   const h = Math.floor(mins / 60);
   const m = mins % 60;
   if (h > 0) return `${h}h ${m}m`;
@@ -116,7 +116,7 @@ export default function AttendancePage() {
       }
     >
       {loading ? (
-        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
       ) : !data ? (
         <p className="p-6 text-center text-sm text-rose-600">No data</p>
       ) : (
@@ -187,13 +187,13 @@ export default function AttendancePage() {
           <section className={`${adminCardCls} overflow-hidden`}>
             <div className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                Logs — {new Date(selectedDate).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
+                Logs â€” {new Date(selectedDate).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
               </p>
             </div>
             {data.today.length === 0 ? (
               <p className={`p-8 text-center text-sm ${adminMutedCls}`}>No check-ins for this date.</p>
             ) : (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto"><table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-slate-800">
                     {["Member", "Check In", "Check Out", "Duration", "Work Notes"].map((h) => (
@@ -226,7 +226,7 @@ export default function AttendancePage() {
                       </td>
                       <td className="px-4 py-3 text-xs font-bold">
                         {log.duration_mins ? formatMins(log.duration_mins) : (
-                          log.check_out ? "—" : (
+                          log.check_out ? "â€”" : (
                             <span className="text-emerald-600 dark:text-emerald-300">
                               {timeSince(log.check_in)}
                             </span>
@@ -234,12 +234,12 @@ export default function AttendancePage() {
                         )}
                       </td>
                       <td className={`max-w-xs px-4 py-3 text-xs ${adminMutedCls}`}>
-                        {log.work_notes ?? "—"}
+                        {log.work_notes ?? "â€”"}
                       </td>
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             )}
           </section>
 
@@ -248,13 +248,13 @@ export default function AttendancePage() {
             <div className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
               <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                 <Calendar className="h-3.5 w-3.5" />
-                Monthly Summary — {new Date(selectedDate).toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+                Monthly Summary â€” {new Date(selectedDate).toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
               </p>
             </div>
             {data.monthly.length === 0 ? (
               <p className={`p-6 text-center text-sm ${adminMutedCls}`}>No data this month.</p>
             ) : (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto"><table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-slate-800">
                     {["Member", "Days Present", "Total Hours", "Avg / Day"].map((h) => (
@@ -279,7 +279,7 @@ export default function AttendancePage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             )}
           </section>
         </div>
@@ -289,7 +289,7 @@ export default function AttendancePage() {
 }
 
 function Loading() {
-  return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking access…</main>;
+  return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking accessâ€¦</main>;
 }
 function Denied() {
   return (
@@ -302,3 +302,5 @@ function Denied() {
     </main>
   );
 }
+
+

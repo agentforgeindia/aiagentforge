@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-// /admin/ai-operations — AI generation volume, failures, credits consumed.
+// /admin/ai-operations â€” AI generation volume, failures, credits consumed.
 
 import { useEffect, useState } from "react";
 import { RefreshCw, ShieldCheck, Zap, AlertTriangle, CheckCircle, Clock } from "lucide-react";
@@ -102,7 +102,7 @@ export default function AiOperationsPage() {
       }
     >
       {loading ? (
-        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
       ) : !data || data.error ? (
         <p className="p-6 text-center text-sm text-rose-600">{data?.error ?? "No data"}</p>
       ) : (
@@ -166,13 +166,13 @@ export default function AiOperationsPage() {
           <section className={`${adminCardCls} overflow-hidden`}>
             <div className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                🤖 AI Agent Health Monitor
+                ðŸ¤– AI Agent Health Monitor
               </p>
             </div>
             {data.by_agent.length === 0 ? (
               <p className={`p-6 text-center text-sm ${adminMutedCls}`}>No generations yet.</p>
             ) : (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto"><table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-slate-800">
                     {["Agent", "Status", "Total", "Success", "Failed", "Today", "Success %", "Fail %"].map((h) => (
@@ -188,7 +188,7 @@ export default function AiOperationsPage() {
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {data.by_agent.map((a) => {
                     const successPct = a.total > 0 ? Math.round((a.completed / a.total) * 100) : 0;
-                    const health = a.failure_pct <= 2 ? "🟢" : a.failure_pct <= 10 ? "🟡" : "🔴";
+                    const health = a.failure_pct <= 2 ? "ðŸŸ¢" : a.failure_pct <= 10 ? "ðŸŸ¡" : "ðŸ”´";
                     return (
                     <tr key={a.agent_slug} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                       <td className="px-4 py-2.5 font-medium">
@@ -233,7 +233,7 @@ export default function AiOperationsPage() {
                     );
                   })}
                 </tbody>
-              </table>
+              </table></div>
             )}
           </section>
 
@@ -242,7 +242,7 @@ export default function AiOperationsPage() {
             {/* Sparkline */}
             <div className={`${adminCardCls} p-4`}>
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                Daily Generations · Last 30 Days
+                Daily Generations Â· Last 30 Days
               </p>
               <DailyChart points={data.daily} />
             </div>
@@ -251,7 +251,7 @@ export default function AiOperationsPage() {
             <div className={`${adminCardCls} overflow-hidden`}>
               <div className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                  Recent Failed Jobs · Last 7 Days
+                  Recent Failed Jobs Â· Last 7 Days
                 </p>
               </div>
               {data.recent_fails.length === 0 ? (
@@ -265,7 +265,7 @@ export default function AiOperationsPage() {
                           {AGENT_LABELS[f.agent_slug] ?? f.agent_slug}
                         </p>
                         <p className={`text-[11px] ${adminMutedCls}`}>
-                          {f.user_id.slice(0, 8)}…
+                          {f.user_id.slice(0, 8)}â€¦
                         </p>
                       </div>
                       <p className={`text-[11px] ${adminMutedCls}`}>
@@ -329,7 +329,7 @@ function StatCard({
 function Loading() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">
-      Checking access…
+      Checking accessâ€¦
     </main>
   );
 }
@@ -345,3 +345,5 @@ function Denied() {
     </main>
   );
 }
+
+

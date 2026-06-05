@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-// /admin/affiliates — Affiliate / Partner management.
+// /admin/affiliates â€” Affiliate / Partner management.
 
 import { useEffect, useState } from "react";
 import { RefreshCw, ShieldCheck, Plus, X, Users, IndianRupee, Gift, Copy, Check } from "lucide-react";
@@ -92,11 +92,11 @@ export default function AffiliatesPage() {
     setRefreshKey((k) => k + 1);
   }
 
-  // Manually record a referral sale → commission auto-computed.
+  // Manually record a referral sale â†’ commission auto-computed.
   async function addReferral(aff: Affiliate) {
     const email = prompt("Referred customer's email/name:");
     if (!email) return;
-    const amtStr = prompt("Sale amount (₹):");
+    const amtStr = prompt("Sale amount (â‚¹):");
     const amount = parseFloat(amtStr ?? "");
     if (isNaN(amount)) return;
     const commission = Math.round(amount * (aff.commission_pct / 100) * 100) / 100;
@@ -124,7 +124,7 @@ export default function AffiliatesPage() {
       }
     >
       {loading ? (
-        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
       ) : !data ? (
         <p className="p-6 text-center text-sm text-rose-600">No data</p>
       ) : (
@@ -133,8 +133,8 @@ export default function AffiliatesPage() {
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Stat label="Partners"        value={`${data.totals.active}/${data.totals.affiliates}`} sub="active / total" icon={<Users className="h-4 w-4" />} />
             <Stat label="Total Referrals" value={data.totals.referrals}                              icon={<Gift className="h-4 w-4" />} />
-            <Stat label="Pending Payout"  value={`₹${data.totals.pending_payout.toLocaleString("en-IN")}`} tone="amber" icon={<IndianRupee className="h-4 w-4" />} />
-            <Stat label="Total Paid"      value={`₹${data.totals.total_paid.toLocaleString("en-IN")}`}     tone="emerald" icon={<IndianRupee className="h-4 w-4" />} />
+            <Stat label="Pending Payout"  value={`â‚¹${data.totals.pending_payout.toLocaleString("en-IN")}`} tone="amber" icon={<IndianRupee className="h-4 w-4" />} />
+            <Stat label="Total Paid"      value={`â‚¹${data.totals.total_paid.toLocaleString("en-IN")}`}     tone="emerald" icon={<IndianRupee className="h-4 w-4" />} />
           </section>
 
           {/* New form */}
@@ -149,7 +149,7 @@ export default function AffiliatesPage() {
                 <input className={adminInputCls} placeholder="Email *" type="email" value={fEmail} onChange={(e) => setFEmail(e.target.value)} required />
                 <input className={adminInputCls} placeholder="Phone" value={fPhone} onChange={(e) => setFPhone(e.target.value)} />
                 <input className={adminInputCls} placeholder="Commission %" type="number" value={fPct} onChange={(e) => setFPct(e.target.value)} />
-                <button type="submit" disabled={fSaving} className={`${adminPrimaryBtnCls} lg:col-span-4 justify-center`}>{fSaving ? "Saving…" : "Create Partner + Referral Link"}</button>
+                <button type="submit" disabled={fSaving} className={`${adminPrimaryBtnCls} lg:col-span-4 justify-center`}>{fSaving ? "Savingâ€¦" : "Create Partner + Referral Link"}</button>
               </form>
             </section>
           )}
@@ -162,7 +162,7 @@ export default function AffiliatesPage() {
             {data.affiliates.length === 0 ? (
               <p className={`p-8 text-center text-sm ${adminMutedCls}`}>No partners yet. Add your first affiliate!</p>
             ) : (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto"><table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-slate-800">
                     {["Partner", "Referral Link", "Commission", "Referrals", "Earned", "Paid", "Status", "Manage"].map((h) => (
@@ -194,8 +194,8 @@ export default function AffiliatesPage() {
                         ) : <span className="text-xs font-bold">{a.commission_pct}%</span>}
                       </td>
                       <td className="px-4 py-2.5 tabular-nums text-xs">{a.referrals}</td>
-                      <td className="px-4 py-2.5 tabular-nums text-xs font-bold text-emerald-600 dark:text-emerald-300">₹{a.earned.toLocaleString("en-IN")}</td>
-                      <td className={`px-4 py-2.5 tabular-nums text-xs ${adminMutedCls}`}>₹{a.paid.toLocaleString("en-IN")}</td>
+                      <td className="px-4 py-2.5 tabular-nums text-xs font-bold text-emerald-600 dark:text-emerald-300">â‚¹{a.earned.toLocaleString("en-IN")}</td>
+                      <td className={`px-4 py-2.5 tabular-nums text-xs ${adminMutedCls}`}>â‚¹{a.paid.toLocaleString("en-IN")}</td>
                       <td className="px-4 py-2.5">
                         {canManage ? (
                           <select value={a.status} onChange={(e) => setStatus(a.id, e.target.value)}
@@ -217,7 +217,7 @@ export default function AffiliatesPage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             )}
           </section>
         </div>
@@ -237,7 +237,7 @@ function Stat({ label, value, sub, icon, tone }: { label: string; value: string 
   );
 }
 
-function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking access…</main>; }
+function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking accessâ€¦</main>; }
 function Denied()  {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] px-6 dark:bg-[#0b0d12]">
@@ -247,3 +247,5 @@ function Denied()  {
     </main>
   );
 }
+
+

@@ -1697,7 +1697,7 @@ export default function ProductographyPage() {
                 )}
 
                 {items.length > 1 && (
-                  <div className="mt-4 grid grid-cols-3 gap-2">
+                  <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
                     {items.map((it) => (
                       <button key={it.id} type="button" onClick={() => setActiveId(it.id)} className={`overflow-hidden rounded-xl border-2 ${activeId === it.id ? "border-cyan-400" : "border-transparent"}`}>
                         {it.url ? <img src={it.url} alt={it.fileName} className="aspect-square w-full object-cover" /> : <div className="aspect-square animate-pulse bg-cyan-400/10" />}
@@ -1802,7 +1802,7 @@ export default function ProductographyPage() {
               </div>
 
               <div ref={stepTopRef}>
-                <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
                   {stepMeta.map((step, index) => (
                     <div
                       key={step.id}

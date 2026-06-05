@@ -2743,7 +2743,7 @@ export default function Home() {
                           <p className="mb-2 text-[11px] font-black uppercase tracking-widest text-cyan-600">
                             Position on Output
                           </p>
-                          <div className="grid grid-cols-4 gap-2">
+                          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                             {articlePositions.map(([val, label]) => (
                               <button
                                 key={val}
@@ -3296,7 +3296,7 @@ export default function Home() {
                           ? "8. Accessories / Styling"
                           : "7. Accessories / Styling"}
                       </h4>
-                      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
                         {["None", "Sunglasses", "Watch", "Bracelet"].map(
                           (item) => (
                             <OptionCard
@@ -3426,10 +3426,10 @@ export default function Home() {
                         <div className="flex flex-col">
                           <div className="bg-black/5 p-3 sm:p-5">
                             {previewResult ? (
-                              <div className="grid grid-cols-2 gap-3">
+                              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <div className="text-center">
                                   {previewImage ? (
-                                    <img src={previewImage} alt="Uploaded textile design" className="mx-auto max-h-[360px] w-full rounded-2xl object-cover shadow-lg" />
+                                    <img src={previewImage} alt="Uploaded textile design" className="mx-auto max-h-[260px] w-full rounded-2xl object-cover shadow-lg sm:max-h-[360px]" />
                                   ) : (
                                     <div className={`flex h-[200px] w-full items-center justify-center rounded-2xl border-2 border-dashed ${darkMode ? "border-white/20" : "border-black/15"}`}><span className="text-3xl opacity-30">📷</span></div>
                                   )}

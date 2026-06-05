@@ -2536,7 +2536,7 @@ if (!response.ok) {
               </div>
 
               <div>
-                <div ref={stepTopRef} className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <div ref={stepTopRef} className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-4">
                   {builderStepMeta.map((step, index) => (
                     <div
                       key={step.id}
@@ -2591,7 +2591,7 @@ if (!response.ok) {
                     {jewelleryType === "More Options" && (
                       <div className="rounded-[1.35rem] border border-cyan-300/40 bg-cyan-400/10 p-4 dark:border-cyan-400/20">
                         <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">More Jewellery Options</p>
-                        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+                        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                           {MORE_JEWELLERY_OPTIONS.map((item) => (
                             <label key={item} className="flex cursor-pointer items-center gap-2 rounded-2xl border border-black/10 bg-white/80 px-3 py-2 text-xs font-bold dark:border-white/10 dark:bg-white/[0.05]">
                               <input type="checkbox" checked={moreJewellery.includes(item)} onChange={() => toggleMoreJewellery(item)} />
@@ -2696,10 +2696,10 @@ if (!response.ok) {
                             <BadgeCheck className="h-5 w-5 text-cyan-600 dark:text-cyan-300" />
                           </div>
 
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <div className="text-center">
                               {previewImage ? (
-                                <img src={previewImage} alt="Uploaded jewellery photo" className="mx-auto max-h-[320px] w-full rounded-[1.25rem] object-cover shadow-lg" />
+                                <img src={previewImage} alt="Uploaded jewellery photo" className="mx-auto max-h-[220px] w-full rounded-[1.25rem] object-cover shadow-lg sm:max-h-[320px]" />
                               ) : (
                                 <div className="flex h-[200px] w-full items-center justify-center rounded-[1.25rem] border-2 border-dashed border-black/15 dark:border-white/20"><span className="text-3xl opacity-30">📷</span></div>
                               )}
