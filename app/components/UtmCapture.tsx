@@ -17,8 +17,16 @@ export default function UtmCapture() {
 
   useEffect(() => {
     captureUtmOnLanding();
-    // Re-run on every route change in case the user clicks a link
-    // that re-introduces UTM params (rare, but cheap).
+
+    // Affiliate referral capture — store ?ref=CODE for 60 days so a
+    // later signup/payment can be attributed to the partner.
+    const ref = searchParams.get("ref");
+    if (ref) {
+      try {
+        localStorage.setItem("af_ref_code", ref);
+        document.cookie = `af_ref=${encodeURIComponent(ref)};path=/;max-age=${60 * 60 * 24 * 60}`;
+      } catch { /* ignore */ }
+    }
   }, [pathname, searchParams]);
 
   return null;

@@ -74,6 +74,39 @@ export default function AffiliatesPage() {
     setTimeout(() => setCopied(null), 1500);
   }
 
+  // Change commission % anytime.
+  async function setCommission(id: string, pct: number) {
+    await supabase.from("affiliates").update({ commission_pct: pct }).eq("id", id);
+    setRefreshKey((k) => k + 1);
+  }
+
+  // Pause / activate a partner.
+  async function setStatus(id: string, status: string) {
+    await supabase.from("affiliates").update({ status }).eq("id", id);
+    setRefreshKey((k) => k + 1);
+  }
+
+  async function removePartner(id: string) {
+    if (!confirm("Delete this partner and all their referrals?")) return;
+    await supabase.from("affiliates").delete().eq("id", id);
+    setRefreshKey((k) => k + 1);
+  }
+
+  // Manually record a referral sale → commission auto-computed.
+  async function addReferral(aff: Affiliate) {
+    const email = prompt("Referred customer's email/name:");
+    if (!email) return;
+    const amtStr = prompt("Sale amount (₹):");
+    const amount = parseFloat(amtStr ?? "");
+    if (isNaN(amount)) return;
+    const commission = Math.round(amount * (aff.commission_pct / 100) * 100) / 100;
+    await supabase.from("affiliate_referrals").insert({
+      affiliate_id: aff.id, referred_email: email,
+      amount_inr: amount, commission_inr: commission, status: "confirmed",
+    });
+    setRefreshKey((k) => k + 1);
+  }
+
   if (pLoading) return <Loading />;
   if (!canView)  return <Denied />;
 
@@ -132,7 +165,7 @@ export default function AffiliatesPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-slate-800">
-                    {["Partner", "Referral Link", "Commission", "Referrals", "Earned", "Paid", "Status"].map((h) => (
+                    {["Partner", "Referral Link", "Commission", "Referrals", "Earned", "Paid", "Status", "Manage"].map((h) => (
                       <th key={h} className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">{h}</th>
                     ))}
                   </tr>
@@ -150,12 +183,36 @@ export default function AffiliatesPage() {
                           {copied === a.ref_code ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
                         </button>
                       </td>
-                      <td className="px-4 py-2.5 text-xs font-bold">{a.commission_pct}%</td>
+                      <td className="px-4 py-2.5">
+                        {canManage ? (
+                          <div className="flex items-center gap-1">
+                            <input type="number" defaultValue={a.commission_pct} disabled={!canManage}
+                              onBlur={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v) && v !== a.commission_pct) setCommission(a.id, v); }}
+                              className="w-14 rounded-md border border-slate-200 bg-white px-1.5 py-1 text-xs dark:border-slate-700 dark:bg-slate-900" />
+                            <span className="text-xs font-bold">%</span>
+                          </div>
+                        ) : <span className="text-xs font-bold">{a.commission_pct}%</span>}
+                      </td>
                       <td className="px-4 py-2.5 tabular-nums text-xs">{a.referrals}</td>
                       <td className="px-4 py-2.5 tabular-nums text-xs font-bold text-emerald-600 dark:text-emerald-300">₹{a.earned.toLocaleString("en-IN")}</td>
                       <td className={`px-4 py-2.5 tabular-nums text-xs ${adminMutedCls}`}>₹{a.paid.toLocaleString("en-IN")}</td>
                       <td className="px-4 py-2.5">
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${a.status === "active" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800"}`}>{a.status}</span>
+                        {canManage ? (
+                          <select value={a.status} onChange={(e) => setStatus(a.id, e.target.value)}
+                            className="rounded-md border border-slate-200 bg-white px-1.5 py-1 text-[11px] dark:border-slate-700 dark:bg-slate-900">
+                            <option value="active">active</option>
+                            <option value="paused">paused</option>
+                            <option value="banned">banned</option>
+                          </select>
+                        ) : <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${a.status === "active" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800"}`}>{a.status}</span>}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        {canManage && (
+                          <div className="flex gap-1.5">
+                            <button type="button" onClick={() => addReferral(a)} className="rounded-md bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-emerald-500">+ Referral</button>
+                            <button type="button" onClick={() => removePartner(a.id)} className="rounded-md border border-rose-200 px-2 py-1 text-[10px] font-bold text-rose-600 hover:bg-rose-50 dark:border-rose-800 dark:hover:bg-rose-500/10">Delete</button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
