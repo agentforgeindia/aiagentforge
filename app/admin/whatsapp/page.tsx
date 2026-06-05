@@ -21,6 +21,18 @@ type Msg = {
 };
 
 type Thread = { wa_from: string; wa_name: string | null; last_body: string; last_at: string };
+type Contact = { wa_from: string; tags: string[]; assigned_to: string | null };
+
+const TAG_OPTIONS = ["Textile", "Jewellery", "Productography", "Enterprise", "Hot Lead", "Support", "Paid"];
+const TAG_COLORS: Record<string, string> = {
+  Textile:        "bg-cyan-100 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300",
+  Jewellery:      "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+  Productography: "bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300",
+  Enterprise:     "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300",
+  "Hot Lead":     "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300",
+  Support:        "bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300",
+  Paid:           "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+};
 
 export default function WhatsAppInboxPage() {
   const { loading: pLoading, has, isAdmin, email } = useAdminPermissions();
@@ -34,6 +46,11 @@ export default function WhatsAppInboxPage() {
   const [loading, setLoading]   = useState(true);
   const [sending, setSending]   = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Contact tags + assignment
+  const [contacts, setContacts] = useState<Record<string, Contact>>({});
+  const [tagOpen, setTagOpen]   = useState(false);
+  const [assignVal, setAssignVal] = useState("");
 
   // Broadcast composer
   const [view, setView]       = useState<"inbox" | "broadcast">("inbox");
@@ -79,6 +96,15 @@ export default function WhatsAppInboxPage() {
       }
       setThreads(list);
       if (!active && list.length) setActive(list[0].wa_from);
+
+      // Load contact tags/assignment
+      const { data: cts } = await supabase
+        .from("whatsapp_contacts")
+        .select("wa_from, tags, assigned_to");
+      const map: Record<string, Contact> = {};
+      for (const c of (cts as Contact[]) ?? []) map[c.wa_from] = c;
+      setContacts(map);
+
       setLoading(false);
     })();
   }, [canView, refreshKey]);
@@ -115,8 +141,33 @@ export default function WhatsAppInboxPage() {
     else alert(json.error ?? "Send failed");
   }
 
+  // Sync assignVal input when switching threads
+  useEffect(() => {
+    if (active) setAssignVal(contacts[active]?.assigned_to ?? "");
+  }, [active, contacts]);
+
+  async function saveContact(patch: Partial<Contact>) {
+    if (!active) return;
+    const current = contacts[active] ?? { wa_from: active, tags: [], assigned_to: null };
+    const next: Contact = { ...current, ...patch, wa_from: active };
+    await supabase.from("whatsapp_contacts").upsert({
+      wa_from: active, tags: next.tags, assigned_to: next.assigned_to,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "wa_from" });
+    setContacts((prev) => ({ ...prev, [active]: next }));
+  }
+
+  function toggleTag(tag: string) {
+    if (!active) return;
+    const cur = contacts[active]?.tags ?? [];
+    const next = cur.includes(tag) ? cur.filter((t) => t !== tag) : [...cur, tag];
+    saveContact({ tags: next });
+  }
+
   if (pLoading) return <Loading />;
   if (!canView)  return <Denied />;
+
+  const activeContact = active ? contacts[active] : undefined;
 
   return (
     <AdminShell
@@ -197,6 +248,13 @@ export default function WhatsAppInboxPage() {
                     className={`w-full px-4 py-3 text-left transition ${active === t.wa_from ? "bg-indigo-50 dark:bg-indigo-500/10" : "hover:bg-slate-50 dark:hover:bg-slate-800/40"}`}>
                     <p className="text-xs font-bold">{t.wa_name ?? t.wa_from}</p>
                     <p className={`truncate text-[11px] ${adminMutedCls}`}>{t.last_body}</p>
+                    {(contacts[t.wa_from]?.tags?.length ?? 0) > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {contacts[t.wa_from].tags.slice(0, 3).map((tag) => (
+                          <span key={tag} className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${TAG_COLORS[tag] ?? "bg-slate-100 text-slate-600"}`}>{tag}</span>
+                        ))}
+                      </div>
+                    )}
                   </button>
                 </li>
               ))}
@@ -206,8 +264,53 @@ export default function WhatsAppInboxPage() {
           {/* Chat */}
           <div className={`${adminCardCls} flex flex-col lg:col-span-2`} style={{ minHeight: "60vh" }}>
             <div className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
-              <p className="text-sm font-bold">{threads.find((t) => t.wa_from === active)?.wa_name ?? active}</p>
-              <p className={`text-[11px] ${adminMutedCls}`}>{active}</p>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-bold">{threads.find((t) => t.wa_from === active)?.wa_name ?? active}</p>
+                  <p className={`text-[11px] ${adminMutedCls}`}>{active}</p>
+                </div>
+                {canManage && (
+                  <button type="button" onClick={() => setTagOpen((o) => !o)}
+                    className="shrink-0 rounded-md border border-slate-200 px-2.5 py-1 text-[11px] font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+                    Tags &amp; Assign
+                  </button>
+                )}
+              </div>
+
+              {/* Current tags + assignee */}
+              {(activeContact?.tags?.length || activeContact?.assigned_to) && (
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  {activeContact?.tags?.map((tag) => (
+                    <span key={tag} className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${TAG_COLORS[tag] ?? "bg-slate-100 text-slate-600"}`}>{tag}</span>
+                  ))}
+                  {activeContact?.assigned_to && (
+                    <span className="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-bold text-white dark:bg-indigo-600">@{activeContact.assigned_to.split("@")[0]}</span>
+                  )}
+                </div>
+              )}
+
+              {/* Tag/assign editor */}
+              {tagOpen && canManage && (
+                <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/40">
+                  <p className={`mb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] ${adminMutedCls}`}>Tags</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {TAG_OPTIONS.map((tag) => {
+                      const on = activeContact?.tags?.includes(tag);
+                      return (
+                        <button key={tag} type="button" onClick={() => toggleTag(tag)}
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition ${on ? (TAG_COLORS[tag] ?? "bg-slate-200 text-slate-700") : "border border-slate-200 text-slate-400 hover:bg-white dark:border-slate-700 dark:hover:bg-slate-800"}`}>
+                          {on ? "✓ " : "+ "}{tag}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className={`mb-1.5 mt-3 text-[10px] font-bold uppercase tracking-[0.14em] ${adminMutedCls}`}>Assign to</p>
+                  <div className="flex gap-2">
+                    <input className={`${adminInputCls} flex-1`} placeholder="team@agentforge.in" value={assignVal} onChange={(e) => setAssignVal(e.target.value)} />
+                    <button type="button" onClick={() => saveContact({ assigned_to: assignVal || null })} className={adminPrimaryBtnCls}>Save</button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex-1 space-y-2 overflow-y-auto p-4" style={{ maxHeight: "45vh" }}>
