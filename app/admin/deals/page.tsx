@@ -119,11 +119,11 @@ export default function DealsPage() {
       <div className="mb-4 grid gap-3 sm:grid-cols-3">
         <div className={`${adminCardCls} p-4`}>
           <p className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] ${adminMutedCls}`}><TrendingUp className="h-3.5 w-3.5"/>Pipeline Value (Weighted)</p>
-          <p className="mt-1 text-2xl font-bold text-indigo-600 dark:text-indigo-300 tabular-nums">â‚¹{Math.round(pipelineValue).toLocaleString("en-IN")}</p>
+          <p className="mt-1 text-2xl font-bold text-indigo-600 dark:text-indigo-300 tabular-nums">₹{Math.round(pipelineValue).toLocaleString("en-IN")}</p>
         </div>
         <div className={`${adminCardCls} p-4`}>
           <p className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] ${adminMutedCls}`}><DollarSign className="h-3.5 w-3.5"/>Won</p>
-          <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">â‚¹{wonValue.toLocaleString("en-IN")}</p>
+          <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">₹{wonValue.toLocaleString("en-IN")}</p>
         </div>
         <div className={`${adminCardCls} p-4`}>
           <p className={`text-[10px] font-bold uppercase tracking-[0.18em] ${adminMutedCls}`}>Total Deals</p>
@@ -143,7 +143,7 @@ export default function DealsPage() {
             <input className={adminInputCls} placeholder="Company" value={fCompany} onChange={(e) => setFCompany(e.target.value)} />
             <input className={adminInputCls} placeholder="Contact name" value={fContact} onChange={(e) => setFContact(e.target.value)} />
             <input className={adminInputCls} placeholder="Phone" value={fPhone} onChange={(e) => setFPhone(e.target.value)} />
-            <input className={adminInputCls} placeholder="Deal value (â‚¹)" type="number" value={fValue} onChange={(e) => setFValue(e.target.value)} />
+            <input className={adminInputCls} placeholder="Deal value (₹)" type="number" value={fValue} onChange={(e) => setFValue(e.target.value)} />
             <select className={adminInputCls} value={fStage} onChange={(e) => setFStage(e.target.value)}>
               {STAGES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
@@ -193,7 +193,7 @@ export default function DealsPage() {
                       {d.contact_name && <p className={`text-[11px] ${adminMutedCls}`}>{d.contact_name} {d.contact_phone && `Â· ${d.contact_phone}`}</p>}
                     </td>
                     <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{d.company ?? "â€”"}</td>
-                    <td className="px-4 py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">â‚¹{d.value_inr.toLocaleString("en-IN")}</td>
+                    <td className="px-4 py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">₹{d.value_inr.toLocaleString("en-IN")}</td>
                     <td className="px-4 py-2.5">
                       {canManage ? (
                         <select className={`rounded-md border border-slate-200 bg-white px-1.5 py-1 text-[11px] dark:border-slate-700 dark:bg-slate-900`} value={d.stage} onChange={(e) => moveStage(d.id, e.target.value)}>

@@ -74,11 +74,11 @@ export default function AnalyticsPage() {
             <Block title="ðŸ“¢ Meta Ads Â· Last 7 Days" prov={data.meta}>
               {data.meta.data && (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-                  <Stat label="Spend"       value={`â‚¹${Number(data.meta.data.spend).toLocaleString("en-IN")}`} />
+                  <Stat label="Spend"       value={`₹${Number(data.meta.data.spend).toLocaleString("en-IN")}`} />
                   <Stat label="Impressions" value={Number(data.meta.data.impressions).toLocaleString("en-IN")} />
                   <Stat label="Clicks"      value={Number(data.meta.data.clicks).toLocaleString("en-IN")} />
                   <Stat label="CTR"         value={`${Number(data.meta.data.ctr).toFixed(2)}%`} />
-                  <Stat label="CPC"         value={`â‚¹${Number(data.meta.data.cpc).toFixed(2)}`} />
+                  <Stat label="CPC"         value={`₹${Number(data.meta.data.cpc).toFixed(2)}`} />
                   <Stat label="Reach"       value={Number(data.meta.data.reach).toLocaleString("en-IN")} />
                 </div>
               )}

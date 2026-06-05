@@ -173,13 +173,13 @@ export default function AdminDashboardPage() {
             </p>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
               {[
-                { label: "Revenue",          val: `â‚¹${data.revenue.today.toLocaleString("en-IN")}`,        color: "text-emerald-400" },
+                { label: "Revenue",          val: `₹${data.revenue.today.toLocaleString("en-IN")}`,        color: "text-emerald-400" },
                 { label: "New Leads",        val: data.counts.open_leads,                                  color: "text-sky-400" },
                 { label: "New Signups",      val: data.counts.signups_today,                                color: "text-blue-400" },
                 { label: "Paid Customers",   val: data.counts.new_payers_today,                             color: "text-indigo-400" },
                 { label: "Credits Used",     val: data.credits.used_today.toLocaleString("en-IN"),          color: "text-purple-400" },
                 { label: "AI Generations",   val: data.ai?.gens_today ?? 0,                                 color: "text-violet-400" },
-                { label: "Net Profit",       val: `â‚¹${(data.finance?.net_profit_month ?? 0).toLocaleString("en-IN")}`, color: (data.finance?.net_profit_month ?? 0) >= 0 ? "text-emerald-400" : "text-rose-400" },
+                { label: "Net Profit",       val: `₹${(data.finance?.net_profit_month ?? 0).toLocaleString("en-IN")}`, color: (data.finance?.net_profit_month ?? 0) >= 0 ? "text-emerald-400" : "text-rose-400" },
               ].map((s) => (
                 <div key={s.label} className="text-center">
                   <p className={`text-lg font-bold tabular-nums sm:text-xl ${s.color}`}>{s.val}</p>
@@ -215,15 +215,15 @@ export default function AdminDashboardPage() {
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <BigStat
               label="Revenue today"
-              value={`â‚¹${data.revenue.today.toLocaleString("en-IN")}`}
+              value={`₹${data.revenue.today.toLocaleString("en-IN")}`}
               delta={trendLabel(data.revenue.today, data.revenue.yesterday)}
               icon={<TrendingUp className="h-4 w-4" />}
               tone="emerald"
             />
             <BigStat
               label="Revenue this month"
-              value={`â‚¹${data.revenue.this_month.toLocaleString("en-IN")}`}
-              sub={`This week: â‚¹${data.revenue.this_week.toLocaleString("en-IN")}`}
+              value={`₹${data.revenue.this_month.toLocaleString("en-IN")}`}
+              sub={`This week: ₹${data.revenue.this_week.toLocaleString("en-IN")}`}
               icon={<TrendingUp className="h-4 w-4" />}
             />
             <BigStat
@@ -249,14 +249,14 @@ export default function AdminDashboardPage() {
                   Daily revenue Â· last 30 days
                 </p>
                 <p className="mt-0.5 text-xl font-bold tabular-nums">
-                  â‚¹{data.revenue.lifetime.toLocaleString("en-IN")}{" "}
+                  ₹{data.revenue.lifetime.toLocaleString("en-IN")}{" "}
                   <span className={`text-xs font-medium ${adminMutedCls}`}>
                     lifetime
                   </span>
                 </p>
               </div>
               <p className={`text-[11px] ${adminMutedCls}`}>
-                Hover bars for daily â‚¹
+                Hover bars for daily ₹
               </p>
             </div>
             <Sparkbars points={data.daily_revenue} />
@@ -511,7 +511,7 @@ function Line({
     tone === "indigo"  ? "text-indigo-600 dark:text-indigo-300" :
                          "text-slate-700 dark:text-slate-200";
   const display = format === "inr"
-    ? `â‚¹${Math.abs(value).toLocaleString("en-IN")}`
+    ? `₹${Math.abs(value).toLocaleString("en-IN")}`
     : value.toLocaleString("en-IN");
   return (
     <li className="flex items-center justify-between gap-3">
@@ -658,7 +658,7 @@ function Sparkbars({
         return (
           <div
             key={i}
-            title={`${p.d}: â‚¹${p.amount.toLocaleString("en-IN")}`}
+            title={`${p.d}: ₹${p.amount.toLocaleString("en-IN")}`}
             className="group flex-1 rounded-t bg-slate-200 transition hover:bg-indigo-500 dark:bg-slate-700"
             style={{ height: `${h}%` }}
           />

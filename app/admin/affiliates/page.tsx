@@ -96,7 +96,7 @@ export default function AffiliatesPage() {
   async function addReferral(aff: Affiliate) {
     const email = prompt("Referred customer's email/name:");
     if (!email) return;
-    const amtStr = prompt("Sale amount (â‚¹):");
+    const amtStr = prompt("Sale amount (₹):");
     const amount = parseFloat(amtStr ?? "");
     if (isNaN(amount)) return;
     const commission = Math.round(amount * (aff.commission_pct / 100) * 100) / 100;
@@ -133,8 +133,8 @@ export default function AffiliatesPage() {
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Stat label="Partners"        value={`${data.totals.active}/${data.totals.affiliates}`} sub="active / total" icon={<Users className="h-4 w-4" />} />
             <Stat label="Total Referrals" value={data.totals.referrals}                              icon={<Gift className="h-4 w-4" />} />
-            <Stat label="Pending Payout"  value={`â‚¹${data.totals.pending_payout.toLocaleString("en-IN")}`} tone="amber" icon={<IndianRupee className="h-4 w-4" />} />
-            <Stat label="Total Paid"      value={`â‚¹${data.totals.total_paid.toLocaleString("en-IN")}`}     tone="emerald" icon={<IndianRupee className="h-4 w-4" />} />
+            <Stat label="Pending Payout"  value={`₹${data.totals.pending_payout.toLocaleString("en-IN")}`} tone="amber" icon={<IndianRupee className="h-4 w-4" />} />
+            <Stat label="Total Paid"      value={`₹${data.totals.total_paid.toLocaleString("en-IN")}`}     tone="emerald" icon={<IndianRupee className="h-4 w-4" />} />
           </section>
 
           {/* New form */}
@@ -194,8 +194,8 @@ export default function AffiliatesPage() {
                         ) : <span className="text-xs font-bold">{a.commission_pct}%</span>}
                       </td>
                       <td className="px-4 py-2.5 tabular-nums text-xs">{a.referrals}</td>
-                      <td className="px-4 py-2.5 tabular-nums text-xs font-bold text-emerald-600 dark:text-emerald-300">â‚¹{a.earned.toLocaleString("en-IN")}</td>
-                      <td className={`px-4 py-2.5 tabular-nums text-xs ${adminMutedCls}`}>â‚¹{a.paid.toLocaleString("en-IN")}</td>
+                      <td className="px-4 py-2.5 tabular-nums text-xs font-bold text-emerald-600 dark:text-emerald-300">₹{a.earned.toLocaleString("en-IN")}</td>
+                      <td className={`px-4 py-2.5 tabular-nums text-xs ${adminMutedCls}`}>₹{a.paid.toLocaleString("en-IN")}</td>
                       <td className="px-4 py-2.5">
                         {canManage ? (
                           <select value={a.status} onChange={(e) => setStatus(a.id, e.target.value)}

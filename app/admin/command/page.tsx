@@ -102,18 +102,18 @@ export default function CommandCenterPage() {
           <section className="rounded-xl bg-gradient-to-br from-slate-900 to-[#0e1117] p-5">
             <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] text-indigo-300">Live Numbers</p>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-              <Hero label="Revenue Today"   value={`â‚¹${data.live.revenue_today.toLocaleString("en-IN")}`} color="text-emerald-400" icon={<IndianRupee className="h-3.5 w-3.5" />} />
-              <Hero label="Revenue Month"   value={`â‚¹${data.live.revenue_month.toLocaleString("en-IN")}`} color="text-emerald-400" icon={<TrendingUp className="h-3.5 w-3.5" />} />
-              <Hero label="Cash in Bank"    value={`â‚¹${data.live.cash_in_bank.toLocaleString("en-IN")}`}  color="text-sky-400"     icon={<Wallet className="h-3.5 w-3.5" />} />
-              <Hero label="Outstanding"     value={`â‚¹${data.live.outstanding.toLocaleString("en-IN")}`}   color="text-amber-400"   icon={<AlertCircle className="h-3.5 w-3.5" />} />
+              <Hero label="Revenue Today"   value={`₹${data.live.revenue_today.toLocaleString("en-IN")}`} color="text-emerald-400" icon={<IndianRupee className="h-3.5 w-3.5" />} />
+              <Hero label="Revenue Month"   value={`₹${data.live.revenue_month.toLocaleString("en-IN")}`} color="text-emerald-400" icon={<TrendingUp className="h-3.5 w-3.5" />} />
+              <Hero label="Cash in Bank"    value={`₹${data.live.cash_in_bank.toLocaleString("en-IN")}`}  color="text-sky-400"     icon={<Wallet className="h-3.5 w-3.5" />} />
+              <Hero label="Outstanding"     value={`₹${data.live.outstanding.toLocaleString("en-IN")}`}   color="text-amber-400"   icon={<AlertCircle className="h-3.5 w-3.5" />} />
               <Hero label="Active Subs"     value={data.live.active_subs}                                 color="text-violet-400" />
-              <Hero label="Lifetime"        value={`â‚¹${data.live.lifetime_revenue.toLocaleString("en-IN")}`} color="text-white" />
+              <Hero label="Lifetime"        value={`₹${data.live.lifetime_revenue.toLocaleString("en-IN")}`} color="text-white" />
             </div>
           </section>
 
           {/* Goals */}
           <section className="grid gap-4 lg:grid-cols-3">
-            <GoalCard label="Revenue Target"     actual={`â‚¹${data.goals.revenue_actual.toLocaleString("en-IN")}`} target={`â‚¹${data.goals.revenue_target.toLocaleString("en-IN")}`} pct={data.goals.revenue_pct} />
+            <GoalCard label="Revenue Target"     actual={`₹${data.goals.revenue_actual.toLocaleString("en-IN")}`} target={`₹${data.goals.revenue_target.toLocaleString("en-IN")}`} pct={data.goals.revenue_pct} />
             <GoalCard label="New Customers"      actual={String(data.goals.customers_actual)} target={String(data.goals.customers_target)} pct={data.goals.customers_pct} />
             <GoalCard label="AI Generations"     actual={data.goals.generations_actual.toLocaleString("en-IN")} target={data.goals.generations_target.toLocaleString("en-IN")} pct={data.goals.generations_pct} />
           </section>
@@ -124,8 +124,8 @@ export default function CommandCenterPage() {
               <Target className="h-3.5 w-3.5" />Set This Month's Targets &amp; Cash
             </p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Field label="Cash in Bank (â‚¹)"      value={cash}  onChange={setCash} />
-              <Field label="Revenue Target (â‚¹)"    value={revT}  onChange={setRevT} />
+              <Field label="Cash in Bank (₹)"      value={cash}  onChange={setCash} />
+              <Field label="Revenue Target (₹)"    value={revT}  onChange={setRevT} />
               <Field label="Customers Target"      value={custT} onChange={setCustT} />
               <Field label="Generations Target"    value={genT}  onChange={setGenT} />
             </div>

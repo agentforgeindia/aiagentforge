@@ -110,7 +110,7 @@ export default function HRPage() {
         </div>
         <div className={`${adminCardCls} p-4`}>
           <p className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] ${adminMutedCls}`}><DollarSign className="h-3.5 w-3.5"/>Monthly Salary Bill</p>
-          <p className="mt-1 text-2xl font-bold text-rose-600 dark:text-rose-300 tabular-nums">â‚¹{totalSalaryBill.toLocaleString("en-IN")}</p>
+          <p className="mt-1 text-2xl font-bold text-rose-600 dark:text-rose-300 tabular-nums">₹{totalSalaryBill.toLocaleString("en-IN")}</p>
         </div>
         <div className={`${adminCardCls} p-4`}>
           <p className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] ${adminMutedCls}`}><Calendar className="h-3.5 w-3.5"/>Pending Leaves</p>
@@ -145,7 +145,7 @@ export default function HRPage() {
                     <input className={adminInputCls} placeholder="Role (e.g. sales)" value={fRole} onChange={(e) => setFRole(e.target.value)} />
                     <input className={adminInputCls} placeholder="Department" value={fDept} onChange={(e) => setFDept(e.target.value)} />
                     <input className={adminInputCls} placeholder="Joining date" type="date" value={fJoin} onChange={(e) => setFJoin(e.target.value)} />
-                    <input className={adminInputCls} placeholder="Base salary (â‚¹)" type="number" value={fSalary} onChange={(e) => setFSalary(e.target.value)} />
+                    <input className={adminInputCls} placeholder="Base salary (₹)" type="number" value={fSalary} onChange={(e) => setFSalary(e.target.value)} />
                     <input className={adminInputCls} placeholder="Phone" value={fPhone} onChange={(e) => setFPhone(e.target.value)} />
                     <button type="submit" disabled={fSaving} className={`${adminPrimaryBtnCls} sm:col-span-2 justify-center`}>{fSaving ? "Savingâ€¦" : "Add Employee"}</button>
                   </form>
@@ -170,7 +170,7 @@ export default function HRPage() {
                         <td className={`px-4 py-2.5 text-xs capitalize ${adminMutedCls}`}>{emp.role}</td>
                         <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{emp.department ?? "â€”"}</td>
                         <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{emp.joining_date ? new Date(emp.joining_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" }) : "â€”"}</td>
-                        <td className="px-4 py-2.5 text-xs font-bold tabular-nums">â‚¹{emp.base_salary.toLocaleString("en-IN")}</td>
+                        <td className="px-4 py-2.5 text-xs font-bold tabular-nums">₹{emp.base_salary.toLocaleString("en-IN")}</td>
                         <td className="px-4 py-2.5">
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${emp.status === "active" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800"}`}>
                             {emp.status}
@@ -247,10 +247,10 @@ export default function HRPage() {
                       <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                         <td className="px-4 py-2.5 text-xs font-medium">{emp?.full_name ?? "â€”"}</td>
                         <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{new Date(s.month).toLocaleDateString("en-IN", { month: "short", year: "2-digit" })}</td>
-                        <td className="px-4 py-2.5 text-xs tabular-nums">â‚¹{s.base_salary.toLocaleString("en-IN")}</td>
-                        <td className="px-4 py-2.5 text-xs tabular-nums text-emerald-600 dark:text-emerald-300">â‚¹{s.incentive.toLocaleString("en-IN")}</td>
-                        <td className="px-4 py-2.5 text-xs tabular-nums text-rose-600 dark:text-rose-300">-â‚¹{s.deductions.toLocaleString("en-IN")}</td>
-                        <td className="px-4 py-2.5 text-xs font-bold tabular-nums">â‚¹{s.net_salary.toLocaleString("en-IN")}</td>
+                        <td className="px-4 py-2.5 text-xs tabular-nums">₹{s.base_salary.toLocaleString("en-IN")}</td>
+                        <td className="px-4 py-2.5 text-xs tabular-nums text-emerald-600 dark:text-emerald-300">₹{s.incentive.toLocaleString("en-IN")}</td>
+                        <td className="px-4 py-2.5 text-xs tabular-nums text-rose-600 dark:text-rose-300">-₹{s.deductions.toLocaleString("en-IN")}</td>
+                        <td className="px-4 py-2.5 text-xs font-bold tabular-nums">₹{s.net_salary.toLocaleString("en-IN")}</td>
                         <td className="px-4 py-2.5">
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${s.paid ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"}`}>
                             {s.paid ? `Paid ${s.paid_on ? new Date(s.paid_on).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : ""}` : "Unpaid"}

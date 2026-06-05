@@ -215,7 +215,7 @@ export default function FinancePage() {
                   ))}
                 </select>
                 <input className={adminInputCls} placeholder="Label (e.g. Hetzner VPS)" value={fLabel} onChange={(e) => setFLabel(e.target.value)} required />
-                <input className={adminInputCls} placeholder="Amount (â‚¹)" type="number" value={fAmount} onChange={(e) => setFAmount(e.target.value)} required />
+                <input className={adminInputCls} placeholder="Amount (₹)" type="number" value={fAmount} onChange={(e) => setFAmount(e.target.value)} required />
                 <input className={adminInputCls} type="date" value={fDate} onChange={(e) => setFDate(e.target.value)} />
                 <input className={adminInputCls} placeholder="Notes (optional)" value={fNotes} onChange={(e) => setFNotes(e.target.value)} />
                 <button type="submit" disabled={fSaving} className={adminPrimaryBtnCls}>
@@ -229,29 +229,29 @@ export default function FinancePage() {
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               label="Revenue This Month"
-              value={`â‚¹${data.revenue.month.toLocaleString("en-IN")}`}
-              sub={`Today: â‚¹${data.revenue.today.toLocaleString("en-IN")}`}
+              value={`₹${data.revenue.month.toLocaleString("en-IN")}`}
+              sub={`Today: ₹${data.revenue.today.toLocaleString("en-IN")}`}
               icon={<TrendingUp className="h-4 w-4" />}
               tone="emerald"
             />
             <StatCard
               label="Expenses This Month"
-              value={`â‚¹${data.expenses.this_month.toLocaleString("en-IN")}`}
-              sub={`All time: â‚¹${data.expenses.total.toLocaleString("en-IN")}`}
+              value={`₹${data.expenses.this_month.toLocaleString("en-IN")}`}
+              sub={`All time: ₹${data.expenses.total.toLocaleString("en-IN")}`}
               icon={<Minus className="h-4 w-4" />}
               tone="rose"
             />
             <StatCard
               label="Net Profit This Month"
-              value={`â‚¹${data.net_profit_month.toLocaleString("en-IN")}`}
-              sub={`Refunds: â‚¹${data.refunds.total_refunded.toLocaleString("en-IN")}`}
+              value={`₹${data.net_profit_month.toLocaleString("en-IN")}`}
+              sub={`Refunds: ₹${data.refunds.total_refunded.toLocaleString("en-IN")}`}
               icon={<DollarSign className="h-4 w-4" />}
               tone={data.net_profit_month >= 0 ? "emerald" : "rose"}
             />
             <StatCard
               label="Revenue This Year"
-              value={`â‚¹${data.revenue.year.toLocaleString("en-IN")}`}
-              sub={`Lifetime: â‚¹${data.revenue.lifetime.toLocaleString("en-IN")}`}
+              value={`₹${data.revenue.year.toLocaleString("en-IN")}`}
+              sub={`Lifetime: ₹${data.revenue.lifetime.toLocaleString("en-IN")}`}
               icon={<TrendingUp className="h-4 w-4" />}
             />
           </section>
@@ -272,7 +272,7 @@ export default function FinancePage() {
                     <li key={cat.value}>
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-medium">{cat.label}</span>
-                        <span className="tabular-nums font-bold">â‚¹{val.toLocaleString("en-IN")}</span>
+                        <span className="tabular-nums font-bold">₹{val.toLocaleString("en-IN")}</span>
                       </div>
                       <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                         <div
@@ -301,21 +301,21 @@ export default function FinancePage() {
                           {new Date(m.m + "-01").toLocaleDateString("en-IN", { month: "short", year: "2-digit" })}
                         </span>
                         <span className={`text-xs font-bold tabular-nums ${m.profit >= 0 ? "text-emerald-600 dark:text-emerald-300" : "text-rose-600 dark:text-rose-300"}`}>
-                          {m.profit >= 0 ? "+" : ""}â‚¹{m.profit.toLocaleString("en-IN")}
+                          {m.profit >= 0 ? "+" : ""}₹{m.profit.toLocaleString("en-IN")}
                         </span>
                       </div>
                       <div className="mt-1 flex gap-1">
                         <div
                           className="h-2 rounded-full bg-emerald-400"
                           style={{ width: `${Math.round((m.revenue / maxVal) * 100)}%` }}
-                          title={`Revenue: â‚¹${m.revenue.toLocaleString("en-IN")}`}
+                          title={`Revenue: ₹${m.revenue.toLocaleString("en-IN")}`}
                         />
                       </div>
                       <div className="mt-0.5 flex gap-1">
                         <div
                           className="h-2 rounded-full bg-rose-300"
                           style={{ width: `${Math.round((m.expense / maxVal) * 100)}%` }}
-                          title={`Expense: â‚¹${m.expense.toLocaleString("en-IN")}`}
+                          title={`Expense: ₹${m.expense.toLocaleString("en-IN")}`}
                         />
                       </div>
                     </div>
@@ -337,7 +337,7 @@ export default function FinancePage() {
                 Revenue Attribution by AI Agent (This Month)
               </p>
               <p className={`mt-1 text-[11px] ${adminMutedCls}`}>
-                Based on credit consumption Ã— revenue per credit (â‚¹{Number(agentData.revenue_per_credit ?? 0).toFixed(2)}/credit)
+                Based on credit consumption Ã— revenue per credit (₹{Number(agentData.revenue_per_credit ?? 0).toFixed(2)}/credit)
               </p>
               <div className="mt-4 space-y-3">
                 {agentData.agents.filter((a: any) => a.agent_slug !== 'other').map((a: any) => {
@@ -354,7 +354,7 @@ export default function FinancePage() {
                         <span className="font-medium">{AGENT_NAMES[a.agent_slug] ?? a.agent_slug}</span>
                         <div className="flex items-center gap-3 tabular-nums">
                           <span className={adminMutedCls}>{a.credits_month?.toLocaleString("en-IN")} credits</span>
-                          <span className="font-bold text-emerald-600 dark:text-emerald-300">â‚¹{Number(a.revenue_month ?? 0).toLocaleString("en-IN")}</span>
+                          <span className="font-bold text-emerald-600 dark:text-emerald-300">₹{Number(a.revenue_month ?? 0).toLocaleString("en-IN")}</span>
                           <span className={`text-[10px] ${adminMutedCls}`}>{a.share_pct}%</span>
                         </div>
                       </div>
@@ -399,7 +399,7 @@ export default function FinancePage() {
                       </td>
                       <td className="px-4 py-2.5 text-xs font-medium">{ex.label}</td>
                       <td className="px-4 py-2.5 tabular-nums text-xs font-bold text-rose-600 dark:text-rose-300">
-                        â‚¹{ex.amount_inr.toLocaleString("en-IN")}
+                        ₹{ex.amount_inr.toLocaleString("en-IN")}
                       </td>
                       <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{ex.notes ?? "â€”"}</td>
                       <td className="px-4 py-2.5">

@@ -154,7 +154,7 @@ export default function AdminAiCostsPage() {
       title="AI generation costs"
       subtitle={
         data
-          ? `Today â‚¹${data.spend_inr.today.toLocaleString("en-IN")} Â· Month â‚¹${data.spend_inr.month.toLocaleString("en-IN")}`
+          ? `Today ₹${data.spend_inr.today.toLocaleString("en-IN")} Â· Month ₹${data.spend_inr.month.toLocaleString("en-IN")}`
           : undefined
       }
       email={email}
@@ -198,7 +198,7 @@ export default function AdminAiCostsPage() {
             </p>
             <Sparkbars points={data.daily} />
             <p className={`mt-3 text-[11px] ${adminMutedCls}`}>
-              USD-INR rate: â‚¹{data.usd_to_inr_rate.toFixed(2)} per $1
+              USD-INR rate: ₹{data.usd_to_inr_rate.toFixed(2)} per $1
             </p>
           </section>
 
@@ -219,7 +219,7 @@ export default function AdminAiCostsPage() {
                     <th className="text-right">Total</th>
                     <th className="text-right">Success</th>
                     <th className="text-right">Failed</th>
-                    <th className="text-right">Cost (â‚¹)</th>
+                    <th className="text-right">Cost (₹)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -236,7 +236,7 @@ export default function AdminAiCostsPage() {
                         {a.failed.toLocaleString("en-IN")}
                       </td>
                       <td className="text-right font-bold tabular-nums">
-                        â‚¹{a.cost_inr.toLocaleString("en-IN")}
+                        ₹{a.cost_inr.toLocaleString("en-IN")}
                       </td>
                     </tr>
                   ))}
@@ -280,10 +280,10 @@ export default function AdminAiCostsPage() {
                         {c.gens.toLocaleString("en-IN")}
                       </td>
                       <td className="text-right tabular-nums text-rose-600">
-                        â‚¹{c.cost_inr.toLocaleString("en-IN")}
+                        ₹{c.cost_inr.toLocaleString("en-IN")}
                       </td>
                       <td className="text-right tabular-nums text-emerald-600">
-                        â‚¹{c.revenue_inr.toLocaleString("en-IN")}
+                        ₹{c.revenue_inr.toLocaleString("en-IN")}
                       </td>
                       <td
                         className={`text-right font-bold tabular-nums ${
@@ -293,7 +293,7 @@ export default function AdminAiCostsPage() {
                         }`}
                       >
                         {c.margin_inr >= 0 ? "+" : ""}
-                        â‚¹{c.margin_inr.toLocaleString("en-IN")}
+                        ₹{c.margin_inr.toLocaleString("en-IN")}
                       </td>
                     </tr>
                   ))}
@@ -426,7 +426,7 @@ export default function AdminAiCostsPage() {
                   />
                 ) : (
                   <p className="mt-1 text-base font-bold tabular-nums">
-                    â‚¹{usdRate.toFixed(2)}{" "}
+                    ₹{usdRate.toFixed(2)}{" "}
                     <span className={`text-xs ${adminMutedCls}`}>per $1</span>
                   </p>
                 )}
@@ -454,7 +454,7 @@ function SpendStat({
         {label}
       </p>
       <p className="mt-1 text-2xl font-bold tabular-nums">
-        â‚¹{inr.toLocaleString("en-IN")}
+        ₹{inr.toLocaleString("en-IN")}
       </p>
       <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
         ${usd.toFixed(2)}
@@ -476,7 +476,7 @@ function Sparkbars({
         return (
           <div
             key={i}
-            title={`${p.d}: â‚¹${p.cost_inr.toLocaleString("en-IN")}`}
+            title={`${p.d}: ₹${p.cost_inr.toLocaleString("en-IN")}`}
             className="group flex-1 rounded-t bg-slate-200 transition hover:bg-rose-500 dark:bg-slate-700"
             style={{ height: `${h}%` }}
           />
