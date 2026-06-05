@@ -1,5 +1,18 @@
 import { NextResponse } from "next/server";
 
+function getPageContext(page: string): string {
+  if (page.includes("/academy")) return "academy";
+  if (page.includes("/jewellery")) return "jewellery";
+  if (page.includes("/textileprints") || page.includes("/textile")) return "textile";
+  if (page.includes("/productography")) return "productography";
+  if (page.includes("/social-ads")) return "social_ads";
+  if (page.includes("/trendforge")) return "trendforge";
+  if (page.includes("/pricing")) return "pricing";
+  if (page.includes("/billing")) return "billing";
+  if (page.includes("/ugc")) return "ugc";
+  return "general";
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -27,6 +40,7 @@ export async function POST(req: Request) {
         page: body.page,
         history: body.history || [],
         source: "agentforge-website",
+        context: getPageContext(body.page || ""),
       }),
     });
 

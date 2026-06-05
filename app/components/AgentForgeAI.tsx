@@ -48,12 +48,19 @@ export default function AgentForgeAI() {
     },
   ]);
 
-  const suggestions = [
-    "Which plan is best for me?",
-    "I have a textile business",
-    "How does Textile AI work?",
-    "I need bulk generation",
-  ];
+  const suggestions = pathname.includes("/academy")
+    ? [
+        "Academy kya hai?",
+        "Salary kitni milegi?",
+        "Apply kaise karu?",
+        "Kaunsi job hai?",
+      ]
+    : [
+        "Which plan is best for me?",
+        "I have a textile business",
+        "How does Jewellery AI work?",
+        "Work From Home opportunity",
+      ];
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
