@@ -2422,7 +2422,7 @@ if (!response.ok) {
                   </button>
                 )}
 
-                {uploads.length > 0 && (
+                {uploads.length > 1 && (
                   <div className="mt-4 rounded-[1.35rem] border border-black/10 bg-white/80 p-3 dark:border-white/10 dark:bg-white/[0.045]">
                     <div className="mb-3 flex items-center justify-between">
                       <p className="text-xs font-black uppercase tracking-widest text-cyan-600">Uploads</p>
