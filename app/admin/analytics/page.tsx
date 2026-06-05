@@ -27,11 +27,16 @@ export default function AnalyticsPage() {
     if (!isAdmin) return;
     setLoading(true);
     (async () => {
-      const { data: sess } = await supabase.auth.getSession();
-      const res = await fetch("/api/admin/analytics", { headers: { Authorization: `Bearer ${sess.session?.access_token}` } });
-      const json = await res.json();
-      setData(json.ok ? json : null);
-      setLoading(false);
+      try {
+        const { data: sess } = await supabase.auth.getSession();
+        const res = await fetch("/api/admin/analytics", { headers: { Authorization: `Bearer ${sess.session?.access_token}` } });
+        const json = await res.json();
+        setData(json.ok ? json : null);
+      } catch {
+        setData(null);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [isAdmin, refreshKey]);
 

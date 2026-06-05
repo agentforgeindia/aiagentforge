@@ -17,7 +17,7 @@ export async function fetchMetaAds(): Promise<Result> {
   const id = acct.startsWith("act_") ? acct : `act_${acct}`;
   try {
     const url = `https://graph.facebook.com/v21.0/${id}/insights?fields=spend,impressions,clicks,ctr,cpc,reach&date_preset=last_7d&access_token=${encodeURIComponent(token)}`;
-    const res = await fetch(url, { cache: "no-store" });
+    const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(8000) });
     const json = await res.json();
     if (!res.ok) return { configured: true, note: json?.error?.message ?? `HTTP ${res.status}` };
     const d = json?.data?.[0] ?? {};
@@ -43,24 +43,25 @@ async function ga4AccessToken(): Promise<string | null> {
   let key = process.env.GA4_SA_PRIVATE_KEY?.trim();
   if (!email || !key) return null;
   key = key.replace(/\\n/g, "\n");
-  const now = Math.floor(Date.now() / 1000);
-  const header = { alg: "RS256", typ: "JWT" };
-  const claim = {
-    iss: email,
-    scope: "https://www.googleapis.com/auth/analytics.readonly",
-    aud: "https://oauth2.googleapis.com/token",
-    iat: now,
-    exp: now + 3600,
-  };
-  const b64 = (o: object) => Buffer.from(JSON.stringify(o)).toString("base64url");
-  const unsigned = `${b64(header)}.${b64(claim)}`;
-  const sig = crypto.createSign("RSA-SHA256").update(unsigned).sign(key, "base64url");
-  const jwt = `${unsigned}.${sig}`;
   try {
+    const now = Math.floor(Date.now() / 1000);
+    const header = { alg: "RS256", typ: "JWT" };
+    const claim = {
+      iss: email,
+      scope: "https://www.googleapis.com/auth/analytics.readonly",
+      aud: "https://oauth2.googleapis.com/token",
+      iat: now,
+      exp: now + 3600,
+    };
+    const b64 = (o: object) => Buffer.from(JSON.stringify(o)).toString("base64url");
+    const unsigned = `${b64(header)}.${b64(claim)}`;
+    const sig = crypto.createSign("RSA-SHA256").update(unsigned).sign(key, "base64url");
+    const jwt = `${unsigned}.${sig}`;
     const res = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
+      signal: AbortSignal.timeout(8000),
     });
     const json = await res.json();
     return json.access_token ?? null;
@@ -75,9 +76,10 @@ export async function fetchGA4(): Promise<Result> {
   try {
     const base = `https://analyticsdata.googleapis.com/v1beta/properties/${prop}:runReport`;
     const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+    const sig = () => AbortSignal.timeout(8000);
 
     // Totals (7 days)
-    const totalsRes = await fetch(base, { method: "POST", headers, body: JSON.stringify({
+    const totalsRes = await fetch(base, { method: "POST", headers, signal: sig(), body: JSON.stringify({
       dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
       metrics: [{ name: "activeUsers" }, { name: "sessions" }, { name: "screenPageViews" }, { name: "newUsers" }],
     }) });
@@ -85,7 +87,7 @@ export async function fetchGA4(): Promise<Result> {
     const row = totals?.rows?.[0]?.metricValues ?? [];
 
     // Top pages
-    const pagesRes = await fetch(base, { method: "POST", headers, body: JSON.stringify({
+    const pagesRes = await fetch(base, { method: "POST", headers, signal: sig(), body: JSON.stringify({
       dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
       dimensions: [{ name: "pagePath" }], metrics: [{ name: "screenPageViews" }],
       orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }], limit: 8,
@@ -93,7 +95,7 @@ export async function fetchGA4(): Promise<Result> {
     const pages = await pagesRes.json();
 
     // Sources
-    const srcRes = await fetch(base, { method: "POST", headers, body: JSON.stringify({
+    const srcRes = await fetch(base, { method: "POST", headers, signal: sig(), body: JSON.stringify({
       dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
       dimensions: [{ name: "sessionDefaultChannelGroup" }], metrics: [{ name: "sessions" }],
       orderBys: [{ metric: { metricName: "sessions" }, desc: true }], limit: 6,
@@ -122,7 +124,7 @@ export async function fetchClarity(): Promise<Result> {
   if (!token) return { configured: false, note: "Set CLARITY_API_TOKEN (Clarity → Settings → Data Export)" };
   try {
     const res = await fetch("https://www.clarity.ms/export-data/api/v1/project-live-insights?numOfDays=3", {
-      headers: { Authorization: `Bearer ${token}` }, cache: "no-store",
+      headers: { Authorization: `Bearer ${token}` }, cache: "no-store", signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) return { configured: true, note: `Clarity HTTP ${res.status}` };
     const json = await res.json();
