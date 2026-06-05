@@ -55,6 +55,14 @@ const TIPS: Record<string, Tip> = {
       "'New lead' se manually add karo.",
     ],
   },
+  "AgentForge Caller GPT": {
+    what: "Live call ke beech — customer ne jo kaha type karo, AI turant ready-to-speak reply deta hai.",
+    steps: [
+      "Customer ki baat type karo ya quick objection button dabao.",
+      "AI ka reply Copy karke padh do.",
+      "Naya caller bhi pehle din se productive — sab objections ka jawab ready.",
+    ],
+  },
   "Daily Caller Reports": {
     what: "Har caller apne din ke numbers bharta hai — supervisor poori team ka total dekhta hai.",
     steps: [

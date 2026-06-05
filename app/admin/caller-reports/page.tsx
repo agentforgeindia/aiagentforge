@@ -62,13 +62,19 @@ export default function CallerReportsPage() {
     })();
   }, [email, date, refreshKey]);
 
+  const [funnel, setFunnel] = useState<any | null>(null);
+
   // Load supervisor summary
   useEffect(() => {
     if (!isSupervisor) { setLoading(false); return; }
     setLoading(true);
     (async () => {
-      const { data } = await supabase.rpc("caller_report_summary", { p_date: date });
-      setSummary(data as Summary);
+      const [{ data: s }, { data: f }] = await Promise.all([
+        supabase.rpc("caller_report_summary", { p_date: date }),
+        supabase.rpc("caller_funnel", { p_days: 7 }),
+      ]);
+      setSummary(s as Summary);
+      setFunnel(f);
       setLoading(false);
     })();
   }, [isSupervisor, date, refreshKey]);
@@ -128,6 +134,38 @@ export default function CallerReportsPage() {
               <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading team…</p>
             ) : summary && (
               <>
+                {/* 7-day conversion funnel */}
+                {funnel && (
+                  <section className={`${adminCardCls} p-4`}>
+                    <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Conversion Funnel · Last 7 Days</p>
+                    <div className="flex items-end gap-2">
+                      {[
+                        { label: "Calls",      val: funnel.calls,      color: "bg-slate-400" },
+                        { label: "Connected",  val: funnel.connected,  color: "bg-sky-400" },
+                        { label: "Demos",      val: funnel.demos,      color: "bg-blue-500" },
+                        { label: "Interested", val: funnel.interested, color: "bg-indigo-500" },
+                        { label: "Hot Leads",  val: funnel.hot,        color: "bg-amber-500" },
+                        { label: "Paid",       val: funnel.paid,       color: "bg-emerald-500" },
+                      ].map((s) => {
+                        const max = Math.max(1, funnel.calls);
+                        const h = Math.max(10, Math.round((s.val / max) * 120));
+                        return (
+                          <div key={s.label} className="flex flex-1 flex-col items-center gap-1">
+                            <span className="text-xs font-bold tabular-nums">{Number(s.val).toLocaleString("en-IN")}</span>
+                            <div className={`w-full rounded-t ${s.color}`} style={{ height: `${h}px` }} />
+                            <span className={`text-center text-[10px] ${adminMutedCls}`}>{s.label}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {funnel.calls > 0 && (
+                      <p className={`mt-3 text-[11px] ${adminMutedCls}`}>
+                        Conversion: {funnel.calls} calls → {funnel.demos} demos ({Math.round((funnel.demos / funnel.calls) * 100)}%) → {funnel.paid} paid ({funnel.demos > 0 ? Math.round((funnel.paid / funnel.demos) * 100) : 0}% of demos)
+                      </p>
+                    )}
+                  </section>
+                )}
+
                 {/* Team totals */}
                 <section className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
                   <Stat label="Callers"     value={summary.totals.callers} />

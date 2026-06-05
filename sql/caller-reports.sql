@@ -78,3 +78,31 @@ $$;
 
 revoke all on function public.caller_report_summary(date) from public;
 grant execute on function public.caller_report_summary(date) to authenticated, service_role;
+
+-- ── caller_funnel(days) — conversion funnel over a window ─────
+create or replace function public.caller_funnel(p_days int default 7)
+returns jsonb
+language plpgsql stable security definer set search_path = public
+as $$
+declare v_start date := current_date - greatest(p_days,1) + 1;
+begin
+  if not (public.has_permission('team.view') or public.has_permission('leads.view') or public.has_permission('*')) then
+    raise exception 'caller_funnel: permission denied';
+  end if;
+  return (
+    select jsonb_build_object(
+      'days', p_days,
+      'calls',      coalesce(sum(total_calls),0),
+      'connected',  coalesce(sum(connected),0),
+      'demos',      coalesce(sum(demos_sent),0),
+      'interested', coalesce(sum(interested),0),
+      'hot',        coalesce(sum(hot_leads),0),
+      'paid',       coalesce(sum(paid_conversions),0)
+    )
+    from public.caller_reports where report_date >= v_start
+  );
+end;
+$$;
+
+revoke all on function public.caller_funnel(int) from public;
+grant execute on function public.caller_funnel(int) to authenticated, service_role;

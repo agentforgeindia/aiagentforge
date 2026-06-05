@@ -66,6 +66,7 @@ const TILES: Tile[] = [
   { href: "/admin/leads",          label: "Leads",          description: "Inbound prospects from ads and outreach.",                icon: <UserPlus className="h-4 w-4" />,        perm: "leads.view" },
   { href: "/admin/sales",          label: "Sales Command",  description: "Calling queue, hot leads, followups, missed leads.",     icon: <Phone className="h-4 w-4" />,           perm: "leads.view" },
   { href: "/admin/caller-reports", label: "Caller Reports", description: "Daily calling numbers — calls, demos, hot leads, paid.",  icon: <PhoneCall className="h-4 w-4" />,       perm: "leads.view" },
+  { href: "/admin/caller-gpt",     label: "Caller GPT",     description: "Live AI calling assistant — instant objection replies.", icon: <Sparkles className="h-4 w-4" />,        perm: "leads.view" },
   { href: "/admin/deals",          label: "Deals",          description: "Formal deal pipeline — proposals, negotiations, closures.", icon: <Briefcase className="h-4 w-4" />,       perm: "leads.view" },
   { href: "/admin/tasks",          label: "Tasks",          description: "Follow-ups, demos, payment reminders.",                   icon: <CheckSquare className="h-4 w-4" />,     perm: "tasks.view" },
   // ── Marketing ────────────────────────────────────────────────
