@@ -1,6 +1,6 @@
 "use client";
 
-// /careers/apply — candidate application form.
+// /careers/apply — candidate application form (website theme).
 
 import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -44,15 +44,21 @@ function ApplyForm() {
     router.push(`/careers/test/${json.candidate_id}`);
   }
 
-  const input = "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
+  const input = "w-full rounded-xl border border-cyan-200/50 bg-white px-4 py-3 text-sm font-medium text-slate-800 shadow-sm transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/25 dark:border-white/10 dark:bg-white/5 dark:text-white";
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-[#0b0d12] dark:to-[#0e1117]">
-      <div className="mx-auto max-w-lg px-5 py-12">
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white">Apply to AgentForge</h1>
-        <p className="mt-1 text-sm text-slate-500">Fill this in 1 minute. Then a short skill test.</p>
+    <main className="relative min-h-screen bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee44,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_35%)]" />
 
-        <form onSubmit={submit} className="mt-6 space-y-3">
+      <div className="relative z-10 mx-auto max-w-lg px-5 py-14">
+        <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-600">Apply</p>
+        <h1 className="mt-2 text-3xl font-black">
+          Join{" "}
+          <span className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">AgentForge</span>
+        </h1>
+        <p className="mt-1 text-sm font-medium text-black/55 dark:text-white/55">Fill this in 1 minute. Then a short skill test.</p>
+
+        <form onSubmit={submit} className="mt-7 space-y-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <input className={input} placeholder="Full Name *" value={f.name} onChange={(e) => up("name", e.target.value)} required />
             <input className={input} placeholder="Mobile Number *" value={f.mobile} onChange={(e) => up("mobile", e.target.value)} required />
@@ -70,13 +76,14 @@ function ApplyForm() {
           <input className={input} placeholder="LinkedIn (optional)" value={f.linkedin} onChange={(e) => up("linkedin", e.target.value)} />
           <input className={input} placeholder="Portfolio link (optional)" value={f.portfolio} onChange={(e) => up("portfolio", e.target.value)} />
 
-          {error && <p className="text-sm font-medium text-rose-600">{error}</p>}
+          {error && <p className="text-sm font-bold text-rose-600">{error}</p>}
 
-          <button type="submit" disabled={loading} className="w-full rounded-lg bg-indigo-600 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-500 disabled:opacity-50">
+          <button type="submit" disabled={loading}
+            className="w-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 py-3.5 text-sm font-black text-white shadow-xl shadow-cyan-500/30 transition hover:scale-[1.02] active:scale-95 disabled:opacity-50">
             {loading ? "Submitting…" : "Continue to Assessment →"}
           </button>
-          <p className="text-center text-[11px] text-slate-400">
-            ⏱️ The test has a timer and anti-cheat. Max 3 attempts. Find a quiet place.
+          <p className="text-center text-[11px] font-bold text-black/40 dark:text-white/40">
+            ⏱️ Test has a timer and anti-cheat. Max 3 attempts. Find a quiet place.
           </p>
         </form>
       </div>

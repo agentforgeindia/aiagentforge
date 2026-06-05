@@ -109,14 +109,17 @@ export default function TestPage() {
   if (phase === "intro") {
     return (
       <Shell>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white">Skill Assessment</h1>
-        <ul className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-400">
+        <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-600">Assessment</p>
+        <h1 className="mt-2 text-2xl font-black">
+          Skill <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">Test</span>
+        </h1>
+        <ul className="mt-4 space-y-2 text-sm font-medium text-black/65 dark:text-white/65">
           <li>⏱️ Each question has its own timer — answer fast.</li>
           <li>🚫 Don't switch tabs or copy-paste — {MAX_WARNINGS} warnings then auto-submit.</li>
           <li>🔁 You get max 3 attempts total.</li>
           <li>✅ Honest answers = best result. Good luck!</li>
         </ul>
-        <button onClick={start} className="mt-6 w-full rounded-lg bg-indigo-600 py-3 text-sm font-bold text-white hover:bg-indigo-500">
+        <button onClick={start} className="mt-6 w-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 py-3.5 text-sm font-black text-white shadow-xl shadow-cyan-500/30 transition hover:scale-[1.02] active:scale-95">
           Start Test →
         </button>
       </Shell>
@@ -141,8 +144,8 @@ export default function TestPage() {
             {result.passed ? "Our team will reach out for the next round." : "You can retry — review the basics and try again."}
           </p>
           <div className="mt-6 inline-flex items-baseline gap-1">
-            <span className="text-5xl font-black text-indigo-600 dark:text-indigo-300">{result.total_score}</span>
-            <span className="text-xl text-slate-400">%</span>
+            <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-6xl font-black text-transparent">{result.total_score}</span>
+            <span className="text-xl text-black/40 dark:text-white/40">%</span>
           </div>
         </div>
         <div className="mt-6 space-y-2">
@@ -169,43 +172,43 @@ export default function TestPage() {
     <Shell wide>
       {/* Top bar */}
       <div className="flex items-center justify-between">
-        <span className="text-xs font-bold text-slate-500">Question {idx + 1} / {questions.length}</span>
+        <span className="text-xs font-black text-black/50 dark:text-white/50">Question {idx + 1} / {questions.length}</span>
         <div className="flex items-center gap-3">
           {warnings > 0 && (
             <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
               ⚠️ {warnings}/{MAX_WARNINGS} warnings
             </span>
           )}
-          <span className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-black tabular-nums ${danger ? "bg-rose-500 text-white" : "bg-slate-900 text-white dark:bg-indigo-600"}`}>
+          <span className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-black tabular-nums shadow-md ${danger ? "bg-rose-500 text-white" : "bg-gradient-to-br from-cyan-400 to-blue-600 text-white"}`}>
             {timeLeft}
           </span>
         </div>
       </div>
 
       {/* Progress */}
-      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-        <div className="h-full bg-indigo-500 transition-all" style={{ width: `${((idx) / questions.length) * 100}%` }} />
+      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/10">
+        <div className="h-full bg-gradient-to-r from-cyan-400 to-blue-600 transition-all" style={{ width: `${((idx) / questions.length) * 100}%` }} />
       </div>
 
       {/* Question */}
       <div className="mt-6">
-        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase capitalize text-slate-500 dark:bg-slate-800">{q.section}</span>
-        <p className="mt-3 select-none text-base font-bold text-slate-900 dark:text-white">{q.question}</p>
+        <span className="rounded-full bg-cyan-100 px-2.5 py-0.5 text-[10px] font-black uppercase capitalize tracking-wider text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300">{q.section}</span>
+        <p className="mt-3 select-none text-base font-black text-slate-900 dark:text-white sm:text-lg">{q.question}</p>
         <div className="mt-4 space-y-2">
           {q.options.map((o, oi) => {
             const sel = answers[q.id] === oi;
             return (
               <button key={oi} type="button" onClick={() => choose(q.id, oi)}
-                className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left text-sm transition ${sel ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10" : "border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-600"}`}>
-                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${sel ? "bg-indigo-600 text-white" : "border border-slate-300 text-slate-400"}`}>{String.fromCharCode(65 + oi)}</span>
-                <span className="select-none text-slate-800 dark:text-slate-200">{o}</span>
+                className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition ${sel ? "border-cyan-400 bg-cyan-50 shadow-sm dark:bg-cyan-500/10" : "border-cyan-200/40 hover:border-cyan-300 dark:border-white/10 dark:hover:border-white/20"}`}>
+                <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black ${sel ? "bg-gradient-to-br from-cyan-400 to-blue-600 text-white" : "border border-cyan-300/60 text-black/40 dark:border-white/20 dark:text-white/40"}`}>{String.fromCharCode(65 + oi)}</span>
+                <span className="select-none font-medium text-slate-800 dark:text-slate-100">{o}</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      <button onClick={next} className="mt-6 w-full rounded-lg bg-indigo-600 py-3 text-sm font-bold text-white hover:bg-indigo-500">
+      <button onClick={next} className="mt-6 w-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 py-3.5 text-sm font-black text-white shadow-xl shadow-cyan-500/30 transition hover:scale-[1.02] active:scale-95">
         {idx + 1 >= questions.length ? "Finish Test" : "Next Question →"}
       </button>
     </Shell>
@@ -214,9 +217,10 @@ export default function TestPage() {
 
 function Shell({ children, wide }: { children: React.ReactNode; wide?: boolean }) {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-[#0b0d12] dark:to-[#0e1117]">
-      <div className={`mx-auto px-5 py-12 ${wide ? "max-w-2xl" : "max-w-md"}`}>
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-[#11141a]">
+    <main className="relative min-h-screen bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee44,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_35%)]" />
+      <div className={`relative z-10 mx-auto px-5 py-12 ${wide ? "max-w-2xl" : "max-w-md"}`}>
+        <div className="rounded-3xl border border-cyan-200/40 bg-white/85 p-6 shadow-xl shadow-cyan-200/20 backdrop-blur dark:border-cyan-400/20 dark:bg-white/[0.05]">
           {children}
         </div>
       </div>
