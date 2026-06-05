@@ -54,58 +54,73 @@ type Tile = {
   label: string;
   description: string;
   icon: React.ReactNode;
-  /** Permission required to see this tile. */
   perm: string;
+  group: string;
 };
 
+// Display order of category sections.
+const GROUP_ORDER = [
+  "Command", "Sales & CRM", "Marketing", "Finance",
+  "AI", "Support", "People & Hiring", "Content", "System",
+];
+
 const TILES: Tile[] = [
-  // ── CRM ─────────────────────────────────────────────────────
-  { href: "/admin/command",        label: "Command Center", description: "Founder cockpit — live numbers, goals, cash, team output.", icon: <Crosshair className="h-4 w-4" />,      perm: "dashboard.view" },
-  { href: "/admin/dashboard",      label: "War Room",       description: "Revenue, signups, pipeline, alerts — all at a glance.",   icon: <LayoutDashboard className="h-4 w-4" />, perm: "dashboard.view" },
-  { href: "/admin/customers",      label: "Customers",      description: "Signed-up users, plans, balances, notes.",                icon: <Users className="h-4 w-4" />,          perm: "customers.view" },
-  { href: "/admin/leads",          label: "Leads",          description: "Inbound prospects from ads and outreach.",                icon: <UserPlus className="h-4 w-4" />,        perm: "leads.view" },
-  { href: "/admin/sales",          label: "Sales Command",  description: "Calling queue, hot leads, followups, missed leads.",     icon: <Phone className="h-4 w-4" />,           perm: "leads.view" },
-  { href: "/admin/caller-reports", label: "Caller Reports", description: "Daily calling numbers — calls, demos, hot leads, paid.",  icon: <PhoneCall className="h-4 w-4" />,       perm: "leads.view" },
-  { href: "/admin/caller-gpt",     label: "Caller GPT",     description: "Live AI calling assistant — instant objection replies.", icon: <Sparkles className="h-4 w-4" />,        perm: "leads.view" },
-  { href: "/admin/deals",          label: "Deals",          description: "Formal deal pipeline — proposals, negotiations, closures.", icon: <Briefcase className="h-4 w-4" />,       perm: "leads.view" },
-  { href: "/admin/tasks",          label: "Tasks",          description: "Follow-ups, demos, payment reminders.",                   icon: <CheckSquare className="h-4 w-4" />,     perm: "tasks.view" },
+  // ── Command ──────────────────────────────────────────────────
+  { group: "Command", href: "/admin/command",        label: "Command Center", description: "Founder cockpit — live numbers, goals, cash, team output.", icon: <Crosshair className="h-4 w-4" />,      perm: "dashboard.view" },
+  { group: "Command", href: "/admin/dashboard",      label: "War Room",       description: "Revenue, signups, pipeline, alerts — all at a glance.",   icon: <LayoutDashboard className="h-4 w-4" />, perm: "dashboard.view" },
+
+  // ── Sales & CRM ──────────────────────────────────────────────
+  { group: "Sales & CRM", href: "/admin/customers",      label: "Customers",      description: "Signed-up users, plans, balances, notes.",                icon: <Users className="h-4 w-4" />,          perm: "customers.view" },
+  { group: "Sales & CRM", href: "/admin/leads",          label: "Leads",          description: "Inbound prospects from ads and outreach.",                icon: <UserPlus className="h-4 w-4" />,        perm: "leads.view" },
+  { group: "Sales & CRM", href: "/admin/sales",          label: "Sales Command",  description: "Calling queue, hot leads, followups, missed leads.",     icon: <Phone className="h-4 w-4" />,           perm: "leads.view" },
+  { group: "Sales & CRM", href: "/admin/caller-reports", label: "Caller Reports", description: "Daily calling numbers — calls, demos, hot leads, paid.",  icon: <PhoneCall className="h-4 w-4" />,       perm: "leads.view" },
+  { group: "Sales & CRM", href: "/admin/caller-gpt",     label: "Caller GPT",     description: "Live AI calling assistant — instant objection replies.", icon: <Sparkles className="h-4 w-4" />,        perm: "leads.view" },
+  { group: "Sales & CRM", href: "/admin/deals",          label: "Deals",          description: "Formal deal pipeline — proposals, negotiations, closures.", icon: <Briefcase className="h-4 w-4" />,       perm: "leads.view" },
+  { group: "Sales & CRM", href: "/admin/tasks",          label: "Tasks",          description: "Follow-ups, demos, payment reminders.",                   icon: <CheckSquare className="h-4 w-4" />,     perm: "tasks.view" },
+
   // ── Marketing ────────────────────────────────────────────────
-  { href: "/admin/email",          label: "Email",          description: "Templates, automation queue, test sends.",                icon: <Mail className="h-4 w-4" />,            perm: "email.view" },
-  { href: "/admin/marketing",      label: "Marketing",      description: "Meta leads, Google leads, campaign performance.",        icon: <Megaphone className="h-4 w-4" />,       perm: "marketing.view" },
+  { group: "Marketing", href: "/admin/email",          label: "Email",          description: "Templates, automation queue, test sends.",                icon: <Mail className="h-4 w-4" />,            perm: "email.view" },
+  { group: "Marketing", href: "/admin/marketing",      label: "Marketing",      description: "Meta leads, Google leads, campaign performance.",        icon: <Megaphone className="h-4 w-4" />,       perm: "marketing.view" },
+  { group: "Marketing", href: "/admin/affiliates",     label: "Affiliates",     description: "Referral partners, commissions, payouts.",                icon: <Handshake className="h-4 w-4" />,       perm: "affiliates.view" },
+
   // ── Finance ──────────────────────────────────────────────────
-  { href: "/admin/invoices",       label: "Invoices",       description: "Every paid order, search and download bills.",           icon: <Receipt className="h-4 w-4" />,         perm: "invoices.view_all" },
-  { href: "/admin/subscriptions",  label: "Subscriptions",  description: "Plan validity, renewals due, expired accounts.",         icon: <CalendarClock className="h-4 w-4" />,   perm: "subscriptions.view" },
-  { href: "/admin/credits-center", label: "Credits",        description: "Balances, purchased, consumed, manual adjustments.",    icon: <Gem className="h-4 w-4" />,             perm: "credits.view" },
-  { href: "/admin/finance",        label: "Finance",        description: "Revenue, expenses, hosting, ads spend, net profit.",     icon: <Wallet className="h-4 w-4" />,          perm: "finance.view" },
+  { group: "Finance", href: "/admin/invoices",       label: "Invoices",       description: "Every paid order, search and download bills.",           icon: <Receipt className="h-4 w-4" />,         perm: "invoices.view_all" },
+  { group: "Finance", href: "/admin/subscriptions",  label: "Subscriptions",  description: "Plan validity, renewals due, expired accounts.",         icon: <CalendarClock className="h-4 w-4" />,   perm: "subscriptions.view" },
+  { group: "Finance", href: "/admin/credits-center", label: "Credits",        description: "Balances, purchased, consumed, manual adjustments.",    icon: <Gem className="h-4 w-4" />,             perm: "credits.view" },
+  { group: "Finance", href: "/admin/finance",        label: "Finance",        description: "Revenue, expenses, hosting, ads spend, net profit.",     icon: <Wallet className="h-4 w-4" />,          perm: "finance.view" },
+
   // ── AI ───────────────────────────────────────────────────────
-  { href: "/admin/agents",         label: "Agents",         description: "Enable/disable AI agents, set credits, prompt version.", icon: <Bot className="h-4 w-4" />,             perm: "agents.view" },
-  { href: "/admin/ai-operations",  label: "AI Operations",  description: "Generations, failures, credits consumed, performance.",  icon: <Zap className="h-4 w-4" />,             perm: "ai_ops.view" },
-  { href: "/admin/generation-log", label: "Generation Log", description: "Every generation — agent, user, status, cost to company.", icon: <ScrollText className="h-4 w-4" />,      perm: "ai_ops.view" },
-  { href: "/admin/ai-costs",       label: "AI Costs",       description: "API spend per agent, top consumers, margin analysis.",   icon: <Coins className="h-4 w-4" />,           perm: "ai_costs.view" },
-  { href: "/admin/ai-assistant",   label: "AI Assistant",   description: "Meeting summaries, sales coaching, WhatsApp reply drafts.", icon: <Sparkles className="h-4 w-4" />,        perm: "dashboard.view" },
+  { group: "AI", href: "/admin/agents",         label: "Agents",         description: "Enable/disable AI agents, set credits, prompt version.", icon: <Bot className="h-4 w-4" />,             perm: "agents.view" },
+  { group: "AI", href: "/admin/ai-operations",  label: "AI Operations",  description: "Generations, failures, credits consumed, performance.",  icon: <Zap className="h-4 w-4" />,             perm: "ai_ops.view" },
+  { group: "AI", href: "/admin/generation-log", label: "Generation Log", description: "Every generation — agent, user, status, cost to company.", icon: <ScrollText className="h-4 w-4" />,      perm: "ai_ops.view" },
+  { group: "AI", href: "/admin/ai-costs",       label: "AI Costs",       description: "API spend per agent, top consumers, margin analysis.",   icon: <Coins className="h-4 w-4" />,           perm: "ai_costs.view" },
+  { group: "AI", href: "/admin/ai-assistant",   label: "AI Assistant",   description: "Meeting summaries, sales coaching, WhatsApp reply drafts.", icon: <Sparkles className="h-4 w-4" />,        perm: "dashboard.view" },
+
   // ── Support ──────────────────────────────────────────────────
-  { href: "/admin/support-center", label: "Support",        description: "Customer tickets — billing, generation, refunds.",       icon: <Ticket className="h-4 w-4" />,          perm: "support.view" },
-  { href: "/admin/whatsapp",       label: "WhatsApp Inbox", description: "Live customer chats, AI-drafted replies, send.",         icon: <MessageCircle className="h-4 w-4" />,   perm: "support.view" },
-  { href: "/admin/refunds-center", label: "Refunds & Disputes", description: "Refund requests, disputes, chargebacks tracking.",  icon: <Undo2 className="h-4 w-4" />,           perm: "support.view" },
-  { href: "/admin/approvals",      label: "Approvals",      description: "Discount, refund, expense requests — approve/reject.",   icon: <BadgeCheck className="h-4 w-4" />,      perm: "approvals.view" },
-  // ── Team ─────────────────────────────────────────────────────
-  { href: "/admin/incentives",      label: "Incentives",     description: "Commission rules, monthly targets, achievement tracking.", icon: <Target className="h-4 w-4" />,        perm: "incentives.view" },
-  { href: "/admin/leaderboard",     label: "Leaderboard",    description: "Sales rankings, attendance, tasks — badges & medals.",  icon: <Trophy className="h-4 w-4" />,          perm: "team.view" },
-  { href: "/admin/team",            label: "Team",           description: "Manage admins and roles.",                               icon: <ShieldQuestion className="h-4 w-4" />,  perm: "team.view" },
-  { href: "/admin/team/attendance", label: "Attendance",     description: "Check-ins, session time, work logs, monthly summary.",   icon: <Clock className="h-4 w-4" />,           perm: "team.view" },
-  { href: "/admin/knowledge-base",  label: "Knowledge Base", description: "SOPs, sales scripts, support docs, training material.", icon: <BookOpen className="h-4 w-4" />,        perm: "kb.view" },
-  { href: "/admin/hr",              label: "HR",             description: "Employees, salary records, leave management.",            icon: <UserCog className="h-4 w-4" />,         perm: "hr.view" },
-  { href: "/admin/recruitment",     label: "Hiring OS",      description: "No-resume hiring — candidates, assessments, pipeline.",   icon: <GraduationCap className="h-4 w-4" />,   perm: "hr.view" },
+  { group: "Support", href: "/admin/support-center", label: "Support",        description: "Customer tickets — billing, generation, refunds.",       icon: <Ticket className="h-4 w-4" />,          perm: "support.view" },
+  { group: "Support", href: "/admin/whatsapp",       label: "WhatsApp Inbox", description: "Live customer chats, AI-drafted replies, send.",         icon: <MessageCircle className="h-4 w-4" />,   perm: "support.view" },
+  { group: "Support", href: "/admin/refunds-center", label: "Refunds & Disputes", description: "Refund requests, disputes, chargebacks tracking.",  icon: <Undo2 className="h-4 w-4" />,           perm: "support.view" },
+  { group: "Support", href: "/admin/approvals",      label: "Approvals",      description: "Discount, refund, expense requests — approve/reject.",   icon: <BadgeCheck className="h-4 w-4" />,      perm: "approvals.view" },
+
+  // ── People & Hiring ──────────────────────────────────────────
+  { group: "People & Hiring", href: "/admin/team",            label: "Team",           description: "Manage admins and roles.",                               icon: <ShieldQuestion className="h-4 w-4" />,  perm: "team.view" },
+  { group: "People & Hiring", href: "/admin/team/attendance", label: "Attendance",     description: "Check-ins, session time, work logs, monthly summary.",   icon: <Clock className="h-4 w-4" />,           perm: "team.view" },
+  { group: "People & Hiring", href: "/admin/incentives",      label: "Incentives",     description: "Commission rules, monthly targets, achievement tracking.", icon: <Target className="h-4 w-4" />,        perm: "incentives.view" },
+  { group: "People & Hiring", href: "/admin/leaderboard",     label: "Leaderboard",    description: "Sales rankings, attendance, tasks — badges & medals.",  icon: <Trophy className="h-4 w-4" />,          perm: "team.view" },
+  { group: "People & Hiring", href: "/admin/hr",              label: "HR",             description: "Employees, salary records, leave management.",            icon: <UserCog className="h-4 w-4" />,         perm: "hr.view" },
+  { group: "People & Hiring", href: "/admin/recruitment",     label: "Hiring OS",      description: "No-resume hiring — candidates, assessments, pipeline.",   icon: <GraduationCap className="h-4 w-4" />,   perm: "hr.view" },
+  { group: "People & Hiring", href: "/admin/knowledge-base",  label: "Knowledge Base", description: "SOPs, sales scripts, support docs, training material.", icon: <BookOpen className="h-4 w-4" />,        perm: "kb.view" },
+
   // ── Content ──────────────────────────────────────────────────
-  { href: "/admin/posts",          label: "Content",        description: "Blog, news and product updates.",                        icon: <FileText className="h-4 w-4" />,        perm: "content.view" },
-  { href: "/admin/testimonials",   label: "Testimonials",   description: "Customer reviews on the homepage.",                     icon: <MessageSquare className="h-4 w-4" />,   perm: "testimonials.manage" },
+  { group: "Content", href: "/admin/posts",          label: "Content",        description: "Blog, news and product updates.",                        icon: <FileText className="h-4 w-4" />,        perm: "content.view" },
+  { group: "Content", href: "/admin/testimonials",   label: "Testimonials",   description: "Customer reviews on the homepage.",                     icon: <MessageSquare className="h-4 w-4" />,   perm: "testimonials.manage" },
+
   // ── System ───────────────────────────────────────────────────
-  { href: "/admin/affiliates",      label: "Affiliates",     description: "Referral partners, commissions, payouts.",                icon: <Handshake className="h-4 w-4" />,       perm: "affiliates.view" },
-  { href: "/admin/automation",      label: "Automation",     description: "If-then rules — auto-assign, email, notify on events.",  icon: <GitPullRequest className="h-4 w-4" />,  perm: "settings.view" },
-  { href: "/admin/integrations",   label: "Integrations",   description: "Connection status — Meta, Google, Razorpay, FAL, n8n.", icon: <Link2 className="h-4 w-4" />,           perm: "settings.view" },
-  { href: "/admin/settings",       label: "Settings",       description: "Company info, plans, credits, notification config.",    icon: <Settings className="h-4 w-4" />,        perm: "settings.view" },
-  { href: "/admin/error-logs",      label: "Error Logs",     description: "System failures — generation, API, webhook, payment.",   icon: <AlertTriangle className="h-4 w-4" />,   perm: "audit.view" },
-  { href: "/admin/audit",          label: "Audit Log",      description: "Every sensitive action — refunds, role changes, edits.",icon: <ClipboardList className="h-4 w-4" />,  perm: "audit.view" },
+  { group: "System", href: "/admin/automation",      label: "Automation",     description: "If-then rules — auto-assign, email, notify on events.",  icon: <GitPullRequest className="h-4 w-4" />,  perm: "settings.view" },
+  { group: "System", href: "/admin/integrations",   label: "Integrations",   description: "Connection status — Meta, Google, Razorpay, FAL, n8n.", icon: <Link2 className="h-4 w-4" />,           perm: "settings.view" },
+  { group: "System", href: "/admin/settings",       label: "Settings",       description: "Company info, plans, credits, notification config.",    icon: <Settings className="h-4 w-4" />,        perm: "settings.view" },
+  { group: "System", href: "/admin/error-logs",      label: "Error Logs",     description: "System failures — generation, API, webhook, payment.",   icon: <AlertTriangle className="h-4 w-4" />,   perm: "audit.view" },
+  { group: "System", href: "/admin/audit",          label: "Audit Log",      description: "Every sensitive action — refunds, role changes, edits.",icon: <ClipboardList className="h-4 w-4" />,  perm: "audit.view" },
 ];
 
 export default function AdminHomePage() {
@@ -150,36 +165,57 @@ export default function AdminHomePage() {
 
   const visibleTiles = TILES.filter((t) => has(t.perm));
 
+  // Group tiles by category, preserving GROUP_ORDER.
+  const grouped = GROUP_ORDER
+    .map((g) => ({ group: g, tiles: visibleTiles.filter((t) => t.group === g) }))
+    .filter((s) => s.tiles.length > 0);
+
   return (
     <AdminShell
       breadcrumbs={[{ label: "Dashboard" }]}
       title="Console"
-      subtitle={`Signed in as ${role ?? "—"}`}
+      subtitle={`Signed in as ${role ?? "—"} · ${visibleTiles.length} modules`}
       email={email}
     >
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {visibleTiles.map((t) => (
-          <Link key={t.href} href={t.href}>
-            <div className={`${adminCardCls} group flex items-start justify-between gap-3 p-4 transition hover:border-slate-300 dark:hover:border-slate-700`}>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                    {t.icon}
-                  </span>
-                  <h2 className="text-sm font-bold">{t.label}</h2>
-                </div>
-                <p className={`mt-1.5 text-xs leading-5 ${adminMutedCls}`}>
-                  {t.description}
-                </p>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-      {visibleTiles.length === 0 && (
+      {visibleTiles.length === 0 ? (
         <p className={`mt-6 text-center text-sm ${adminMutedCls}`}>
           Your role does not grant access to any module yet. Contact the founder.
         </p>
+      ) : (
+        <div className="space-y-7">
+          {grouped.map((section) => (
+            <section key={section.group}>
+              <div className="mb-2.5 flex items-center gap-3">
+                <h2 className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+                  {section.group}
+                </h2>
+                <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-400 dark:bg-slate-800">
+                  {section.tiles.length}
+                </span>
+                <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {section.tiles.map((t) => (
+                  <Link key={t.href} href={t.href}>
+                    <div className={`${adminCardCls} group flex items-start justify-between gap-3 p-4 transition hover:border-slate-300 dark:hover:border-slate-700`}>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                            {t.icon}
+                          </span>
+                          <h3 className="text-sm font-bold">{t.label}</h3>
+                        </div>
+                        <p className={`mt-1.5 text-xs leading-5 ${adminMutedCls}`}>
+                          {t.description}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
       )}
     </AdminShell>
   );

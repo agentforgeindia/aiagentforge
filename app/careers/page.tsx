@@ -83,7 +83,7 @@ export default function CareersPage() {
         ) : (
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {roles.map((r) => (
-              <Link key={r.id} href={`/careers/apply?role=${r.slug}`}
+              <Link key={r.id} href={`/careers/learn?role=${r.slug}`}
                 className="group flex items-center justify-between rounded-2xl border border-cyan-200/40 bg-white/80 p-5 shadow-md shadow-cyan-200/10 backdrop-blur transition hover:scale-[1.02] hover:border-cyan-400 hover:shadow-cyan-300/30 dark:border-cyan-400/20 dark:bg-white/[0.05] dark:hover:border-cyan-400">
                 <div className="flex items-center gap-3">
                   <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-md">
@@ -91,7 +91,7 @@ export default function CareersPage() {
                   </span>
                   <div>
                     <p className="text-sm font-black">{r.title}</p>
-                    <p className="text-[11px] font-bold text-black/50 dark:text-white/50">Apply &amp; take assessment</p>
+                    <p className="text-[11px] font-bold text-black/50 dark:text-white/50">Learn → Apply → Test</p>
                   </div>
                 </div>
                 <span className="text-xl font-black text-cyan-600 transition group-hover:translate-x-1 dark:text-cyan-300">→</span>
