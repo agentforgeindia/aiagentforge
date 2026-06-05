@@ -39,7 +39,7 @@ export default function AcademyAssessmentPage() {
   const [submitted, setSubmitted] = useState(false);
   const [result, setResult] = useState<{ score: number; total: number; pct: number } | null>(null);
   const [error, setError] = useState("");
-  const timerRef = useRef<NodeJS.Timeout>();
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const handleSubmit = useCallback(async (auto = false) => {
     if (submitting || submitted) return;
