@@ -25,6 +25,14 @@ export default function DetailsPage() {
   const [address, setAddress]   = useState("");
   const [locality, setLocality] = useState("");
   const [landmark, setLandmark] = useState("");
+  // Personal details
+  const [dob, setDob]           = useState("");
+  const [gender, setGender]     = useState("");
+  const [marital, setMarital]   = useState("");
+  const [qualification, setQualification] = useState("");
+  const [experience, setExperience] = useState("");
+  const [languages, setLanguages] = useState("");
+  const [company, setCompany]   = useState("");
   const [coords, setCoords]     = useState<{ lat: number; lng: number } | null>(null);
   const [dist, setDist]         = useState<number | null>(null);
   const [locating, setLocating] = useState(false);
@@ -92,6 +100,8 @@ export default function DetailsPage() {
         candidate_id: id, address, locality, landmark,
         latitude: coords?.lat ?? null, longitude: coords?.lng ?? null,
         distance_km: dist != null ? Math.round(dist * 100) / 100 : null,
+        dob, gender, marital_status: marital, qualification,
+        experience_years: experience, languages, current_company: company,
       }),
     });
     const json = await res.json();
@@ -125,6 +135,32 @@ export default function DetailsPage() {
               <textarea className={input} rows={2} placeholder="Full address (house/flat, street, area) *" value={address} onChange={(e) => setAddress(e.target.value)} />
               <input className={input} placeholder="Locality / Area name" value={locality} onChange={(e) => setLocality(e.target.value)} />
               <input className={input} placeholder="Nearest famous landmark (e.g. XYZ Mall, ABC Temple) *" value={landmark} onChange={(e) => setLandmark(e.target.value)} />
+
+              {/* Personal details */}
+              <p className="pt-2 text-[11px] font-black uppercase tracking-[0.2em] text-cyan-600">Personal Details</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-black/40 dark:text-white/40">Date of Birth</label>
+                  <input className={`${input} mt-1`} type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-black/40 dark:text-white/40">Gender</label>
+                  <select className={`${input} mt-1`} value={gender} onChange={(e) => setGender(e.target.value)}>
+                    <option value="">Select</option><option>Male</option><option>Female</option><option>Other</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <select className={input} value={marital} onChange={(e) => setMarital(e.target.value)}>
+                  <option value="">Marital status</option><option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option>
+                </select>
+                <input className={input} placeholder="Qualification (e.g. B.Com)" value={qualification} onChange={(e) => setQualification(e.target.value)} />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input className={input} type="number" step="0.5" placeholder="Experience (years)" value={experience} onChange={(e) => setExperience(e.target.value)} />
+                <input className={input} placeholder="Languages (Hindi, English…)" value={languages} onChange={(e) => setLanguages(e.target.value)} />
+              </div>
+              <input className={input} placeholder="Current company (if any)" value={company} onChange={(e) => setCompany(e.target.value)} />
 
               {/* Location detect */}
               <button type="button" onClick={detect} disabled={locating}

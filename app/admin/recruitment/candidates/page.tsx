@@ -23,6 +23,9 @@ type Candidate = {
   address: string | null; locality: string | null; landmark: string | null;
   latitude: number | null; longitude: number | null;
   distance_km: number | null; details_completed: boolean | null;
+  dob: string | null; gender: string | null; marital_status: string | null;
+  qualification: string | null; experience_years: number | null;
+  languages: string | null; current_company: string | null;
   created_at: string;
 };
 
@@ -207,6 +210,20 @@ export default function CandidatesPage() {
                       </div>
                     </div>
                     {c.email && <p className={`mt-3 text-[11px] ${adminMutedCls}`}>📧 {c.email}</p>}
+                    {(c.dob || c.gender || c.marital_status || c.qualification) && (
+                      <div className="mt-2 rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/40">
+                        <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${adminMutedCls}`}>Personal</p>
+                        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px]">
+                          {c.dob && <span>🎂 {new Date(c.dob).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>}
+                          {c.gender && <span>{c.gender}</span>}
+                          {c.marital_status && <span>💍 {c.marital_status}</span>}
+                          {c.qualification && <span>🎓 {c.qualification}</span>}
+                          {c.experience_years != null && <span>💼 {c.experience_years} yr exp</span>}
+                          {c.languages && <span>🗣️ {c.languages}</span>}
+                          {c.current_company && <span>🏢 {c.current_company}</span>}
+                        </div>
+                      </div>
+                    )}
                     {(c.address || c.landmark) && (
                       <div className="mt-2 rounded-lg bg-slate-50 p-2.5 dark:bg-slate-800/40">
                         <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${adminMutedCls}`}>Location</p>
