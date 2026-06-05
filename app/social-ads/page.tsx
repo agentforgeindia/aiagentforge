@@ -529,7 +529,40 @@ export default function SocialAdsPage() {
   // UI
   // ────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-slate-900 py-10 px-4">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950 dark:to-slate-900 py-10 px-4">
+      {/* Doodles — social, ads, engagement */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+        {/* Heart/like top-left */}
+        <svg className="absolute left-6 top-20 h-12 w-12 text-pink-400/30" viewBox="0 0 48 48" fill="currentColor">
+          <path d="M24 42 C24 42 4 28 4 16 C4 10 9 6 14 6 C18 6 22 9 24 12 C26 9 30 6 34 6 C39 6 44 10 44 16 C44 28 24 42 24 42Z" />
+        </svg>
+        {/* Megaphone top-right */}
+        <svg className="absolute right-8 top-16 h-14 w-14 text-cyan-400/30" viewBox="0 0 56 56" fill="none">
+          <path d="M8 20 L8 36 L18 36 L34 46 L34 10 L18 20 Z" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M40 20 C44 22 44 34 40 36" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+          <path d="M44 16 C50 20 50 36 44 40" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+        {/* Share icon mid-left */}
+        <svg className="absolute left-8 top-1/2 h-14 w-14 text-purple-400/20" viewBox="0 0 56 56" fill="none">
+          <circle cx="44" cy="10" r="7" stroke="currentColor" strokeWidth="2.5" />
+          <circle cx="44" cy="46" r="7" stroke="currentColor" strokeWidth="2.5" />
+          <circle cx="12" cy="28" r="7" stroke="currentColor" strokeWidth="2.5" />
+          <line x1="19" y1="24" x2="37" y2="13" stroke="currentColor" strokeWidth="2.5" />
+          <line x1="19" y1="32" x2="37" y2="43" stroke="currentColor" strokeWidth="2.5" />
+        </svg>
+        {/* Sparkle star */}
+        <svg className="absolute right-1/4 top-12 h-8 w-8 text-blue-400/40 animate-pulse" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" />
+        </svg>
+        {/* Dot grid bottom */}
+        <svg className="absolute bottom-24 right-8 h-14 w-14 text-cyan-400/20" viewBox="0 0 42 42" fill="currentColor">
+          {[7,21,35].map(y => [7,21,35].map(x => <circle key={`${x}${y}`} cx={x} cy={y} r="2.5" />))}
+        </svg>
+        {/* Wavy line bottom-left */}
+        <svg className="absolute bottom-32 left-6 h-10 w-28 text-purple-400/20" viewBox="0 0 120 40" fill="none">
+          <path d="M2 20 Q 18 4, 34 20 T 66 20 T 98 20" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+      </div>
       <div className="max-w-6xl mx-auto">
         <header className="mb-6">
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white flex items-center gap-3">

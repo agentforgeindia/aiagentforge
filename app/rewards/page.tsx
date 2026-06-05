@@ -47,6 +47,39 @@ export default function RewardsPage() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee44,transparent_40%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_40%)]" />
+      {/* Doodles — rewards, stars, coins */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+        {/* Trophy top-left */}
+        <svg className="absolute left-8 top-20 h-16 w-14 text-amber-400/35" viewBox="0 0 56 64" fill="none">
+          <path d="M14 4 L42 4 L42 28 C42 40 28 46 28 46 C28 46 14 40 14 28 Z" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M4 4 L14 4 C14 16 8 22 4 22 Z" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M52 4 L42 4 C42 16 48 22 52 22 Z" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          <line x1="28" y1="46" x2="28" y2="56" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+          <line x1="18" y1="60" x2="38" y2="60" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+        {/* Star sparkle top-right big */}
+        <svg className="absolute right-10 top-14 h-14 w-14 text-yellow-400/40 animate-pulse" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" />
+        </svg>
+        {/* Coin mid-left */}
+        <svg className="absolute left-6 top-1/2 h-16 w-16 text-cyan-400/25" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="26" stroke="currentColor" strokeWidth="3" />
+          <circle cx="32" cy="32" r="18" stroke="currentColor" strokeWidth="2" strokeDasharray="4 5" />
+          <text x="26" y="38" fontSize="18" fontWeight="900" fill="currentColor" fontFamily="serif">₹</text>
+        </svg>
+        {/* Small stars scattered */}
+        <svg className="absolute right-1/4 top-1/4 h-8 w-8 text-purple-400/35" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" />
+        </svg>
+        {/* Dot grid bottom-right */}
+        <svg className="absolute bottom-24 right-8 h-14 w-14 text-amber-400/20" viewBox="0 0 42 42" fill="currentColor">
+          {[7,21,35].map(y => [7,21,35].map(x => <circle key={`${x}${y}`} cx={x} cy={y} r="2.5" />))}
+        </svg>
+        {/* Wavy line bottom */}
+        <svg className="absolute bottom-32 left-6 h-10 w-28 text-cyan-400/25" viewBox="0 0 120 40" fill="none">
+          <path d="M2 20 Q 18 4, 34 20 T 66 20 T 98 20" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+      </div>
 
       <div className="relative z-10 mx-auto max-w-2xl px-5 py-14">
         {/* Hero */}

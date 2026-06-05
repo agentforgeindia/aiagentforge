@@ -186,9 +186,42 @@ const breadcrumbSchema = {
   ],
 };
 
+function FaqDoodles() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+      {/* Question mark top-left */}
+      <svg className="absolute left-6 top-20 h-16 w-16 text-cyan-400/25 dark:text-cyan-400/15" viewBox="0 0 64 64" fill="none">
+        <text x="8" y="52" fontSize="52" fontWeight="900" fill="currentColor" fontFamily="serif">?</text>
+      </svg>
+      {/* Speech bubble top-right */}
+      <svg className="absolute right-10 top-14 h-14 w-14 text-purple-400/30 dark:text-purple-400/20" viewBox="0 0 64 64" fill="none">
+        <rect x="4" y="4" width="46" height="34" rx="10" stroke="currentColor" strokeWidth="3" />
+        <path d="M14 38 L10 52 L26 42" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      {/* Dashed circle mid-left */}
+      <svg className="absolute left-8 top-1/2 h-20 w-20 text-blue-400/20" viewBox="0 0 80 80" fill="none">
+        <circle cx="40" cy="40" r="34" stroke="currentColor" strokeWidth="3" strokeDasharray="6 8" />
+      </svg>
+      {/* Dot grid bottom-right */}
+      <svg className="absolute bottom-32 right-8 h-16 w-16 text-cyan-400/20" viewBox="0 0 48 48" fill="currentColor">
+        {[8,20,32,44].map(y => [8,20,32,44].map(x => <circle key={`${x}${y}`} cx={x} cy={y} r="2.5" />))}
+      </svg>
+      {/* Another question mark bottom-left */}
+      <svg className="absolute bottom-20 left-16 h-12 w-12 text-purple-400/20 dark:text-purple-400/10 animate-pulse" viewBox="0 0 48 48" fill="none">
+        <text x="6" y="40" fontSize="38" fontWeight="900" fill="currentColor" fontFamily="serif">?</text>
+      </svg>
+      {/* Wavy line */}
+      <svg className="absolute right-4 top-1/2 h-10 w-28 text-cyan-400/20" viewBox="0 0 120 40" fill="none">
+        <path d="M2 20 Q 20 4, 38 20 T 74 20 T 110 20" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      </svg>
+    </div>
+  );
+}
+
 export default function FAQPage() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
+      <FaqDoodles />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}

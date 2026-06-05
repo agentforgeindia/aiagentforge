@@ -192,6 +192,36 @@ export default async function TutorialsPage({
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
+      {/* Doodles — play, video, learning */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+        {/* Play button top-left */}
+        <svg className="absolute left-8 top-20 h-16 w-16 text-cyan-400/30" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="3" />
+          <path d="M24 20 L48 32 L24 44 Z" fill="currentColor" opacity="0.5" />
+        </svg>
+        {/* Star sparkle top-right */}
+        <svg className="absolute right-10 top-14 h-10 w-10 text-purple-400/50 animate-pulse" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" />
+        </svg>
+        {/* Film strip mid-right */}
+        <svg className="absolute right-6 top-1/3 h-20 w-8 text-blue-400/20" viewBox="0 0 28 80" fill="none">
+          <rect x="2" y="2" width="24" height="76" rx="4" stroke="currentColor" strokeWidth="2.5" />
+          {[8,20,32,44,56,68].map(y => <rect key={y} x="6" y={y} width="16" height="8" rx="2" fill="currentColor" opacity="0.4" />)}
+        </svg>
+        {/* Wavy line bottom */}
+        <svg className="absolute bottom-28 left-6 h-10 w-32 text-cyan-400/25" viewBox="0 0 130 40" fill="none">
+          <path d="M2 20 Q 22 4, 42 20 T 82 20 T 122 20" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+        {/* Dot grid bottom-right */}
+        <svg className="absolute bottom-20 right-10 h-14 w-14 text-purple-400/20" viewBox="0 0 42 42" fill="currentColor">
+          {[7,21,35].map(y => [7,21,35].map(x => <circle key={`${x}${y}`} cx={x} cy={y} r="2.5" />))}
+        </svg>
+        {/* Small play buttons scattered */}
+        <svg className="absolute left-1/4 top-16 h-8 w-8 text-cyan-400/20" viewBox="0 0 32 32" fill="none">
+          <circle cx="16" cy="16" r="13" stroke="currentColor" strokeWidth="2.5" />
+          <path d="M12 10 L24 16 L12 22 Z" fill="currentColor" opacity="0.4" />
+        </svg>
+      </div>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}

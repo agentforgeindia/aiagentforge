@@ -374,6 +374,40 @@ export default async function HowItWorksPage() {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
+      {/* Doodles — upload, generate, arrows */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+        {/* Arrow right top-left */}
+        <svg className="absolute left-6 top-24 h-10 w-28 text-cyan-400/35" viewBox="0 0 120 40" fill="none">
+          <path d="M4 20 L100 20" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+          <path d="M88 8 L104 20 L88 32" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        {/* Sparkle star top-right */}
+        <svg className="absolute right-10 top-16 h-10 w-10 text-purple-400/50 animate-pulse" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" />
+        </svg>
+        {/* Gear mid-right */}
+        <svg className="absolute right-8 top-1/3 h-16 w-16 text-blue-400/20" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="10" stroke="currentColor" strokeWidth="3" />
+          <circle cx="32" cy="32" r="22" stroke="currentColor" strokeWidth="3" strokeDasharray="5 7" />
+        </svg>
+        {/* Upload cloud bottom-left */}
+        <svg className="absolute bottom-32 left-8 h-16 w-16 text-cyan-400/25" viewBox="0 0 64 64" fill="none">
+          <path d="M32 44 L32 24 M24 32 L32 24 L40 32" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M20 44 C12 44 8 38 10 32 C12 26 18 24 22 26 C24 18 34 14 42 20 C48 16 56 22 54 30 C58 32 58 40 52 44" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+        {/* Dot grid bottom-right */}
+        <svg className="absolute bottom-24 right-6 h-14 w-14 text-purple-400/20" viewBox="0 0 42 42" fill="currentColor">
+          {[7,21,35].map(y => [7,21,35].map(x => <circle key={`${x}${y}`} cx={x} cy={y} r="2.5" />))}
+        </svg>
+        {/* Step numbers hint left */}
+        <svg className="absolute left-10 top-1/2 h-20 w-8 text-cyan-400/15" viewBox="0 0 24 80" fill="none">
+          <circle cx="12" cy="10" r="8" stroke="currentColor" strokeWidth="2.5" />
+          <line x1="12" y1="18" x2="12" y2="32" stroke="currentColor" strokeWidth="2" strokeDasharray="3 4" />
+          <circle cx="12" cy="40" r="8" stroke="currentColor" strokeWidth="2.5" />
+          <line x1="12" y1="48" x2="12" y2="62" stroke="currentColor" strokeWidth="2" strokeDasharray="3 4" />
+          <circle cx="12" cy="70" r="8" stroke="currentColor" strokeWidth="2.5" />
+        </svg>
+      </div>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
