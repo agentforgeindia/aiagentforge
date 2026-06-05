@@ -186,31 +186,15 @@ export default function AcademyPage() {
         </div>
       </section>
 
-      {/* ── Scale Vision ─────────────────────────────────────── */}
-      <section className="px-4 py-12">
-        <div className="mx-auto max-w-3xl rounded-2xl border border-purple-500/20 bg-gradient-to-br from-purple-500/10 to-cyan-500/10 p-8 text-center shadow-sm">
-          <Users className="mx-auto mb-3 h-10 w-10 text-purple-500" />
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Scale Vision — 100 Members</h2>
-          <p className="mt-3 text-slate-600 dark:text-slate-300">
-            Jab 100 active members ho jayenge — 50 Telecallers, 20 Researchers, 10 Support, 10 Social Media, 10 AI Operators —
-            agar har member sirf ₹10,000/month contribute kare, to hoga
-          </p>
-          <p className="mt-4 text-4xl font-bold bg-gradient-to-r from-cyan-500 to-purple-600 bg-clip-text text-transparent">
-            ₹10 Lakh / Month
-          </p>
-          <p className="mt-1 text-sm text-slate-500">collective business contribution</p>
-        </div>
-      </section>
-
       {/* ── CTA ──────────────────────────────────────────────── */}
       <section className="px-4 py-10 text-center">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Tayaar ho? Abhi apply karo.</h2>
         <p className="mt-2 text-slate-500 dark:text-slate-400">Registration free hai. Training free hai. Bas skill aur dedication chahiye.</p>
         <Link
-          href="/academy/register"
+          href="/careers"
           className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 px-10 py-4 text-lg font-semibold text-white shadow-lg hover:shadow-cyan-500/25 transition-all hover:scale-105"
         >
-          Apply Now — Free <ArrowRight className="h-5 w-5" />
+          Start Learning → <ArrowRight className="h-5 w-5" />
         </Link>
       </section>
 

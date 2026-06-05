@@ -9,6 +9,7 @@ import {
   BookOpen, Building2, BrainCircuit, Phone, PartyPopper,
   Phone as PhoneIcon, Briefcase, Headphones, Megaphone, Clapperboard,
   Bot, Palette, Code2, Circle, Wallet, Clock, Home, GraduationCap,
+  TrendingUp, Share2, IndianRupee, CheckCircle,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -69,6 +70,14 @@ const BENEFITS = [
   { Icon: GraduationCap, label: "Free training + AI tools" },
 ];
 
+const JOB_CATEGORIES = [
+  { Icon: PhoneIcon,   title: "Telecaller",                basic: "₹5,000", incentive: "Per Sale",          color: "from-cyan-400 to-blue-500",    border: "border-cyan-500/20" },
+  { Icon: TrendingUp,  title: "Lead Research Executive",   basic: "₹5,000", incentive: "Target Based",      color: "from-blue-400 to-indigo-500",  border: "border-blue-500/20" },
+  { Icon: Share2,      title: "Social Media Executive",    basic: "₹5,000", incentive: "Performance Based", color: "from-purple-400 to-pink-500",  border: "border-purple-500/20" },
+  { Icon: Bot,         title: "AI Operator",               basic: "₹5,000", incentive: "Output Based",      color: "from-emerald-400 to-teal-500", border: "border-emerald-500/20" },
+  { Icon: Headphones,  title: "Customer Support",          basic: "₹5,000", incentive: "CSAT Based",        color: "from-amber-400 to-orange-500", border: "border-amber-500/20" },
+];
+
 export default function AcademyPage() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
@@ -121,6 +130,51 @@ export default function AcademyPage() {
               </span>
             ))}
           </div>
+        </div>
+
+        {/* ── Salary & WFH Highlight ── */}
+        <div className="mt-14 grid gap-4 sm:grid-cols-3">
+          <div className="rounded-2xl border border-cyan-300/40 bg-white/85 p-5 text-center shadow-md backdrop-blur dark:border-cyan-400/20 dark:bg-white/[0.05]">
+            <IndianRupee className="mx-auto mb-2 h-7 w-7 text-cyan-500" />
+            <p className="text-2xl font-black text-slate-900 dark:text-white">₹5,000</p>
+            <p className="text-xs font-bold text-black/50 dark:text-white/50">Basic Salary / Month</p>
+          </div>
+          <div className="rounded-2xl border border-emerald-300/40 bg-white/85 p-5 text-center shadow-md backdrop-blur dark:border-emerald-400/20 dark:bg-white/[0.05]">
+            <Home className="mx-auto mb-2 h-7 w-7 text-emerald-500" />
+            <p className="text-2xl font-black text-slate-900 dark:text-white">100%</p>
+            <p className="text-xs font-bold text-black/50 dark:text-white/50">Work From Home</p>
+          </div>
+          <div className="rounded-2xl border border-purple-300/40 bg-white/85 p-5 text-center shadow-md backdrop-blur dark:border-purple-400/20 dark:bg-white/[0.05]">
+            <TrendingUp className="mx-auto mb-2 h-7 w-7 text-purple-500" />
+            <p className="text-2xl font-black text-slate-900 dark:text-white">+Incentive</p>
+            <p className="text-xs font-bold text-black/50 dark:text-white/50">Performance Based Earning</p>
+          </div>
+        </div>
+
+        {/* ── Job Categories ── */}
+        <div className="mt-16 text-center">
+          <p className="text-[11px] font-black uppercase tracking-[0.3em] text-cyan-600">Job Categories</p>
+          <h2 className="mt-2 text-2xl font-black sm:text-3xl">5 roles — apni skill choose karo</h2>
+        </div>
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {JOB_CATEGORIES.map((j) => (
+            <div key={j.title} className={`rounded-2xl border ${j.border} bg-white/85 p-5 shadow-md backdrop-blur dark:bg-white/[0.05]`}>
+              <div className={`mb-3 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br ${j.color} text-white shadow`}>
+                <j.Icon className="h-5 w-5" />
+              </div>
+              <p className="font-black text-slate-900 dark:text-white">{j.title}</p>
+              <div className="mt-3 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold text-black/40 dark:text-white/40">Basic</p>
+                  <p className="text-lg font-black text-slate-900 dark:text-white">{j.basic}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-bold text-black/40 dark:text-white/40">Incentive</p>
+                  <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">{j.incentive}</p>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Journey */}
