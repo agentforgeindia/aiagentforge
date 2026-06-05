@@ -23,6 +23,8 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/components/AuthProvider";
 import { track } from "@/lib/analytics";
 import { validateImageFile } from "@/lib/uploadValidation";
+import RatingFeedbackModal from "@/app/components/RatingFeedbackModal";
+import CongratulationsPopup from "@/app/components/CongratulationsPopup";
 import {
   Upload,
   Sparkles,
@@ -239,6 +241,10 @@ export default function SocialAdsPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generationIds, setGenerationIds] = useState<string[] | null>(null);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingGenerationId, setRatingGenerationId] = useState<string | undefined>();
+  const [showCongratsPopup, setShowCongratsPopup] = useState(false);
+  const [congratsCredits, setCongratsCredits] = useState(0);
   const [batchId, setBatchId] = useState<string | null>(null);
   const [results, setResults] = useState<
     { generation_id: string; output_urls: string[] }[] | null
@@ -375,6 +381,8 @@ export default function SocialAdsPage() {
           );
           setBusy(false);
           refreshProfile();
+          setRatingGenerationId(generationIds?.[0]);
+          setShowRatingModal(true);
           if (pollRef.current) {
             window.clearInterval(pollRef.current);
             pollRef.current = null;
@@ -692,6 +700,26 @@ export default function SocialAdsPage() {
           </section>
         )}
       </div>
+
+      {showRatingModal && (
+        <RatingFeedbackModal
+          generationId={ratingGenerationId}
+          agent="social-ads"
+          onClose={() => setShowRatingModal(false)}
+          onCreditsAwarded={(c) => {
+            setShowRatingModal(false);
+            setCongratsCredits(c);
+            setShowCongratsPopup(true);
+            refreshProfile();
+          }}
+        />
+      )}
+      {showCongratsPopup && (
+        <CongratulationsPopup
+          credits={congratsCredits}
+          onClose={() => setShowCongratsPopup(false)}
+        />
+      )}
     </div>
   );
 }

@@ -10,6 +10,11 @@ import AnalyticsRouteTracker from "./AnalyticsRouteTracker";
 import UtmCapture from "./UtmCapture";
 import LaunchOfferPopup from "./LaunchOfferPopup";
 
+const PhonePromptPopup = dynamic(() => import("./PhonePromptPopup"), {
+  ssr: false,
+  loading: () => null,
+});
+
 // Floating chat — 286 lines, not SEO-critical, only useful after
 // the user shows intent. Dynamic-import + ssr:false keeps it out
 // of the initial JS payload on every page (cuts a few hundred KB
@@ -62,6 +67,7 @@ export default function LayoutClient({
       {!hideChrome && <Footer />}
       {!hideChrome && <AgentForgeAI />}
       {!hideChrome && <LaunchOfferPopup />}
+      {!hideChrome && <PhonePromptPopup />}
     </>
   );
 }

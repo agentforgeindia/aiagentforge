@@ -33,6 +33,8 @@ import {
   FaLinkedin,
   FaWhatsapp,
 } from "react-icons/fa";
+import RatingFeedbackModal from "@/app/components/RatingFeedbackModal";
+import CongratulationsPopup from "@/app/components/CongratulationsPopup";
 
 const productTypes = [
   { id: "saree", title: "Saree", desc: "Ethnic drape branding", icon: Shirt },
@@ -144,6 +146,10 @@ export default function UGCForgePage() {
   const [hasRights, setHasRights] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingGenerationId, setRatingGenerationId] = useState<string | undefined>();
+  const [showCongratsPopup, setShowCongratsPopup] = useState(false);
+  const [congratsCredits, setCongratsCredits] = useState(0);
 
   const selectedProductLabel = useMemo(() => {
     return productTypes.find((item) => item.id === selectedProduct)?.title || "Product";
@@ -247,10 +253,13 @@ export default function UGCForgePage() {
         throw new Error(data?.error || "Generation failed");
       }
 
+      const genId = data?.generation_id || generationId;
+      setRatingGenerationId(genId);
+      setShowRatingModal(true);
       setResult({
         success: true,
         status: data?.status || "processing",
-        generation_id: data?.generation_id || generationId,
+        generation_id: genId,
         output_url: data?.output_url || data?.image_url || "",
         hook:
           data?.hook ||
@@ -587,6 +596,25 @@ export default function UGCForgePage() {
           )}
         </div>
       </section>
+
+      {showRatingModal && (
+        <RatingFeedbackModal
+          generationId={ratingGenerationId}
+          agent="ugc-forge"
+          onClose={() => setShowRatingModal(false)}
+          onCreditsAwarded={(c) => {
+            setShowRatingModal(false);
+            setCongratsCredits(c);
+            setShowCongratsPopup(true);
+          }}
+        />
+      )}
+      {showCongratsPopup && (
+        <CongratulationsPopup
+          credits={congratsCredits}
+          onClose={() => setShowCongratsPopup(false)}
+        />
+      )}
     </main>
   );
 }

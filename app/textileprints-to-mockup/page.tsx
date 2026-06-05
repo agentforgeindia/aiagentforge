@@ -16,6 +16,8 @@ import AIThinkingSteps from "@/app/components/AIThinkingSteps";
 import TestimonialsSlider, {
   type Testimonial,
 } from "@/app/components/TestimonialsSlider";
+import RatingFeedbackModal from "@/app/components/RatingFeedbackModal";
+import CongratulationsPopup from "@/app/components/CongratulationsPopup";
 
 const TEXTILE_THINKING_STEPS = [
   "Reading your design file",
@@ -828,6 +830,10 @@ export default function Home() {
   const [showPhonePopup, setShowPhonePopup] = useState(false);
   const [showSignupPopup, setShowSignupPopup] = useState(false);
   const [phoneInput, setPhoneInput] = useState("");
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingGenerationId, setRatingGenerationId] = useState<string | undefined>();
+  const [showCongratsPopup, setShowCongratsPopup] = useState(false);
+  const [congratsCredits, setCongratsCredits] = useState(0);
 
   const [textileCategory, setTextileCategory] =
     useState<TextileCategory>("Men\'s Wear");
@@ -1961,6 +1967,10 @@ export default function Home() {
       ),
     );
     setActiveId(item.id);
+
+    // Show rating/feedback modal after generation completes
+    setRatingGenerationId(generationId);
+    setShowRatingModal(true);
   };
 
   const hasSavedPhoneNumber = (profileData: any) => {
@@ -3707,6 +3717,27 @@ export default function Home() {
         source="textile-ai"
         context="textile mockup"
       />
+
+      {showRatingModal && (
+        <RatingFeedbackModal
+          generationId={ratingGenerationId}
+          agent="textile"
+          onClose={() => setShowRatingModal(false)}
+          onCreditsAwarded={(credits) => {
+            setShowRatingModal(false);
+            setCongratsCredits(credits);
+            setShowCongratsPopup(true);
+            refreshProfile();
+          }}
+        />
+      )}
+
+      {showCongratsPopup && (
+        <CongratulationsPopup
+          credits={congratsCredits}
+          onClose={() => setShowCongratsPopup(false)}
+        />
+      )}
 
       <StickyMobileCTA
         ctaName="textile_sticky_mobile"

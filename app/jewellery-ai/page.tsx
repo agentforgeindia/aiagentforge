@@ -41,6 +41,8 @@ import AIThinkingSteps from "@/app/components/AIThinkingSteps";
 import TestimonialsSlider, {
   type Testimonial,
 } from "@/app/components/TestimonialsSlider";
+import RatingFeedbackModal from "@/app/components/RatingFeedbackModal";
+import CongratulationsPopup from "@/app/components/CongratulationsPopup";
 
 const JEWELLERY_THINKING_STEPS = [
   "Analyzing gemstone reflections",
@@ -736,6 +738,10 @@ export default function JewelleryAIPage() {
   const [showPromptBox, setShowPromptBox] = useState(false);
 
   const [showSignupPopup, setShowSignupPopup] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingGenerationId, setRatingGenerationId] = useState<string | undefined>();
+  const [showCongratsPopup, setShowCongratsPopup] = useState(false);
+  const [congratsCredits, setCongratsCredits] = useState(0);
 
   // ----- AI Guidance (Vision-based auto-fill + suggestion card) -----
   type JewellerySuggestion = {
@@ -1786,6 +1792,8 @@ if (!response.ok) {
       setGeneratedOutputUrl(finalUrl);
       setGenerationProgress(100);
       refreshProfile?.();
+      setRatingGenerationId(generationId);
+      setShowRatingModal(true);
       window.setTimeout(() => setIsGenerating(false), 900);
       return;
     }
@@ -1816,6 +1824,8 @@ if (!response.ok) {
         setGeneratedOutputUrl(finalUrl);
         setGenerationProgress(100);
         refreshProfile?.();
+        setRatingGenerationId(generationId);
+        setShowRatingModal(true);
         window.setTimeout(() => setIsGenerating(false), 900);
         return;
       }
@@ -1877,6 +1887,26 @@ if (!response.ok) {
         source="jewellery-ai"
         context="jewellery visual"
       />
+
+      {showRatingModal && (
+        <RatingFeedbackModal
+          generationId={ratingGenerationId}
+          agent="jewellery"
+          onClose={() => setShowRatingModal(false)}
+          onCreditsAwarded={(credits) => {
+            setShowRatingModal(false);
+            setCongratsCredits(credits);
+            setShowCongratsPopup(true);
+            refreshProfile?.();
+          }}
+        />
+      )}
+      {showCongratsPopup && (
+        <CongratulationsPopup
+          credits={congratsCredits}
+          onClose={() => setShowCongratsPopup(false)}
+        />
+      )}
 
       <StickyMobileCTA
         ctaName="jewellery_sticky_mobile"
@@ -2255,7 +2285,7 @@ if (!response.ok) {
 
             <div className="grid gap-5 lg:grid-cols-[0.72fr_1.28fr]">
               <div className="lg:sticky lg:top-24">
-                <label className={`relative flex min-h-[190px] cursor-pointer overflow-hidden rounded-[1.5rem] border-2 border-dashed transition-all ${uploads[0]?.preview ? "border-cyan-300/60 dark:border-cyan-400/40" : "items-center justify-center bg-[#fffaf0] p-5 text-center border-black/15 dark:bg-black/20 dark:border-white/15"}`}>
+                <label className={`relative flex h-[240px] cursor-pointer overflow-hidden rounded-[1.5rem] border-2 border-dashed transition-all ${uploads[0]?.preview ? "border-cyan-300/60 dark:border-cyan-400/40" : "items-center justify-center bg-[#fffaf0] p-5 text-center border-black/15 dark:bg-black/20 dark:border-white/15"}`}>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -2266,7 +2296,7 @@ if (!response.ok) {
                   />
                   {uploads[0]?.preview ? (
                     <>
-                      <img src={uploads[0].preview} alt="Uploaded jewellery preview" className="min-h-[190px] w-full object-cover" />
+                      <img src={uploads[0].preview} alt="Uploaded jewellery preview" className="h-full w-full object-contain" />
                       <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/40 to-transparent p-3">
                         <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-black text-black/70">Tap to change</span>
                       </div>

@@ -43,6 +43,8 @@ import AIThinkingSteps from "@/app/components/AIThinkingSteps";
 import TestimonialsSlider, {
   type Testimonial,
 } from "@/app/components/TestimonialsSlider";
+import RatingFeedbackModal from "@/app/components/RatingFeedbackModal";
+import CongratulationsPopup from "@/app/components/CongratulationsPopup";
 
 const PRODUCTOGRAPHY_THINKING_STEPS = [
   "Reading product details",
@@ -491,6 +493,10 @@ export default function ProductographyPage() {
 
   const [profile, setProfile] = useState<any>(null);
   const [showSignupPopup, setShowSignupPopup] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingGenerationId, setRatingGenerationId] = useState<string | undefined>();
+  const [showCongratsPopup, setShowCongratsPopup] = useState(false);
+  const [congratsCredits, setCongratsCredits] = useState(0);
   const [items, setItems] = useState<GenItem[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -1128,6 +1134,8 @@ export default function ProductographyPage() {
       prev.map((it) => (it.id === item.id ? { ...it, resultUrl: finalImage || "", status: "done" } : it)),
     );
     setActiveId(item.id);
+    setRatingGenerationId(generationId);
+    setShowRatingModal(true);
   };
 
   const handleGenerate = async () => {
@@ -1618,14 +1626,14 @@ export default function ProductographyPage() {
 
             <div className="grid gap-5 lg:grid-cols-[0.72fr_1.28fr]">
               <div className="lg:sticky lg:top-24">
-                <label className={`relative flex min-h-[190px] cursor-pointer overflow-hidden rounded-[1.5rem] border-2 border-dashed transition-all ${
+                <label className={`relative flex h-[240px] cursor-pointer overflow-hidden rounded-[1.5rem] border-2 border-dashed transition-all ${
                   items[0]?.url
                     ? darkMode ? "border-cyan-400/40" : "border-cyan-300/60"
                     : darkMode ? "items-center justify-center bg-black/20 p-5 text-center border-white/15" : "items-center justify-center bg-[#fffaf0] p-5 text-center border-black/15"
                 }`}>
                   {items[0]?.url ? (
                     <>
-                      <img src={items[0].url} alt="Uploaded product preview" className="min-h-[190px] w-full object-cover" />
+                      <img src={items[0].url} alt="Uploaded product preview" className="h-full w-full object-contain" />
                       <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/40 to-transparent p-3">
                         <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-black text-black/70">Tap to change</span>
                       </div>
@@ -2036,6 +2044,26 @@ export default function ProductographyPage() {
         source="productography-ai"
         context="product shoot"
       />
+
+      {showRatingModal && (
+        <RatingFeedbackModal
+          generationId={ratingGenerationId}
+          agent="productography"
+          onClose={() => setShowRatingModal(false)}
+          onCreditsAwarded={(credits) => {
+            setShowRatingModal(false);
+            setCongratsCredits(credits);
+            setShowCongratsPopup(true);
+            refreshProfile();
+          }}
+        />
+      )}
+      {showCongratsPopup && (
+        <CongratulationsPopup
+          credits={congratsCredits}
+          onClose={() => setShowCongratsPopup(false)}
+        />
+      )}
 
       <StickyMobileCTA
         ctaName="productography_sticky_mobile"

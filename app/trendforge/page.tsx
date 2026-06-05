@@ -5,6 +5,8 @@ import { ChangeEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "../components/ThemeProvider";
+import RatingFeedbackModal from "@/app/components/RatingFeedbackModal";
+import CongratulationsPopup from "@/app/components/CongratulationsPopup";
 
 type Trend = {
   id: string;
@@ -95,6 +97,9 @@ export default function TrendForgePage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
   const [resultUrl, setResultUrl] = useState("");
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [showCongratsPopup, setShowCongratsPopup] = useState(false);
+  const [congratsCredits, setCongratsCredits] = useState(0);
 
   const bg = darkMode ? "bg-[#070b14] text-white" : "bg-[#fff8e8] text-[#111827]";
   const card = darkMode ? "border-white/10 bg-white/[0.07] shadow-black/40" : "border-black/10 bg-white/80 shadow-black/10";
@@ -181,6 +186,7 @@ export default function TrendForgePage() {
       }
 
       setResultUrl(data.image_url || data.output_url || "");
+      setShowRatingModal(true);
     } catch (err: any) {
       setError(err?.message || "Something went wrong while generating your viral image.");
     } finally {
@@ -260,9 +266,9 @@ export default function TrendForgePage() {
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">
-              <label className={`group flex min-h-[330px] cursor-pointer flex-col items-center justify-center rounded-[1.75rem] border border-dashed p-5 text-center transition hover:border-cyan-400 ${softCard}`}>
+              <label className={`group flex h-[330px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[1.75rem] border border-dashed p-5 text-center transition hover:border-cyan-400 ${softCard}`}>
                 {previewUrl ? (
-                  <img src={previewUrl} alt="Uploaded preview" className="h-[290px] w-full rounded-[1.35rem] object-cover" />
+                  <img src={previewUrl} alt="Uploaded preview" className="h-full w-full rounded-[1.35rem] object-contain" />
                 ) : (
                   <div>
                     <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-cyan-400/15 text-3xl">
@@ -382,6 +388,24 @@ export default function TrendForgePage() {
           </div>
         </section>
       </div>
+
+      {showRatingModal && (
+        <RatingFeedbackModal
+          agent="trendforge"
+          onClose={() => setShowRatingModal(false)}
+          onCreditsAwarded={(c) => {
+            setShowRatingModal(false);
+            setCongratsCredits(c);
+            setShowCongratsPopup(true);
+          }}
+        />
+      )}
+      {showCongratsPopup && (
+        <CongratulationsPopup
+          credits={congratsCredits}
+          onClose={() => setShowCongratsPopup(false)}
+        />
+      )}
     </main>
   );
 }
