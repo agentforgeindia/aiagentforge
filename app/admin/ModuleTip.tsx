@@ -55,6 +55,14 @@ const TIPS: Record<string, Tip> = {
       "'New lead' se manually add karo.",
     ],
   },
+  "Templates & Links": {
+    what: "Ready-to-send WhatsApp messages + saare important links (pages, pricing, tutorials, social).",
+    steps: [
+      "WhatsApp tab se message 'Copy' karke customer ko bhejo.",
+      "Har template pe 💡 likha hai kab use karna hai.",
+      "Links tab se koi bhi page/social link copy ya open karo.",
+    ],
+  },
   "🏆 Sales War Room": {
     what: "Poori sales team ek jagah — ranks, sales, incentives, kudos. Ek dusre ko appreciate karo!",
     steps: [

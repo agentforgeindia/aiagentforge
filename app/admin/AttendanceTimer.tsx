@@ -31,8 +31,16 @@ export default function AttendanceTimer({ email }: { email: string }) {
   const [notes, setNotes]         = useState("");
   const [loading, setLoading]     = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [onBreak, setOnBreak]     = useState<{ id: string; type: string } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
+  const lastActivity = useRef<number>(Date.now());
+  const sessionRef = useRef<ActiveSession | null>(null);
+  const onBreakRef = useRef<boolean>(false);
+  sessionRef.current = session;
+  onBreakRef.current = Boolean(onBreak);
+
+  const IDLE_MS = 10 * 60 * 1000; // 10 minutes
 
   // Load active session on mount
   useEffect(() => {
@@ -41,10 +49,41 @@ export default function AttendanceTimer({ email }: { email: string }) {
       if (data) {
         setSession(data as ActiveSession);
         setNotes(data.work_notes ?? "");
+      } else {
+        // Morning auto-popup — prompt to start session once per day.
+        try {
+          const key = `af_att_prompt_${new Date().toISOString().slice(0,10)}`;
+          if (!localStorage.getItem(key)) { setOpen(true); localStorage.setItem(key, "1"); }
+        } catch { /* ignore */ }
       }
       setInitialLoad(false);
     })();
   }, []);
+
+  // Idle auto-logout — 10 min no activity (and not on break) ends session.
+  useEffect(() => {
+    const mark = () => { lastActivity.current = Date.now(); };
+    ["mousemove", "keydown", "click", "scroll", "touchstart"].forEach((e) => window.addEventListener(e, mark, { passive: true }));
+    const iv = window.setInterval(() => {
+      if (sessionRef.current && !onBreakRef.current && Date.now() - lastActivity.current > IDLE_MS) {
+        autoLogout();
+      }
+    }, 30000);
+    return () => {
+      ["mousemove", "keydown", "click", "scroll", "touchstart"].forEach((e) => window.removeEventListener(e, mark));
+      clearInterval(iv);
+    };
+  }, []);
+
+  async function autoLogout() {
+    const s = sessionRef.current;
+    if (!s) return;
+    await supabase.from("attendance_logs")
+      .update({ check_out: new Date().toISOString(), auto_logout: true })
+      .eq("id", s.id);
+    setSession(null);
+    try { localStorage.setItem("af_att_autologout", "1"); } catch { /* ignore */ }
+  }
 
   // Live timer
   useEffect(() => {
@@ -71,16 +110,42 @@ export default function AttendanceTimer({ email }: { email: string }) {
   async function checkIn() {
     setLoading(true);
     const name = email.split("@")[0];
+
+    // If the previous session was auto-logged-out (idle), ask why.
+    let reloginReason: string | null = null;
+    try {
+      if (localStorage.getItem("af_att_autologout") === "1") {
+        reloginReason = prompt("Aap session se 10+ min door the (auto logout). Reason batao (TL ko report jaayegi):") || "No reason given";
+        localStorage.removeItem("af_att_autologout");
+      }
+    } catch { /* ignore */ }
+
     const { data, error } = await supabase
       .from("attendance_logs")
-      .insert({ member_email: email, member_name: name, work_notes: notes || null })
+      .insert({ member_email: email, member_name: name, work_notes: notes || null, relogin_reason: reloginReason })
       .select("id, check_in, work_notes")
       .single();
     if (!error && data) {
       setSession(data as ActiveSession);
+      lastActivity.current = Date.now();
       setOpen(false);
     }
     setLoading(false);
+  }
+
+  // ── Breaks ──
+  async function startBreak(type: "lunch" | "tea") {
+    if (!session) return;
+    const { data } = await supabase.from("attendance_breaks")
+      .insert({ log_id: session.id, member_email: email, break_type: type })
+      .select("id").single();
+    if (data) setOnBreak({ id: data.id, type });
+  }
+  async function endBreak() {
+    if (!onBreak) return;
+    await supabase.from("attendance_breaks").update({ ended_at: new Date().toISOString() }).eq("id", onBreak.id);
+    setOnBreak(null);
+    lastActivity.current = Date.now();
   }
 
   async function checkOut() {
@@ -149,13 +214,36 @@ export default function AttendanceTimer({ email }: { email: string }) {
 
           {/* Timer display */}
           {session && (
-            <div className="bg-emerald-50 px-4 py-3 text-center dark:bg-emerald-500/5">
-              <p className="text-3xl font-bold tabular-nums text-emerald-600 dark:text-emerald-300">
+            <div className={`px-4 py-3 text-center ${onBreak ? "bg-amber-50 dark:bg-amber-500/5" : "bg-emerald-50 dark:bg-emerald-500/5"}`}>
+              <p className={`text-3xl font-bold tabular-nums ${onBreak ? "text-amber-600 dark:text-amber-300" : "text-emerald-600 dark:text-emerald-300"}`}>
                 {formatDuration(elapsed)}
               </p>
-              <p className="mt-0.5 text-[11px] text-emerald-600/70 dark:text-emerald-400/70">
-                Total time online today
+              <p className={`mt-0.5 text-[11px] ${onBreak ? "text-amber-600/70 dark:text-amber-400/70" : "text-emerald-600/70 dark:text-emerald-400/70"}`}>
+                {onBreak ? `On ${onBreak.type} break ☕` : "Total time online today"}
               </p>
+            </div>
+          )}
+
+          {/* Break controls */}
+          {session && (
+            <div className="flex gap-2 border-t border-slate-200 px-4 py-2.5 dark:border-slate-800">
+              {onBreak ? (
+                <button type="button" onClick={endBreak}
+                  className="flex-1 rounded-md bg-emerald-600 py-2 text-xs font-bold text-white hover:bg-emerald-500">
+                  ▶ Resume Work
+                </button>
+              ) : (
+                <>
+                  <button type="button" onClick={() => startBreak("lunch")}
+                    className="flex-1 rounded-md border border-amber-300 bg-amber-50 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100 dark:border-amber-700/40 dark:bg-amber-500/10 dark:text-amber-300">
+                    🍽️ Lunch Break
+                  </button>
+                  <button type="button" onClick={() => startBreak("tea")}
+                    className="flex-1 rounded-md border border-amber-300 bg-amber-50 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100 dark:border-amber-700/40 dark:bg-amber-500/10 dark:text-amber-300">
+                    ☕ Tea Break
+                  </button>
+                </>
+              )}
             </div>
           )}
 
