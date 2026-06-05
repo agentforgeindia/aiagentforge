@@ -5,9 +5,9 @@ import AdminShell from "@/app/admin/AdminShell";
 import { useAdminPermissions } from "@/app/admin/AdminPermissions";
 import { supabase } from "@/lib/supabase";
 import {
-  User, Phone, Mail, MapPin, Briefcase, Calendar, Camera,
-  Save, Loader2, CheckCircle, AlertCircle, Github, Linkedin,
-  CreditCard, Building, Shield, Star, Clock,
+  User, Phone, MapPin, Briefcase, Calendar, Camera,
+  Save, Loader2, CheckCircle, AlertCircle,
+  CreditCard, Building, Shield, Star, Clock, Link,
 } from "lucide-react";
 
 type Profile = {
@@ -194,11 +194,11 @@ export default function MyProfilePage() {
                     <p className={sectionTitleCls}><Star className="h-4 w-4 text-amber-500" /> Skills & Social</p>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
-                        <label className={labelCls}><Linkedin className="h-3.5 w-3.5" /> LinkedIn</label>
+                        <label className={labelCls}><Link className="h-3.5 w-3.5" /> LinkedIn</label>
                         <input className={inputCls} value={form.linkedin} onChange={e => set("linkedin", e.target.value)} placeholder="linkedin.com/in/..." />
                       </div>
                       <div>
-                        <label className={labelCls}><Github className="h-3.5 w-3.5" /> GitHub</label>
+                        <label className={labelCls}><Link className="h-3.5 w-3.5" /> GitHub</label>
                         <input className={inputCls} value={form.github} onChange={e => set("github", e.target.value)} placeholder="github.com/..." />
                       </div>
                       <div className="sm:col-span-2">
