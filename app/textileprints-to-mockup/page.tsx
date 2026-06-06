@@ -111,7 +111,9 @@ const isEmpireProfile = (profile: any) => {
     profile?.is_empire ||
     profile?.empire_pack ||
     profile?.has_empire ||
-    planText.includes("empire"),
+    planText.includes("empire") ||
+    planText.includes("founder") ||
+    planText.includes("unlimited"),
   );
 };
 
