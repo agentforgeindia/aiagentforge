@@ -41,7 +41,6 @@ export default function Navbar() {
     { label: "Gallery", href: "/gallery" },
     { label: "Influencer Hub", href: "/influencer-hub" },
     { label: "Tutorials", href: "/tutorials" },
-    { label: "News & Blog", href: "/news" },
     { label: "Pricing", href: "/pricing" },
     { label: "About", href: "/about" },
   ];
