@@ -8,7 +8,7 @@ import { useParams } from "next/navigation";
 import { MapPin, Navigation, CheckCircle2, Building2 } from "lucide-react";
 
 // ── AgentForge office location (UPDATE these to the real coords) ──
-const OFFICE = { lat: 19.0760, lng: 72.8777, label: "AgentForge HQ" };
+const OFFICE = { lat: 19.26621226817183, lng: 72.96567637084333, label: "AgentForge HQ" };
 
 function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371;
@@ -92,7 +92,7 @@ export default function DetailsPage() {
   }, [coords]);
 
   async function submit() {
-    if (!address || !landmark) { setError("Address aur nearest landmark zaroori hai."); return; }
+    if (!address || !landmark) { setError("Full address and nearest landmark are required."); return; }
     setSaving(true); setError(null);
     const res = await fetch("/api/careers/details", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -121,15 +121,15 @@ export default function DetailsPage() {
             <p className="text-5xl">🎉</p>
             <h1 className="mt-3 text-2xl font-black">Details <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">Submitted!</span></h1>
             <p className="mt-2 text-sm font-medium text-black/60 dark:text-white/60">
-              Shukriya! Hamari team aapki details review karke jald hi interview ke liye contact karegi.
+              Thank you! Our team will review your details and contact you shortly to schedule an interview.
             </p>
-            {dist != null && <p className="mt-3 text-xs font-bold text-cyan-700 dark:text-cyan-300">📍 Office se distance: {dist.toFixed(1)} km</p>}
+            {dist != null && <p className="mt-3 text-xs font-bold text-cyan-700 dark:text-cyan-300">📍 Distance from office: {dist.toFixed(1)} km</p>}
           </div>
         ) : (
           <>
             <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-600">You Passed · Final Step</p>
             <h1 className="mt-2 text-3xl font-black">Complete your <span className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">details</span></h1>
-            <p className="mt-1 text-sm font-medium text-black/55 dark:text-white/55">Address aur location share karo — interview schedule karne mein help karega.</p>
+            <p className="mt-1 text-sm font-medium text-black/55 dark:text-white/55">Share your address and location — this helps us schedule your interview.</p>
 
             <div className="mt-6 space-y-3">
               <textarea className={input} rows={2} placeholder="Full address (house/flat, street, area) *" value={address} onChange={(e) => setAddress(e.target.value)} />
@@ -183,7 +183,7 @@ export default function DetailsPage() {
                   </div>
                   <div ref={mapRef} className="h-56 w-full overflow-hidden rounded-xl" style={{ background: "#e5f3f6" }} />
                   <p className="mt-2 flex items-center gap-1 text-[11px] font-medium text-black/45 dark:text-white/45">
-                    <MapPin className="h-3 w-3" />Aapki location aur office ke beech ki doori.
+                    <MapPin className="h-3 w-3" />Distance between your location and our office.
                   </p>
                 </div>
               )}
