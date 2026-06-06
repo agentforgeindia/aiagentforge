@@ -1,6 +1,6 @@
 // POST /api/careers/submit  (PUBLIC)
-// Grades answers server-side, saves the attempt, updates the
-// candidate's scores + pipeline stage + AI recommendation.
+// Grades answers server-side, saves attempt, updates stage.
+// On pass: inserts recruitment_notification for HR/high command.
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -15,14 +15,14 @@ function svc() {
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
-const PASS_THRESHOLD = 60; // %
+const PASS_THRESHOLD = 60;
 
 export async function POST(req: Request) {
-  const b = await req.json().catch(() => ({}));
-  const candidateId: string = b.candidate_id;
-  const answers: Record<string, number> = b.answers ?? {};   // {questionId: selectedIdx}
-  const cheatFlags: number = Number(b.cheat_flags ?? 0);
-  const durationSecs: number = Number(b.duration_secs ?? 0);
+  const b              = await req.json().catch(() => ({}));
+  const candidateId: string    = b.candidate_id;
+  const answers: Record<string, number> = b.answers ?? {};
+  const cheatFlags: number     = Number(b.cheat_flags ?? 0);
+  const durationSecs: number   = Number(b.duration_secs ?? 0);
 
   if (!candidateId) return NextResponse.json({ error: "candidate_id required" }, { status: 400 });
 
@@ -31,7 +31,6 @@ export async function POST(req: Request) {
   const qIds = Object.keys(answers);
   if (qIds.length === 0) return NextResponse.json({ error: "No answers submitted" }, { status: 400 });
 
-  // Fetch correct answers for the submitted questions
   const { data: qs } = await db.from("recruitment_questions")
     .select("id, section, correct_idx")
     .in("id", qIds);
@@ -44,10 +43,7 @@ export async function POST(req: Request) {
     bySection[sec] ??= { correct: 0, total: 0 };
     bySection[sec].total++;
     totalQ++;
-    if (answers[q.id] === q.correct_idx) {
-      bySection[sec].correct++;
-      totalCorrect++;
-    }
+    if (answers[q.id] === q.correct_idx) { bySection[sec].correct++; totalCorrect++; }
   }
 
   const sectionScores: Record<string, number> = {};
@@ -55,26 +51,21 @@ export async function POST(req: Request) {
     sectionScores[sec] = v.total ? Math.round((v.correct / v.total) * 100) : 0;
   }
   const totalScore = totalQ ? Math.round((totalCorrect / totalQ) * 100) : 0;
-  const passed = totalScore >= PASS_THRESHOLD && cheatFlags < 3;
+  const passed     = totalScore >= PASS_THRESHOLD && cheatFlags < 3;
+  const trust      = Math.max(0, 100 - cheatFlags * 20);
+  const aiRec      = !passed ? "reject" : totalScore >= 80 && trust >= 80 ? "hire" : "hold";
 
-  // Trust score: drops with cheat flags
-  const trust = Math.max(0, 100 - cheatFlags * 20);
-
-  // AI recommendation
-  const aiRec = !passed ? "reject" : totalScore >= 80 && trust >= 80 ? "hire" : "hold";
-
-  // Attempt number
-  const { count } = await db.from("assessment_attempts").select("id", { count: "exact", head: true }).eq("candidate_id", candidateId);
+  const { count } = await db.from("assessment_attempts")
+    .select("id", { count: "exact", head: true })
+    .eq("candidate_id", candidateId);
   const attemptNo = (count ?? 0) + 1;
 
-  // Save attempt
   await db.from("assessment_attempts").insert({
     candidate_id: candidateId, attempt_no: attemptNo,
     section_scores: sectionScores, total_score: totalScore,
     passed, cheat_flags: cheatFlags, duration_secs: durationSecs,
   });
 
-  // Update candidate
   await db.from("candidates").update({
     knowledge_score: sectionScores["basic"] ?? null,
     product_score:   sectionScores["product"] ?? null,
@@ -86,6 +77,25 @@ export async function POST(req: Request) {
     stage: passed ? "passed" : "assessment_completed",
     updated_at: new Date().toISOString(),
   }).eq("id", candidateId);
+
+  // ── Notify high command (HR + above) on pass ──
+  if (passed) {
+    const { data: cand } = await db.from("candidates")
+      .select("name, role_slug")
+      .eq("id", candidateId)
+      .maybeSingle();
+
+    try {
+      await db.from("recruitment_notifications").insert({
+        candidate_id:   candidateId,
+        candidate_name: cand?.name ?? "Unknown",
+        role_slug:      cand?.role_slug ?? null,
+        event_type:     "passed_test",
+        total_score:    totalScore,
+        details: { section_scores: sectionScores, trust_score: trust, attempt_no: attemptNo, ai_recommendation: aiRec },
+      });
+    } catch {}
+  }
 
   return NextResponse.json({
     ok: true,
