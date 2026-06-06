@@ -16,6 +16,7 @@ import {
   Gift,
   Lock,
   Mail,
+  Phone,
   Shirt,
   ShieldCheck,
   Sparkles,
@@ -35,6 +36,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [mobile, setMobile] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -68,6 +70,7 @@ export default function SignupPage() {
         id: userId,
         email: userEmail ?? trimmedEmail,
         full_name: fullName,
+        billing_phone: mobile.trim() || null,
         credits: 100,
         plan: "free",
         utm_source: utm.utm_source ?? null,
@@ -412,6 +415,20 @@ export default function SignupPage() {
                   placeholder="Password (minimum 6 characters)"
                   type="password"
                   autoComplete="new-password"
+                />
+              </div>
+
+              {/* Mobile */}
+              <div className="relative">
+                <Phone className={`pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 ${muted}`} />
+                <input
+                  value={mobile}
+                  onChange={(event) => setMobile(event.target.value)}
+                  className={inputClass}
+                  placeholder="WhatsApp / Mobile number (optional)"
+                  type="tel"
+                  autoComplete="tel"
+                  inputMode="tel"
                 />
               </div>
 
