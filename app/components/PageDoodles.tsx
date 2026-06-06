@@ -97,7 +97,7 @@ interface Props {
 
 export default function PageDoodles({ variant = "default", grid = true, glow = true }: Props) {
   const doodles = SETS[variant];
-  const glow    = GLOWS[variant];
+  const glowClass = GLOWS[variant];
 
   return (
     <>
