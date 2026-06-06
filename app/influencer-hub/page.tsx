@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Instagram, Twitter, Globe, MessageCircle, Send, ExternalLink, Star, Users } from "lucide-react";
+import { Instagram, Globe, MessageCircle, Send, ExternalLink, Star, Users } from "lucide-react";
 import { useTheme } from "@/app/components/ThemeProvider";
 
 type Influencer = {
@@ -186,7 +186,7 @@ export default function InfluencerHubPage() {
                       {inf.instagram_url && (
                         <a href={inf.instagram_url} target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-3 py-1.5 text-[11px] font-black text-white shadow transition hover:scale-[1.04]">
-                          <Instagram className="h-3.5 w-3.5" /> Instagram
+                          📸 Instagram
                         </a>
                       )}
                       {inf.youtube_url && (
@@ -198,7 +198,7 @@ export default function InfluencerHubPage() {
                       {inf.twitter_url && (
                         <a href={inf.twitter_url} target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 rounded-full bg-[#1d9bf0] px-3 py-1.5 text-[11px] font-black text-white shadow transition hover:scale-[1.04]">
-                          <Twitter className="h-3.5 w-3.5" /> Twitter / X
+                          𝕏 Twitter / X
                         </a>
                       )}
                       {inf.tiktok_url && (
