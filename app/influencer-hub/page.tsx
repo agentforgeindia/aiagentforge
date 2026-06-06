@@ -1,12 +1,13 @@
 "use client";
 
-// /influencer-hub — Public page: browse all active influencer profiles, follow, comment
+// /influencer-hub — Social media style feed: approved influencer videos, reactions, comments
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Globe, MessageCircle, Send, ExternalLink, Star, Users } from "lucide-react";
+import { MessageCircle, Send, Star, Users, Heart, Flame, ThumbsUp, Smile, Globe, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import { useTheme } from "@/app/components/ThemeProvider";
 
+// ── Types ────────────────────────────────────────────────────────────────────
 type Influencer = {
   candidate_id: string; name: string; niche?: string; bio?: string;
   profile_photo_url?: string; instagram_url?: string; youtube_url?: string;
@@ -14,295 +15,468 @@ type Influencer = {
   followers_count?: string; referral_code: string; created_at: string;
 };
 
-type Comment = {
-  id: string; influencer_candidate_id: string; commenter_name: string;
-  comment_text: string; created_at: string;
+type FeedItem = {
+  video_id: string; candidate_id: string; video_url: string;
+  platform?: string; caption?: string; created_at: string;
+  influencer_name: string; niche?: string; bio?: string;
+  profile_photo_url?: string; instagram_url?: string; youtube_url?: string;
+  twitter_url?: string; tiktok_url?: string; website_url?: string;
+  referral_code: string;
 };
 
+type Reaction = { video_id: string; reaction_type: string; user_key: string };
+type VComment = { id: string; video_id: string; commenter_name: string; comment_text: string; created_at: string };
+type PComment = { id: string; influencer_candidate_id: string; commenter_name: string; comment_text: string; created_at: string };
+
+const REACTIONS = [
+  { type: "like",  emoji: "👍", label: "Like",  Icon: ThumbsUp },
+  { type: "love",  emoji: "❤️", label: "Love",  Icon: Heart },
+  { type: "fire",  emoji: "🔥", label: "Fire",  Icon: Flame },
+  { type: "wow",   emoji: "😮", label: "Wow",   Icon: Smile },
+];
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function getUserKey(): string {
+  if (typeof window === "undefined") return "anon";
+  let k = localStorage.getItem("__hub_uk");
+  if (!k) { k = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem("__hub_uk", k); }
+  return k;
+}
+
+function Initials({ name, size = "md" }: { name: string; size?: "sm" | "md" | "lg" }) {
+  const parts = name.trim().split(" ");
+  const init = ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase();
+  const s = size === "sm" ? "h-8 w-8 text-xs" : size === "lg" ? "h-14 w-14 text-xl" : "h-10 w-10 text-sm";
+  return (
+    <div className={`flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 font-black text-white shadow ${s}`}>
+      {init}
+    </div>
+  );
+}
+
+function Avatar({ name, url, size = "md" }: { name: string; url?: string; size?: "sm" | "md" | "lg" }) {
+  const s = size === "sm" ? "h-8 w-8" : size === "lg" ? "h-14 w-14" : "h-10 w-10";
+  if (url) return <img src={url} alt={name} className={`${s} shrink-0 rounded-full object-cover shadow`} />;
+  return <Initials name={name} size={size} />;
+}
+
+function PlatformBadge({ platform }: { platform?: string }) {
+  const map: Record<string, { label: string; cls: string }> = {
+    instagram: { label: "📸 Instagram", cls: "bg-gradient-to-r from-pink-500 to-rose-500" },
+    youtube:   { label: "▶ YouTube",    cls: "bg-gradient-to-r from-rose-600 to-red-600" },
+    facebook:  { label: "👥 Facebook",  cls: "bg-blue-600" },
+    tiktok:    { label: "🎵 TikTok",    cls: "bg-[#010101]" },
+    other:     { label: "🔗 Other",     cls: "bg-slate-600" },
+  };
+  const p = map[platform?.toLowerCase() ?? ""] ?? map["other"];
+  return <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-black text-white ${p.cls}`}>{p.label}</span>;
+}
+
+function SocialLinks({ inf }: { inf: Influencer | FeedItem }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {inf.instagram_url && <a href={inf.instagram_url} target="_blank" rel="noopener noreferrer" className="rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-3 py-1 text-[11px] font-black text-white transition hover:scale-105">📸 Instagram</a>}
+      {inf.youtube_url   && <a href={inf.youtube_url}   target="_blank" rel="noopener noreferrer" className="rounded-full bg-gradient-to-r from-rose-600 to-red-600 px-3 py-1 text-[11px] font-black text-white transition hover:scale-105">▶ YouTube</a>}
+      {inf.twitter_url   && <a href={inf.twitter_url}   target="_blank" rel="noopener noreferrer" className="rounded-full bg-[#1d9bf0] px-3 py-1 text-[11px] font-black text-white transition hover:scale-105">𝕏 Twitter</a>}
+      {inf.tiktok_url    && <a href={inf.tiktok_url}    target="_blank" rel="noopener noreferrer" className="rounded-full bg-[#010101] border border-white/20 px-3 py-1 text-[11px] font-black text-white transition hover:scale-105">🎵 TikTok</a>}
+      {inf.website_url   && <a href={inf.website_url}   target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-3 py-1 text-[11px] font-black text-slate-700 transition hover:scale-105 dark:border-white/20 dark:bg-white/10 dark:text-white"><Globe className="h-3 w-3" /> Website</a>}
+    </div>
+  );
+}
+
+// ── Main Page ────────────────────────────────────────────────────────────────
 export default function InfluencerHubPage() {
   const { darkMode } = useTheme();
-  const [influencers, setInfluencers] = useState<Influencer[]>([]);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Comment form state per influencer
-  const [commentForm, setCommentForm] = useState<Record<string, { name: string; text: string; sending: boolean; sent: boolean }>>({});
+  const [influencers, setInfluencers]   = useState<Influencer[]>([]);
+  const [feed, setFeed]                 = useState<FeedItem[]>([]);
+  const [reactions, setReactions]       = useState<Reaction[]>([]);
+  const [vComments, setVComments]       = useState<VComment[]>([]);
+  const [pComments, setPComments]       = useState<PComment[]>([]);
+  const [loading, setLoading]           = useState(true);
 
-  useEffect(() => {
-    fetch("/api/influencer-hub")
-      .then(r => r.json())
-      .then(d => {
-        if (d.ok) { setInfluencers(d.influencers); setComments(d.comments); }
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  const [activeTab, setActiveTab]       = useState<"feed" | "creators">("feed");
+  const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
+  const [expandedProfile,  setExpandedProfile]  = useState<string | null>(null);
 
-  function getForm(id: string) {
-    return commentForm[id] ?? { name: "", text: "", sending: false, sent: false };
+  // comment forms: { name, text, sending }
+  const [vcForms, setVcForms] = useState<Record<string, { name: string; text: string; sending: boolean }>>({});
+  const [pcForms, setPcForms] = useState<Record<string, { name: string; text: string; sending: boolean }>>({});
+
+  const userKey = typeof window !== "undefined" ? getUserKey() : "anon";
+
+  async function load() {
+    setLoading(true);
+    const r = await fetch("/api/influencer-hub");
+    const d = await r.json();
+    if (d.ok) {
+      setInfluencers(d.influencers);
+      setFeed(d.feed);
+      setReactions(d.reactions);
+      setVComments(d.video_comments);
+      setPComments(d.profile_comments);
+    }
+    setLoading(false);
   }
-  function setForm(id: string, patch: Partial<typeof commentForm[string]>) {
-    setCommentForm(prev => ({ ...prev, [id]: { ...getForm(id), ...patch } }));
-  }
 
-  async function postComment(influencer_candidate_id: string) {
-    const f = getForm(influencer_candidate_id);
-    if (!f.name.trim() || !f.text.trim()) return;
-    setForm(influencer_candidate_id, { sending: true });
-    try {
-      const res = await fetch("/api/influencer-hub", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ influencer_candidate_id, commenter_name: f.name, comment_text: f.text }),
-      });
-      const d = await res.json();
-      if (d.ok) {
-        setForm(influencer_candidate_id, { name: "", text: "", sent: true, sending: false });
-        setComments(prev => [...prev, {
-          id: Date.now().toString(), influencer_candidate_id,
-          commenter_name: f.name, comment_text: f.text,
-          created_at: new Date().toISOString(),
-        }]);
-        setTimeout(() => setForm(influencer_candidate_id, { sent: false }), 3000);
-      } else {
-        alert(d.error ?? "Could not post comment.");
-        setForm(influencer_candidate_id, { sending: false });
+  useEffect(() => { load(); }, []);
+
+  // ── Reactions ──
+  async function react(video_id: string, reaction_type: string) {
+    // Optimistic update
+    setReactions(prev => {
+      const existing = prev.find(r => r.video_id === video_id && r.user_key === userKey);
+      if (existing) {
+        if (existing.reaction_type === reaction_type) return prev.filter(r => !(r.video_id === video_id && r.user_key === userKey));
+        return prev.map(r => r.video_id === video_id && r.user_key === userKey ? { ...r, reaction_type } : r);
       }
-    } catch {
-      alert("Network error.");
-      setForm(influencer_candidate_id, { sending: false });
+      return [...prev, { video_id, user_key: userKey, reaction_type }];
+    });
+    await fetch("/api/influencer-hub", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "video_reaction", video_id, user_key: userKey, reaction_type }),
+    });
+  }
+
+  // ── Video comment ──
+  async function postVideoComment(video_id: string) {
+    const f = vcForms[video_id] ?? { name: "", text: "", sending: false };
+    if (!f.name.trim() || !f.text.trim()) return;
+    setVcForms(p => ({ ...p, [video_id]: { ...f, sending: true } }));
+    const res = await fetch("/api/influencer-hub", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "video_comment", video_id, commenter_name: f.name, comment_text: f.text }),
+    });
+    const d = await res.json();
+    if (d.ok) {
+      setVComments(p => [...p, { id: Date.now().toString(), video_id, commenter_name: f.name, comment_text: f.text, created_at: new Date().toISOString() }]);
+      setVcForms(p => ({ ...p, [video_id]: { name: f.name, text: "", sending: false } }));
+    } else {
+      alert(d.error); setVcForms(p => ({ ...p, [video_id]: { ...f, sending: false } }));
     }
   }
 
-  const card = darkMode ? "border-white/10 bg-[#111827]" : "border-slate-200 bg-white";
-  const mutedCls = darkMode ? "text-slate-400" : "text-slate-500";
-  const fmt = (d: string) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  // ── Profile comment ──
+  async function postProfileComment(influencer_candidate_id: string) {
+    const f = pcForms[influencer_candidate_id] ?? { name: "", text: "", sending: false };
+    if (!f.name.trim() || !f.text.trim()) return;
+    setPcForms(p => ({ ...p, [influencer_candidate_id]: { ...f, sending: true } }));
+    const res = await fetch("/api/influencer-hub", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "profile_comment", influencer_candidate_id, commenter_name: f.name, comment_text: f.text }),
+    });
+    const d = await res.json();
+    if (d.ok) {
+      setPComments(p => [...p, { id: Date.now().toString(), influencer_candidate_id, commenter_name: f.name, comment_text: f.text, created_at: new Date().toISOString() }]);
+      setPcForms(p => ({ ...p, [influencer_candidate_id]: { name: f.name, text: "", sending: false } }));
+    } else {
+      alert(d.error); setPcForms(p => ({ ...p, [influencer_candidate_id]: { ...f, sending: false } }));
+    }
+  }
 
-  function Initials({ name }: { name: string }) {
-    const parts = name.trim().split(" ");
-    const init = (parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "");
+  // ── Styles ──
+  const bg      = darkMode ? "bg-[#0a0d14]" : "bg-[#f1f3f8]";
+  const card    = darkMode ? "bg-[#111827] border-white/10" : "bg-white border-slate-200";
+  const muted   = darkMode ? "text-slate-400" : "text-slate-500";
+  const inputCls = `w-full rounded-full border px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400/30 ${darkMode ? "border-white/10 bg-white/5 text-white placeholder-white/30" : "border-slate-200 bg-slate-50 text-slate-800 placeholder-slate-400"}`;
+  const fmt = (d: string) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  const fmtAgo = (d: string) => {
+    const diff = Date.now() - new Date(d).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return "just now";
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+  };
+
+  // ── Video player/embed ──
+  function VideoPlayer({ url, platform }: { url: string; platform?: string }) {
+    const isVideo = /\.(mp4|mov|webm|ogg)(\?|$)/i.test(url);
+    const isYouTube = /youtube\.com|youtu\.be/.test(url);
+    const isInsta = /instagram\.com/.test(url);
+
+    if (isVideo) return (
+      <video controls className="max-h-96 w-full rounded-xl bg-black object-contain" preload="metadata">
+        <source src={url} />
+      </video>
+    );
+    if (isYouTube) {
+      const videoId = url.match(/(?:v=|youtu\.be\/)([^&\s]+)/)?.[1];
+      if (videoId) return (
+        <iframe className="aspect-video w-full rounded-xl" src={`https://www.youtube.com/embed/${videoId}`}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+      );
+    }
+    // Fallback: link card
     return (
-      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 text-xl font-black text-white shadow-lg">
-        {init.toUpperCase()}
+      <a href={url} target="_blank" rel="noopener noreferrer"
+        className={`flex items-center justify-center gap-3 rounded-xl border p-6 transition hover:border-purple-400 ${card}`}>
+        <ExternalLink className="h-6 w-6 text-purple-500" />
+        <span className="text-sm font-bold">Watch on {platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : "Platform"} →</span>
+      </a>
+    );
+  }
+
+  // ── Reaction counts ──
+  function ReactionBar({ video_id }: { video_id: string }) {
+    const myReaction = reactions.find(r => r.video_id === video_id && r.user_key === userKey)?.reaction_type;
+    const counts = REACTIONS.reduce((acc, r) => {
+      acc[r.type] = reactions.filter(x => x.video_id === video_id && x.reaction_type === r.type).length;
+      return acc;
+    }, {} as Record<string, number>);
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+
+    return (
+      <div className="flex items-center gap-2">
+        <div className="flex gap-1">
+          {REACTIONS.map(r => (
+            <button key={r.type} onClick={() => react(video_id, r.type)}
+              title={r.label}
+              className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold transition hover:scale-110 ${
+                myReaction === r.type
+                  ? "bg-purple-500/20 text-purple-400 ring-1 ring-purple-400/40"
+                  : darkMode ? "bg-white/5 text-white/60 hover:bg-white/10" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}>
+              <span>{r.emoji}</span>
+              {counts[r.type] > 0 && <span className="tabular-nums">{counts[r.type]}</span>}
+            </button>
+          ))}
+        </div>
+        {total > 0 && <span className={`text-xs ${muted}`}>{total} reaction{total !== 1 ? "s" : ""}</span>}
       </div>
     );
   }
 
-  const NICHE_COLORS: Record<string, string> = {
-    fashion: "from-pink-400 to-rose-500",
-    jewellery: "from-amber-400 to-orange-500",
-    textile: "from-emerald-400 to-teal-500",
-    tech: "from-blue-400 to-indigo-500",
-    fitness: "from-green-400 to-emerald-600",
-    food: "from-orange-400 to-red-500",
-    beauty: "from-pink-400 to-fuchsia-500",
-  };
-  const nicheColor = (n?: string) => NICHE_COLORS[n?.toLowerCase() ?? ""] ?? "from-purple-400 to-pink-500";
+  // ── Feed Post ──
+  function FeedPost({ item }: { item: FeedItem }) {
+    const videoComments = vComments.filter(c => c.video_id === item.video_id);
+    const showComments = expandedComments[item.video_id];
+    const f = vcForms[item.video_id] ?? { name: "", text: "", sending: false };
 
-  return (
-    <main className={`min-h-screen ${darkMode ? "bg-[#0a0d14] text-white" : "bg-[#f8f9fc] text-slate-900"}`}>
-
-      {/* ── Hero ── */}
-      <div className={`relative overflow-hidden ${darkMode ? "bg-[#0d1017]" : "bg-white"} border-b ${darkMode ? "border-white/10" : "border-slate-100"}`}>
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,#a855f722,transparent_55%),radial-gradient(circle_at_bottom_left,#ec489915,transparent_55%)]" />
-        <div className="relative mx-auto max-w-5xl px-5 py-16 text-center">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-purple-400/30 bg-purple-400/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-purple-400">
-            🌟 Influencer Hub
-          </div>
-          <h1 className="text-4xl font-black sm:text-5xl">
-            Meet Our{" "}
-            <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
-              Creator Community
-            </span>
-          </h1>
-          <p className={`mx-auto mt-4 max-w-xl text-sm font-medium leading-relaxed ${mutedCls}`}>
-            These are the content creators and influencers who partner with AgentForge AI.
-            Follow them on their platforms, leave a comment, and support their work.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/careers/influencer" className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-2.5 text-xs font-black text-white shadow-lg transition hover:scale-[1.02]">
-              <Star className="mr-1.5 inline h-3.5 w-3.5" /> Join as Influencer
-            </Link>
-            <Link href="/" className={`rounded-full border px-6 py-2.5 text-xs font-black transition hover:scale-[1.02] ${card}`}>
-              ← Back to Home
-            </Link>
+    return (
+      <article className={`overflow-hidden rounded-2xl border ${card} shadow-sm`}>
+        {/* Post header */}
+        <div className="flex items-center gap-3 px-4 pt-4 pb-3">
+          <Avatar name={item.influencer_name} url={item.profile_photo_url} />
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-black text-sm">{item.influencer_name}</span>
+              {item.niche && <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-black text-purple-700 dark:bg-purple-500/20 dark:text-purple-300">{item.niche}</span>}
+              <PlatformBadge platform={item.platform} />
+            </div>
+            <p className={`text-[11px] ${muted}`}>{fmtAgo(item.created_at)}</p>
           </div>
         </div>
-      </div>
 
-      {/* ── Influencer Grid ── */}
-      <div className="mx-auto max-w-5xl px-5 py-12">
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className={`text-sm ${mutedCls}`}>Loading creators…</div>
-          </div>
-        ) : influencers.length === 0 ? (
-          <div className={`rounded-3xl border p-16 text-center ${card}`}>
-            <Users className={`mx-auto h-12 w-12 ${mutedCls}`} />
-            <h2 className="mt-4 text-xl font-black">No creators yet</h2>
-            <p className={`mt-2 text-sm ${mutedCls}`}>Be the first to join our influencer programme!</p>
-            <Link href="/careers/influencer" className="mt-5 inline-block rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-2.5 text-xs font-black text-white shadow">Apply Now →</Link>
-          </div>
-        ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {influencers.map(inf => {
-              const infComments = comments.filter(c => c.influencer_candidate_id === inf.candidate_id);
-              const isExpanded = expandedId === inf.candidate_id;
-              const f = getForm(inf.candidate_id);
+        {/* Video */}
+        <div className="px-4">
+          <VideoPlayer url={item.video_url} platform={item.platform} />
+        </div>
 
-              return (
-                <div key={inf.candidate_id} className={`flex flex-col overflow-hidden rounded-3xl border transition ${card} ${isExpanded ? "sm:col-span-2 lg:col-span-3" : ""}`}>
-                  {/* Card header */}
-                  <div className="p-5">
-                    <div className="flex items-start gap-4">
-                      {inf.profile_photo_url ? (
-                        <img src={inf.profile_photo_url} alt={inf.name}
-                          className="h-16 w-16 shrink-0 rounded-2xl object-cover shadow-lg" />
-                      ) : (
-                        <Initials name={inf.name} />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-start gap-2">
-                          <h2 className="text-base font-black">{inf.name}</h2>
-                          {inf.niche && (
-                            <span className={`rounded-full bg-gradient-to-r px-2.5 py-0.5 text-[10px] font-black text-white ${nicheColor(inf.niche)}`}>
-                              {inf.niche}
-                            </span>
-                          )}
-                        </div>
-                        {inf.followers_count && (
-                          <p className={`mt-0.5 text-[11px] font-bold ${mutedCls}`}>
-                            <Users className="mr-0.5 inline h-3 w-3" /> {Number(inf.followers_count).toLocaleString("en-IN")} followers
-                          </p>
-                        )}
-                        {inf.bio && (
-                          <p className={`mt-1.5 text-xs leading-relaxed ${mutedCls} line-clamp-2`}>{inf.bio}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Social links */}
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {inf.instagram_url && (
-                        <a href={inf.instagram_url} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-3 py-1.5 text-[11px] font-black text-white shadow transition hover:scale-[1.04]">
-                          📸 Instagram
-                        </a>
-                      )}
-                      {inf.youtube_url && (
-                        <a href={inf.youtube_url} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-rose-500 to-red-600 px-3 py-1.5 text-[11px] font-black text-white shadow transition hover:scale-[1.04]">
-                          ▶ YouTube
-                        </a>
-                      )}
-                      {inf.twitter_url && (
-                        <a href={inf.twitter_url} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 rounded-full bg-[#1d9bf0] px-3 py-1.5 text-[11px] font-black text-white shadow transition hover:scale-[1.04]">
-                          𝕏 Twitter / X
-                        </a>
-                      )}
-                      {inf.tiktok_url && (
-                        <a href={inf.tiktok_url} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 rounded-full bg-[#010101] px-3 py-1.5 text-[11px] font-black text-white shadow transition hover:scale-[1.04]">
-                          🎵 TikTok
-                        </a>
-                      )}
-                      {inf.website_url && (
-                        <a href={inf.website_url} target="_blank" rel="noopener noreferrer"
-                          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-black transition hover:scale-[1.04] ${card}`}>
-                          <Globe className="h-3.5 w-3.5" /> Website
-                        </a>
-                      )}
-                    </div>
-
-                    {/* Expand / Comments toggle */}
-                    <button
-                      onClick={() => setExpandedId(isExpanded ? null : inf.candidate_id)}
-                      className={`mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold transition ${mutedCls} hover:text-purple-400`}>
-                      <MessageCircle className="h-3.5 w-3.5" />
-                      {infComments.length > 0 ? `${infComments.length} comment${infComments.length !== 1 ? "s" : ""}` : "Leave a comment"}
-                      {isExpanded ? " ↑" : " ↓"}
-                    </button>
-                  </div>
-
-                  {/* Expanded: comments + form */}
-                  {isExpanded && (
-                    <div className={`border-t px-5 pb-5 pt-4 ${darkMode ? "border-white/10" : "border-slate-100"}`}>
-                      {inf.bio && (
-                        <div className={`mb-4 rounded-xl border p-3 text-xs leading-relaxed ${mutedCls} ${darkMode ? "border-white/10 bg-white/[0.03]" : "border-slate-100 bg-slate-50"}`}>
-                          {inf.bio}
-                        </div>
-                      )}
-
-                      {/* Comments list */}
-                      {infComments.length > 0 && (
-                        <div className="mb-4 space-y-2">
-                          {infComments.map(c => (
-                            <div key={c.id} className={`rounded-xl border p-3 ${darkMode ? "border-white/10 bg-white/[0.03]" : "border-slate-100 bg-slate-50"}`}>
-                              <div className="flex items-center justify-between gap-2">
-                                <span className="text-xs font-black">{c.commenter_name}</span>
-                                <span className={`text-[10px] ${mutedCls}`}>{fmt(c.created_at)}</span>
-                              </div>
-                              <p className={`mt-1 text-xs leading-relaxed ${mutedCls}`}>{c.comment_text}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Comment form */}
-                      {f.sent ? (
-                        <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-xs font-bold text-emerald-500">
-                          ✅ Comment posted! Thank you.
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <input
-                            value={f.name}
-                            onChange={e => setForm(inf.candidate_id, { name: e.target.value })}
-                            placeholder="Your name"
-                            className={`w-full rounded-xl border px-3 py-2 text-xs font-medium placeholder-slate-400 focus:outline-none ${darkMode ? "border-white/10 bg-white/5 text-white placeholder-white/30 focus:border-purple-400" : "border-slate-200 bg-white text-slate-700 focus:border-purple-400"}`}
-                          />
-                          <div className="flex gap-2">
-                            <input
-                              value={f.text}
-                              onChange={e => setForm(inf.candidate_id, { text: e.target.value })}
-                              placeholder="Leave a comment…"
-                              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); postComment(inf.candidate_id); } }}
-                              className={`flex-1 rounded-xl border px-3 py-2 text-xs font-medium placeholder-slate-400 focus:outline-none ${darkMode ? "border-white/10 bg-white/5 text-white placeholder-white/30 focus:border-purple-400" : "border-slate-200 bg-white text-slate-700 focus:border-purple-400"}`}
-                            />
-                            <button
-                              onClick={() => postComment(inf.candidate_id)}
-                              disabled={f.sending || !f.name.trim() || !f.text.trim()}
-                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-600 text-white transition hover:bg-purple-500 disabled:opacity-40">
-                              <Send className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+        {/* Caption */}
+        {item.caption && (
+          <div className="px-4 pt-3">
+            <p className="text-sm leading-relaxed"><span className="font-black">{item.influencer_name}</span> <span className={muted}>{item.caption}</span></p>
           </div>
         )}
 
-        {/* Join CTA */}
-        {!loading && influencers.length > 0 && (
-          <div className={`mt-12 rounded-3xl border p-8 text-center ${card}`}>
-            <h2 className="text-xl font-black">Want to be featured here?</h2>
-            <p className={`mt-2 text-sm ${mutedCls}`}>Apply to join the AgentForge Influencer Programme. Create content, share your link, and earn commission on every sale.</p>
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-              <Link href="/careers/influencer" className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3 text-xs font-black text-white shadow-lg transition hover:scale-[1.02]">
-                <Star className="mr-1.5 inline h-3.5 w-3.5" /> Apply Now
-              </Link>
-              <Link href="/careers/influencer" className={`rounded-full border px-5 py-3 text-xs font-black transition hover:scale-[1.02] ${card}`}>
-                Already a partner? Access Dashboard →
-              </Link>
+        {/* Social follow links */}
+        <div className="px-4 pt-3">
+          <SocialLinks inf={item} />
+        </div>
+
+        {/* Reactions */}
+        <div className={`border-t px-4 py-3 ${darkMode ? "border-white/10" : "border-slate-100"}`}>
+          <ReactionBar video_id={item.video_id} />
+        </div>
+
+        {/* Comments toggle */}
+        <div className={`border-t ${darkMode ? "border-white/10" : "border-slate-100"}`}>
+          <button
+            onClick={() => setExpandedComments(p => ({ ...p, [item.video_id]: !showComments }))}
+            className={`flex w-full items-center gap-2 px-4 py-2.5 text-xs font-bold transition ${muted} hover:text-purple-500`}>
+            <MessageCircle className="h-4 w-4" />
+            {videoComments.length > 0 ? `${videoComments.length} comment${videoComments.length !== 1 ? "s" : ""}` : "Add a comment"}
+            {showComments ? <ChevronUp className="ml-auto h-4 w-4" /> : <ChevronDown className="ml-auto h-4 w-4" />}
+          </button>
+
+          {showComments && (
+            <div className={`border-t px-4 pb-4 pt-3 ${darkMode ? "border-white/10" : "border-slate-100"}`}>
+              {/* Existing comments */}
+              {videoComments.length > 0 && (
+                <div className="mb-3 space-y-2.5 max-h-48 overflow-y-auto">
+                  {videoComments.map(c => (
+                    <div key={c.id} className="flex gap-2.5">
+                      <Initials name={c.commenter_name} size="sm" />
+                      <div className={`rounded-2xl px-3 py-2 text-xs flex-1 ${darkMode ? "bg-white/5" : "bg-slate-50"}`}>
+                        <span className="font-black">{c.commenter_name}</span>
+                        <span className={`ml-1.5 ${muted}`}>{c.comment_text}</span>
+                        <p className={`mt-0.5 text-[10px] ${muted}`}>{fmtAgo(c.created_at)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Comment form */}
+              <div className="flex gap-2">
+                <div className="flex-1 space-y-1.5">
+                  <input value={f.name} placeholder="Your name"
+                    onChange={e => setVcForms(p => ({ ...p, [item.video_id]: { ...f, name: e.target.value } }))}
+                    className={inputCls} />
+                  <div className="flex gap-2">
+                    <input value={f.text} placeholder="Write a comment…"
+                      onChange={e => setVcForms(p => ({ ...p, [item.video_id]: { ...f, text: e.target.value } }))}
+                      onKeyDown={e => { if (e.key === "Enter") postVideoComment(item.video_id); }}
+                      className={`${inputCls} flex-1`} />
+                    <button onClick={() => postVideoComment(item.video_id)} disabled={f.sending || !f.name.trim() || !f.text.trim()}
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-purple-600 text-white transition hover:bg-purple-500 disabled:opacity-40">
+                      <Send className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </article>
+    );
+  }
+
+  // ── Creator Card ──
+  function CreatorCard({ inf }: { inf: Influencer }) {
+    const infComments = pComments.filter(c => c.influencer_candidate_id === inf.candidate_id);
+    const isExpanded = expandedProfile === inf.candidate_id;
+    const f = pcForms[inf.candidate_id] ?? { name: "", text: "", sending: false };
+
+    return (
+      <div className={`overflow-hidden rounded-2xl border ${card} shadow-sm`}>
+        <div className="p-4">
+          <div className="flex gap-3">
+            <Avatar name={inf.name} url={inf.profile_photo_url} size="lg" />
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-start gap-1.5">
+                <h3 className="font-black">{inf.name}</h3>
+                {inf.niche && <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-black text-purple-700 dark:bg-purple-500/20 dark:text-purple-300">{inf.niche}</span>}
+              </div>
+              {inf.followers_count && <p className={`mt-0.5 text-[11px] font-bold ${muted}`}>👥 {Number(inf.followers_count).toLocaleString("en-IN")} followers</p>}
+              {inf.bio && <p className={`mt-1 text-xs leading-relaxed ${muted} line-clamp-2`}>{inf.bio}</p>}
+            </div>
+          </div>
+          <div className="mt-3">
+            <SocialLinks inf={inf} />
+          </div>
+          <button
+            onClick={() => setExpandedProfile(isExpanded ? null : inf.candidate_id)}
+            className={`mt-3 flex items-center gap-1.5 text-xs font-bold transition ${muted} hover:text-purple-500`}>
+            <MessageCircle className="h-3.5 w-3.5" />
+            {infComments.length > 0 ? `${infComments.length} comment${infComments.length !== 1 ? "s" : ""}` : "Say something…"}
+            {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+          </button>
+        </div>
+
+        {isExpanded && (
+          <div className={`border-t px-4 pb-4 pt-3 ${darkMode ? "border-white/10" : "border-slate-100"}`}>
+            {infComments.length > 0 && (
+              <div className="mb-3 space-y-2">
+                {infComments.slice(-5).map(c => (
+                  <div key={c.id} className="flex gap-2">
+                    <Initials name={c.commenter_name} size="sm" />
+                    <div className={`rounded-2xl px-3 py-2 text-xs flex-1 ${darkMode ? "bg-white/5" : "bg-slate-50"}`}>
+                      <span className="font-black">{c.commenter_name}</span>
+                      <span className={`ml-1.5 ${muted}`}>{c.comment_text}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="space-y-1.5">
+              <input value={f.name} placeholder="Your name"
+                onChange={e => setPcForms(p => ({ ...p, [inf.candidate_id]: { ...f, name: e.target.value } }))}
+                className={inputCls} />
+              <div className="flex gap-2">
+                <input value={f.text} placeholder="Leave a comment…"
+                  onChange={e => setPcForms(p => ({ ...p, [inf.candidate_id]: { ...f, text: e.target.value } }))}
+                  onKeyDown={e => { if (e.key === "Enter") postProfileComment(inf.candidate_id); }}
+                  className={`${inputCls} flex-1`} />
+                <button onClick={() => postProfileComment(inf.candidate_id)} disabled={f.sending || !f.name.trim() || !f.text.trim()}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-purple-600 text-white transition hover:bg-purple-500 disabled:opacity-40">
+                  <Send className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
         )}
       </div>
-    </main>
+    );
+  }
+
+  // ── Render ──
+  return (
+    <div className={`min-h-screen ${bg}`}>
+      {/* ── Top bar ── */}
+      <div className={`sticky top-[72px] z-30 border-b ${darkMode ? "bg-[#0a0d14]/95 border-white/10" : "bg-[#f1f3f8]/95 border-slate-200"} backdrop-blur`}>
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg font-black">🌟 Influencer Hub</h1>
+            <div className="flex rounded-full border p-0.5 text-xs font-black overflow-hidden border-slate-200 dark:border-white/10">
+              {(["feed", "creators"] as const).map(t => (
+                <button key={t} onClick={() => setActiveTab(t)}
+                  className={`rounded-full px-4 py-1.5 transition ${activeTab === t ? "bg-purple-600 text-white shadow" : muted}`}>
+                  {t === "feed" ? "📽️ Feed" : "👥 Creators"}
+                </button>
+              ))}
+            </div>
+          </div>
+          <Link href="/careers/influencer"
+            className="hidden items-center gap-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 text-xs font-black text-white shadow transition hover:scale-[1.02] sm:inline-flex">
+            <Star className="h-3.5 w-3.5" /> Become a Creator
+          </Link>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-5xl px-4 py-6">
+        {loading ? (
+          <div className={`flex items-center justify-center py-24 text-sm ${muted}`}>Loading feed…</div>
+        ) : (
+          <>
+            {/* ── Feed Tab ── */}
+            {activeTab === "feed" && (
+              <div className="mx-auto max-w-xl space-y-5">
+                {feed.length === 0 ? (
+                  <div className={`rounded-2xl border p-16 text-center ${card}`}>
+                    <p className="text-4xl">🎬</p>
+                    <h2 className="mt-4 text-xl font-black">No videos yet</h2>
+                    <p className={`mt-2 text-sm ${muted}`}>When our creators upload approved videos, they'll appear here as posts.</p>
+                    <Link href="/careers/influencer" className="mt-5 inline-block rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-2.5 text-xs font-black text-white shadow">Join as Creator →</Link>
+                  </div>
+                ) : (
+                  feed.map(item => <FeedPost key={item.video_id} item={item} />)
+                )}
+              </div>
+            )}
+
+            {/* ── Creators Tab ── */}
+            {activeTab === "creators" && (
+              <div>
+                {influencers.length === 0 ? (
+                  <div className={`rounded-2xl border p-16 text-center ${card}`}>
+                    <Users className={`mx-auto h-12 w-12 ${muted}`} />
+                    <h2 className="mt-4 text-xl font-black">No creators yet</h2>
+                    <p className={`mt-2 text-sm ${muted}`}>Be the first to join our influencer programme!</p>
+                    <Link href="/careers/influencer" className="mt-5 inline-block rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-2.5 text-xs font-black text-white shadow">Apply Now →</Link>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {influencers.map(inf => <CreatorCard key={inf.candidate_id} inf={inf} />)}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
   );
 }
