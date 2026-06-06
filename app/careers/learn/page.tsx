@@ -90,15 +90,19 @@ function LearnInner() {
   const role   = params.get("role") ?? "telecaller";
   const cid    = params.get("cid") ?? "";
 
+  const isCC = role === "content-creator";
+
   const [modules, setModules]   = useState<Module[]>([]);
-  const [loading, setLoading]   = useState(true);
+  const [loading, setLoading]   = useState(!isCC); // CC doesn't load modules
   const [open, setOpen]         = useState<string | null>(null);
   const [openFaq, setOpenFaq]   = useState<number | null>(null);
   const [readMods, setReadMods] = useState<Set<string>>(new Set());
   const [readComp, setReadComp] = useState<Set<string>>(new Set());
   const [readTour, setReadTour] = useState<Set<string>>(new Set());
+  const [scriptRead, setScriptRead] = useState(false); // CC only
 
   useEffect(() => {
+    if (isCC) return; // CC skips module loading
     (async () => {
       const { data } = await supabase
         .from("recruitment_training")
@@ -120,7 +124,7 @@ function LearnInner() {
       setModules(list);
       setLoading(false);
     })();
-  }, [role]);
+  }, [role, isCC]);
 
   useEffect(() => {
     if (!cid) return;
@@ -135,13 +139,19 @@ function LearnInner() {
     setReadMods((r) => new Set(r).add(id));
   }
 
-  const allModsRead = modules.length === 0 || readMods.size >= modules.length;
+  const allModsRead = isCC ? true : (modules.length === 0 || readMods.size >= modules.length);
   const allCompRead = readComp.size >= COMPANY_READS.length;
   const allTourDone = readTour.size >= TOUR_PAGES.length;
-  const allDone     = allModsRead && allCompRead && allTourDone;
+  const allScriptRead = isCC ? scriptRead : true;
+  const allDone     = allModsRead && allCompRead && allTourDone && allScriptRead;
 
-  const totalItems  = COMPANY_READS.length + modules.length + TOUR_PAGES.length;
-  const doneItems   = readComp.size + readMods.size + readTour.size;
+  // CC: company + script(1) + tour; others: company + modules + tour
+  const totalItems  = isCC
+    ? COMPANY_READS.length + 1 + TOUR_PAGES.length
+    : COMPANY_READS.length + modules.length + TOUR_PAGES.length;
+  const doneItems   = isCC
+    ? readComp.size + (scriptRead ? 1 : 0) + readTour.size
+    : readComp.size + readMods.size + readTour.size;
   const progressPct = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0;
 
   return (
@@ -166,7 +176,10 @@ function LearnInner() {
           <span className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">then test</span>
         </h1>
         <p className="mt-2 text-sm font-medium text-black/55 dark:text-white/55">
-          For <b>{ROLE_LABEL[role] ?? role}</b> — first get to know the company, complete your role training, take the website tour, then unlock your assessment.
+          {isCC
+            ? <>For <b>Content Creator / Influencer</b> — read the pitch script, take the website tour, then unlock your 5-question AgentForge assessment.</>
+            : <>For <b>{ROLE_LABEL[role] ?? role}</b> — first get to know the company, complete your role training, take the website tour, then unlock your assessment.</>
+          }
         </p>
 
         {/* ── SECTION 1: Know the Company ── */}
@@ -196,8 +209,69 @@ function LearnInner() {
           <p className="mt-2 text-[11px] font-bold text-amber-600 dark:text-amber-400">⚠️ Open all three links before proceeding.</p>
         )}
 
-        {/* ── SECTION 2: Role Training ── */}
-        <SectionHeader step={2} title="Role Training" done={allModsRead} extraLabel={`${readMods.size}/${modules.length} read`} />
+        {/* ── SECTION 2: CC Pitch Script OR Role Training ── */}
+        {isCC ? (
+          <>
+            <SectionHeader step={2} title="AgentForge Pitch Script" done={scriptRead} />
+            <p className="mt-1 text-[11px] font-medium text-black/50 dark:text-white/50">
+              Read and save this script. You will use it to promote AgentForge to textile, jewellery and product businesses.
+            </p>
+            <div className="mt-3 overflow-hidden rounded-2xl border-2 border-purple-300/60 bg-white/90 shadow-md dark:border-purple-400/30 dark:bg-white/[0.05]">
+              <div className="flex items-center justify-between border-b border-purple-200/40 px-4 py-3 dark:border-purple-400/20">
+                <span className="text-[11px] font-black uppercase tracking-widest text-purple-700 dark:text-purple-300">📜 Your Pitch Script</span>
+                <button
+                  onClick={() => navigator.clipboard.writeText(`🎯 AgentForge — India's Own AI Platform for Businesses\n\nAgentForge helps textile, jewellery and product businesses get professional AI photos in seconds.\n\n• Textile Prints to Mockup — fabric designs into apparel mockups\n• Jewellery AI Photography — professional jewellery photos without a studio\n• Productography AI — product shots for e-commerce\n\nPlans from ₹99/month. Made in India.\n\nCheck it out: https://aiagentforge.in`)}
+                  className="text-[11px] font-black text-purple-600 transition hover:text-purple-800 dark:text-purple-300"
+                >
+                  📋 Copy
+                </button>
+              </div>
+              <div className="p-4">
+                <div className="space-y-3 text-sm font-medium leading-relaxed text-slate-700 dark:text-slate-200">
+                  <p className="font-black text-purple-700 dark:text-purple-300">Hi [Business Owner's Name]!</p>
+                  <p>I wanted to introduce you to <b>AgentForge</b> — India&apos;s first AI visual studio built specifically for textile, jewellery, and product photography businesses.</p>
+                  <div className="space-y-2">
+                    <div className="rounded-xl border border-blue-200/50 bg-blue-50/60 p-3 dark:border-blue-400/20 dark:bg-blue-500/5">
+                      <p className="font-black text-blue-700 dark:text-blue-300">📦 Textile Prints to Mockup</p>
+                      <p className="mt-1 text-[12px]">Upload your fabric print design → get realistic apparel mockups in seconds. No photoshoot, no model, no studio needed.</p>
+                    </div>
+                    <div className="rounded-xl border border-pink-200/50 bg-pink-50/60 p-3 dark:border-pink-400/20 dark:bg-pink-500/5">
+                      <p className="font-black text-pink-700 dark:text-pink-300">💍 Jewellery AI Photography</p>
+                      <p className="mt-1 text-[12px]">Upload a simple jewellery photo → get professional studio-quality images. Save ₹5,000+ per shoot.</p>
+                    </div>
+                    <div className="rounded-xl border border-emerald-200/50 bg-emerald-50/60 p-3 dark:border-emerald-400/20 dark:bg-emerald-500/5">
+                      <p className="font-black text-emerald-700 dark:text-emerald-300">📸 Productography AI</p>
+                      <p className="mt-1 text-[12px]">Any product photo → beautiful lifestyle and studio shots using AI. Ready for your website and social media.</p>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-amber-200/50 bg-amber-50/60 p-3 dark:border-amber-400/20 dark:bg-amber-500/5">
+                    <p className="font-black text-amber-700 dark:text-amber-300">💡 How to Pitch It:</p>
+                    <p className="mt-1 text-[12px] italic">&ldquo;Kya aap photography ke liye studio hire karte ho? AgentForge ka AI seconds mein professional photos de deta hai — fraction of the cost pe.&rdquo;</p>
+                    <p className="mt-1 text-[12px] italic">&ldquo;Are you spending money on photoshoots? AgentForge&apos;s AI gives you professional visuals in seconds — for a fraction of the cost.&rdquo;</p>
+                  </div>
+                  <p className="text-[12px] text-black/60 dark:text-white/50">✅ Made in India · Plans from ₹99/month · No studio needed</p>
+                  <p className="font-bold text-purple-700 dark:text-purple-300">🔗 Your referral link: https://aiagentforge.in/?ref=YOURCODE<br/>💰 You earn 10% commission on every purchase — forever.</p>
+                </div>
+                {!scriptRead && (
+                  <button
+                    onClick={() => setScriptRead(true)}
+                    className="mt-4 w-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500 py-2.5 text-sm font-black text-white shadow transition hover:scale-[1.02]"
+                  >
+                    ✅ I&apos;ve Read the Script →
+                  </button>
+                )}
+                {scriptRead && (
+                  <div className="mt-3 flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span className="text-sm font-black">Script read — well done!</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <SectionHeader step={2} title="Role Training" done={allModsRead} extraLabel={`${readMods.size}/${modules.length} read`} />
         {modules.length > 0 && (
           <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/10">
             <div className="h-full bg-gradient-to-r from-cyan-400 to-blue-600 transition-all" style={{ width: `${(readMods.size / Math.max(modules.length, 1)) * 100}%` }} />
@@ -254,11 +328,15 @@ function LearnInner() {
             })}
           </div>
         )}
+          </>
+        )}
 
         {/* ── SECTION 3: Website Tour ── */}
         <SectionHeader step={3} title="Website Tour" done={allTourDone} />
         <p className="mt-1 text-[11px] font-medium text-black/50 dark:text-white/50">
-          Explore our website — the assessment includes questions about our products and pages.
+          {isCC
+            ? "Explore the AgentForge website — your 5-question assessment will ask about these pages."
+            : "Explore our website — the assessment includes questions about our products and pages."}
         </p>
         <div className="mt-3 space-y-2">
           {TOUR_PAGES.map((p) => {
@@ -316,14 +394,18 @@ function LearnInner() {
         <div className="mt-12 rounded-3xl border border-cyan-200/40 bg-gradient-to-br from-white/90 to-cyan-50/60 p-6 text-center shadow-xl shadow-cyan-200/20 backdrop-blur dark:border-cyan-400/20 dark:from-white/[0.06] dark:to-white/[0.02]">
           <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-600">Step 3 · Assessment</p>
           <h2 className="mt-2 text-xl font-black sm:text-2xl">
-            {allDone ? "🎉 All done! Ready for your assessment?" : "Complete your training first"}
+            {allDone
+              ? (isCC ? "🎉 All done! Ready for your AgentForge quiz?" : "🎉 All done! Ready for your assessment?")
+              : "Complete your training first"}
           </h2>
           <p className="mt-1 text-sm font-medium text-black/55 dark:text-white/55">
             {allDone
-              ? "Take a short skill test. Pass it and our team will contact you."
+              ? (isCC
+                  ? "Take a short 5-question quiz about AgentForge. Then get your referral code!"
+                  : "Take a short skill test. Pass it and our team will contact you.")
               : `Still pending: ${[
                   !allCompRead ? "Company pages" : "",
-                  !allModsRead && modules.length > 0 ? "Training modules" : "",
+                  isCC ? (!scriptRead ? "Pitch script" : "") : (!allModsRead && modules.length > 0 ? "Training modules" : ""),
                   !allTourDone ? "Website tour" : "",
                 ].filter(Boolean).join(", ")}`}
           </p>

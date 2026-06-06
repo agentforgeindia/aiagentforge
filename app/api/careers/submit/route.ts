@@ -97,6 +97,12 @@ export async function POST(req: Request) {
     } catch {}
   }
 
+  // Fetch candidate role for result context
+  const { data: candInfo } = await db.from("candidates")
+    .select("name, role_slug")
+    .eq("id", candidateId)
+    .maybeSingle();
+
   return NextResponse.json({
     ok: true,
     total_score: totalScore,
@@ -104,5 +110,11 @@ export async function POST(req: Request) {
     trust_score: trust,
     passed,
     recommendation: aiRec,
+    correct_count: totalCorrect,
+    total_questions: totalQ,
+    attempts_used: attemptNo,
+    attempts_left: Math.max(0, 3 - attemptNo),
+    candidate_name: candInfo?.name ?? null,
+    role_slug: candInfo?.role_slug ?? null,
   });
 }

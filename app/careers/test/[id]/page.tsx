@@ -108,11 +108,21 @@ export default function TestPage() {
   const [ccResponse, setCcResponse] = useState<"yes"|"no"|null>(null);
   const [ccSubmitting, setCcSubmitting] = useState(false);
 
+  const [candidateRole, setCandidateRole] = useState<string | null>(null);
+
   const startedAt   = useRef<number>(0);
   const answersRef  = useRef(answers);
   const warnRef     = useRef(0);
   const submittedRef = useRef(false);
   answersRef.current = answers;
+
+  // Fetch candidate role on mount to tailor the intro screen
+  useEffect(() => {
+    fetch(`/api/careers/candidate-role?id=${id}`)
+      .then(r => r.json())
+      .then(d => { if (d.role_slug) setCandidateRole(d.role_slug); })
+      .catch(() => {});
+  }, [id]);
 
   // ── Start test ──
   async function start() {
@@ -151,7 +161,16 @@ export default function TestPage() {
     });
     const json = await res.json();
     if (!json.ok) { setError(json.error ?? "Submit failed."); setPhase("error"); return; }
-    setResult(json); setPhase("result");
+    setResult(json);
+    // Content Creators: after 5-question quiz → show referral proposal (not regular pass/fail)
+    if (json.role_slug === "content-creator") {
+      const ccRes  = await fetch(`/api/careers/content-creator?candidate_id=${id}`);
+      const ccJson = await ccRes.json();
+      if (ccJson.ok) { setCcData(ccJson); setPhase("cc_proposal"); }
+      else { setPhase("received"); }
+      return;
+    }
+    setPhase("result");
   }, [id]);
 
   // ── Next question ──
@@ -207,22 +226,45 @@ export default function TestPage() {
 
   // ── RENDER ──
   if (phase === "intro") {
+    const isCC = candidateRole === "content-creator";
     return (
       <Shell>
         <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-600">Step 3 · Assessment</p>
         <h1 className="mt-2 text-2xl font-black">
-          Skill <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">Test</span>
+          {isCC
+            ? <>AgentForge <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Quiz</span></>
+            : <>Skill <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">Test</span></>
+          }
         </h1>
-        <ul className="mt-4 space-y-2 text-sm font-medium text-black/65 dark:text-white/65">
-          <li>⏱️ Each question has its own timer — answer promptly.</li>
-          <li>🚫 Do not switch tabs or copy-paste — auto-submit after {MAX_WARNINGS} warnings.</li>
-          <li>🔁 Maximum 3 attempts allowed in total.</li>
-          <li>✅ Answer honestly — your genuine response gives the best result. Good luck!</li>
-        </ul>
-        <button onClick={start}
-          className="mt-6 w-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 py-3.5 text-sm font-black text-white shadow-xl shadow-cyan-500/30 transition hover:scale-[1.02] active:scale-95">
-          Start Test →
-        </button>
+        {isCC ? (
+          <>
+            <p className="mt-2 text-sm font-medium text-black/60 dark:text-white/55">
+              5 basic questions about AgentForge — our AI platform for textile, jewellery and productography.
+            </p>
+            <ul className="mt-4 space-y-2 text-sm font-medium text-black/65 dark:text-white/65">
+              <li>📋 5 questions · 30 seconds each</li>
+              <li>🌟 Based on the website tour you just completed</li>
+              <li>✅ Answer from what you learned — good luck!</li>
+            </ul>
+            <button onClick={start}
+              className="mt-6 w-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500 py-3.5 text-sm font-black text-white shadow-xl shadow-purple-500/30 transition hover:scale-[1.02] active:scale-95">
+              Start Quiz →
+            </button>
+          </>
+        ) : (
+          <>
+            <ul className="mt-4 space-y-2 text-sm font-medium text-black/65 dark:text-white/65">
+              <li>⏱️ Each question has its own timer — answer promptly.</li>
+              <li>🚫 Do not switch tabs or copy-paste — auto-submit after {MAX_WARNINGS} warnings.</li>
+              <li>🔁 Maximum 3 attempts allowed in total.</li>
+              <li>✅ Answer honestly — your genuine response gives the best result. Good luck!</li>
+            </ul>
+            <button onClick={start}
+              className="mt-6 w-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 py-3.5 text-sm font-black text-white shadow-xl shadow-cyan-500/30 transition hover:scale-[1.02] active:scale-95">
+              Start Test →
+            </button>
+          </>
+        )}
       </Shell>
     );
   }

@@ -48,7 +48,6 @@ export default function Navbar() {
   const careerLinks = [
     { label: "🏠 Careers Home",         href: "/careers",              desc: "Open roles & salary info" },
     { label: "📝 Apply Now",             href: "/careers/apply",        desc: "Submit your application" },
-    { label: "📚 Learn & Earn",          href: "/careers/learn?role=telecaller", desc: "Training modules" },
     { label: "🌟 Influencer Programme",  href: "/careers/influencer",   desc: "Earn 10% commission as a creator" },
     { label: "📊 Referral Tracker",      href: "/careers/referral",     desc: "Track your earnings" },
   ];

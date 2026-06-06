@@ -2,10 +2,59 @@
 
 // /careers/apply — Step 1 of the hiring flow.
 // Candidate fills signup details → redirected to /careers/learn?role=X&cid=UUID
+// Content Creators: video upload + AgentForge pitch script shown after submit
 
-import { Suspense, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Link as LinkIcon } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+
+const CC_PITCH_SCRIPT = `🎯 AgentForge — India's Own AI Platform for Businesses
+
+Hi [Business Owner's Name]!
+
+I wanted to introduce you to AgentForge — India's first AI visual studio built specifically for textile, jewellery, and product photography businesses.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📦 TEXTILE PRINTS TO MOCKUP
+Upload your fabric print design → get realistic apparel and fabric mockups in seconds. No photoshoot. No model. No studio.
+Perfect for: Fabric manufacturers, garment exporters, textile wholesalers.
+
+💍 JEWELLERY AI PHOTOGRAPHY
+Upload a simple jewellery photo → get professional studio-quality images with perfect backgrounds. Save ₹5,000+ per shoot.
+Perfect for: Jewellery shops, online jewellery sellers, exporters.
+
+📸 PRODUCTOGRAPHY AI
+Any product photo → beautiful lifestyle and studio shots using AI. Ready for your website and social media in seconds.
+Perfect for: E-commerce sellers, product brands, D2C businesses.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 HOW TO PITCH IT:
+"Kya aap photography ke liye studio hire karte ho? AgentForge ka AI seconds mein professional photos de deta hai — fraction of the cost pe."
+
+Or in English:
+"Are you spending money on photoshoots? AgentForge's AI gives you professional visuals in seconds — for a fraction of the cost."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Made in India, priced for Indian businesses
+✅ No photography studio needed
+✅ Results in seconds, not days
+✅ Plans starting from ₹99/month
+
+🔗 Your referral link: https://aiagentforge.in/?ref=YOURCODE
+💰 You earn 10% commission on every purchase they make — forever.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📱 WHERE TO SHARE:
+• Instagram Reels / Stories — before vs. after AI photo comparison
+• YouTube Shorts — "How Indian businesses are using AI for photography"
+• WhatsApp Business groups for textile / jewellery traders
+• LinkedIn posts targeting business owners
+`;
 
 const ROLES = [
   { slug: "telecaller",           label: "Telecaller",            salary: "₹5,000 + Incentive" },
@@ -29,8 +78,13 @@ function ApplyForm() {
     instagram_url: "", youtube_url: "", facebook_url: "", other_url: "",
     followers_count: "", avg_views: "", niche: "",
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState<string | null>(null);
+  const [videoFile, setVideoFile]         = useState<File | null>(null);
+  const [loading, setLoading]             = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
+  const [error, setError]                 = useState<string | null>(null);
+  const [alreadyApplied, setAlreadyApplied] = useState(false);
+  const [submitted, setSubmitted]         = useState<{ candidateId: string } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const isCC = f.role_slug === "content-creator";
 
@@ -47,26 +101,102 @@ function ApplyForm() {
     }
     setLoading(true); setError(null);
 
-    const body = isCC
-      ? { ...f, social_links: cc }
-      : { ...f };
+    const body = isCC ? { ...f, social_links: cc } : { ...f };
 
     const res  = await fetch("/api/careers/apply", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
     });
     const json = await res.json();
+
+    if (!json.ok) {
+      setLoading(false);
+      if (json.already_applied) {
+        setAlreadyApplied(true);
+      } else {
+        setError(json.error ?? "Something went wrong.");
+      }
+      return;
+    }
+
+    const candidateId = json.candidate_id as string;
+
+    // Upload demo video for CC if provided
+    if (isCC && videoFile) {
+      try {
+        setUploadProgress("Uploading demo video…");
+        const ext  = videoFile.name.split(".").pop() ?? "mp4";
+        const path = `${candidateId}/demo.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("cc-demo-videos")
+          .upload(path, videoFile, { upsert: true });
+        if (!upErr) {
+          const { data: urlData } = supabase.storage.from("cc-demo-videos").getPublicUrl(path);
+          await supabase.from("candidates").update({ demo_video_url: urlData?.publicUrl ?? path }).eq("id", candidateId);
+        }
+      } catch (_) { /* Non-blocking — proceed even if upload fails */ }
+      setUploadProgress(null);
+    }
+
     setLoading(false);
 
-    if (!json.ok) { setError(json.error ?? "Something went wrong."); return; }
-
-    // Redirect to learn page with role + candidateId
-    router.push(`/careers/learn?role=${f.role_slug}&cid=${json.candidate_id}`);
+    if (isCC) {
+      setSubmitted({ candidateId }); // Show pitch script before redirecting
+    } else {
+      router.push(`/careers/learn?role=${f.role_slug}&cid=${candidateId}`);
+    }
   }
 
   const input = "w-full rounded-xl border border-cyan-200/50 bg-white px-4 py-3 text-sm font-medium text-slate-800 shadow-sm transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/25 dark:border-white/10 dark:bg-[#0f1a2e] dark:text-white";
   const selectInput = `${input} [&>option]:bg-[#0f1a2e] [&>option]:text-white`;
 
   const selectedRole = ROLES.find(r => r.slug === f.role_slug);
+
+  // ── CC Pitch Script screen (shown after submit) ──
+  if (submitted) {
+    return (
+      <main className="relative min-h-screen bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
+        <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#f472b644,transparent_40%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_40%)]" />
+        <div className="relative z-10 mx-auto max-w-2xl px-5 py-14">
+          <div className="mb-6 text-center">
+            <p className="text-5xl">✅</p>
+            <h1 className="mt-3 text-2xl font-black">
+              Application <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Submitted!</span>
+            </h1>
+            <p className="mt-2 text-sm font-medium text-black/60 dark:text-white/60">
+              Welcome to the AgentForge Influencer Programme. Here is your pitch script — save it!
+            </p>
+          </div>
+
+          <div className="rounded-3xl border-2 border-purple-300/60 bg-white/90 p-5 shadow-xl dark:border-purple-400/30 dark:bg-white/[0.06]">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white">📜 Your Pitch Script</span>
+            </div>
+            <pre className="whitespace-pre-wrap text-[13px] font-medium leading-relaxed text-slate-700 dark:text-slate-200" style={{ fontFamily: "inherit" }}>
+              {CC_PITCH_SCRIPT}
+            </pre>
+            <button
+              onClick={() => { navigator.clipboard.writeText(CC_PITCH_SCRIPT); }}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-purple-300/60 bg-purple-50 px-4 py-1.5 text-xs font-black text-purple-700 transition hover:bg-purple-100 dark:border-purple-400/30 dark:bg-purple-400/10 dark:text-purple-300"
+            >
+              📋 Copy Script
+            </button>
+          </div>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm font-bold text-black/55 dark:text-white/55">
+              Next: Tour the AgentForge website, then take a short 5-question assessment about our platform.
+            </p>
+            <a
+              href={`/careers/learn?role=${f.role_slug}&cid=${submitted.candidateId}`}
+              className="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-8 py-4 text-sm font-black text-white shadow-xl shadow-purple-500/30 transition hover:scale-[1.03] active:scale-95"
+            >
+              Continue to Website Tour →
+            </a>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="relative min-h-screen bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
@@ -146,17 +276,68 @@ function ApplyForm() {
                 <input className={input} placeholder="Avg. Reel/Video Views" value={cc.avg_views} onChange={(e) => upc("avg_views", e.target.value)} />
               </div>
               <input className={input} placeholder="Your Content Niche (e.g. Fashion, Tech, Food)" value={cc.niche} onChange={(e) => upc("niche", e.target.value)} />
+
+              {/* Demo Video Upload */}
+              <div className="rounded-xl border border-dashed border-purple-300/70 bg-white/60 p-4 dark:border-purple-400/30 dark:bg-white/[0.04]">
+                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-purple-700 dark:text-purple-300">
+                  🎬 Demo Video (optional but recommended)
+                </p>
+                <p className="mt-1 text-[11px] font-medium text-black/50 dark:text-white/40">
+                  Upload a short intro video showing your content style. Max 100 MB. MP4 / MOV preferred.
+                </p>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="video/*"
+                  className="hidden"
+                  onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
+                />
+                <div className="mt-2 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    className="rounded-full border border-purple-300/60 bg-purple-50 px-4 py-1.5 text-xs font-black text-purple-700 transition hover:bg-purple-100 dark:border-purple-400/30 dark:bg-purple-400/10 dark:text-purple-300"
+                  >
+                    📂 Choose Video
+                  </button>
+                  {videoFile && (
+                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                      ✅ {videoFile.name} ({(videoFile.size / 1024 / 1024).toFixed(1)} MB)
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Already applied — show info card with HR email */}
+          {alreadyApplied && (
+            <div className="rounded-2xl border border-amber-300/70 bg-amber-50/80 p-4 dark:border-amber-400/30 dark:bg-amber-500/5">
+              <p className="text-sm font-black text-amber-800 dark:text-amber-300">⏳ Application Already Submitted</p>
+              <p className="mt-1.5 text-[13px] font-medium leading-relaxed text-black/70 dark:text-white/65">
+                Your application is under review. Please wait — our HR team will call or WhatsApp you soon.
+              </p>
+              <p className="mt-2.5 text-[12px] font-medium text-black/60 dark:text-white/55">
+                If it has been <b>more than 72 hours</b> without any response, contact us:
+              </p>
+              <a
+                href="mailto:hr@aiagentforge.in"
+                className="mt-2 inline-flex items-center gap-2 rounded-full border border-amber-400/60 bg-white px-4 py-2 text-sm font-black text-amber-700 shadow-sm transition hover:bg-amber-50 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300"
+              >
+                📧 hr@aiagentforge.in
+              </a>
             </div>
           )}
 
           {error && <p className="text-sm font-bold text-rose-600">{error}</p>}
+          {uploadProgress && <p className="text-sm font-bold text-cyan-600">{uploadProgress}</p>}
 
-          <button type="submit" disabled={loading}
+          <button type="submit" disabled={loading || alreadyApplied}
             className="w-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 py-3.5 text-sm font-black text-white shadow-xl shadow-cyan-500/30 transition hover:scale-[1.02] active:scale-95 disabled:opacity-50">
-            {loading ? "Submitting…" : "Continue → Training & Test"}
+            {loading ? "Submitting…" : isCC ? "Submit Application →" : "Continue → Training & Test"}
           </button>
           <p className="text-center text-[11px] font-bold text-black/40 dark:text-white/40">
-            No resume needed · Only 1-2 minutes · 3 test attempts
+            {isCC ? "No test required · Get your referral code instantly if eligible" : "No resume needed · Only 1-2 minutes · 3 test attempts"}
           </p>
         </form>
       </div>

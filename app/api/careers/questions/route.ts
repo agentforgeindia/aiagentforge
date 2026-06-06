@@ -16,8 +16,9 @@ function svc() {
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
-const MAX_ATTEMPTS = 3;
-const MAX_QUESTIONS = 80;
+const MAX_ATTEMPTS    = 3;
+const MAX_QUESTIONS   = 50;   // 50 questions × 2 marks = 100 total
+const CC_MAX_QUESTIONS = 5;   // Content Creator: 5 basic AgentForge questions
 const TIME_BY_DIFF: Record<string, number> = { easy: 30, medium: 45, hard: 60 };
 
 function shuffle<T>(arr: T[]): T[] {
@@ -43,16 +44,30 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Maximum 3 attempts reached. Test locked." }, { status: 403 });
   }
 
-  // Role-specific + common questions
-  const { data: qs } = await db.from("recruitment_questions")
-    .select("id, section, difficulty, question, options")
-    .or(`role_slug.eq.${cand.role_slug},role_slug.is.null`);
+  // Content Creators: 5 role-specific AgentForge questions only
+  // All other roles: role-specific + common questions, up to 50
+  const isCC = cand.role_slug === "content-creator";
 
+  let rawQs: any[] | null = null;
+  if (isCC) {
+    const { data } = await db.from("recruitment_questions")
+      .select("id, section, difficulty, question, options")
+      .eq("role_slug", "content-creator");
+    rawQs = data;
+  } else {
+    const { data } = await db.from("recruitment_questions")
+      .select("id, section, difficulty, question, options")
+      .or(`role_slug.eq.${cand.role_slug},role_slug.is.null`);
+    rawQs = data;
+  }
+
+  const qs = rawQs;
   if (!qs || qs.length === 0) {
     return NextResponse.json({ error: "No questions configured yet. Please check back later." }, { status: 400 });
   }
 
-  const picked = shuffle(qs).slice(0, MAX_QUESTIONS).map((q: any) => ({
+  const limit  = isCC ? CC_MAX_QUESTIONS : MAX_QUESTIONS;
+  const picked = shuffle(qs).slice(0, limit).map((q: any) => ({
     id: q.id,
     section: q.section,
     difficulty: q.difficulty,

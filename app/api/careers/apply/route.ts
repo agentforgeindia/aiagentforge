@@ -54,14 +54,38 @@ export async function POST(req: Request) {
 
   const db = svc();
 
-  const { data: existing } = await db.from("candidates").select("id, stage").eq("mobile", mobile).maybeSingle();
+  // Check by mobile AND email (either match = same person)
+  const { data: existingByMobile } = await db.from("candidates").select("id, stage, name").eq("mobile", mobile).maybeSingle();
+  const existingByEmail = b.email
+    ? (await db.from("candidates").select("id, stage, name").eq("email", b.email).maybeSingle()).data
+    : null;
+  const existing = existingByMobile ?? existingByEmail;
+
+  // Stages where re-application is blocked (awaiting HR response)
+  const ACTIVE_STAGES = [
+    "applied", "training_started", "training_completed",
+    "assessment_started", "assessment_completed",
+    "passed", "interview_eligible", "interview_scheduled",
+    "selected", "offer_sent", "offer_accepted", "security_paid",
+  ];
 
   let candidateId: string;
   if (existing) {
+    if (ACTIVE_STAGES.includes(existing.stage ?? "")) {
+      return NextResponse.json({
+        ok: false,
+        already_applied: true,
+        stage: existing.stage,
+        error:
+          "You have already applied and your application is under review. Please wait — our team will contact you. " +
+          "If it has been more than 72 hours without a response, please email hr@aiagentforge.in",
+      }, { status: 409 });
+    }
+    // Stage is 'rejected' or 'hired' or unknown → allow re-application by updating
     candidateId = existing.id;
     await db.from("candidates").update({
       name, email: b.email || null, city: b.city || null, state: b.state || null,
-      role_slug: b.role_slug || null, updated_at: new Date().toISOString(),
+      role_slug: b.role_slug || null, stage: "applied", updated_at: new Date().toISOString(),
     }).eq("id", candidateId);
   } else {
     const { data: created, error } = await db.from("candidates").insert({
