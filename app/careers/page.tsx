@@ -67,11 +67,11 @@ function Doodles() {
 }
 
 const JOURNEY = [
-  { Icon: BookOpen,     title: "Apply",           desc: "Sign up karo, basic details bharo — 1 minute ka kaam.", color: "from-cyan-400 to-blue-500" },
-  { Icon: Building2,    title: "Learn",            desc: "Role training + AgentForge ko jaano + Website Tour.",   color: "from-blue-400 to-indigo-500" },
-  { Icon: BrainCircuit, title: "Skill Test",       desc: "Short MCQ test — merit ke hisaab se aage badho.",      color: "from-indigo-400 to-purple-500" },
-  { Icon: Phone,        title: "HR Call",          desc: "Pass = HR team interview ke liye contact karegi.",      color: "from-purple-400 to-fuchsia-500" },
-  { Icon: PartyPopper,  title: "Get Hired",        desc: "Security deposit → Login milega → Kaam shuru!",        color: "from-fuchsia-400 to-pink-500" },
+  { Icon: BookOpen,     title: "Apply",      desc: "Sign up and fill basic details — done in 1 minute.",          color: "from-cyan-400 to-blue-500" },
+  { Icon: Building2,    title: "Learn",      desc: "Role training + know AgentForge + Website Tour.",             color: "from-blue-400 to-indigo-500" },
+  { Icon: BrainCircuit, title: "Skill Test", desc: "Short MCQ test — progress purely on merit.",                 color: "from-indigo-400 to-purple-500" },
+  { Icon: Phone,        title: "HR Call",    desc: "On pass, our HR team will call you for the next steps.",     color: "from-purple-400 to-fuchsia-500" },
+  { Icon: PartyPopper,  title: "Get Hired",  desc: "Security deposit → receive login credentials → start work!", color: "from-fuchsia-400 to-pink-500" },
 ];
 
 const BENEFITS = [
@@ -125,8 +125,8 @@ export default function CareersPage() {
             Grow with us.
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-base font-medium leading-relaxed text-black/60 dark:text-white/60">
-            Resume ki zaroorat nahi. Short training lo, skill test do — aur merit pe job paao.
-            Sab kaam <b>Work From Home</b>. Flexible hours. Fixed salary + incentive.
+            No resume required. Complete a short training, pass the skill test — and get hired on merit.
+            All roles are <b>Work From Home</b>. Flexible hours. Fixed salary + incentive.
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <a href="#roles"
@@ -209,7 +209,7 @@ export default function CareersPage() {
         <div className="relative mt-20 overflow-hidden rounded-[2rem] border border-cyan-300/40 bg-gradient-to-r from-cyan-400/15 via-blue-500/15 to-purple-500/15 p-10 text-center shadow-2xl backdrop-blur-xl">
           <h2 className="text-2xl font-black sm:text-3xl md:text-4xl">Ready to build your career?</h2>
           <p className="mx-auto mt-2 max-w-md text-sm font-medium text-black/60 dark:text-white/60">
-            Apply karo. Training lo. Test do. Hamari team aapko contact karegi.
+            Apply. Train. Test. Our team will reach out to you.
           </p>
           <Link href="/careers/apply"
             className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-9 py-4 text-sm font-black text-white shadow-xl shadow-cyan-500/30 transition hover:scale-105 active:scale-95 sm:text-base">

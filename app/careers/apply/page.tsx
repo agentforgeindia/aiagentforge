@@ -40,10 +40,10 @@ function ApplyForm() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!f.name || f.mobile.length < 8) {
-      setError("Naam aur valid mobile number zaroori hai."); return;
+      setError("Full name and a valid mobile number are required."); return;
     }
     if (isCC && !cc.instagram_url && !cc.youtube_url && !cc.facebook_url && !cc.other_url) {
-      setError("Content Creator ke liye kam se kam ek social media link zaroori hai."); return;
+      setError("Please add at least one social media profile link for the Content Creator role."); return;
     }
     setLoading(true); setError(null);
 
@@ -87,7 +87,7 @@ function ApplyForm() {
           <span className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">AgentForge</span>
         </h1>
         <p className="mt-1 text-sm font-medium text-black/55 dark:text-white/55">
-          Basic details bharo. Fir training + test hoga. 1 minute mein done.
+          Fill in your basic details. Training + test follows. Done in 1 minute.
         </p>
 
         {selectedRole && (
@@ -122,7 +122,7 @@ function ApplyForm() {
                 📱 Social Media Profiles (required)
               </p>
               <p className="text-[11px] font-medium text-black/55 dark:text-white/45">
-                Apne social media profiles share karo. Hamar AI aapki reach analyse karega aur referral offer dega.
+                Share your social media profiles. Our AI will analyse your reach and may offer a referral partnership.
               </p>
               <div className="flex items-center gap-2">
                 <span className="shrink-0 text-lg">📸</span>
@@ -155,7 +155,7 @@ function ApplyForm() {
             {loading ? "Submitting…" : "Continue → Training & Test"}
           </button>
           <p className="text-center text-[11px] font-bold text-black/40 dark:text-white/40">
-            Koi resume nahi chahiye · Sirf 1-2 minute · 3 attempts tak
+            No resume needed · Only 1-2 minutes · 3 test attempts
           </p>
         </form>
       </div>
