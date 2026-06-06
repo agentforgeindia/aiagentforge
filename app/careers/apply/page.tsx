@@ -32,10 +32,9 @@ Perfect for: E-commerce sellers, product brands, D2C businesses.
 ━━━━━━━━━━━━━━━━━━━━━━━━━
 
 💡 HOW TO PITCH IT:
-"Kya aap photography ke liye studio hire karte ho? AgentForge ka AI seconds mein professional photos de deta hai — fraction of the cost pe."
+"Are you spending money on studio photoshoots? AgentForge's AI gives you professional product visuals in seconds — at a fraction of the cost."
 
-Or in English:
-"Are you spending money on photoshoots? AgentForge's AI gives you professional visuals in seconds — for a fraction of the cost."
+"Still hiring photographers for every product? AgentForge generates studio-quality photos instantly using AI — no studio, no model, no wait."
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -78,12 +77,15 @@ function ApplyForm() {
     instagram_url: "", youtube_url: "", facebook_url: "", other_url: "",
     followers_count: "", avg_views: "", niche: "",
   });
-  const [videoFile, setVideoFile]         = useState<File | null>(null);
   const [loading, setLoading]             = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   const [error, setError]                 = useState<string | null>(null);
   const [alreadyApplied, setAlreadyApplied] = useState(false);
-  const [submitted, setSubmitted]         = useState<{ candidateId: string } | null>(null);
+  // CC flow phases: null → "script" → "video" → done (redirect dashboard)
+  const [ccPhase, setCcPhase]             = useState<null | "script" | "video">(null);
+  const [candidateId, setCandidateId]     = useState<string | null>(null);
+  // video upload
+  const [videoFile, setVideoFile]         = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const isCC = f.role_slug === "content-creator";
@@ -118,31 +120,14 @@ function ApplyForm() {
       return;
     }
 
-    const candidateId = json.candidate_id as string;
-
-    // Upload demo video for CC if provided
-    if (isCC && videoFile) {
-      try {
-        setUploadProgress("Uploading demo video…");
-        const ext  = videoFile.name.split(".").pop() ?? "mp4";
-        const path = `${candidateId}/demo.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from("cc-demo-videos")
-          .upload(path, videoFile, { upsert: true });
-        if (!upErr) {
-          const { data: urlData } = supabase.storage.from("cc-demo-videos").getPublicUrl(path);
-          await supabase.from("candidates").update({ demo_video_url: urlData?.publicUrl ?? path }).eq("id", candidateId);
-        }
-      } catch (_) { /* Non-blocking — proceed even if upload fails */ }
-      setUploadProgress(null);
-    }
-
+    const cid = json.candidate_id as string;
+    setCandidateId(cid);
     setLoading(false);
 
     if (isCC) {
-      setSubmitted({ candidateId }); // Show pitch script before redirecting
+      setCcPhase("script"); // Step 1: show script
     } else {
-      router.push(`/careers/learn?role=${f.role_slug}&cid=${candidateId}`);
+      router.push(`/careers/learn?role=${f.role_slug}&cid=${cid}`);
     }
   }
 
@@ -151,8 +136,8 @@ function ApplyForm() {
 
   const selectedRole = ROLES.find(r => r.slug === f.role_slug);
 
-  // ── CC Pitch Script screen (shown after submit) ──
-  if (submitted) {
+  // ── CC Phase 1: Pitch Script screen ──
+  if (ccPhase === "script") {
     return (
       <main className="relative min-h-screen bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
         <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#f472b644,transparent_40%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_40%)]" />
@@ -163,36 +148,126 @@ function ApplyForm() {
               Application <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Submitted!</span>
             </h1>
             <p className="mt-2 text-sm font-medium text-black/60 dark:text-white/60">
-              Welcome to the AgentForge Influencer Programme. Here is your pitch script — save it!
+              Step 1: Read this pitch script carefully. You will make a short video based on it next.
             </p>
           </div>
 
           <div className="rounded-3xl border-2 border-purple-300/60 bg-white/90 p-5 shadow-xl dark:border-purple-400/30 dark:bg-white/[0.06]">
-            <div className="mb-3 flex items-center gap-2">
+            <div className="mb-3 flex items-center justify-between gap-2">
               <span className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white">📜 Your Pitch Script</span>
+              <button
+                onClick={() => { navigator.clipboard.writeText(CC_PITCH_SCRIPT); }}
+                className="inline-flex items-center gap-1.5 rounded-full border border-purple-300/60 bg-purple-50 px-4 py-1.5 text-xs font-black text-purple-700 transition hover:bg-purple-100 dark:border-purple-400/30 dark:bg-purple-400/10 dark:text-purple-300"
+              >
+                📋 Copy Script
+              </button>
             </div>
             <pre className="whitespace-pre-wrap text-[13px] font-medium leading-relaxed text-slate-700 dark:text-slate-200" style={{ fontFamily: "inherit" }}>
               {CC_PITCH_SCRIPT}
             </pre>
-            <button
-              onClick={() => { navigator.clipboard.writeText(CC_PITCH_SCRIPT); }}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-purple-300/60 bg-purple-50 px-4 py-1.5 text-xs font-black text-purple-700 transition hover:bg-purple-100 dark:border-purple-400/30 dark:bg-purple-400/10 dark:text-purple-300"
-            >
-              📋 Copy Script
-            </button>
           </div>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm font-bold text-black/55 dark:text-white/55">
-              Next: Tour the AgentForge website, then take a short 5-question assessment about our platform.
+          <div className="mt-6 rounded-2xl border border-amber-300/50 bg-amber-50/80 p-4 dark:border-amber-400/20 dark:bg-amber-500/5">
+            <p className="text-sm font-black text-amber-800 dark:text-amber-300">📌 Next Step</p>
+            <p className="mt-1 text-[13px] font-medium text-black/70 dark:text-white/60 leading-relaxed">
+              Using this script, create a short video ad (Reel, Short, or Story) promoting AgentForge AI. Then upload it in the next step — our team will review and approve it. Once approved, post it on your social media to start earning commissions.
             </p>
-            <a
-              href={`/careers/learn?role=${f.role_slug}&cid=${submitted.candidateId}`}
-              className="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-8 py-4 text-sm font-black text-white shadow-xl shadow-purple-500/30 transition hover:scale-[1.03] active:scale-95"
-            >
-              Continue to Website Tour →
-            </a>
           </div>
+
+          <div className="mt-5 text-center">
+            <button
+              onClick={() => setCcPhase("video")}
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-8 py-4 text-sm font-black text-white shadow-xl shadow-purple-500/30 transition hover:scale-[1.03] active:scale-95"
+            >
+              I've Read the Script — Create My Video Ad →
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ── CC Phase 2: Video Upload screen ──
+  if (ccPhase === "video") {
+    async function uploadVideo(e: React.FormEvent) {
+      e.preventDefault();
+      if (!videoFile || !candidateId) { router.push(`/careers/influencer/dashboard?cid=${candidateId}`); return; }
+      setUploadProgress("Uploading your video…");
+      try {
+        const ext  = videoFile.name.split(".").pop() ?? "mp4";
+        const path = `${candidateId}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("cc-demo-videos")
+          .upload(path, videoFile, { upsert: true });
+        if (upErr) throw upErr;
+        const { data: urlData } = supabase.storage.from("cc-demo-videos").getPublicUrl(path);
+        const videoUrl = urlData?.publicUrl ?? path;
+        // Save as video submission
+        await fetch("/api/careers/influencer/video-submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ candidate_id: candidateId, video_url: videoUrl, platform: "other", caption: "Application video" }),
+        });
+      } catch (_) { /* Non-blocking */ }
+      setUploadProgress(null);
+      router.push(`/careers/influencer/dashboard?cid=${candidateId}`);
+    }
+
+    return (
+      <main className="relative min-h-screen bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
+        <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#f472b644,transparent_40%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_40%)]" />
+        <div className="relative z-10 mx-auto max-w-lg px-5 py-14">
+          <div className="mb-6 text-center">
+            <p className="text-5xl">🎬</p>
+            <h1 className="mt-3 text-2xl font-black">
+              Upload Your <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Video Ad</span>
+            </h1>
+            <p className="mt-2 text-sm font-medium text-black/60 dark:text-white/60">
+              Create a short video using the script we gave you. Upload it here — we will review and approve it within 24 hours.
+            </p>
+          </div>
+
+          <form onSubmit={uploadVideo} className="space-y-4 rounded-3xl border border-purple-300/60 bg-white/90 p-6 shadow-xl dark:border-purple-400/30 dark:bg-white/[0.06]">
+            <div className="rounded-xl border-2 border-dashed border-purple-300/60 bg-purple-50/50 p-6 text-center dark:border-purple-400/20 dark:bg-purple-500/5">
+              <p className="text-3xl">📱</p>
+              <p className="mt-2 text-sm font-black text-purple-800 dark:text-purple-300">Choose Your Video File</p>
+              <p className="mt-1 text-xs font-medium text-black/45 dark:text-white/40">
+                MP4 · MOV · Max 200 MB
+              </p>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="video/*"
+                className="hidden"
+                onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
+              />
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="mt-3 rounded-full border border-purple-300/60 bg-purple-50 px-5 py-2 text-xs font-black text-purple-700 transition hover:bg-purple-100 dark:border-purple-400/30 dark:bg-purple-400/10 dark:text-purple-300"
+              >
+                📂 Browse Files
+              </button>
+              {videoFile && (
+                <p className="mt-3 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  ✅ {videoFile.name} ({(videoFile.size / 1024 / 1024).toFixed(1)} MB)
+                </p>
+              )}
+            </div>
+
+            {uploadProgress && <p className="text-center text-sm font-bold text-purple-600">{uploadProgress}</p>}
+
+            <button
+              type="submit"
+              disabled={!!uploadProgress}
+              className="w-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500 py-3.5 text-sm font-black text-white shadow-xl shadow-purple-500/30 transition hover:scale-[1.02] active:scale-95 disabled:opacity-60"
+            >
+              {uploadProgress ? "Uploading…" : videoFile ? "Submit Video & Go to Dashboard →" : "Skip — Go to My Dashboard →"}
+            </button>
+            <p className="text-center text-[11px] font-bold text-black/40 dark:text-white/35">
+              You can also upload videos later from your dashboard.
+            </p>
+          </form>
         </div>
       </main>
     );

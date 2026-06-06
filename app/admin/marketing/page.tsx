@@ -78,8 +78,19 @@ export default function MarketingPage() {
         </button>
       }
     >
+      {/* Influencer Panel link */}
+      <a href="/admin/marketing/influencers"
+        className="mb-4 flex items-center gap-3 rounded-2xl border border-purple-400/30 bg-purple-500/5 px-5 py-4 transition hover:bg-purple-500/10">
+        <span className="text-2xl">🌟</span>
+        <div>
+          <p className="font-black text-white">Influencer Panel</p>
+          <p className="text-xs text-white/50">Manage influencers, upload scripts, review video submissions, track revenue</p>
+        </div>
+        <span className="ml-auto text-white/30">→</span>
+      </a>
+
       {loading ? (
-        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
       ) : !data || data.error ? (
         <p className="p-6 text-center text-sm text-rose-600">{data?.error ?? "No data"}</p>
       ) : (

@@ -1,0 +1,92 @@
+// GET /api/careers/influencer/dashboard?cid=UUID
+// Returns influencer dashboard data: referral code, stats, scripts, videos
+
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+
+const db = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { persistSession: false, autoRefreshToken: false } }
+);
+
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const cid = searchParams.get("cid");
+  if (!cid) return NextResponse.json({ ok: false, error: "Missing cid" }, { status: 400 });
+
+  // Fetch candidate + social info
+  const { data: cand } = await db
+    .from("candidates")
+    .select("id, name, email, mobile, stage, demo_video_url, role_slug")
+    .eq("id", cid)
+    .eq("role_slug", "content-creator")
+    .maybeSingle();
+
+  if (!cand) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+
+  const { data: social } = await db
+    .from("content_creator_social")
+    .select("referral_code, referral_status, instagram_url, youtube_url, facebook_url, niche, followers_count, avg_views")
+    .eq("candidate_id", cid)
+    .maybeSingle();
+
+  // Referral stats — signups
+  const { count: signupCount } = await db
+    .from("profiles")
+    .select("id", { count: "exact", head: true })
+    .eq("referred_by", social?.referral_code ?? "__none__");
+
+  // Referral stats — earnings
+  const { data: earnings } = await db
+    .from("referral_earnings")
+    .select("commission_amount, purchase_amount, status, created_at, order_id")
+    .eq("referral_code", social?.referral_code ?? "__none__")
+    .order("created_at", { ascending: false });
+
+  // Recent signups via this referral
+  const { data: signups } = await db
+    .from("profiles")
+    .select("full_name, email, created_at")
+    .eq("referred_by", social?.referral_code ?? "__none__")
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  // Active scripts from admin
+  const { data: scripts } = await db
+    .from("influencer_scripts")
+    .select("id, title, description, script_text, video_ref, created_at")
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  // Influencer's video submissions
+  const { data: videos } = await db
+    .from("influencer_video_submissions")
+    .select("id, script_id, video_url, platform, caption, status, admin_note, created_at")
+    .eq("candidate_id", cid)
+    .order("created_at", { ascending: false });
+
+  const totalEarnings = (earnings ?? []).reduce((s, r) => s + (r.commission_amount ?? 0), 0);
+  const totalPurchases = (earnings ?? []).length;
+
+  const referralLink = social?.referral_code
+    ? `https://aiagentforge.in/?ref=${social.referral_code}`
+    : null;
+
+  return NextResponse.json({
+    ok: true,
+    candidate: cand,
+    social,
+    referral_link: referralLink,
+    stats: {
+      signups: signupCount ?? 0,
+      purchases: totalPurchases,
+      earnings: totalEarnings,
+    },
+    signup_list: signups ?? [],
+    purchase_list: earnings ?? [],
+    scripts: scripts ?? [],
+    videos: videos ?? [],
+  });
+}

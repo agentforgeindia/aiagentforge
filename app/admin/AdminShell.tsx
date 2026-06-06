@@ -312,7 +312,7 @@ export default function AdminShell({
       <div className="relative mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
         <AdminDoodles type={doodleType ?? "general"} />
         <div className="relative z-10">
-          <ModuleTip title={title} />
+          <ModuleTip module={title} />
           {children}
         </div>
       </div>
