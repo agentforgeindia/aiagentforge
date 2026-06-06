@@ -49,7 +49,6 @@ export default function Navbar() {
     { label: "🏠 Careers Home", href: "/careers", desc: "Open roles & salary info" },
     { label: "📝 Apply Now", href: "/careers/apply", desc: "Submit your application" },
     { label: "📚 Learn & Earn", href: "/careers/learn?role=telecaller", desc: "Training modules" },
-    { label: "🎯 Take the Test", href: "/careers/test", desc: "Skill assessment" },
     { label: "📊 Referral Tracker", href: "/careers/referral", desc: "Track your earnings" },
   ];
   const [showProfile, setShowProfile] = useState(false);
