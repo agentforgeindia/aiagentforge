@@ -148,3 +148,54 @@ alter table public.candidates
   add column if not exists longitude         double precision,
   add column if not exists distance_km       numeric(8,2),
   add column if not exists details_completed boolean default false;
+
+-- ── 8. Routing views: Learn & Earn Academy pool vs Hiring OS pool ─────────────
+-- Learn & Earn Academy: candidates who applied and are in training/assessment stage
+-- Hiring OS: candidates who passed the test (HR reviews and calls them)
+
+create or replace view public.v_learn_earn_academy as
+select
+  c.id,
+  c.name,
+  c.email,
+  c.phone,
+  c.role_slug,
+  c.stage,
+  c.created_at as applied_at,
+  c.details_completed,
+  (select count(*) from public.assessment_attempts a where a.candidate_id = c.id) as attempts_used
+from public.candidates c
+where c.stage in ('applied', 'training_started', 'training_completed', 'assessment_started', 'assessment_completed')
+order by c.created_at desc;
+
+create or replace view public.v_hiring_os as
+select
+  c.id,
+  c.name,
+  c.email,
+  c.phone,
+  c.role_slug,
+  c.stage,
+  c.final_score,
+  c.trust_score,
+  c.ai_recommendation,
+  c.created_at as applied_at,
+  aa.total_score,
+  aa.attempt_no,
+  aa.passed_at,
+  rr.salary_display,
+  rr.salary_base
+from public.candidates c
+join (
+  select distinct on (candidate_id) candidate_id, total_score, attempt_no, passed, created_at as passed_at
+  from public.assessment_attempts
+  where passed = true
+  order by candidate_id, created_at desc
+) aa on aa.candidate_id = c.id
+left join public.recruitment_roles rr on rr.slug = c.role_slug
+where c.stage in ('passed', 'interview_eligible', 'interview_scheduled', 'selected', 'offer_sent', 'offer_accepted', 'security_paid', 'hired')
+order by aa.passed_at desc;
+
+-- RLS for views (views inherit from underlying table; grant read to authenticated admin roles)
+grant select on public.v_learn_earn_academy to authenticated;
+grant select on public.v_hiring_os to authenticated;
