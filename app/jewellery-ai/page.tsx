@@ -1441,6 +1441,26 @@ const handleDownloadResult = async () => {
   }
 };
 
+const handleDownloadPDF = () => {
+  if (!generatedOutputUrl) return;
+  const date = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>AgentForge Jewellery AI</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#fff; font-family:Arial,sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:20px; }
+  img { max-width:100%; max-height:90vh; object-fit:contain; border-radius:8px; box-shadow:0 4px 24px rgba(0,0,0,0.12); }
+  .label { margin-top:14px; font-size:11px; color:#6b7280; text-align:center; }
+  @media print { body { background:#fff; } }
+</style></head><body>
+<img src="${generatedOutputUrl}" />
+<p class="label">AgentForge Jewellery AI · ${date}</p>
+</body></html>`;
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const w = window.open(url, "_blank");
+  if (w) { setTimeout(() => { w.print(); setTimeout(() => URL.revokeObjectURL(url), 3000); }, 600); }
+};
+
 const handleShareResult = async () => {
   if (!generatedOutputUrl) return;
 
@@ -1557,6 +1577,14 @@ const WEBHOOK_URL =
     const resolvedShootStyle = customShootStyle || shootStyle;
     const resolvedAccessory = customAccessory || accessory;
 
+    // Map selected size → actual output dimensions
+    const resolveJewelleryOutputSize = (sz: string): string => {
+      if (sz.toLowerCase().includes("square") || sz === "Square 1080x1080") return "2000x2000";
+      if (sz.toLowerCase().includes("mobile") || sz === "Mobile 1080x1920") return "1080x1920";
+      return sz;
+    };
+    const resolvedOutputSize = resolveJewelleryOutputSize(outputSize);
+
     const styleDirectives: string[] = [];
 
     if (resolvedAccessory === "No Accessories") {
@@ -1625,7 +1653,7 @@ const WEBHOOK_URL =
       shoot_style: resolvedShootStyle,
       accessories: resolvedAccessory,
       camera_angle: customCameraAngle || cameraAngle,
-      output_size: outputSize,
+      output_size: resolvedOutputSize,
       output_quality: quality,
       jewellery_notes: jewelleryDetails,
       model_notes: modelNotes,
@@ -2727,6 +2755,13 @@ if (!response.ok) {
                               Share / Copy Link
                             </button>
                           </div>
+                          <button
+                            type="button"
+                            onClick={handleDownloadPDF}
+                            className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-300/50 bg-rose-50 px-4 py-2.5 text-sm font-black text-rose-700 transition hover:scale-[1.02] dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-300"
+                          >
+                            📄 Download as PDF
+                          </button>
 
                           <a
                             href={`https://wa.me/?text=${encodeURIComponent(`AI Jewellery visual ready: ${generatedOutputUrl}`)}`}

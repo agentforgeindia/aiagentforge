@@ -1218,6 +1218,22 @@ export default function Home() {
     darkMode,
   ]);
 
+  // Map user-selected size+quality → actual output_size sent to API
+  const resolveOutputDimensions = (sizeValue: string, qualityValue: string): { output_size: string; quality: string } => {
+    const s = sizeValue.trim().toLowerCase();
+    const q = qualityValue.trim();
+    // Square selection → always 2000×2000 regardless of quality
+    if (s === "1080x1080" || s === "square (1:1)") {
+      return { output_size: "2000x2000", quality: q };
+    }
+    // Mobile/portrait → keep portrait dimensions
+    if (s === "1080x1920" || s === "mobile (9:16)") {
+      return { output_size: "1080x1920", quality: q };
+    }
+    // Custom size — pass as-is
+    return { output_size: sizeValue.trim(), quality: q };
+  };
+
   const getRequiredCredits = (
     sizeValue = customOutputSize.trim() || outputSize,
     qualityValue = customQuality.trim() || quality,
@@ -1228,15 +1244,15 @@ export default function Home() {
       address?: string;
     },
   ) => {
-    const normalizedSize = sizeValue.trim();
+    const normalizedSize = sizeValue.trim().toLowerCase();
     const normalizedQuality = qualityValue.trim().toLowerCase();
 
     let baseCredits = 15;
 
-    if (normalizedSize === "1080x1080" && normalizedQuality === "premium") {
+    if ((normalizedSize === "1080x1080" || normalizedSize === "2000x2000") && normalizedQuality === "premium") {
       baseCredits = 15;
     } else if (
-      normalizedSize === "1080x1080" &&
+      (normalizedSize === "1080x1080" || normalizedSize === "2000x2000") &&
       normalizedQuality === "ultra hd"
     ) {
       baseCredits = 20;
@@ -1741,9 +1757,9 @@ export default function Home() {
     const resolvedModelType = customModelType.trim() || modelType;
     const resolvedProduct = customProduct.trim() || product;
     const resolvedShootStyle = customShootStyle.trim() || shootStyle;
-    const resolvedOutputSize = customOutputSize.trim() || outputSize;
     const resolvedQuality = customQuality.trim() || quality;
     const resolvedPose = customPose.trim() || pose;
+    const { output_size: resolvedOutputSize } = resolveOutputDimensions(customOutputSize.trim() || outputSize, resolvedQuality);
     const resolvedAccessories = resolveAccessories();
     const selectedBrandDetails = {
       company_name: useCompanyName ? companyName.trim() : "",
@@ -2181,6 +2197,30 @@ export default function Home() {
     } catch (error) {
       window.open(previewResult, "_blank", "noopener,noreferrer");
     }
+  };
+
+  const handleDownloadPDF = () => {
+    const doneItems = items.filter((it) => it.resultUrl && it.status === "done");
+    if (doneItems.length === 0 && !previewResult) return;
+    const imgUrls = doneItems.length > 0 ? doneItems.map((it) => it.resultUrl!) : [previewResult!];
+    const date = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
+    const imgTags = imgUrls.map((url, i) =>
+      `<div class="page"><img src="${url}" /><p class="label">Mockup ${i + 1} — AgentForge AI · ${date}</p></div>`
+    ).join("");
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>AgentForge Mockups</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#fff; font-family:Arial,sans-serif; }
+  .page { page-break-after:always; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:20px; }
+  .page:last-child { page-break-after:auto; }
+  img { max-width:100%; max-height:90vh; object-fit:contain; border-radius:8px; box-shadow:0 4px 24px rgba(0,0,0,0.12); }
+  .label { margin-top:12px; font-size:11px; color:#6b7280; text-align:center; }
+  @media print { body { background:#fff; } }
+</style></head><body>${imgTags}</body></html>`;
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, "_blank");
+    if (w) { setTimeout(() => { w.print(); setTimeout(() => URL.revokeObjectURL(url), 3000); }, 600); }
   };
 
   const pageBg = darkMode
@@ -3512,6 +3552,13 @@ export default function Home() {
                                 <span>Share Now</span>
                               </button>
                             </div>
+
+                            <button
+                              onClick={handleDownloadPDF}
+                              className="mt-1 flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-300/50 bg-rose-50 px-5 py-2.5 text-sm font-black text-rose-700 shadow transition hover:scale-[1.02] dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-300"
+                            >
+                              📄 Download as PDF {items.filter(it => it.status === "done").length > 1 ? `(${items.filter(it => it.status === "done").length} pages)` : ""}
+                            </button>
 
                             <a
                               href={whatsappLink}

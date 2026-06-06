@@ -998,6 +998,12 @@ export default function ProductographyPage() {
     throw new Error("Generation is taking longer than expected. Please check n8n execution.");
   };
 
+  const resolveProductOutputSize = (sz: string): string => {
+    if (sz === "1080x1080") return "2000x2000";
+    if (sz === "1080x1920") return "1080x1920";
+    return sz;
+  };
+
   const generateOne = async (item: GenItem, userId: string) => {
     const generationId = newId();
     const resolvedCategory = customCategory.trim() || productCategory;
@@ -1006,6 +1012,7 @@ export default function ProductographyPage() {
     const resolvedShootStyle = customShootStyle.trim() || shootStyle;
     const resolvedBackground = customBackground.trim() || background;
     const resolvedCameraAngle = customCameraAngle.trim() || cameraAngle;
+    const resolvedOutputSize = resolveProductOutputSize(outputSize);
 
     setItems((prev) => prev.map((it) => (it.id === item.id ? { ...it, status: "generating" } : it)));
 
@@ -1025,7 +1032,7 @@ export default function ProductographyPage() {
       product_type: resolvedCategory,
       model_type: resolvedModelLook,
       shoot_style: resolvedShootStyle,
-      output_size: outputSize,
+      output_size: resolvedOutputSize,
       quality,
       article_number: item.productCode.trim() || null,
       custom_instruction: customInstruction,
@@ -1199,6 +1206,30 @@ export default function ProductographyPage() {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadPDF = () => {
+    const doneItems = items.filter((it) => it.resultUrl && it.status === "done");
+    if (doneItems.length === 0 && !previewResult) return;
+    const imgUrls = doneItems.length > 0 ? doneItems.map((it) => it.resultUrl!) : [previewResult!];
+    const date = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
+    const imgTags = imgUrls.map((url, i) =>
+      `<div class="page"><img src="${url}" /><p class="label">Product Shoot ${i + 1} — AgentForge AI · ${date}</p></div>`
+    ).join("");
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>AgentForge Product Shoots</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#fff; font-family:Arial,sans-serif; }
+  .page { page-break-after:always; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:20px; }
+  .page:last-child { page-break-after:auto; }
+  img { max-width:100%; max-height:90vh; object-fit:contain; border-radius:8px; box-shadow:0 4px 24px rgba(0,0,0,0.12); }
+  .label { margin-top:12px; font-size:11px; color:#6b7280; text-align:center; }
+  @media print { body { background:#fff; } }
+</style></head><body>${imgTags}</body></html>`;
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, "_blank");
+    if (w) { setTimeout(() => { w.print(); setTimeout(() => URL.revokeObjectURL(url), 3000); }, 600); }
   };
 
   const handleNativeShare = async () => {
@@ -1996,6 +2027,9 @@ export default function ProductographyPage() {
                                   WhatsApp
                                 </a>
                               </div>
+                              <button onClick={handleDownloadPDF} className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-300/50 bg-rose-50 px-5 py-2.5 text-sm font-black text-rose-700 transition hover:scale-[1.02] dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-300">
+                                📄 Download as PDF {items.filter(it => it.status === "done").length > 1 ? `(${items.filter(it => it.status === "done").length} pages)` : ""}
+                              </button>
                               <Link
                                 href="/my-creations"
                                 className={`mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-sm font-bold transition hover:scale-[1.01] ${darkMode ? "border-white/10 bg-white/[0.04] text-white/70 hover:border-cyan-400/30 hover:text-cyan-300" : "border-black/10 bg-cyan-50/70 text-black/70 hover:border-cyan-300 hover:text-cyan-700"}`}
