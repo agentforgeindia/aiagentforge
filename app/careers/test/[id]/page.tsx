@@ -283,8 +283,29 @@ export default function TestPage() {
             ) : (
               <div className="mt-4 rounded-2xl border border-cyan-200/40 bg-white/85 p-5 text-center dark:border-cyan-400/20 dark:bg-white/[0.05]">
                 <p className="text-3xl">{ccResponse === "yes" ? "🎉" : "👍"}</p>
-                <p className="mt-2 text-sm font-black">{ccResponse === "yes" ? "Great! Our team will contact you soon." : "No problem! Our team will keep you informed."}</p>
-                <p className="mt-1 text-[11px] font-bold text-black/40 dark:text-white/40">Our Team Will Contact You Soon.</p>
+                <p className="mt-2 text-sm font-black">{ccResponse === "yes" ? "Welcome to the AgentForge Referral Programme!" : "No problem! Our team will keep you informed."}</p>
+                {ccResponse === "yes" && ccData?.referral_code && (
+                  <div className="mt-4 rounded-2xl border-2 border-dashed border-cyan-400/50 bg-cyan-50/60 p-4 dark:bg-cyan-400/5">
+                    <p className="text-[11px] font-black uppercase tracking-widest text-cyan-600">Your Referral Code</p>
+                    <p className="mt-2 text-2xl font-black tracking-widest text-slate-900 dark:text-white">{ccData.referral_code}</p>
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(ccData.referral_code!); }}
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-cyan-500 px-4 py-1.5 text-xs font-black text-white transition hover:bg-cyan-600"
+                    >
+                      Copy Code
+                    </button>
+                    <p className="mt-3 text-[11px] font-medium text-black/55 dark:text-white/45">
+                      Share this code or your referral link. You earn <b>10% commission</b> on every purchase made through your link.
+                    </p>
+                    <a href={`/careers/referral?code=${ccData.referral_code}`}
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-cyan-300/60 bg-white px-4 py-2 text-xs font-black text-cyan-700 shadow transition hover:scale-[1.02] dark:border-cyan-400/30 dark:bg-white/10 dark:text-cyan-300">
+                      📊 View My Earnings Dashboard →
+                    </a>
+                  </div>
+                )}
+                {ccResponse === "yes" && !ccData?.referral_code && (
+                  <p className="mt-2 text-[11px] font-bold text-black/40 dark:text-white/40">Our team will share your referral code shortly.</p>
+                )}
               </div>
             )}
           </>
