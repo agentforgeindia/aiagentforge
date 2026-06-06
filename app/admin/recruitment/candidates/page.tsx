@@ -3,7 +3,7 @@
 // /admin/recruitment/candidates — candidate pipeline management.
 
 import { useEffect, useState } from "react";
-import { RefreshCw, ShieldCheck, Plus, X, ChevronDown, ChevronUp } from "lucide-react";
+import { RefreshCw, ShieldCheck, Plus, X, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import AdminShell, {
   adminCardCls, adminMutedCls, adminSecondaryBtnCls,
@@ -44,9 +44,10 @@ const STAGE_LABEL: Record<string, string> = {
 const ROLES = ["telecaller","sales-executive","support-executive","marketing-executive","content-creator","ai-operator","designer","developer","hr-executive"];
 
 export default function CandidatesPage() {
-  const { loading: pLoading, has, email } = useAdminPermissions();
-  const canView   = has("hr.view");
-  const canManage = has("hr.manage");
+  const { loading: pLoading, has, email, role } = useAdminPermissions();
+  const canView    = has("hr.view");
+  const canManage  = has("hr.manage");
+  const isFounder  = role === "founder";
 
   const [rows, setRows]       = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,6 +97,17 @@ export default function CandidatesPage() {
     const final = parts.length ? Math.round(parts.reduce((a, b) => a + b, 0) / parts.length) : null;
     await supabase.from("candidates").update({ ...patch, final_score: final, updated_at: new Date().toISOString() }).eq("id", id);
     setRefreshKey((k) => k + 1);
+  }
+
+  async function removeCandidate(id: string, name: string) {
+    if (!isFounder) return;
+    const confirmed = window.confirm(
+      `Remove "${name}" permanently?\n\nThis will delete the candidate and all related records (scores, social links, payments). This action cannot be undone.`
+    );
+    if (!confirmed) return;
+    await supabase.from("candidates").delete().eq("id", id);
+    setRows((prev) => prev.filter((r) => r.id !== id));
+    if (expanded === id) setExpanded(null);
   }
 
   if (pLoading) return <Loading />;
@@ -172,6 +184,16 @@ export default function CandidatesPage() {
                       </select>
                     ) : (
                       <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold dark:bg-slate-800">{STAGE_LABEL[c.stage]}</span>
+                    )}
+                    {isFounder && (
+                      <button
+                        type="button"
+                        title="Remove candidate (founder only)"
+                        onClick={() => removeCandidate(c.id, c.name)}
+                        className="flex h-7 w-7 items-center justify-center rounded-md border border-rose-200 text-rose-400 transition hover:border-rose-400 hover:bg-rose-50 hover:text-rose-600 dark:border-rose-500/30 dark:hover:bg-rose-500/10"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     )}
                     <button type="button" onClick={() => setExpanded(open ? null : c.id)}>{open ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}</button>
                   </div>
