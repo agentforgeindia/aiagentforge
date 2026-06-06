@@ -99,7 +99,7 @@ export default function MarketingPage() {
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard label="Total Leads"    value={data.leads.total_leads}   sub={`Today: ${data.leads.leads_today}`}  icon={<Users className="h-4 w-4" />} />
             <StatCard label="This Month"     value={data.leads.leads_month}   sub={`This week: ${data.leads.leads_week}`} icon={<TrendingUp className="h-4 w-4" />} tone="emerald" />
-            <StatCard label="Meta Leads"     value={data.leads.meta_leads}    sub={`FB: ${data.leads.facebook_leads} Â· IG: ${data.leads.instagram_leads}`} icon={<Target className="h-4 w-4" />} tone="indigo" />
+            <StatCard label="Meta Leads"     value={data.leads.meta_leads}    sub={`FB: ${data.leads.facebook_leads} · IG: ${data.leads.instagram_leads}`} icon={<Target className="h-4 w-4" />} tone="indigo" />
             <StatCard label="Google Leads"   value={data.leads.google_leads}  sub={`Converted: ${data.leads.converted}`} icon={<Target className="h-4 w-4" />} tone="emerald" />
           </section>
 
@@ -147,7 +147,7 @@ export default function MarketingPage() {
             {/* Daily leads sparkline */}
             <div className={`${adminCardCls} p-4`}>
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                Daily Leads Â· Last 30 Days
+                Daily Leads · Last 30 Days
               </p>
               <DailyChart points={data.daily_leads} />
               <div className="mt-3 flex gap-4 text-[11px]">
@@ -303,7 +303,7 @@ function StatCard({ label, value, sub, icon, tone }: {
 }
 
 function Loading() {
-  return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking accessâ€¦</main>;
+  return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking access…</main>;
 }
 function Denied() {
   return (

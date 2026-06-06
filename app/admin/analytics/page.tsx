@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-// /admin/analytics â€” Meta Ads + GA4 + Clarity in one place + quick links.
+// /admin/analytics — Meta Ads + GA4 + Clarity in one place + quick links.
 
 import { useEffect, useState } from "react";
 import { RefreshCw, ShieldCheck, ExternalLink, BarChart3, Eye, MousePointerClick } from "lucide-react";
@@ -48,7 +48,7 @@ export default function AnalyticsPage() {
       doodleType="analytics"
       breadcrumbs={[{ label: "Analytics" }]}
       title="Analytics"
-      subtitle="Meta Ads, Google Analytics & Microsoft Clarity â€” last 7 days"
+      subtitle="Meta Ads, Google Analytics & Microsoft Clarity — last 7 days"
       email={email}
       actions={<button type="button" onClick={() => setRefreshKey((k) => k + 1)} className={adminSecondaryBtnCls}><RefreshCw className="h-3.5 w-3.5" />Refresh</button>}
     >
@@ -65,13 +65,13 @@ export default function AnalyticsPage() {
         </section>
 
         {loading ? (
-          <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
+          <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
         ) : !data ? (
           <p className="p-6 text-center text-sm text-rose-600">Could not load analytics.</p>
         ) : (
           <>
             {/* Meta Ads */}
-            <Block title="ðŸ“¢ Meta Ads Â· Last 7 Days" prov={data.meta}>
+            <Block title="📢 Meta Ads · Last 7 Days" prov={data.meta}>
               {data.meta.data && (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                   <Stat label="Spend"       value={`₹${Number(data.meta.data.spend).toLocaleString("en-IN")}`} />
@@ -85,7 +85,7 @@ export default function AnalyticsPage() {
             </Block>
 
             {/* GA4 */}
-            <Block title="ðŸ“Š Google Analytics Â· Last 7 Days" prov={data.ga4}>
+            <Block title="📊 Google Analytics · Last 7 Days" prov={data.ga4}>
               {data.ga4.data && (
                 <>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -103,7 +103,7 @@ export default function AnalyticsPage() {
             </Block>
 
             {/* Clarity */}
-            <Block title="ðŸ” Microsoft Clarity Â· Last 3 Days" prov={data.clarity}>
+            <Block title="🔍 Microsoft Clarity · Last 3 Days" prov={data.clarity}>
               {data.clarity.data && (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   <Stat label="Sessions"    value={Number(data.clarity.data.sessions).toLocaleString("en-IN")} icon={<Eye className="h-4 w-4" />} />
@@ -127,7 +127,7 @@ function Block({ title, prov, children }: { title: string; prov: Prov; children:
         {!prov.configured && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">Not configured</span>}
       </div>
       {!prov.configured || prov.note ? (
-        <p className={`text-xs ${adminMutedCls}`}>âš™ï¸ {prov.note ?? "No data."}</p>
+        <p className={`text-xs ${adminMutedCls}`}>⚙️ {prov.note ?? "No data."}</p>
       ) : children}
     </section>
   );
@@ -161,7 +161,7 @@ function List({ title, rows }: { title: string; rows: { label: string; value: nu
   );
 }
 
-function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking accessâ€¦</main>; }
+function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking access…</main>; }
 function Denied()  {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] px-6 dark:bg-[#0b0d12]">
@@ -171,4 +171,3 @@ function Denied()  {
     </main>
   );
 }
-
