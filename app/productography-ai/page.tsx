@@ -567,7 +567,7 @@ export default function ProductographyPage() {
     : "bg-gradient-to-b from-[#f8fbff] via-white to-[#eefaff] text-black";
 
   const isFreeAccount = useMemo(() => isFreeAccountFromProfile(profile), [profile]);
-  const canBulk = useMemo(() => hasBulkAccess(profile), [profile]);
+  const canBulk = useMemo(() => hasBulkAccess(profile?.plan), [profile]);
 
   const requiredCredits = (() => {
     const q = quality.toLowerCase();
