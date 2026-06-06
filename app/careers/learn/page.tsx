@@ -26,22 +26,25 @@ const COMPANY_READS = [
 ];
 
 const TOUR_PAGES = [
-  { key: "home",    href: "/",        title: "Home Page",      desc: "Explore the AgentForge homepage" },
-  { key: "agents",  href: "/agents",  title: "Our AI Agents",  desc: "Understand our AI products" },
-  { key: "academy", href: "/academy", title: "Academy",        desc: "Explore the learning platform" },
-  { key: "pricing", href: "/pricing", title: "Pricing",        desc: "Plans and pricing details" },
-  { key: "blog",    href: "/blog",    title: "Blog",           desc: "Company updates and articles" },
+  { key: "home",      href: "/",           title: "Home Page",      desc: "Explore the AgentForge homepage" },
+  { key: "agents",    href: "/agents",     title: "Our AI Agents",  desc: "Understand our AI products" },
+  { key: "pricing",   href: "/pricing",    title: "Pricing",        desc: "Plans and pricing details" },
+  { key: "tutorials", href: "/tutorials",  title: "Tutorials",      desc: "Step-by-step guides and walkthroughs" },
+  { key: "blog",      href: "/blog",       title: "Blog",           desc: "Company updates and articles" },
 ];
 
 const FAQ: { q: string; a: string }[] = [
-  { q: "Is any prior experience required?",     a: "No, anyone can apply. We provide all training after you join." },
-  { q: "When will salary be paid?",             a: "Monthly salary via bank transfer. Incentives are performance-based." },
-  { q: "What are the working hours?",           a: "8 hours daily with flexible timing. Overtime earns extra incentive." },
-  { q: "Why is a security deposit required?",   a: "A refundable ₹500 deposit is collected after selection — it filters serious candidates." },
-  { q: "What if I fail the test?",              a: "You get 3 attempts total. Review the training material and try again." },
-  { q: "What equipment is needed for WFH?",    a: "A smartphone or laptop with a stable internet connection — that is all." },
-  { q: "What happens after the HR call?",       a: "Once you agree, your salary is confirmed. After the ₹500 deposit, login credentials and training access are provided." },
-  { q: "How does Content Creator work?",        a: "Your social media profile is scored by AI. Good reach earns you a referral link with 10% commission on every purchase." },
+  { q: "Is any prior experience required?",           a: "No, anyone can apply. We provide all training after you join." },
+  { q: "When will salary be paid?",                   a: "Monthly salary via bank transfer. Incentives are performance-based." },
+  { q: "What are the working hours?",                 a: "8 hours daily with flexible timing. Overtime earns extra incentive." },
+  { q: "Why is a security deposit required?",         a: "A refundable ₹500 deposit is collected after selection — it filters serious candidates." },
+  { q: "What if I fail the test?",                    a: "You get 3 attempts total. Review the training material and try again." },
+  { q: "What equipment is needed for WFH?",          a: "A smartphone or laptop with a stable internet connection — that is all." },
+  { q: "What happens after the HR call?",             a: "Once you agree, your salary is confirmed. After the ₹500 deposit, login credentials and full training access are provided." },
+  { q: "How does Content Creator work?",              a: "Your social media profile is scored by AI. Good reach earns you a referral link with 10% commission on every purchase." },
+  { q: "What is AgentForge Academy?",                 a: "AgentForge Academy is our internal learning platform. Once you join, you get access to role-specific training modules, scripts, SOPs, WhatsApp templates, and AI tools — everything you need to perform from day one." },
+  { q: "How does the Referral Rewards programme work?", a: "Every team member gets a personal referral link. When someone signs up or purchases through your link, you earn a commission. Referral earnings are tracked in real time on your dashboard and cleared every 48 hours." },
+  { q: "Can I earn from referrals without being hired?", a: "Content Creators with strong social media reach may receive a referral partnership offer even before joining as an employee. AI scores your profile and, if eligible, you get a referral link with 10% commission per sale." },
 ];
 
 // Inject a reminder popup into each tour page tab
@@ -101,10 +104,18 @@ function LearnInner() {
         .from("recruitment_training")
         .select("*")
         .or(`role_slug.eq.${role},role_slug.is.null`);
-      const list = (data as Module[]) ?? [];
-      list.sort((a, b) => {
+      const raw = (data as Module[]) ?? [];
+      raw.sort((a, b) => {
         if ((a.role_slug === null) !== (b.role_slug === null)) return a.role_slug === null ? -1 : 1;
         return a.module_order - b.module_order;
+      });
+      // Deduplicate by title — keep the role-specific version over generic (null slug)
+      const seen = new Set<string>();
+      const list = raw.filter((m) => {
+        const key = m.title.trim().toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
       });
       setModules(list);
       setLoading(false);
@@ -202,8 +213,26 @@ function LearnInner() {
         ) : (
           <div className="mt-4 space-y-2">
             {modules.map((m, i) => {
+              const isWelcome = m.title.toLowerCase().includes("welcome");
               const isOpen = open === m.id;
               const isRead = readMods.has(m.id);
+
+              // "Welcome to AgentForge" — always expanded, featured card
+              if (isWelcome) {
+                return (
+                  <div key={m.id} onClick={() => setReadMods((r) => new Set(r).add(m.id))}
+                    className="overflow-hidden rounded-2xl border-2 border-cyan-300/60 bg-gradient-to-br from-cyan-50/80 to-blue-50/60 p-5 shadow-md shadow-cyan-200/20 dark:border-cyan-400/30 dark:from-cyan-900/20 dark:to-blue-900/10">
+                    <div className="mb-3 flex items-center gap-2">
+                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black text-white ${isRead ? "bg-emerald-500" : "bg-gradient-to-br from-cyan-400 to-blue-600"}`}>
+                        {isRead ? <CheckCircle2 className="h-4 w-4" /> : "★"}
+                      </span>
+                      <span className="text-sm font-black text-cyan-700 dark:text-cyan-300">{m.title}</span>
+                    </div>
+                    <div className="whitespace-pre-wrap text-sm font-medium leading-relaxed text-black/75 dark:text-white/75">{m.content}</div>
+                  </div>
+                );
+              }
+
               return (
                 <div key={m.id} className="overflow-hidden rounded-2xl border border-cyan-200/40 bg-white/85 backdrop-blur dark:border-cyan-400/20 dark:bg-white/[0.05]">
                   <button type="button" onClick={() => toggleMod(m.id)} className="flex w-full items-center justify-between gap-3 p-4 text-left">

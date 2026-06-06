@@ -63,7 +63,8 @@ function ApplyForm() {
     router.push(`/careers/learn?role=${f.role_slug}&cid=${json.candidate_id}`);
   }
 
-  const input = "w-full rounded-xl border border-cyan-200/50 bg-white px-4 py-3 text-sm font-medium text-slate-800 shadow-sm transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/25 dark:border-white/10 dark:bg-white/5 dark:text-white";
+  const input = "w-full rounded-xl border border-cyan-200/50 bg-white px-4 py-3 text-sm font-medium text-slate-800 shadow-sm transition focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/25 dark:border-white/10 dark:bg-[#0f1a2e] dark:text-white";
+  const selectInput = `${input} [&>option]:bg-[#0f1a2e] [&>option]:text-white`;
 
   const selectedRole = ROLES.find(r => r.slug === f.role_slug);
 
@@ -106,7 +107,7 @@ function ApplyForm() {
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <input className={input} placeholder="Email" type="email" value={f.email} onChange={(e) => up("email", e.target.value)} />
-            <select className={input} value={f.role_slug} onChange={(e) => up("role_slug", e.target.value)}>
+            <select className={selectInput} value={f.role_slug} onChange={(e) => up("role_slug", e.target.value)}>
               {ROLES.map((r) => <option key={r.slug} value={r.slug}>{r.label}</option>)}
             </select>
           </div>
