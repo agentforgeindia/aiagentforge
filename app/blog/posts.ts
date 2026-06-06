@@ -111,7 +111,7 @@ export const BLOG_POSTS: BlogPost[] = [
         type: "p",
         text: "A mid-scale Surat wholesaler shipping 30 new designs a month was spending ₹4–8 lakh on photography alone. And it took 5–7 days from design lock to WhatsApp drop. By that time, the trend had moved.",
       },
-      { type: "quote", text: "Trend pakad ne ke liye 7 din bahut zyada hain. Tab tak buyer next vendor pe ja chuka hota hai." },
+      { type: "quote", text: "Seven days is too long to catch a trend. By then the buyer has already moved to the next vendor." },
 
       { type: "h2", text: "What changed in 2026" },
       {
@@ -1525,7 +1525,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         type: "p",
-        text: "He told me, very simply: 'Aisi koi cheez honi chahiye jo seedhe fabric ki photo se mockup bana de. Bana do.' That was the brief. One sentence. From one shirt manufacturer who knew exactly what the industry needed and could not find it anywhere.",
+        text: "He told me, very simply: 'There should be something that turns a fabric photo directly into a mockup. Build it.' That was the brief. One sentence. From one shirt manufacturer who knew exactly what the industry needed and could not find it anywhere.",
       },
       { type: "h2", text: "Bhavin's problem is everyone's problem" },
       {

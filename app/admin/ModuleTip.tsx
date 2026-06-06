@@ -5,384 +5,383 @@
 // ============================================================
 // Renders automatically inside AdminShell based on page title.
 // Once a user clicks "Got it", that tip stays hidden (localStorage).
-// Keep tips short, simple, action-oriented (Hinglish OK).
+// Keep tips short, simple and action-oriented.
 // ============================================================
 
-import { useEffect, useState } from "react";
-import { Lightbulb, X } from "lucide-react";
+import { useState } from "react";
+import { HelpCircle, X } from "lucide-react";
 
 type Tip = { what: string; steps: string[] };
 
-// Keyed by the AdminShell `title` prop (exact match).
 const TIPS: Record<string, Tip> = {
   "Founder Command Center": {
-    what: "Sirf founder ke liye — live cash position, monthly goals aur team output ek jagah.",
+    what: "Founder-only view — live cash position, monthly goals and team output in one place.",
     steps: [
-      "Upar Live Numbers mein revenue, cash-in-bank, outstanding dekho.",
-      "'Set Targets' se is mahine ke revenue/customer/generation goals daalo.",
-      "Goal cards progress bar se batate hain target ke kitne paas ho.",
+      "Check Live Numbers at the top: revenue, cash-in-bank, outstanding.",
+      "Use 'Set Targets' to enter this month's revenue, customer and generation goals.",
+      "Goal cards show a progress bar so you can see how close you are to each target.",
     ],
   },
   "Affiliate Partners": {
-    what: "Referral partners manage karo — har ek ko unique link milti hai, sale pe commission.",
+    what: "Manage referral partners — each gets a unique link and earns commission on every sale they bring.",
     steps: [
-      "'Add Partner' se naya affiliate banao — link auto-generate hoti hai.",
-      "Link pe click karke copy karo, partner ko bhejo.",
-      "Earned/Paid columns se commission track karo.",
+      "Add a partner with their name, email and commission rate.",
+      "Share their unique referral link with them.",
+      "Track their referred signups and commission payouts from this panel.",
     ],
   },
   "War Room": {
-    what: "Aapka daily dashboard — sab kuch ek nazar mein: aaj ka revenue, naye leads, signups, AI usage aur net profit.",
+    what: "Your daily dashboard — open tasks, hot leads and the most important numbers at a glance.",
     steps: [
-      "Upar Scoreboard mein aaj ke numbers dekho.",
-      "Red/amber alerts pe click karke seedha us page pe jao.",
-      "AI Business Intelligence section smart suggestions deta hai — unhe follow karo.",
+      "Check open tasks first — overdue ones are highlighted in red.",
+      "Hot leads at the top need to be called today.",
+      "Use the quick-action buttons to log a call or update a lead without switching pages.",
     ],
   },
   "Customers": {
-    what: "Sabhi registered users — unka plan, credit balance, payment history aur notes.",
+    what: "All registered users — their plan, credits, usage and contact details.",
     steps: [
-      "Kisi customer pe click karke uski poori timeline dekho.",
-      "Health badge (green/yellow/red) batata hai kaun churn ho sakta hai.",
-      "Notes add karke team ke liye context chhodo.",
+      "Search by name, email or phone.",
+      "Click a customer to see their full generation history and billing.",
+      "Use 'Add Credits' to manually top up a customer's balance.",
     ],
   },
   "Leads": {
-    what: "Inbound prospects — ads, website aur manual entries se aaye leads.",
+    what: "Inbound prospects — everyone who filled a form, called or showed interest but has not paid yet.",
     steps: [
-      "Upar-right 'Pipeline' button se Kanban view kholo — cards ko Next/Back move karo.",
-      "Har lead ka score (🔥/⚡/❄️) batata hai kaun hot hai.",
-      "'New lead' se manually add karo.",
+      "New leads land here automatically from the website form.",
+      "Update the status (New → Contacted → Demo Sent → Hot Lead) as you progress.",
+      "Add notes after each call so the next team member has full context.",
     ],
   },
   "Templates & Links": {
-    what: "Ready-to-send WhatsApp messages + saare important links (pages, pricing, tutorials, social).",
+    what: "Ready-to-send WhatsApp messages, pitch scripts and shareable product links.",
     steps: [
-      "WhatsApp tab se message 'Copy' karke customer ko bhejo.",
-      "Har template pe 💡 likha hai kab use karna hai.",
-      "Links tab se koi bhi page/social link copy ya open karo.",
+      "Pick a template (intro, follow-up, demo, closing) and tap Copy.",
+      "Paste into WhatsApp — personalise the name and product if needed.",
+      "Short product links can be shared directly in chats or on social media.",
     ],
   },
   "🏆 Sales War Room": {
-    what: "Poori sales team ek jagah — ranks, sales, incentives, kudos. Ek dusre ko appreciate karo!",
+    what: "The whole sales team in one view — who called, who hit targets, what is open.",
     steps: [
-      "Top 10 agents dikhte hain, 'Show all' se baaki.",
-      "Kisi ko ❤️ dabake kudos do (appreciation).",
-      "Emergency mein 'Ping Head Office' se founder/admin ko direct alert bhejo.",
+      "See each caller's daily numbers: calls made, demos sent, hot leads, paid.",
+      "Click any team member to drill into their lead list.",
+      "Use the top bar filters to switch between Today, This Week and This Month.",
     ],
   },
   "Help & Rules": {
-    what: "Apne role ke rules + backend tips. Kuch samajh nahi aaya to AI se pucho.",
+    what: "Your role's rules, commission structure and escalation process — all in one place.",
     steps: [
-      "Upar apne role ke rules padho.",
-      "AI Help box mein koi bhi sawaal type karo — step-by-step jawab milega.",
-      "Quick buttons se common sawaal seedha pucho.",
+      "Read your role's rules carefully before your first day.",
+      "Commission slabs and payout dates are listed here.",
+      "If you have a dispute or question, use the escalation contact shown at the bottom.",
     ],
   },
   "AgentForge Caller GPT": {
-    what: "Live call ke beech — customer ne jo kaha type karo, AI turant ready-to-speak reply deta hai.",
+    what: "Live call assistant — type what the customer said and get a ready-to-speak reply instantly.",
     steps: [
-      "Customer ki baat type karo ya quick objection button dabao.",
-      "AI ka reply Copy karke padh do.",
-      "Naya caller bhi pehle din se productive — sab objections ka jawab ready.",
+      "Type the customer's question or objection.",
+      "Copy the AI reply and deliver it naturally.",
+      "Even first-day callers can handle tough objections — every answer is ready.",
     ],
   },
   "Daily Caller Reports": {
-    what: "Har caller apne din ke numbers bharta hai — supervisor poori team ka total dekhta hai.",
+    what: "Each caller logs their daily numbers here — supervisors see the full team total.",
     steps: [
-      "Apne calls/demos/hot leads/paid bharke 'Save My Report' dabao.",
-      "Supervisor ko upar team totals + har caller ki row dikhti hai.",
-      "Date change karke purane din ke reports dekho.",
+      "Fill in your calls, demos, hot leads and paid count, then tap 'Save My Report'.",
+      "Supervisors see the team totals and each caller's individual row.",
+      "Change the date to review past reports.",
     ],
   },
   "Sales Command Center": {
-    what: "Calling team ka daily kaam yahan se — kis lead ko abhi call karna hai.",
+    what: "The calling team's daily work hub — see which leads to call right now.",
     steps: [
-      "🔥 Hot Leads pehle call karo — sabse zyada chance.",
-      "Lead pe 'Call' dabao → number khulega + outcome note karo.",
-      "Outcome save karte hi lead status auto-update ho jaata hai.",
+      "Call 🔥 Hot Leads first — they have the highest conversion chance.",
+      "Tap 'Call' on a lead to open their number and log the outcome.",
+      "Saving the outcome automatically updates the lead status.",
     ],
   },
   "Deals Pipeline": {
-    what: "Bade/formal deals track karo — proposal se closure tak.",
+    what: "Track large or formal deals from proposal to close.",
     steps: [
-      "'New Deal' se deal banao, value aur stage set karo.",
-      "Stage dropdown se deal ko aage badhao.",
-      "Upar 'Pipeline Value' batata hai kitna business pipeline mein hai.",
+      "Create a deal with 'New Deal', set the value and stage.",
+      "Use the stage dropdown to advance the deal forward.",
+      "The 'Pipeline Value' banner shows the total business currently in the pipeline.",
     ],
   },
   "Tasks": {
-    what: "Team ke follow-ups, demos aur reminders.",
+    what: "Team follow-ups, demos and reminders.",
     steps: [
-      "Task banao aur kisi member ko assign karo.",
-      "Due date set karo — overdue tasks War Room mein alert karte hain.",
-      "Done hone pe status update karo.",
+      "Create a task and assign it to a team member.",
+      "Set a due date — overdue tasks surface as alerts in the War Room.",
+      "Update the status when done.",
     ],
   },
   "Analytics": {
-    what: "Meta Ads, Google Analytics aur Microsoft Clarity ka data ek jagah — last 7 days.",
+    what: "Meta Ads, Google Analytics and Microsoft Clarity data in one view — last 7 days.",
     steps: [
-      "Upar gradient buttons se direct dashboard kholo.",
-      "Meta token hai to ad spend/clicks/CTR yahin dikhega.",
-      "GA4 + Clarity ke liye keys env mein daalni hongi (founder).",
+      "Use the gradient buttons at the top to open each platform's full dashboard.",
+      "If a Meta token is configured, ad spend, clicks and CTR appear directly here.",
+      "GA4 and Clarity require API keys set in the environment (founder task).",
     ],
   },
   "Marketing Center": {
-    what: "Leads kahan se aa rahe hain (Meta/Google) aur email campaigns ka performance.",
+    what: "Where your leads are coming from (Meta / Google) and email campaign performance.",
     steps: [
-      "Source breakdown dekho — kaunsa channel best chal raha hai.",
-      "Daily leads chart se trend samjho.",
-      "Email template performance se delivery rate check karo.",
+      "Check the source breakdown to see which channel is performing best.",
+      "Use the daily leads chart to spot trends.",
+      "Email template metrics show delivery and open rates.",
     ],
   },
   "Credit Center": {
-    what: "Poora credit system — kitne credits beche, use hue, balance kiska kitna hai.",
+    what: "The full credit system — credits sold, credits used and each user's balance.",
     steps: [
-      "Ledger bank-statement jaisa har transaction dikhata hai.",
-      "Top Consumers se pata chalega kaun zyada use kar raha.",
-      "Manual Adjustment se kisi user ko credits add kar sakte ho.",
+      "The ledger shows every transaction like a bank statement.",
+      "Top Consumers shows who is using the most credits.",
+      "Use Manual Adjustment to add credits to any user's account.",
     ],
   },
   "Finance": {
-    what: "Revenue vs Expenses = Net Profit. Asli kamaai yahan dikhti hai.",
+    what: "Revenue minus expenses equals net profit. Real earnings are tracked here.",
     steps: [
-      "'Add Expense' se manual kharche add karo (salary, hosting, etc.).",
-      "'Sync Costs' se Meta Ads, OpenAI, FAL ka kharcha auto aata hai.",
-      "Revenue by Agent batata hai kaunsa AI agent paisa kama raha.",
+      "Use 'Add Expense' to log manual costs (salary, hosting, etc.).",
+      "'Sync Costs' pulls Meta Ads, OpenAI and FAL costs automatically.",
+      "'Revenue by Agent' shows which AI agent is generating the most income.",
     ],
   },
   "Agent Management": {
-    what: "Har AI agent ka control — on/off, credits cost, prompt version.",
+    what: "Control every AI agent — toggle on/off, set credit cost, manage prompt versions.",
     steps: [
-      "Kisi agent ko band karna ho to Enabled toggle off karo.",
-      "Credits Per Generation se pricing control karo.",
-      "Change ke baad 'Save Changes' dabana zaroori hai.",
+      "Toggle Enabled off to disable an agent for all users.",
+      "Set Credits Per Generation to control per-use pricing.",
+      "Always tap 'Save Changes' after any update.",
     ],
   },
   "AI Operations": {
-    what: "AI generations ka health — kitne bane, fail hue, credits lage.",
+    what: "AI generation health — how many ran, failed and how many credits were used.",
     steps: [
-      "Health Monitor mein 🟢/🟡/🔴 batata hai kaunsa agent theek hai.",
-      "Failed Jobs section se problems jaldi pakdo.",
-      "Daily chart se usage trend dekho.",
+      "Health Monitor shows 🟢/🟡/🔴 for each agent's status.",
+      "Check Failed Jobs to catch problems early.",
+      "The daily chart reveals usage trends over time.",
     ],
   },
   "WhatsApp Inbox": {
-    what: "Customer ke WhatsApp messages yahan aate hain — AI pehle se reply draft kar deta hai.",
+    what: "Customer WhatsApp messages arrive here — AI pre-drafts a reply for every one.",
     steps: [
-      "Left mein conversation chuno.",
-      "AI ka draft reply box mein pehle se bhara hota hai — edit karke 'Send' dabao.",
-      "Auto-reply chahiye to WHATSAPP_AUTO_REPLY=true set karo (tab AI khud bhej dega).",
+      "Select a conversation on the left.",
+      "The AI draft is pre-filled in the reply box — edit if needed, then tap 'Send'.",
+      "Set WHATSAPP_AUTO_REPLY=true to let AI send replies automatically.",
     ],
   },
   "Generation Log": {
-    what: "Har ek AI generation ka detailed record — kaun, kaunsa agent, status, aur company ko kitna cost pada.",
+    what: "A detailed record of every AI generation — who ran it, which agent, status and cost.",
     steps: [
-      "Agent ya Status se filter karo.",
-      "Upar-right total estimated cost dikhta hai.",
-      "Failed generations dhundh ke problem jaldi pakdo.",
+      "Filter by Agent or Status to narrow down.",
+      "Total estimated cost is shown in the top-right.",
+      "Find failed generations quickly to diagnose issues.",
     ],
   },
   "Error Logs": {
-    what: "System ki saari failures ek jagah — payment, webhook, generation, API errors.",
+    what: "All system failures in one place — payment, webhook, generation and API errors.",
     steps: [
-      "Unresolved errors pe focus karo (red).",
-      "Category se filter karo — Payment errors sabse important.",
-      "Theek hone pe 'Resolve' dabake hatao.",
+      "Focus on unresolved errors (shown in red).",
+      "Filter by category — Payment errors are highest priority.",
+      "Tap 'Resolve' once an error has been fixed.",
     ],
   },
   "Approvals": {
-    what: "Team discount/refund/expense request raise karti hai — manager/founder approve ya reject karta hai.",
+    what: "Team members raise discount, refund or expense requests here — manager approves or rejects.",
     steps: [
-      "'New Request' se request banao (type + amount).",
-      "Manager Pending tab mein Approve/Reject karta hai.",
-      "Har decision note ke saath record hota hai.",
+      "Create a request with 'New Request' (type + amount).",
+      "Managers review pending requests in the Pending tab and Approve or Reject.",
+      "Every decision is recorded with a note.",
     ],
   },
   "Refund & Dispute Center": {
-    what: "Saare refund requests, disputes aur chargebacks track karo — reason + approval ke saath.",
+    what: "Track all refund requests, disputes and chargebacks — with reason and approval trail.",
     steps: [
-      "'New Request' se refund/dispute log karo.",
-      "Approve → phir 'Mark Processed' jab paisa wapas ho.",
-      "Open Amount batata hai kitna refund pending hai.",
+      "Log a refund or dispute with 'New Request'.",
+      "Approve → then tap 'Mark Processed' once the money has been returned.",
+      "'Open Amount' shows the total pending refund value.",
     ],
   },
   "AI Assistant": {
-    what: "Teen AI tools — call summary, sales coaching, aur WhatsApp reply draft. Bas text paste karo.",
+    what: "Three AI tools — call summary, sales coaching and WhatsApp reply drafting. Just paste text.",
     steps: [
-      "Meeting Summary: call transcript paste karo → structured summary + follow-up message milega.",
-      "Sales Coach: call notes daalo → score + improvement tips milenge.",
-      "WhatsApp Assistant: customer ka message paste karo → ready reply milega, Copy karke bhej do.",
+      "Meeting Summary: paste a call transcript → get a structured summary and follow-up message.",
+      "Sales Coach: paste call notes → get a score and improvement tips.",
+      "WhatsApp Assistant: paste the customer's message → get a ready reply to copy and send.",
     ],
   },
   "AI Costs": {
-    what: "Har agent ka API kharcha aur per-customer margin.",
+    what: "API cost per agent and per-customer margin.",
     steps: [
-      "Cost catalogue mein per-generation cost set/update karo.",
-      "Top customers ka cost vs revenue dekho.",
-      "USD↔INR rate update karke sahi numbers paao.",
+      "Set or update the per-generation cost in the cost catalogue.",
+      "Review top customers' cost vs revenue.",
+      "Update the USD↔INR rate to keep numbers accurate.",
     ],
   },
   "Support Center": {
-    what: "Customer ki problems — billing, generation, refund tickets.",
+    what: "Customer problems — billing, generation and refund tickets.",
     steps: [
-      "'New Ticket' se issue log karo aur priority set karo.",
-      "Status dropdown se Open → In Progress → Resolved badlo.",
-      "Urgent tickets War Room mein alert karte hain.",
+      "Log an issue with 'New Ticket' and set the priority.",
+      "Move status from Open → In Progress → Resolved using the dropdown.",
+      "Urgent tickets surface as alerts in the War Room.",
     ],
   },
   "Incentive Engine": {
-    what: "Har sales member ka target, achievement aur incentive.",
+    what: "Each sales member's target, achievement and incentive.",
     steps: [
-      "Commission rules dekho (Starter ₹200, Pro ₹1000, Empire ₹4000).",
-      "Member ka monthly target set karo.",
-      "Progress bar batata hai kaun target ke kitna paas hai.",
+      "Review commission rules (Starter ₹200, Pro ₹1,000, Empire ₹4,000).",
+      "Set the member's monthly target.",
+      "The progress bar shows how close each person is to their target.",
     ],
   },
   "🏆 Leaderboard": {
-    what: "Team ki ranking — sales, kaam ke ghante aur tasks.",
+    what: "Team rankings — sales, working hours and tasks completed.",
     steps: [
-      "Top 3 ko medals milte hain 🥇🥈🥉.",
-      "'Award Badge' se kisi member ko badge do (motivation).",
-      "Month change karke purana data dekho.",
+      "Top 3 earn medals 🥇🥈🥉.",
+      "Use 'Award Badge' to give a team member a recognition badge.",
+      "Switch months to view historical data.",
     ],
   },
   "Team": {
-    what: "Admins aur unke roles manage karo.",
+    what: "Manage admins and their roles.",
     steps: [
-      "Naya member add karke role do (founder/admin/sales/support).",
-      "Role decide karta hai kaun kya dekh sakta hai.",
-      "Member hata bhi sakte ho — access turant band.",
+      "Add a new member and assign their role (founder / admin / sales / support).",
+      "The role determines what each person can see and do.",
+      "Removing a member cuts off their access immediately.",
     ],
   },
   "Attendance": {
-    what: "Team ka check-in/out aur kitna time online raha — sab yahan.",
+    what: "Team check-in / check-out and total online time — all tracked here.",
     steps: [
-      "Har member upar-right 'Check in' button se din shuru karta hai.",
-      "🟢 Currently Online batata hai abhi kaun kaam pe hai.",
-      "Monthly Summary mein har member ke total ghante dikhte hain.",
+      "Each member starts their day with the 'Check In' button (top right).",
+      "🟢 Currently Online shows who is actively working right now.",
+      "Monthly Summary shows total hours for each team member.",
     ],
   },
   "Knowledge Base": {
-    what: "Team ke liye SOPs, sales scripts aur training docs ek jagah.",
+    what: "SOPs, sales scripts and training documents for the team — all in one place.",
     steps: [
-      "Category se filter karo (Sales/Support/Training).",
-      "Article pe click karke poora padho.",
-      "'New Article' se naya SOP add karo — pin karke top pe rakho.",
+      "Filter by category (Sales / Support / Training).",
+      "Click an article to read the full content.",
+      "Use 'New Article' to add a new SOP — pin it to keep it at the top.",
     ],
   },
   "Hiring OS": {
-    what: "No-resume hiring system — candidates apply, test dete hain, score ke basis pe hire hote hain.",
+    what: "No-resume hiring system — candidates apply, take a test and get scored automatically.",
     steps: [
-      "'Candidates' mein applicants ka pipeline manage karo (Applied → Hired).",
-      "'Questions' mein assessment ke MCQ banao (section + role wise).",
-      "Funnel aur leaderboard se best candidates pakdo.",
+      "Manage the applicant pipeline in 'Candidates' (Applied → Hired).",
+      "Build assessment MCQs in 'Questions' by section and role.",
+      "Use the funnel and leaderboard to identify top candidates.",
     ],
   },
   "Candidates": {
-    what: "Har candidate ka pipeline — stage, scores, salary, AI recommendation.",
+    what: "Each candidate's pipeline — stage, scores, salary and AI recommendation.",
     steps: [
-      "Stage dropdown se candidate ko aage badhao.",
-      "Card expand karke scores + expected/offered salary daalo (final auto-calculate).",
-      "Talent Pool tag se rejected candidates future ke liye save karo.",
+      "Use the stage dropdown to move a candidate forward.",
+      "Expand a card to add scores and expected / offered salary (final is auto-calculated).",
+      "Tag strong rejections as Talent Pool to revisit them in the future.",
     ],
   },
   "Question Bank": {
-    what: "Assessment ke MCQ questions — section (basic/product/crm/sales) aur role wise.",
+    what: "MCQ questions for assessments — organised by section (basic / product / crm / sales) and role.",
     steps: [
-      "'Add Question' se MCQ banao — 4 options.",
-      "Green circle pe click karke correct answer set karo.",
-      "Section se filter karke manage karo.",
+      "Use 'Add Question' to create an MCQ with 4 options.",
+      "Click the green circle next to the correct answer to mark it.",
+      "Filter by section to manage questions more easily.",
     ],
   },
   "HR Module": {
-    what: "Employees, unki salary aur leave management.",
+    what: "Employees, their salaries and leave management.",
     steps: [
-      "Employees tab mein staff add karo + base salary set karo.",
-      "Leaves tab mein leave requests approve/reject karo.",
-      "Salary tab mein 'Mark Paid' se payment record karo.",
+      "Add staff in the Employees tab and set their base salary.",
+      "Approve or reject leave requests in the Leaves tab.",
+      "Use 'Mark Paid' in the Salary tab to record a salary payment.",
     ],
   },
   "Automation Center": {
-    what: "If-this-then-that rules — kaam apne aap ho jaaye.",
+    what: "If-this-then-that rules — work happens automatically.",
     steps: [
-      "'New Rule' banao: pehle trigger chuno (jaise Lead Created).",
-      "Phir actions add karo (assign, email, notify).",
-      "Rule ko Enable karo — phir wo auto chalega.",
+      "Create a 'New Rule': choose a trigger first (e.g. Lead Created).",
+      "Add one or more actions (assign, email, notify).",
+      "Enable the rule — it runs automatically from that point.",
     ],
   },
   "Integrations": {
-    what: "Saari services ka connection status ek jagah.",
+    what: "Connection status for all external services in one view.",
     steps: [
       "🟢 = connected, 🔴 = disconnected.",
-      "Red dikhe to wo service ka key/setting check karo.",
-      "Troubleshooting mein ye sabse pehle dekho.",
+      "If a service is red, check its API key or settings.",
+      "Always check this page first when troubleshooting.",
     ],
   },
   "System Settings": {
-    what: "Company info, plan pricing, credits aur notifications ka config.",
+    what: "Company info, plan pricing, credits and notification configuration.",
     steps: [
-      "Koi value change karo — '•' dikhega jo unsaved hai.",
-      "Upar 'Save All' dabake sab ek saath save karo.",
-      "Plan prices yahan se control hote hain.",
+      "Change a value — a '•' indicator appears for any unsaved field.",
+      "Tap 'Save All' at the top to save everything at once.",
+      "Plan prices are controlled entirely from this page.",
     ],
   },
   "Testimonials": {
-    what: "Users ke reviews — approve karne pe website pe dikhte hain.",
+    what: "User reviews — approve them to display on the website.",
     steps: [
-      "Pending tab mein naye reviews aate hain.",
-      "'Approve' dabao to homepage pe live ho jaata hai.",
-      "Galat ho to 'Reject' ya 'Delete' karo.",
+      "New reviews arrive in the Pending tab.",
+      "Tap 'Approve' to make a review live on the homepage.",
+      "Use 'Reject' or 'Delete' to remove inappropriate reviews.",
     ],
   },
 };
 
-export default function ModuleTip({ title }: { title: string }) {
-  const tip = TIPS[title];
-  const storageKey = `af-tip-dismissed:${title}`;
-  const [show, setShow] = useState(false);
-
-  useEffect(() => {
-    if (!tip) return;
-    try {
-      setShow(localStorage.getItem(storageKey) !== "1");
-    } catch {
-      setShow(true);
-    }
-  }, [tip, storageKey]);
-
-  if (!tip || !show) return null;
-
-  function dismiss() {
-    try { localStorage.setItem(storageKey, "1"); } catch { /* ignore */ }
-    setShow(false);
-  }
+export default function ModuleTip({ module: mod }: { module: string }) {
+  const [open, setOpen] = useState(false);
+  const tip = TIPS[mod];
+  if (!tip) return null;
 
   return (
-    <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3.5 dark:border-amber-700/40 dark:bg-amber-500/10">
-      <div className="flex items-start gap-3">
-        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-200 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
-          <Lightbulb className="h-4 w-4" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold text-amber-900 dark:text-amber-200">{tip.what}</p>
-          <ul className="mt-1.5 space-y-0.5">
-            {tip.steps.map((s, i) => (
-              <li key={i} className="flex items-start gap-1.5 text-[11px] text-amber-800/90 dark:text-amber-300/80">
-                <span className="font-bold">{i + 1}.</span>
-                <span>{s}</span>
-              </li>
-            ))}
-          </ul>
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="ml-1.5 inline-flex items-center text-white/40 transition hover:text-white/80"
+        title={`Help: ${mod}`}
+      >
+        <HelpCircle className="h-4 w-4" />
+      </button>
+
+      {open && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setOpen(false)}
+          />
+          <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/10 bg-[#0f172a] p-6 shadow-2xl">
+            <button
+              onClick={() => setOpen(false)}
+              className="absolute right-4 top-4 text-white/40 hover:text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-cyan-400">
+              How to use
+            </p>
+            <h3 className="mb-2 text-base font-black text-white">{mod}</h3>
+            <p className="mb-4 text-sm text-white/65">{tip.what}</p>
+            <ol className="space-y-2">
+              {tip.steps.map((s, i) => (
+                <li key={i} className="flex gap-2.5 text-sm text-white/80">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-[10px] font-black text-cyan-400">
+                    {i + 1}
+                  </span>
+                  {s}
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={dismiss}
-          className="shrink-0 rounded-md px-2 py-1 text-[10px] font-bold text-amber-700 transition hover:bg-amber-200/60 dark:text-amber-300 dark:hover:bg-amber-500/15"
-        >
-          Got it ✕
-        </button>
-      </div>
-    </div>
+      )}
+    </>
   );
 }

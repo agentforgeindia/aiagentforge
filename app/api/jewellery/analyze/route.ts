@@ -180,7 +180,7 @@ function normaliseSuggestion(raw: any) {
     pose: coerceToWhitelist(raw?.pose, ALLOWED.pose, "Auto Pose"),
     face_expression: coerceToWhitelist(raw?.face_expression, ALLOWED.face_expression, "Soft Smile"),
     camera_angle: coerceToWhitelist(raw?.camera_angle, ALLOWED.camera_angle, "Auto Angle"),
-    reason: typeof raw?.reason === "string" ? raw.reason.slice(0, 200) : "AI ne is piece ke liye safe defaults pick kiye hain.",
+    reason: typeof raw?.reason === "string" ? raw.reason.slice(0, 200) : "AI has selected safe defaults for this piece.",
   };
 }
 
