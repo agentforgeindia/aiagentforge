@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Instagram, Globe, MessageCircle, Send, ExternalLink, Star, Users } from "lucide-react";
+import { Globe, MessageCircle, Send, ExternalLink, Star, Users } from "lucide-react";
 import { useTheme } from "@/app/components/ThemeProvider";
 
 type Influencer = {
