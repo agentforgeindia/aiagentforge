@@ -86,7 +86,13 @@ function Dashboard() {
       const refreshData = await refreshRes.json();
       if (refreshData.ok) setData(refreshData);
     } catch (e: any) {
-      alert("Upload failed: " + (e?.message ?? "Unknown error"));
+      const msg = e?.message ?? "Unknown error";
+      const isBucketError = msg.toLowerCase().includes("bucket") || msg.toLowerCase().includes("not found");
+      if (isBucketError) {
+        alert("Storage not configured yet. Our team is setting it up — please try again in a few minutes, or contact us at hr@aiagentforge.in");
+      } else {
+        alert("Upload failed: " + msg);
+      }
     }
     setUploading(false);
   }
