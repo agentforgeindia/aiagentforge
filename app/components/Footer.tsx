@@ -47,10 +47,10 @@ const COMPANY_LINKS = [
 ];
 
 const ACADEMY_LINKS = [
-  { label: "AgentForge Academy", href: "/careers" },
-  { label: "Learn & Earn", href: "/careers/learn?role=telecaller" },
-  { label: "Work With Us", href: "/careers" },
+  { label: "Careers & Jobs", href: "/careers" },
   { label: "Apply Now", href: "/careers/apply" },
+  { label: "Learn & Earn", href: "/careers/learn?role=telecaller" },
+  { label: "Referral Tracker", href: "/careers/referral" },
 ];
 
 const SEO_LINKS = [
