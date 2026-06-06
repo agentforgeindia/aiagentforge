@@ -43,14 +43,23 @@ export default function Navbar() {
     { label: "News & Blog", href: "/news" },
     { label: "Pricing", href: "/pricing" },
     { label: "About", href: "/about" },
-    { label: "Support", href: "/support" },
+  ];
+
+  const careerLinks = [
+    { label: "🏠 Careers Home", href: "/careers", desc: "Open roles & salary info" },
+    { label: "📝 Apply Now", href: "/careers/apply", desc: "Submit your application" },
+    { label: "📚 Learn & Earn", href: "/careers/learn?role=telecaller", desc: "Training modules" },
+    { label: "🎯 Take the Test", href: "/careers/test", desc: "Skill assessment" },
+    { label: "📊 Referral Tracker", href: "/careers/referral", desc: "Track your earnings" },
   ];
   const [showProfile, setShowProfile] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  // Mobile-only accordion state (separate from desktop dropdowns above)
   const [mobileAgentsOpen, setMobileAgentsOpen] = useState(false);
+  const [mobileCareersOpen, setMobileCareersOpen] = useState(false);
+  const [showCareers, setShowCareers] = useState(false);
   const agentRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const careersRef = useRef<HTMLDivElement>(null);
 
   const isLoggedIn = !!authUser;
   const user = {
@@ -63,6 +72,7 @@ export default function Navbar() {
     function handleClick(e: MouseEvent) {
       if (agentRef.current && !agentRef.current.contains(e.target as Node)) setShowAgents(false);
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) setShowProfile(false);
+      if (careersRef.current && !careersRef.current.contains(e.target as Node)) setShowCareers(false);
     }
     document.addEventListener("mousedown", handleClick);
 
@@ -105,6 +115,7 @@ export default function Navbar() {
   };
 
   const isAgentActive = pathname.includes("mockup") || pathname.includes("jewellery") || pathname.includes("productography");
+  const isCareersActive = pathname.startsWith("/careers");
 
   const initials = getInitials(user?.name, user?.email);
 
@@ -150,7 +161,7 @@ export default function Navbar() {
   </div>
 </Link>
 
-        {/* Desktop nav — flow: Home → Gallery → Tutorials → News & Blog → Pricing → About → Support → Agents */}
+        {/* Desktop nav */}
         <nav className="hidden items-center gap-1 text-sm font-medium lg:flex">
           {navLinks.map((link) => (
             <Link
@@ -166,7 +177,40 @@ export default function Navbar() {
             </Link>
           ))}
 
-          {/* Agents dropdown (last) */}
+          {/* Careers dropdown */}
+          <div className="relative" ref={careersRef}>
+            <button
+              type="button"
+              onClick={() => setShowCareers(!showCareers)}
+              className={`flex items-center gap-1 rounded-full px-4 py-2 transition-all duration-200 ${
+                isCareersActive
+                  ? "bg-cyan-500/10 font-bold text-cyan-600"
+                  : `${muted} hover:bg-cyan-500/5 hover:text-cyan-500`
+              }`}
+            >
+              Careers
+              <svg className={`h-3.5 w-3.5 transition-transform duration-200 ${showCareers ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+
+            {showCareers && (
+              <div className={`absolute right-0 top-14 z-[9999] w-72 overflow-hidden rounded-[2rem] border shadow-2xl backdrop-blur-2xl ${darkMode ? "border-white/10 bg-[#0b1220]/98" : "border-black/10 bg-white/98"}`}>
+                {careerLinks.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`block px-4 py-3 transition-colors ${darkMode ? "hover:bg-white/8" : "hover:bg-cyan-50"}`}
+                  >
+                    <p className="text-sm font-bold">{item.label}</p>
+                    <p className={`mt-0.5 text-xs ${muted}`}>{item.desc}</p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Agents dropdown */}
           <div className="relative" ref={agentRef}>
             <button
               type="button"
@@ -403,7 +447,6 @@ export default function Navbar() {
             }`}
           >
             <div className="grid gap-1 text-sm font-semibold">
-              {/* Flow: Home → Gallery → Tutorials → News & Blog → Pricing → About → Support → Agents */}
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
@@ -416,7 +459,40 @@ export default function Navbar() {
                 </Link>
               ))}
 
-              {/* Agents accordion (last) */}
+              {/* Careers accordion */}
+              <div className={`mt-1 border-t pt-1 ${darkMode ? "border-white/10" : "border-black/10"}`}>
+                <button
+                  type="button"
+                  onClick={() => setMobileCareersOpen((v) => !v)}
+                  className={`flex w-full items-center justify-between gap-2 rounded-2xl px-4 py-3 text-left transition-colors ${
+                    isCareersActive ? "bg-cyan-500/10 text-cyan-600" : "hover:bg-cyan-400/10"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="text-base">🎓</span>
+                    Careers
+                  </span>
+                  <svg className={`h-4 w-4 transition-transform ${mobileCareersOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </button>
+                {mobileCareersOpen && (
+                  <div className="mt-1 grid gap-0.5 pl-2">
+                    {careerLinks.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="flex flex-col rounded-2xl px-4 py-2.5 hover:bg-cyan-400/10"
+                      >
+                        <p className="text-sm font-bold">{item.label}</p>
+                        <p className={`mt-0.5 text-[11px] ${muted}`}>{item.desc}</p>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Agents accordion */}
               <div className={`mt-1 border-t pt-1 ${darkMode ? "border-white/10" : "border-black/10"}`}>
                 <button
                   type="button"
