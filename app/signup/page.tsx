@@ -90,6 +90,20 @@ export default function SignupPage() {
 
     // One-shot — don't attribute the next user on the same device.
     clearStoredUtm();
+
+    // Referral reward — if the user signed up via a referral link,
+    // grant credits to the referrer + a welcome bonus to this user.
+    // process_referral() uses auth.uid() — works when Supabase auto-confirms
+    // the account (no email verification step). For email-confirmation flows,
+    // auth/callback handles it after the user clicks the verify link.
+    try {
+      const refCode = typeof window !== "undefined" ? localStorage.getItem("af_ref_code") : null;
+      if (refCode) {
+        await supabase.rpc("process_referral", { p_ref_code: refCode });
+        localStorage.removeItem("af_ref_code");
+      }
+    } catch { /* ignore referral errors — auth/callback is the fallback */ }
+
     return true;
   }
 
