@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Instagram, Youtube, Twitter, Globe, MessageCircle, Send, ExternalLink, Star, Users } from "lucide-react";
+import { Instagram, Twitter, Globe, MessageCircle, Send, ExternalLink, Star, Users } from "lucide-react";
 import { useTheme } from "@/app/components/ThemeProvider";
 
 type Influencer = {
@@ -192,7 +192,7 @@ export default function InfluencerHubPage() {
                       {inf.youtube_url && (
                         <a href={inf.youtube_url} target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-rose-500 to-red-600 px-3 py-1.5 text-[11px] font-black text-white shadow transition hover:scale-[1.04]">
-                          <Youtube className="h-3.5 w-3.5" /> YouTube
+                          ▶ YouTube
                         </a>
                       )}
                       {inf.twitter_url && (
