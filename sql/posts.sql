@@ -69,7 +69,7 @@ create index if not exists posts_category_published_idx
 -- updated_at auto-touch
 -- ============================================================
 create or replace function public.posts_touch_updated_at()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql set search_path = public as $$
 begin
   new.updated_at = now();
   return new;

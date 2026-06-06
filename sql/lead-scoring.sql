@@ -115,7 +115,7 @@ $$;
 
 -- Trigger: auto-score on insert/update
 create or replace function public.trigger_score_lead()
-returns trigger language plpgsql security definer as $$
+returns trigger language plpgsql security definer set search_path = public as $$
 begin
   perform public.score_lead(new.id);
   return new;

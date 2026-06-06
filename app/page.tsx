@@ -712,7 +712,7 @@ export default function Home() {
               uses: [
                 {
                   title: "E-commerce Sellers",
-                  desc: "Amazon, Flipkart, Meesho ke liye hero product shots.",
+                  desc: "Hero product shots for Amazon, Flipkart, and Meesho listings.",
                 },
                 {
                   title: "Instagram Shops & D2C Brands",

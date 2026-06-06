@@ -162,7 +162,7 @@ create table if not exists public.invoice_counters (
 -- 5.  updated_at auto-touch on leads
 -- ────────────────────────────────────────────────────────────
 create or replace function public.leads_touch_updated_at()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql set search_path = public as $$
 begin
   new.updated_at = now();
   return new;

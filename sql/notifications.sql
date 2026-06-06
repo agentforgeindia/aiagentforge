@@ -119,7 +119,7 @@ grant execute on function public.create_notification(text, text, text, text, tex
 
 -- 4a. New lead
 create or replace function public.notify_on_new_lead()
-returns trigger language plpgsql security definer as $$
+returns trigger language plpgsql security definer set search_path = public as $$
 declare
   v_source text;
 begin
@@ -146,7 +146,7 @@ create trigger leads_notify_insert
 
 -- 4b. Payment paid / refunded
 create or replace function public.notify_on_payment_change()
-returns trigger language plpgsql security definer as $$
+returns trigger language plpgsql security definer set search_path = public as $$
 declare
   v_label text;
   v_severity text;

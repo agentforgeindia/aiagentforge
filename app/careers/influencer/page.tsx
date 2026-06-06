@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Star, TrendingUp, Gift, Users, ArrowRight, BadgeCheck, ExternalLink } from "lucide-react";
 import { useTheme } from "@/app/components/ThemeProvider";
+import PageDoodles from "@/app/components/PageDoodles";
 
 const PERKS = [
   { Icon: TrendingUp, title: "Earn on Every Sale",    desc: "Earn a commission on every purchase made through your unique referral link — no cap, no expiry." },

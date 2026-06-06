@@ -93,7 +93,7 @@ export default function PaymentPage() {
                 <p className="text-5xl">🎉</p>
                 <h1 className="mt-3 text-2xl font-black">Welcome to <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">AgentForge!</span></h1>
                 <p className="mt-1 text-sm font-medium text-black/60 dark:text-white/60">
-                  Payment successful. Aapka login ID generate ho gaya hai.
+                  Payment successful. Your login credentials have been generated.
                 </p>
               </div>
 
@@ -139,14 +139,14 @@ export default function PaymentPage() {
               </div>
 
               <div className="mt-5 rounded-2xl border border-amber-200/60 bg-amber-50/60 p-4 dark:border-amber-400/20 dark:bg-amber-500/5">
-                <p className="text-xs font-black text-amber-800 dark:text-amber-200">⚠️ Credentials save kar lo!</p>
+                <p className="text-xs font-black text-amber-800 dark:text-amber-200">⚠️ Save your credentials!</p>
                 <p className="mt-1 text-[11px] font-medium text-black/60 dark:text-white/50">
-                  In details ko screenshot lo ya note karo. Support team jald hi aapse Zoom/WhatsApp pe training ke liye contact karegi.
+                  Screenshot or note down these details. Our support team will contact you soon on Zoom/WhatsApp for training.
                 </p>
               </div>
 
               <a href="/admin" className="mt-5 block w-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 py-3.5 text-center text-sm font-black text-white shadow-xl shadow-cyan-500/30 transition hover:scale-[1.02]">
-                Dashboard Login Karo →
+                Go to Dashboard →
               </a>
             </div>
           ) : (
@@ -158,22 +158,22 @@ export default function PaymentPage() {
                 </div>
                 <h1 className="mt-4 text-2xl font-black">Security Deposit</h1>
                 <p className="mt-1 text-sm font-medium text-black/55 dark:text-white/55">
-                  AgentForge joining ke liye ek baar ₹500 refundable security deposit submit karo.
+                  To join AgentForge, submit a one-time refundable security deposit of ₹500.
                 </p>
               </div>
 
               <div className="mt-6 space-y-3">
                 <div className="flex items-start gap-3">
                   <Lock className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
-                  <p className="text-sm font-medium text-black/70 dark:text-white/70">100% Refundable — kaam chhod ne pe wapas mil jayega.</p>
+                  <p className="text-sm font-medium text-black/70 dark:text-white/70">100% Refundable — returned if you leave.</p>
                 </div>
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                  <p className="text-sm font-medium text-black/70 dark:text-white/70">Payment ke turant baad login credentials milenge.</p>
+                  <p className="text-sm font-medium text-black/70 dark:text-white/70">Login credentials are generated instantly after payment.</p>
                 </div>
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                  <p className="text-sm font-medium text-black/70 dark:text-white/70">Support team training ke liye jald contact karegi.</p>
+                  <p className="text-sm font-medium text-black/70 dark:text-white/70">Our support team will contact you soon for training.</p>
                 </div>
               </div>
 

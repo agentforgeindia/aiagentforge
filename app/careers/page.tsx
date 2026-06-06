@@ -11,6 +11,7 @@ import {
   GraduationCap, Circle, Wallet, Clock, Home, Star, Monitor,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import PageDoodles from "@/app/components/PageDoodles";
 
 type Role = {
   id: string; title: string; slug: string; description: string | null;
@@ -111,6 +112,7 @@ export default function CareersPage() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee44,transparent_40%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_40%),radial-gradient(circle_at_bottom,#3b82f622,transparent_45%)]" />
+      <PageDoodles variant="careers" glow={false} grid />
       <Doodles />
 
       <div className="relative z-10 mx-auto max-w-5xl px-5 py-16">

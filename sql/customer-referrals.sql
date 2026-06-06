@@ -22,7 +22,7 @@ update public.profiles
 
 -- Auto-assign a code to every new profile
 create or replace function public.set_referral_code()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql set search_path = public as $$
 begin
   if new.referral_code is null then
     new.referral_code := upper(substr(md5(new.id::text || clock_timestamp()::text), 1, 8));

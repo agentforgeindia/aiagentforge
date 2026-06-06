@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { MessageCircle, Send, Star, Users, Heart, Flame, ThumbsUp, Smile, Globe, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import { useTheme } from "@/app/components/ThemeProvider";
+import PageDoodles from "@/app/components/PageDoodles";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type Influencer = {
@@ -414,7 +415,8 @@ export default function InfluencerHubPage() {
 
   // ── Render ──
   return (
-    <div className={`min-h-screen ${bg}`}>
+    <div className={`relative min-h-screen ${bg}`}>
+      <PageDoodles variant="influencer" glow grid />
       {/* ── Top bar ── */}
       <div className={`sticky top-[72px] z-30 border-b ${darkMode ? "bg-[#0a0d14]/95 border-white/10" : "bg-[#f1f3f8]/95 border-slate-200"} backdrop-blur`}>
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">

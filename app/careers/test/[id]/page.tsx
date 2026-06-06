@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { Download, Share2 } from "lucide-react";
+import PageDoodles from "@/app/components/PageDoodles";
 
 type Q = { id: string; section: string; difficulty: string; question: string; options: string[]; time: number };
 type Result = {
@@ -502,6 +503,7 @@ function Shell({ children, wide }: { children: React.ReactNode; wide?: boolean }
   return (
     <main className="relative min-h-screen bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee44,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_35%)]" />
+      <PageDoodles variant="test" glow={false} grid />
       <div className={`relative z-10 mx-auto px-5 py-12 ${wide ? "max-w-2xl" : "max-w-md"}`}>
         <div className="rounded-3xl border border-cyan-200/40 bg-white/85 p-6 shadow-xl shadow-cyan-200/20 backdrop-blur dark:border-cyan-400/20 dark:bg-white/[0.05]">
           {children}

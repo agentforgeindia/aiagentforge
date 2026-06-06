@@ -107,7 +107,7 @@ export default function MyProfilePage() {
   const initials = (form.full_name || email || "?").slice(0, 2).toUpperCase();
 
   return (
-    <AdminShell breadcrumbs={[{ label: "My Profile" }]} title="My Profile" subtitle="Apni complete details fill karo" email={email}>
+    <AdminShell breadcrumbs={[{ label: "My Profile" }]} title="My Profile" subtitle="Fill in your complete profile details" email={email}>
       <div className="relative">
         <Doodles />
         <div className="relative z-10">
@@ -162,7 +162,7 @@ export default function MyProfilePage() {
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
                         <label className={labelCls}><User className="h-3.5 w-3.5" /> Full Name *</label>
-                        <input className={inputCls} value={form.full_name} onChange={e => set("full_name", e.target.value)} placeholder="Aapka poora naam" />
+                        <input className={inputCls} value={form.full_name} onChange={e => set("full_name", e.target.value)} placeholder="Your full name" />
                       </div>
                       <div>
                         <label className={labelCls}><Phone className="h-3.5 w-3.5" /> Mobile Number</label>
@@ -174,7 +174,7 @@ export default function MyProfilePage() {
                       </div>
                       <div>
                         <label className={labelCls}><MapPin className="h-3.5 w-3.5" /> City</label>
-                        <input className={inputCls} value={form.city} onChange={e => set("city", e.target.value)} placeholder="Aapka sheher" />
+                        <input className={inputCls} value={form.city} onChange={e => set("city", e.target.value)} placeholder="Your city" />
                       </div>
                       <div>
                         <label className={labelCls}><MapPin className="h-3.5 w-3.5" /> State</label>
@@ -187,7 +187,7 @@ export default function MyProfilePage() {
                     </div>
                     <div className="mt-4">
                       <label className={labelCls}>Bio / About Me</label>
-                      <textarea className={inputCls} rows={3} value={form.bio} onChange={e => set("bio", e.target.value)} placeholder="Apne baare mein kuch likho..." />
+                      <textarea className={inputCls} rows={3} value={form.bio} onChange={e => set("bio", e.target.value)} placeholder="Write a short bio about yourself..." />
                     </div>
                   </div>
                   <div className={sectionCls}>
@@ -239,7 +239,7 @@ export default function MyProfilePage() {
                 <div className={sectionCls}>
                   <p className={sectionTitleCls}><CreditCard className="h-4 w-4 text-emerald-500" /> Bank & Payment Details</p>
                   <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-                    ⚠️ Ye details sirf salary transfer ke liye use ki jaati hain. Secure rakha jata hai.
+                    ⚠️ These details are used only for salary transfers and are kept fully secure.
                   </p>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
@@ -269,7 +269,7 @@ export default function MyProfilePage() {
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <label className={labelCls}><User className="h-3.5 w-3.5" /> Contact Name</label>
-                      <input className={inputCls} value={form.emergency_contact_name} onChange={e => set("emergency_contact_name", e.target.value)} placeholder="Family member ka naam" />
+                      <input className={inputCls} value={form.emergency_contact_name} onChange={e => set("emergency_contact_name", e.target.value)} placeholder="Family member's name" />
                     </div>
                     <div>
                       <label className={labelCls}><Phone className="h-3.5 w-3.5" /> Contact Phone</label>
@@ -289,7 +289,7 @@ export default function MyProfilePage() {
           )}
           {saved && (
             <div className="mt-4 flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-              <CheckCircle className="h-4 w-4 shrink-0" /> Profile save ho gaya!
+              <CheckCircle className="h-4 w-4 shrink-0" /> Profile saved successfully!
             </div>
           )}
 

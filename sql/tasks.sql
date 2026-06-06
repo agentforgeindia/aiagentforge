@@ -62,7 +62,7 @@ create index if not exists tasks_due_idx          on public.tasks (due_at)      
 
 -- updated_at auto-touch
 create or replace function public.tasks_touch_updated_at()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql set search_path = public as $$
 begin
   new.updated_at = now();
   -- When status flips to completed, stamp completed_at.

@@ -6,7 +6,7 @@
 
 -- ── Trigger: New signup ──────────────────────────────────────
 create or replace function public.notify_on_new_signup()
-returns trigger language plpgsql security definer as $$
+returns trigger language plpgsql security definer set search_path = public as $$
 begin
   perform public.create_notification(
     'user.signup',
@@ -27,7 +27,7 @@ create trigger profiles_notify_signup
 
 -- ── Trigger: New support ticket ──────────────────────────────
 create or replace function public.notify_on_new_ticket()
-returns trigger language plpgsql security definer as $$
+returns trigger language plpgsql security definer set search_path = public as $$
 declare
   v_severity text;
 begin
@@ -56,7 +56,7 @@ create trigger support_tickets_notify
 
 -- ── Trigger: Task assigned ───────────────────────────────────
 create or replace function public.notify_on_task_assigned()
-returns trigger language plpgsql security definer as $$
+returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if (tg_op = 'INSERT' or (tg_op = 'UPDATE' and old.assigned_to_email is distinct from new.assigned_to_email))
     and new.assigned_to_email is not null

@@ -168,6 +168,7 @@ grant execute on function public.refund_credits(uuid, bigint, text, text) to ser
 create or replace function public.profiles_block_credit_tampering()
 returns trigger
 language plpgsql
+set search_path = public
 as $$
 begin
   if (

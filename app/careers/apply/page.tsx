@@ -8,6 +8,7 @@ import { Suspense, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Link as LinkIcon } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import PageDoodles from "@/app/components/PageDoodles";
 
 const CC_PITCH_SCRIPT = `🎯 AgentForge — India's Own AI Platform for Businesses
 
@@ -141,6 +142,7 @@ function ApplyForm() {
     return (
       <main className="relative min-h-screen bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
         <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#f472b644,transparent_40%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_40%)]" />
+        <PageDoodles variant="apply" glow={false} grid />
         <div className="relative z-10 mx-auto max-w-2xl px-5 py-14">
           <div className="mb-6 text-center">
             <p className="text-5xl">✅</p>
@@ -216,6 +218,7 @@ function ApplyForm() {
     return (
       <main className="relative min-h-screen bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
         <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#f472b644,transparent_40%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_40%)]" />
+        <PageDoodles variant="apply" glow={false} grid />
         <div className="relative z-10 mx-auto max-w-lg px-5 py-14">
           <div className="mb-6 text-center">
             <p className="text-5xl">🎬</p>
@@ -276,6 +279,7 @@ function ApplyForm() {
   return (
     <main className="relative min-h-screen bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee44,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_35%)]" />
+      <PageDoodles variant="apply" glow={false} grid />
 
       <div className="relative z-10 mx-auto max-w-lg px-5 py-14">
         {/* Step indicator */}

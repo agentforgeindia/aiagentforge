@@ -11,10 +11,10 @@ import { supabase } from "@/lib/supabase";
 type Data = { code: string; link: string; referred_count: number; credits_earned: number; error?: string };
 
 const REWARD_RULES = [
-  { icon: "🎁", title: "Refer a friend",     reward: "50 credits", note: "Jab aapke link se koi naya user signup kare." },
-  { icon: "🎉", title: "Your friend's bonus", reward: "25 credits", note: "Naye user ko bhi welcome bonus milta hai." },
-  { icon: "⭐", title: "Rate your result",    reward: "+1 credit",  note: "Har generation pe rating do." },
-  { icon: "✍️", title: "Write feedback",      reward: "+2 credits", note: "Result ke saath feedback likho." },
+  { icon: "🎁", title: "Refer a friend",     reward: "50 credits", note: "When someone signs up using your referral link." },
+  { icon: "🎉", title: "Your friend's bonus", reward: "25 credits", note: "Your friend also gets a welcome bonus on signup." },
+  { icon: "⭐", title: "Rate your result",    reward: "+1 credit",  note: "Rate each generation after it completes." },
+  { icon: "✍️", title: "Write feedback",      reward: "+2 credits", note: "Write feedback along with your result rating." },
 ];
 
 export default function RewardsPage() {
@@ -91,14 +91,14 @@ export default function RewardsPage() {
             Refer &amp; <span className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">earn credits</span>
           </h1>
           <p className="mx-auto mt-3 max-w-md text-sm font-medium text-black/60 dark:text-white/60">
-            Apne friends ko AgentForge invite karo. Har signup pe aapko <b>50 credits</b> —
-            aur unhe bhi <b>25 bonus credits</b>!
+            Invite your friends to AgentForge. Earn <b>50 credits</b> for every signup —
+            and your friend gets <b>25 bonus credits</b> too!
           </p>
         </div>
 
         {!loggedIn ? (
           <div className="mt-10 rounded-3xl border border-cyan-200/40 bg-white/85 p-8 text-center backdrop-blur dark:border-cyan-400/20 dark:bg-white/[0.05]">
-            <p className="text-sm font-medium text-black/60 dark:text-white/60">Apna referral link paane ke liye login karein.</p>
+            <p className="text-sm font-medium text-black/60 dark:text-white/60">Please log in to get your referral link.</p>
             <Link href="/login" className="mt-4 inline-flex rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-7 py-3 text-sm font-black text-white shadow-lg shadow-cyan-500/30">Login</Link>
           </div>
         ) : loading ? (

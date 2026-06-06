@@ -7,6 +7,7 @@ import {
   Building2, Users, LifeBuoy, Sparkles, ArrowUpRight, Globe, HelpCircle,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import PageDoodles from "@/app/components/PageDoodles";
 
 type Module = { id: string; role_slug: string | null; module_order: number; title: string; content: string };
 
@@ -157,6 +158,7 @@ function LearnInner() {
   return (
     <main className="relative min-h-screen bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee44,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_35%)]" />
+      <PageDoodles variant="training" glow={false} grid />
 
       <div className="relative z-10 mx-auto max-w-2xl px-5 py-14">
         {/* Progress bar */}
@@ -246,8 +248,8 @@ function LearnInner() {
                   </div>
                   <div className="rounded-xl border border-amber-200/50 bg-amber-50/60 p-3 dark:border-amber-400/20 dark:bg-amber-500/5">
                     <p className="font-black text-amber-700 dark:text-amber-300">💡 How to Pitch It:</p>
-                    <p className="mt-1 text-[12px] italic">&ldquo;Kya aap photography ke liye studio hire karte ho? AgentForge ka AI seconds mein professional photos de deta hai — fraction of the cost pe.&rdquo;</p>
-                    <p className="mt-1 text-[12px] italic">&ldquo;Are you spending money on photoshoots? AgentForge&apos;s AI gives you professional visuals in seconds — for a fraction of the cost.&rdquo;</p>
+                    <p className="mt-1 text-[12px] italic">&ldquo;Are you spending money on studio photoshoots? AgentForge&apos;s AI gives you professional product visuals in seconds — at a fraction of the cost.&rdquo;</p>
+                    <p className="mt-1 text-[12px] italic">&ldquo;Still hiring photographers for every product? AgentForge generates studio-quality photos instantly using AI — no studio, no model, no wait.&rdquo;</p>
                   </div>
                   <p className="text-[12px] text-black/60 dark:text-white/50">✅ Made in India · Plans from ₹99/month · No studio needed</p>
                   <p className="font-bold text-purple-700 dark:text-purple-300">🔗 Your referral link: https://aiagentforge.in/?ref=YOURCODE<br/>💰 You earn 10% commission on every purchase — forever.</p>
