@@ -127,7 +127,7 @@ export default function InfluencerAdminPage() {
   if (pLoading || !canView) return null;
 
   return (
-    <AdminShell title="Influencers" doodleType="analytics">
+    <AdminShell breadcrumbs={[{ label: "Marketing", href: "/admin/marketing" }, { label: "Influencers" }]} title="Influencers" doodleType="analytics">
       {/* Stats */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
