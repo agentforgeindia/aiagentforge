@@ -1491,12 +1491,12 @@ export default function Home() {
 
       // 2. Company logo — top-right, 14% width
       if (companyLogoImg) {
-        drawLogoInCorner(ctx, canvas.width, canvas.height, companyLogoImg, "top-right", 0.14, 1);
+        drawLogoInCorner(ctx, canvas.width, canvas.height, companyLogoImg, "top-right", 0.07, 0.95);
       }
 
       // 3. AF logo — bottom-right, 10% width, slightly translucent
       if (afLogoImg) {
-        drawLogoInCorner(ctx, canvas.width, canvas.height, afLogoImg, "bottom-right", 0.10, 0.88);
+        drawLogoInCorner(ctx, canvas.width, canvas.height, afLogoImg, "bottom-right", 0.06, 0.85);
       }
 
       return await new Promise<Blob | null>((resolve) => {
