@@ -166,39 +166,18 @@ export async function POST(request: Request) {
   // attacker-supplied user_id and stamp our own.
   const forwarded = { ...body, user_id: user.id };
 
-  let response: Response;
-  try {
-    response = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(forwarded),
-      cache: "no-store",
-    });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: err?.message || "n8n unreachable." },
-      { status: 502 },
-    );
-  }
+  fetch(webhookUrl, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(forwarded),
+  cache: "no-store",
+}).catch((err) => {
+  console.error("n8n trigger failed:", err);
+});
 
-  const text = await response.text();
-  let data: any = null;
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch {
-    data = { raw: text };
-  }
-
-  if (!response.ok) {
-    return NextResponse.json(
-      { error: data?.error || data?.message || `n8n error ${response.status}`, details: data },
-      { status: response.status },
-    );
-  }
-
-  return NextResponse.json({
-    success: true,
-    generation_id: body.generation_id,
-    webhook_response: data,
-  });
+return NextResponse.json({
+  success: true,
+  status: "processing",
+  generation_id: body.generation_id,
+});
 }
