@@ -283,8 +283,8 @@ export default function InfluencerAdminPage() {
           { label: "Influencers",  value: influencers.length,              icon: <Users className="h-5 w-5 text-indigo-500" /> },
           { label: "Signups",      value: totalSignups,                    icon: <Users className="h-5 w-5 text-cyan-500" /> },
           { label: "Sales",        value: totalPurchases,                  icon: <ShoppingBag className="h-5 w-5 text-purple-500" /> },
-          { label: "Revenue",      value: `₹${totalRevenue.toFixed(0)}`,   icon: <IndianRupee className="h-5 w-5 text-emerald-500" />, hi: true },
-          { label: "Payout owed",  value: `₹${totalEarnings.toFixed(0)}`,  icon: <IndianRupee className="h-5 w-5 text-amber-500" /> },
+          { label: "Revenue",      value: `₹${totalRevenue.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`,   icon: <IndianRupee className="h-5 w-5 text-emerald-500" />, hi: true },
+          { label: "Payout owed",  value: `₹${totalEarnings.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`,  icon: <IndianRupee className="h-5 w-5 text-amber-500" /> },
         ].map(s => (
           <div key={s.label} className={`${adminCardCls} p-4`}>
             {s.icon}
@@ -477,7 +477,7 @@ export default function InfluencerAdminPage() {
                   <div className="hidden items-center gap-4 sm:flex">
                     <span className={`flex items-center gap-1 text-xs ${adminMutedCls}`}><Users className="h-3.5 w-3.5" /> {inf.total_signups}</span>
                     <span className={`flex items-center gap-1 text-xs ${adminMutedCls}`}><ShoppingBag className="h-3.5 w-3.5" /> {inf.total_purchases}</span>
-                    <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-300"><IndianRupee className="h-3.5 w-3.5" /> {(inf.total_earnings ?? 0).toFixed(0)}</span>
+                    <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-300"><IndianRupee className="h-3.5 w-3.5" /> {(inf.total_earnings ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}</span>
                     <span className={`flex items-center gap-1 text-xs ${adminMutedCls}`}><ThumbsUp className="h-3.5 w-3.5" /> {infRx.length}</span>
                     <span className={`flex items-center gap-1 text-xs ${adminMutedCls}`}><MessageCircle className="h-3.5 w-3.5" /> {infVidCmts.length + infHubCmts.length}</span>
                     <span className={`flex items-center gap-1 text-xs ${adminMutedCls}`}><Video className="h-3.5 w-3.5" /> {inf.videos_approved}/{inf.videos_submitted}</span>

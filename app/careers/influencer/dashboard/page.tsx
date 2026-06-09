@@ -248,7 +248,7 @@ function Dashboard() {
           </div>
           <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4 text-center">
             <IndianRupee className="mx-auto h-5 w-5 text-emerald-400" />
-            <p className="mt-2 text-2xl font-black tabular-nums text-emerald-300">₹{stats.earnings.toFixed(0)}</p>
+            <p className="mt-2 text-2xl font-black tabular-nums text-emerald-300">₹{stats.earnings.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</p>
             <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Your Earnings</p>
           </div>
         </div>
@@ -398,7 +398,7 @@ function Dashboard() {
                     <tr key={i} className="border-b border-white/5 hover:bg-white/[0.03]">
                       <td className="px-4 py-3 text-xs text-white/40">{fmt(p.created_at)}</td>
                       <td className="px-4 py-3 font-medium text-white">✅ Sale via your link</td>
-                      <td className="px-4 py-3 font-black text-emerald-300">+₹{p.commission_amount?.toFixed(0) ?? "—"}</td>
+                      <td className="px-4 py-3 font-black text-emerald-300">+₹{p.commission_amount?.toLocaleString("en-IN", { maximumFractionDigits: 2 }) ?? "—"}</td>
                       <td className="px-4 py-3">
                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${p.status === "paid" ? "bg-emerald-500/20 text-emerald-300" : p.status === "cleared" ? "bg-cyan-500/20 text-cyan-300" : "bg-amber-500/20 text-amber-300"}`}>{p.status === "paid" ? "Paid out" : p.status === "cleared" ? "Cleared" : "Pending"}</span>
                       </td>
