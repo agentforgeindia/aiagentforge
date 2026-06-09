@@ -63,9 +63,20 @@ export async function GET(req: Request) {
   // Influencer's video submissions
   const { data: videos } = await db
     .from("influencer_video_submissions")
-    .select("id, script_id, video_url, platform, caption, status, admin_note, created_at")
+    .select("id, script_id, video_url, platform, caption, status, admin_note, created_at, is_pinned, view_count")
     .eq("candidate_id", cid)
     .order("created_at", { ascending: false });
+
+  // Video engagement stats (reactions + comments per video)
+  const videoIds = (videos ?? []).map(v => v.id);
+  const [reactionsRes, vCommentsRes] = await Promise.all([
+    videoIds.length
+      ? db.from("influencer_video_reactions").select("video_id, reaction_type").in("video_id", videoIds)
+      : { data: [] },
+    videoIds.length
+      ? db.from("influencer_video_comments").select("video_id").in("video_id", videoIds)
+      : { data: [] },
+  ]);
 
   const totalEarnings = (earnings ?? []).reduce((s, r) => s + (r.commission_amount ?? 0), 0);
   const totalPurchases = (earnings ?? []).length;
@@ -73,6 +84,16 @@ export async function GET(req: Request) {
   const referralLink = social?.referral_code
     ? `https://aiagentforge.in/?ref=${social.referral_code}`
     : null;
+
+  // Build per-video engagement map
+  const videoEngagement: Record<string, { reactions: Record<string, number>; comments: number; views: number }> = {};
+  for (const v of videos ?? []) {
+    const rList = (reactionsRes.data ?? []).filter(r => r.video_id === v.id);
+    const cCount = (vCommentsRes.data ?? []).filter(c => c.video_id === v.id).length;
+    const reactionCounts: Record<string, number> = {};
+    for (const r of rList) reactionCounts[r.reaction_type] = (reactionCounts[r.reaction_type] ?? 0) + 1;
+    videoEngagement[v.id] = { reactions: reactionCounts, comments: cCount, views: v.view_count ?? 0 };
+  }
 
   return NextResponse.json({
     ok: true,
@@ -88,5 +109,6 @@ export async function GET(req: Request) {
     purchase_list: earnings ?? [],
     scripts: scripts ?? [],
     videos: videos ?? [],
+    video_engagement: videoEngagement,
   });
 }

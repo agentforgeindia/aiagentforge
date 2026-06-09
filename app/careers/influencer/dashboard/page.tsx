@@ -57,6 +57,8 @@ function Dashboard() {
 
   useEffect(() => {
     if (!cid) { setError("Invalid link — dashboard ID missing."); setLoading(false); return; }
+    // Auto-save cid so Influencer Hub can auto-login
+    if (typeof window !== "undefined") localStorage.setItem("__inf_cid", cid);
     fetch(`/api/careers/influencer/dashboard?cid=${cid}`)
       .then(r => r.json())
       .then(d => {

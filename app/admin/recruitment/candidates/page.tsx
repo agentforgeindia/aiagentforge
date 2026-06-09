@@ -85,7 +85,12 @@ export default function CandidatesPage() {
   }
 
   async function setStage(id: string, stage: string) {
-    await supabase.from("candidates").update({ stage, updated_at: new Date().toISOString() }).eq("id", id);
+    // Use API so content-creator records auto-sync to influencer hub on selection
+    await fetch("/api/admin/candidates/stage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ candidate_id: id, stage }),
+    });
     setRefreshKey((k) => k + 1);
   }
 
