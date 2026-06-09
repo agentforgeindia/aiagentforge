@@ -325,26 +325,28 @@ export default function InfluencerAdminPage() {
           ) : (
             <>
               <div className="flex flex-wrap gap-1.5 text-[11px] font-bold">
-                {["all","applied","selected","hired","rejected"].map(s => {
-                  const count = s === "all" ? applicants.length : applicants.filter(a => a.stage === s).length;
-                  return <span key={s} className="rounded-full border border-slate-200 px-2.5 py-0.5 dark:border-slate-700">{s === "all" ? "All" : s.charAt(0).toUpperCase()+s.slice(1)} ({count})</span>;
-                })}
+                {[
+                  { label: "All",      match: (_: string) => true },
+                  { label: "🕒 Pending",  match: (s: string) => s === "applied" },
+                  { label: "✅ Approved", match: (s: string) => s === "selected" || s === "hired" },
+                  { label: "❌ Rejected", match: (s: string) => s === "rejected" },
+                ].map(f => (
+                  <span key={f.label} className="rounded-full border border-slate-200 px-2.5 py-0.5 dark:border-slate-700">
+                    {f.label} ({applicants.filter(a => f.match(a.stage)).length})
+                  </span>
+                ))}
               </div>
               {applicants.map(a => {
                 const cc = a.cc;
-                const verdictCls: Record<string, string> = {
-                  strong_influencer: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
-                  moderate:          "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-                  not_fit:           "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300",
-                  admin_approved:    "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-                };
-                const stageCls: Record<string, string> = {
-                  selected: "bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300",
-                  hired:    "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
-                  rejected: "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300",
-                  applied:  "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300",
-                };
                 const isActing = appActing === a.id;
+                // Simple status: Approved / Rejected / Pending
+                const approved = a.stage === "selected" || a.stage === "hired";
+                const statusLabel = approved ? "✅ Approved" : a.stage === "rejected" ? "❌ Rejected" : "🕒 Pending";
+                const statusCls = approved
+                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+                  : a.stage === "rejected"
+                    ? "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"
+                    : "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300";
                 return (
                   <div key={a.id} className={`${adminCardCls} p-4`}>
                     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -355,25 +357,13 @@ export default function InfluencerAdminPage() {
                             {a.name?.charAt(0)?.toUpperCase() ?? "?"}
                           </div>
                           <p className="font-bold">{a.name}</p>
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${stageCls[a.stage] ?? stageCls.applied}`}>{a.stage}</span>
-                          {cc?.ai_score != null && (
-                            <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-black text-purple-700 dark:bg-purple-500/15 dark:text-purple-300">
-                              🤖 {cc.ai_score}/100
-                            </span>
-                          )}
-                          {cc?.ai_verdict && (
-                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${verdictCls[cc.ai_verdict] ?? verdictCls.moderate}`}>
-                              {cc.ai_verdict === "strong_influencer" ? "✅ Strong" : cc.ai_verdict === "moderate" ? "⚡ Moderate" : cc.ai_verdict === "admin_approved" ? "👑 Admin" : "❌ Not Fit"}
-                            </span>
-                          )}
-                          {cc?.referral_status === "active" && (
-                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">🟢 Active</span>
-                          )}
+                          <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-black ${statusCls}`}>{statusLabel}</span>
                         </div>
                         <p className={`mt-1 text-[11px] ${adminMutedCls}`}>{a.mobile}{a.email && ` · ${a.email}`}</p>
                         {/* Social stats */}
                         {cc && (
                           <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px]">
+                            {cc.ai_score != null && <span className={adminMutedCls}>🤖 AI score {cc.ai_score}/100</span>}
                             {cc.niche          && <span className={adminMutedCls}>🎯 {cc.niche}</span>}
                             {cc.followers_count && <span className={adminMutedCls}>👥 {Number(cc.followers_count).toLocaleString("en-IN")} followers</span>}
                             {cc.avg_views      && <span className={adminMutedCls}>👁 {cc.avg_views} avg views</span>}
@@ -394,47 +384,26 @@ export default function InfluencerAdminPage() {
                         </p>
                       </div>
 
-                      {/* Right: actions */}
-                      {a.stage !== "hired" && (
-                        <div className="flex flex-col gap-2">
-                          {a.stage !== "selected" && a.stage !== "rejected" && (
-                            <>
-                              <button
-                                onClick={() => approveApplicant(a.id, "approve")}
-                                disabled={isActing}
-                                className={`${adminPrimaryBtnCls} text-xs`}
-                              >
-                                <Check className="h-3.5 w-3.5" /> Approve
-                              </button>
-                              <button
-                                onClick={() => approveApplicant(a.id, "reject")}
-                                disabled={isActing}
-                                className="inline-flex items-center gap-1.5 rounded-md border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-600 transition hover:bg-rose-100 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300 disabled:opacity-50"
-                              >
-                                <X className="h-3.5 w-3.5" /> Reject
-                              </button>
-                            </>
-                          )}
-                          {a.stage === "selected" && (
-                            <button
-                              onClick={() => approveApplicant(a.id, "reject")}
-                              disabled={isActing}
-                              className="inline-flex items-center gap-1.5 rounded-md border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-600 transition hover:bg-rose-100 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300 disabled:opacity-50"
-                            >
-                              <X className="h-3.5 w-3.5" /> Revoke
-                            </button>
-                          )}
-                          {a.stage === "rejected" && (
-                            <button
-                              onClick={() => approveApplicant(a.id, "approve")}
-                              disabled={isActing}
-                              className={`${adminSecondaryBtnCls} text-xs`}
-                            >
-                              <Check className="h-3.5 w-3.5" /> Re-approve
-                            </button>
-                          )}
-                        </div>
-                      )}
+                      {/* Right: one simple toggle — Approve or Reject */}
+                      <div className="flex flex-col gap-2">
+                        {approved ? (
+                          <button
+                            onClick={() => approveApplicant(a.id, "reject")}
+                            disabled={isActing}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-rose-300 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-600 transition hover:bg-rose-100 disabled:opacity-50 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
+                          >
+                            <X className="h-3.5 w-3.5" /> {isActing ? "…" : "Reject"}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => approveApplicant(a.id, "approve")}
+                            disabled={isActing}
+                            className={`${adminPrimaryBtnCls} text-xs`}
+                          >
+                            <Check className="h-3.5 w-3.5" /> {isActing ? "…" : "Approve"}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
