@@ -102,6 +102,7 @@ const TILES: Tile[] = [
   { group: "AI", href: "/admin/generation-log", label: "Generation Log", description: "Every generation — agent, user, status, cost to company.", icon: <ScrollText className="h-4 w-4" />,      perm: "ai_ops.view" },
   { group: "AI", href: "/admin/ai-costs",       label: "AI Costs",       description: "API spend per agent, top consumers, margin analysis.",   icon: <Coins className="h-4 w-4" />,           perm: "ai_costs.view" },
   { group: "AI", href: "/admin/ai-assistant",   label: "AI Assistant",   description: "Meeting summaries, sales coaching, WhatsApp reply drafts.", icon: <Sparkles className="h-4 w-4" />,        perm: "dashboard.view" },
+  { group: "AI", href: "/admin/team-assistant", label: "Team Assistant", description: "Universal helper — ask anything, training, draft replies. No internal financials.", icon: <Bot className="h-4 w-4" />, perm: "leads.view" },
 
   // ── Support ──────────────────────────────────────────────────
   { group: "Support", href: "/admin/support-center", label: "Support",        description: "Customer tickets — billing, generation, refunds.",       icon: <Ticket className="h-4 w-4" />,          perm: "support.view" },
