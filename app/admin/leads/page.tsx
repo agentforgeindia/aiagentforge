@@ -143,10 +143,12 @@ export default function AdminLeadsPage() {
     utm_source: string | null;
     utm_campaign: string | null;
     utm_medium: string | null;
+    referred_by: string | null;
     has_phone: boolean;
     last_activity_at: string | null;
   }[]>([]);
   const [loadingSignups, setLoadingSignups] = useState(false);
+  const [signupError, setSignupError] = useState<string | null>(null);
   const [convertingId, setConvertingId] = useState<string | null>(null);
 
   // Auto-opens when ?new=1 is in the URL — drives the AdminShell
@@ -325,12 +327,17 @@ export default function AdminLeadsPage() {
   useEffect(() => {
     if (!canViewLeads || topView !== "signups") return;
     setLoadingSignups(true);
+    setSignupError(null);
     (async () => {
       const { data, error } = await supabase.rpc("free_signups", {
         p_limit: 200,
         p_days: 90,
       });
-      if (!error && Array.isArray(data)) {
+      if (error) {
+        // Surface the real reason instead of silently showing "no signups".
+        setSignupError(error.message || "Failed to load free signups.");
+        setSignupRows([]);
+      } else if (Array.isArray(data)) {
         setSignupRows(data as typeof signupRows);
       }
       setLoadingSignups(false);
@@ -709,6 +716,21 @@ export default function AdminLeadsPage() {
         <div className={`${adminCardCls}`}>
           {loadingSignups ? (
             <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
+          ) : signupError ? (
+            <div className="p-6 text-center">
+              <p className="text-sm font-bold text-rose-600 dark:text-rose-400">
+                Couldn&apos;t load free signups
+              </p>
+              <p className={`mt-1 text-xs ${adminMutedCls}`}>{signupError}</p>
+              <button
+                type="button"
+                onClick={() => setRefreshKey((k) => k + 1)}
+                className={`${adminSecondaryBtnCls} mt-3 inline-flex`}
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Retry
+              </button>
+            </div>
           ) : signupRows.length === 0 ? (
             <p className={`p-8 text-center text-sm ${adminMutedCls}`}>
               No free-tier signups in the last 90 days that aren&apos;t already
@@ -726,6 +748,11 @@ export default function AdminLeadsPage() {
                       <span className="rounded-md bg-sky-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">
                         Free signup
                       </span>
+                      {s.referred_by && (
+                        <span className="rounded-md bg-violet-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">
+                          Referral · {s.referred_by}
+                        </span>
+                      )}
                       {s.has_phone && (
                         <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
                           Phone shared · warm
