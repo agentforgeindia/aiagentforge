@@ -72,6 +72,34 @@ export async function POST(request: Request) {
     const userId = payment?.notes?.userId;
     const planName = payment?.notes?.planName;
 
+    // ── Workshop seat payments (separate flow from credit plans) ──
+    // Backup path: if the client-side verify call was missed, the
+    // webhook still records the seat. register_workshop_seat is
+    // idempotent on razorpay_order_id, so a double-fire is a no-op.
+    if (payment?.notes?.type === "workshop" && payment?.notes?.slot) {
+      const supabaseAdmin = getSupabaseAdmin();
+      const { error: wkErr } = await supabaseAdmin.rpc(
+        "register_workshop_seat",
+        {
+          p_slot_id: payment.notes.slot,
+          p_order_id: razorpayOrderId,
+          p_payment_id: razorpayPaymentId,
+          p_amount: payment?.amount ? Number(payment.amount) / 100 : 99,
+          p_name: null,
+          p_email: payment?.email ?? null,
+          p_phone: payment?.contact ?? null,
+        },
+      );
+      if (wkErr) {
+        console.error("[razorpay-webhook] register_workshop_seat failed:", wkErr);
+        return NextResponse.json(
+          { error: wkErr.message || "Could not record seat." },
+          { status: 500 },
+        );
+      }
+      return NextResponse.json({ success: true, workshop: true });
+    }
+
     if (!razorpayPaymentId || !razorpayOrderId || !userId || !planName) {
       return NextResponse.json(
         { error: "Webhook missing required payment notes." },

@@ -6,9 +6,60 @@
 import { useEffect, useMemo, useState } from "react";
 
 
-const WORKSHOP_DATE = "2026-05-24T15:00:00+05:30";
-const REGISTER_LINK = "https://rzp.io/rzp/agentforge-workshop";
-const WHATSAPP_LINK = "https://rzp.io/rzp/agentforge-workshop";
+// Workshop slots. Seat tracking + ₹99 payment handled by our own
+// Razorpay Checkout flow (see /api/workshop/*). slot.id must match
+// the slot_id rows in sql/workshop.sql.
+const SLOTS = [
+  {
+    id: "20-june",
+    date: "20 June 2026",
+    day: "Saturday",
+    time: "7:00 PM",
+    dateTime: "2026-06-20T19:00:00+05:30",
+  },
+  {
+    id: "21-june",
+    date: "21 June 2026",
+    day: "Sunday",
+    time: "3:00 PM",
+    dateTime: "2026-06-21T15:00:00+05:30",
+  },
+  {
+    id: "27-june",
+    date: "27 June 2026",
+    day: "Saturday",
+    time: "7:00 PM",
+    dateTime: "2026-06-27T19:00:00+05:30",
+  },
+  {
+    id: "28-june",
+    date: "28 June 2026",
+    day: "Sunday",
+    time: "3:00 PM",
+    dateTime: "2026-06-28T15:00:00+05:30",
+  },
+];
+
+type Slot = (typeof SLOTS)[number];
+type SeatInfo = { filled: number; max: number; left: number; full: boolean };
+
+// Timer sabse pehli (earliest) workshop date tak chalega.
+const WORKSHOP_DATE = SLOTS[0].dateTime;
+// Saare generic CTA buttons slots section pe scroll karayenge.
+const REGISTER_LINK = "#slots";
+const WHATSAPP_LINK = "#slots";
+
+function loadRazorpayScript(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined") return resolve(false);
+    if ((window as any).Razorpay) return resolve(true);
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
 
 const heroImages = [
   { title: "Men Shirt Mockup", category: "Male Garments", src: "/Workshop/mens-shirt.png" },
@@ -85,6 +136,97 @@ export default function WebinarLandingPage() {
   return () => clearInterval(timer);
 }, []);
 
+  const [seats, setSeats] = useState<Record<string, SeatInfo>>({});
+  const [busySlot, setBusySlot] = useState<string | null>(null);
+
+  const fetchSeats = async () => {
+    try {
+      const res = await fetch("/api/workshop/seats", { cache: "no-store" });
+      const data = await res.json();
+      if (data?.slots) setSeats(data.slots);
+    } catch {
+      /* seat display is best-effort */
+    }
+  };
+
+  useEffect(() => {
+    fetchSeats();
+    const interval = setInterval(fetchSeats, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleJoin = async (slot: Slot) => {
+    if (busySlot) return;
+    setBusySlot(slot.id);
+    try {
+      const res = await fetch("/api/workshop/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slot: slot.id }),
+      });
+      const data = await res.json();
+
+      if (data?.full) {
+        alert("Ye slot full ho gaya hai. Kripya doosri date chunein.");
+        fetchSeats();
+        return;
+      }
+      if (!res.ok || !data?.order_id) {
+        alert(data?.error || "Kuch galat hua. Dobara try karein.");
+        return;
+      }
+
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        alert("Payment load nahi hua. Internet check karke dobara try karein.");
+        return;
+      }
+
+      const rzp = new (window as any).Razorpay({
+        key: data.key_id,
+        order_id: data.order_id,
+        amount: data.amount * 100,
+        currency: data.currency || "INR",
+        name: "AgentForge AI Workshop",
+        description: `TextilePrints to Mockup AI — ${slot.date}`,
+        image: "/af-logo.png",
+        theme: { color: "#7c3aed" },
+        handler: async (response: any) => {
+          try {
+            const verify = await fetch("/api/workshop/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                slot: slot.id,
+              }),
+            });
+            const vd = await verify.json();
+            if (vd?.ok) {
+              window.location.href = `/workshop/thankyou?slot=${slot.id}`;
+            } else {
+              alert(
+                vd?.error ||
+                  "Payment ho gaya par verify nahi hua. Support se contact karein.",
+              );
+            }
+          } catch {
+            alert("Payment verify nahi hua. Support se contact karein.");
+          }
+        },
+        modal: { ondismiss: () => setBusySlot(null) },
+      });
+
+      rzp.open();
+    } catch {
+      alert("Kuch galat hua. Dobara try karein.");
+    } finally {
+      setBusySlot(null);
+    }
+  };
+
   const isDark = theme === "dark";
 
   const pageClass = useMemo(
@@ -152,7 +294,13 @@ export default function WebinarLandingPage() {
 >
 
     <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee22,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf622,transparent_35%),radial-gradient(circle_at_bottom,#f59e0b18,transparent_35%),linear-gradient(180deg,#f8fbff_0%,#eef8ff_55%,#fffaf2_100%)]" />
+  <div
+    className={`absolute inset-0 ${
+      isDark
+        ? "bg-[radial-gradient(circle_at_top_left,#22d3ee18,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf61f,transparent_35%),radial-gradient(circle_at_bottom,#f59e0b12,transparent_35%),linear-gradient(180deg,#050816_0%,#070b22_55%,#0a0a1f_100%)]"
+        : "bg-[radial-gradient(circle_at_top_left,#22d3ee22,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf622,transparent_35%),radial-gradient(circle_at_bottom,#f59e0b18,transparent_35%),linear-gradient(180deg,#f8fbff_0%,#eef8ff_55%,#fffaf2_100%)]"
+    }`}
+  />
 
   <div className="absolute inset-0 opacity-[0.14]">
     <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
@@ -182,7 +330,9 @@ export default function WebinarLandingPage() {
   ].map((item, index) => (
     <div
       key={index}
-      className="absolute rounded-[1.5rem] bg-white/70 p-3 text-4xl shadow-xl backdrop-blur-md"
+      className={`absolute rounded-[1.5rem] p-3 text-4xl shadow-xl backdrop-blur-md ${
+        isDark ? "bg-white/10" : "bg-white/70"
+      }`}
       style={{
         left: item.left,
         top: item.top,
@@ -313,7 +463,7 @@ export default function WebinarLandingPage() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <CTA label="Join Workshop Now — ₹99" />
             <p className={`text-sm font-bold ${mutedText}`}>
-              Sunday • Sharp 3:00 PM • Limited Seats
+              4 Live Slots • 20–28 June • Limited Seats
             </p>
           </div>
         </div>
@@ -352,6 +502,84 @@ export default function WebinarLandingPage() {
               ))}
             </div>
           </div>
+        </div>
+      </section>
+
+      <section id="slots" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-12 md:px-8">
+        <div className="mb-8 text-center">
+          <p className="text-sm font-black uppercase tracking-[0.25em] text-violet-500">
+            Choose Your Slot
+          </p>
+          <h2 className="mx-auto mt-3 max-w-4xl text-4xl font-black tracking-tight md:text-5xl">
+            Pick a Workshop Date
+          </h2>
+          <p className={`mx-auto mt-3 max-w-2xl text-base ${mutedText}`}>
+            Saturday batch live at 7:00 PM • Sunday batch live at 3:00 PM • Limited seats per slot
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {SLOTS.map((slot) => {
+            const seat = seats[slot.id];
+            const isFull = seat?.full === true;
+            const isBusy = busySlot === slot.id;
+            const low = seat && !isFull && seat.left <= 15;
+
+            return (
+              <div
+                key={slot.id}
+                className={`flex flex-col rounded-[1.75rem] border p-6 transition duration-300 ${
+                  isFull
+                    ? "opacity-70"
+                    : "hover:-translate-y-1 hover:shadow-2xl"
+                } ${cardClass}`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex rounded-full bg-violet-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-violet-700">
+                    {slot.day}
+                  </span>
+                  {isFull ? (
+                    <span className="inline-flex rounded-full bg-rose-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-rose-700">
+                      Slot Full
+                    </span>
+                  ) : seat ? (
+                    <span
+                      className={`inline-flex rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${
+                        low
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-emerald-100 text-emerald-700"
+                      }`}
+                    >
+                      {seat.left} seats left
+                    </span>
+                  ) : null}
+                </div>
+
+                <h3 className="mt-4 text-2xl font-black">{slot.date}</h3>
+                <p className={`mt-1 text-sm font-bold ${mutedText}`}>
+                  Live at {slot.time} IST
+                </p>
+                <div className="mt-4 text-3xl font-black text-violet-500">₹99</div>
+
+                <button
+                  type="button"
+                  onClick={() => handleJoin(slot)}
+                  disabled={isFull || isBusy}
+                  className={`mt-5 inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-black uppercase tracking-wide text-white shadow-lg transition ${
+                    isFull
+                      ? "cursor-not-allowed bg-slate-400"
+                      : "bg-gradient-to-r from-cyan-500 via-blue-600 to-violet-700 hover:scale-[1.02] active:scale-95 disabled:opacity-70"
+                  }`}
+                >
+                  {isFull
+                    ? "Slot Full"
+                    : isBusy
+                      ? "Please wait…"
+                      : "Join This Slot →"}
+                </button>
+              </div>
+            );
+          })}
         </div>
       </section>
 

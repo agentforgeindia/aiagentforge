@@ -1,9 +1,53 @@
 "use client";
 
-const COMMUNITY_LINK =
-  "https://chat.whatsapp.com/F4ZfEeVXEmv2NaTwe4aIbs";
+import { useEffect, useState } from "react";
+
+// Har date ki apni WhatsApp community link yahan daalo.
+// Razorpay redirect URL ?slot=<id> ke hisaab se ye chunega.
+// ordinal = " kaunsi edition" (landing page India's First hai;
+// har agli date agli edition — Second, Third, Fourth).
+type SlotInfo = { date: string; ordinal: string; community: string };
+
+const SLOT_COMMUNITIES: Record<string, SlotInfo> = {
+  "20-june": {
+    date: "20 June 2026 (Saturday, 7:00 PM)",
+    ordinal: "First",
+    community: "https://chat.whatsapp.com/REPLACE-20JUNE",
+  },
+  "21-june": {
+    date: "21 June 2026 (Sunday, 3:00 PM)",
+    ordinal: "Second",
+    community: "https://chat.whatsapp.com/REPLACE-21JUNE",
+  },
+  "27-june": {
+    date: "27 June 2026 (Saturday, 7:00 PM)",
+    ordinal: "Third",
+    community: "https://chat.whatsapp.com/REPLACE-27JUNE",
+  },
+  "28-june": {
+    date: "28 June 2026 (Sunday, 3:00 PM)",
+    ordinal: "Fourth",
+    community: "https://chat.whatsapp.com/REPLACE-28JUNE",
+  },
+};
+
+// Agar slot param na mile (purane links) to ye fallback community.
+const DEFAULT_COMMUNITY = "https://chat.whatsapp.com/F4ZfEeVXEmv2NaTwe4aIbs";
 
 export default function WorkshopThankYouPage() {
+  const [slotInfo, setSlotInfo] = useState<SlotInfo | null>(null);
+
+  useEffect(() => {
+    const slot = new URLSearchParams(window.location.search).get("slot");
+    if (slot && SLOT_COMMUNITIES[slot]) {
+      setSlotInfo(SLOT_COMMUNITIES[slot]);
+    }
+  }, []);
+
+  const COMMUNITY_LINK = slotInfo?.community ?? DEFAULT_COMMUNITY;
+  // Slot pata na ho to landing page jaisa "First".
+  const ordinal = slotInfo?.ordinal ?? "First";
+
   return (
     <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden px-4 py-10 text-slate-950">
 
@@ -97,9 +141,15 @@ export default function WorkshopThankYouPage() {
         </h1>
 
         <p className="mx-auto mt-5 max-w-3xl text-base font-medium leading-7 text-slate-600 sm:mt-6 sm:text-xl sm:leading-9">
-          Your seat for India’s First TextilePrints to Mockup AI Workshop
-          has been successfully reserved.
+          Thank you for joining India’s {ordinal} TextilePrints to Mockup AI
+          Workshop. Your seat has been successfully reserved.
         </p>
+
+        {slotInfo && (
+          <div className="mx-auto mt-6 inline-flex rounded-full bg-violet-50 px-6 py-3 text-sm font-black uppercase tracking-[0.16em] text-violet-700">
+            Your Slot: {slotInfo.date}
+          </div>
+        )}
 
         {/* Next Step Box */}
 
