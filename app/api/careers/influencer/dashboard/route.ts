@@ -81,6 +81,21 @@ export async function GET(req: Request) {
   const totalEarnings = (earnings ?? []).reduce((s, r) => s + (r.commission_amount ?? 0), 0);
   const totalPurchases = (earnings ?? []).length;
 
+  // Withdrawals — for the "Withdraw" button + available balance.
+  const { data: withdrawals } = await db
+    .from("influencer_withdrawals")
+    .select("id, amount, status, requested_at, processed_at")
+    .eq("candidate_id", cid)
+    .order("requested_at", { ascending: false });
+
+  const withdrawnTotal = (withdrawals ?? [])
+    .filter(w => ["requested", "processing", "paid"].includes(w.status))
+    .reduce((s, w) => s + (w.amount ?? 0), 0);
+  const availableBalance = Math.max(0, totalEarnings - withdrawnTotal);
+  const pendingWithdrawal = (withdrawals ?? []).find(w =>
+    ["requested", "processing"].includes(w.status)
+  ) ?? null;
+
   const referralLink = social?.referral_code
     ? `https://aiagentforge.in/?ref=${social.referral_code}`
     : null;
@@ -105,6 +120,9 @@ export async function GET(req: Request) {
       purchases: totalPurchases,
       earnings: totalEarnings,
     },
+    available_balance: availableBalance,
+    withdrawals: withdrawals ?? [],
+    pending_withdrawal: pendingWithdrawal,
     signup_list: signups ?? [],
     purchase_list: earnings ?? [],
     scripts: scripts ?? [],

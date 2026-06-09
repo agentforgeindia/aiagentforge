@@ -137,6 +137,18 @@ export async function POST(request: Request) {
       new_balance?: number;
     };
 
+    // Influencer commission — idempotent per order_id, safe if verify-payment
+    // already recorded it.
+    try {
+      await supabaseAdmin.rpc("record_referral_earning", {
+        p_user_id: userId,
+        p_order_id: razorpayOrderId,
+        p_amount: plan.amount,
+      });
+    } catch (e) {
+      console.error("[razorpay-webhook] record_referral_earning failed:", e);
+    }
+
     return NextResponse.json({
       success: true,
       alreadyProcessed: !result.added,

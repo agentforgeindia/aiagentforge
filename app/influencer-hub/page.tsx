@@ -45,6 +45,8 @@ type DashData = {
   social: { referral_code: string; referral_status: string; niche?: string; followers_count?: string; instagram_url?: string; youtube_url?: string } | null;
   referral_link: string | null;
   stats: { signups: number; purchases: number; earnings: number };
+  available_balance?: number;
+  pending_withdrawal?: { id: string; amount: number; status: string; requested_at: string } | null;
   signup_list: { full_name: string; email: string; created_at: string }[];
   purchase_list: Earning[];
   scripts: { id: string; title: string; description?: string; script_text?: string }[];
@@ -470,11 +472,50 @@ export default function InfluencerHubPage() {
   function DashboardTab() {
     const [copied, setCopied] = useState(false);
 
+    // Withdraw flow
+    const [withdrawing, setWithdrawing] = useState(false);
+    const [withdrawMsg, setWithdrawMsg] = useState<string | null>(null);
+    const [withdrawErr, setWithdrawErr] = useState<string | null>(null);
+
     function copyLink() {
       if (!dashData?.referral_link) return;
       navigator.clipboard.writeText(dashData.referral_link);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+
+    async function requestWithdraw() {
+      if (!dashData) return;
+      const cid = dashData.candidate.id;
+      const avail = dashData.available_balance ?? 0;
+      if (avail <= 0) {
+        setWithdrawErr("No balance available to withdraw yet.");
+        return;
+      }
+      if (!window.confirm(`Request withdrawal of ₹${avail.toLocaleString("en-IN")}?\n\nThe amount will be transferred to your registered account within 24 hours.`)) {
+        return;
+      }
+      setWithdrawing(true);
+      setWithdrawErr(null);
+      setWithdrawMsg(null);
+      try {
+        const r = await fetch("/api/careers/influencer/withdraw-earnings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cid }),
+        });
+        const d = await r.json();
+        if (d.ok) {
+          setWithdrawMsg(d.message || "Withdrawal requested! Transfer within 24 hours.");
+          // Refresh dashboard so the pending state shows.
+          loadDashboard(cid);
+        } else {
+          setWithdrawErr(d.error || "Could not request withdrawal.");
+        }
+      } catch {
+        setWithdrawErr("Network error. Please try again.");
+      }
+      setWithdrawing(false);
     }
 
     // Not logged in yet
@@ -505,7 +546,7 @@ export default function InfluencerHubPage() {
       );
     }
 
-    const { candidate, social, referral_link, stats, purchase_list, videos, video_engagement } = dashData;
+    const { candidate, social, referral_link, stats, purchase_list, signup_list, videos, video_engagement } = dashData;
     const pending = purchase_list.filter(e => e.status === "pending").reduce((s, e) => s + e.commission_amount, 0);
     const paid    = purchase_list.filter(e => e.status === "paid").reduce((s, e) => s + e.commission_amount, 0);
 
@@ -566,6 +607,54 @@ export default function InfluencerHubPage() {
           ))}
         </div>
 
+        {/* Withdraw card */}
+        <div className={`rounded-2xl border p-5 ${card}`}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className={`text-[10px] font-black uppercase tracking-wider ${muted}`}>Available to withdraw</p>
+              <p className="mt-0.5 text-3xl font-black text-emerald-600 dark:text-emerald-400">
+                ₹{(dashData.available_balance ?? 0).toLocaleString("en-IN")}
+              </p>
+              <p className={`mt-1 text-[11px] ${muted}`}>
+                💸 Payouts are transferred to your registered account within 24 hours.
+              </p>
+            </div>
+            <div className="shrink-0">
+              {dashData.pending_withdrawal ? (
+                <div className="rounded-xl border border-amber-300/40 bg-amber-50 px-4 py-3 text-center dark:border-amber-400/20 dark:bg-amber-500/10">
+                  <p className="text-xs font-black text-amber-700 dark:text-amber-300">
+                    ⏳ ₹{dashData.pending_withdrawal.amount.toLocaleString("en-IN")} requested
+                  </p>
+                  <p className="mt-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                    Transferring within 24 hours
+                  </p>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={requestWithdraw}
+                  disabled={withdrawing || (dashData.available_balance ?? 0) <= 0}
+                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-3 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <IndianRupee className="h-4 w-4" />
+                  {withdrawing ? "Requesting…" : "Withdraw Earnings"}
+                </button>
+              )}
+            </div>
+          </div>
+          {withdrawMsg && (
+            <div className="mt-3 flex items-start gap-2 rounded-xl border border-emerald-300/40 bg-emerald-50 px-4 py-3 text-xs font-bold text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-300">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{withdrawMsg}</span>
+            </div>
+          )}
+          {withdrawErr && (
+            <p className="mt-3 rounded-xl border border-rose-300/40 bg-rose-50 px-4 py-2.5 text-xs font-bold text-rose-700 dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-300">
+              {withdrawErr}
+            </p>
+          )}
+        </div>
+
         {/* Videos section */}
         <div className={`rounded-2xl border ${card}`}>
           <div className="flex items-center justify-between px-5 py-4">
@@ -613,6 +702,51 @@ export default function InfluencerHubPage() {
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+
+        {/* ── Referral Signups ── */}
+        <div className={`rounded-2xl border ${card}`}>
+          <div className="flex items-center justify-between px-5 py-4">
+            <p className="font-black">👥 Signups via Your Link</p>
+            <span className={`text-xs font-black px-2.5 py-1 rounded-full ${
+              (signup_list?.length ?? 0) > 0
+                ? "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300"
+                : darkMode ? "bg-white/5 text-white/40" : "bg-slate-100 text-slate-400"
+            }`}>{signup_list?.length ?? 0} total</span>
+          </div>
+          {!signup_list || signup_list.length === 0 ? (
+            <div className="px-5 pb-5">
+              <p className={`text-sm ${muted}`}>No signups yet. Share your referral link to start tracking!</p>
+              {referral_link && (
+                <div className={`mt-3 flex items-center gap-2 rounded-xl border px-3 py-2 ${darkMode ? "border-white/5 bg-white/5" : "border-slate-100 bg-slate-50"}`}>
+                  <span className="text-xs font-mono font-bold truncate flex-1">{referral_link}</span>
+                  <button onClick={copyLink} className="shrink-0 text-xs font-black text-purple-600 dark:text-purple-300 hover:underline">Copy</button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="px-5 pb-5 space-y-2">
+              {signup_list.map((s, i) => (
+                <div key={i} className={`flex items-center justify-between rounded-xl border px-4 py-3 ${darkMode ? "border-white/5 bg-white/5" : "border-slate-100 bg-slate-50"}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-black text-white bg-gradient-to-br from-blue-400 to-indigo-500`}>
+                      {(s.full_name || s.email || "?").charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold">{s.full_name || "User"}</p>
+                      <p className={`text-[11px] ${muted}`}>{s.email}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className={`text-[11px] font-bold ${muted}`}>
+                      {new Date(s.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                    </p>
+                    <span className="text-[10px] font-black text-blue-500">✅ Signed up</span>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

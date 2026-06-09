@@ -147,6 +147,19 @@ export async function POST(request: Request) {
       new_balance?: number;
     };
 
+    // Influencer commission — if this buyer signed up via an influencer's
+    // referral code, record the commission so it shows in their dashboard.
+    // Best-effort: never fail the payment response over this.
+    try {
+      await supabaseAdmin.rpc("record_referral_earning", {
+        p_user_id: userId,
+        p_order_id: razorpay_order_id,
+        p_amount: plan.amount,
+      });
+    } catch (e) {
+      console.error("[verify-payment] record_referral_earning failed:", e);
+    }
+
     return NextResponse.json({
       success: true,
       alreadyProcessed: !result.added,
