@@ -49,10 +49,17 @@ export default function CandidatesPage() {
   const canManage  = has("hr.manage");
   const isFounder  = role === "founder";
 
+  type CCData = {
+    referral_code: string; referral_status: string; ai_score?: number; ai_verdict?: string;
+    niche?: string; followers_count?: string; avg_views?: string;
+    instagram_url?: string; youtube_url?: string; facebook_url?: string; other_url?: string;
+  };
+
   const [rows, setRows]       = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [stageFilter, setStageFilter] = useState("all");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [ccData, setCcData]   = useState<Record<string, CCData>>({}); // cc social by candidate_id
   const [refreshKey, setRefreshKey] = useState(0);
   const [showNew, setShowNew] = useState(false);
 
@@ -82,6 +89,20 @@ export default function CandidatesPage() {
     setFName(""); setFMobile(""); setFEmail(""); setFCity(""); setFRole("telecaller");
     setShowNew(false); setFSaving(false);
     setRefreshKey((k) => k + 1);
+  }
+
+  async function expandRow(id: string, roleSlug: string | null) {
+    const next = expanded === id ? null : id;
+    setExpanded(next);
+    // Lazy-load content creator social data
+    if (next && roleSlug === "content-creator" && !ccData[id]) {
+      const { data } = await supabase
+        .from("content_creator_social")
+        .select("referral_code, referral_status, ai_score, ai_verdict, niche, followers_count, avg_views, instagram_url, youtube_url, facebook_url, other_url")
+        .eq("candidate_id", id)
+        .maybeSingle();
+      if (data) setCcData(prev => ({ ...prev, [id]: data as CCData }));
+    }
   }
 
   async function setStage(id: string, stage: string) {
@@ -174,7 +195,7 @@ export default function CandidatesPage() {
             return (
               <div key={c.id} className={adminCardCls}>
                 <div className="flex items-center justify-between gap-3 p-4">
-                  <button type="button" onClick={() => setExpanded(open ? null : c.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+                  <button type="button" onClick={() => expandRow(c.id, c.role_slug)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-slate-700 to-slate-900 text-sm font-bold text-white dark:from-indigo-500 dark:to-indigo-700">{c.name[0]?.toUpperCase()}</div>
                     <div className="min-w-0">
                       <p className="text-sm font-bold">{c.name}</p>
@@ -200,7 +221,7 @@ export default function CandidatesPage() {
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     )}
-                    <button type="button" onClick={() => setExpanded(open ? null : c.id)}>{open ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}</button>
+                    <button type="button" onClick={() => expandRow(c.id, c.role_slug)}>{open ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}</button>
                   </div>
                 </div>
 
@@ -265,6 +286,59 @@ export default function CandidatesPage() {
                         </div>
                       </div>
                     )}
+
+                    {/* ── Content Creator Application Details ── */}
+                    {c.role_slug === "content-creator" && (() => {
+                      const cc = ccData[c.id];
+                      const verdictColor: Record<string, string> = {
+                        strong_influencer: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+                        moderate:          "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+                        not_fit:           "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300",
+                        admin_approved:    "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+                      };
+                      return (
+                        <div className="mt-3 rounded-lg border border-pink-200/60 bg-pink-50/50 p-3 dark:border-pink-400/20 dark:bg-pink-500/5">
+                          <p className={`mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-pink-700 dark:text-pink-300`}>
+                            📸 Content Creator Profile
+                          </p>
+                          {!cc ? (
+                            <p className={`text-[11px] ${adminMutedCls}`}>No social data submitted yet.</p>
+                          ) : (
+                            <>
+                              <div className="flex flex-wrap gap-2 text-[11px]">
+                                {cc.ai_score != null && (
+                                  <span className="rounded-full bg-purple-100 px-2.5 py-0.5 font-black text-purple-700 dark:bg-purple-500/15 dark:text-purple-300">
+                                    🤖 AI Score: {cc.ai_score}/100
+                                  </span>
+                                )}
+                                {cc.ai_verdict && (
+                                  <span className={`rounded-full px-2.5 py-0.5 font-black ${verdictColor[cc.ai_verdict] ?? verdictColor.moderate}`}>
+                                    {cc.ai_verdict === "strong_influencer" ? "✅ Strong" : cc.ai_verdict === "moderate" ? "⚡ Moderate" : cc.ai_verdict === "admin_approved" ? "👑 Admin Approved" : "❌ Not Fit"}
+                                  </span>
+                                )}
+                                {cc.referral_status && (
+                                  <span className={`rounded-full px-2.5 py-0.5 font-black ${cc.referral_status === "active" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"}`}>
+                                    {cc.referral_status === "active" ? "🟢 Active" : `🔵 ${cc.referral_status}`}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="mt-2 grid gap-1 text-[11px] sm:grid-cols-2">
+                                {cc.niche && <span className={adminMutedCls}>🎯 Niche: <b>{cc.niche}</b></span>}
+                                {cc.followers_count && <span className={adminMutedCls}>👥 Followers: <b>{Number(cc.followers_count).toLocaleString("en-IN")}</b></span>}
+                                {cc.avg_views && <span className={adminMutedCls}>👁 Avg Views: <b>{cc.avg_views}</b></span>}
+                                {cc.referral_code && <span className={adminMutedCls}>🔗 Code: <b className="font-mono">{cc.referral_code}</b></span>}
+                              </div>
+                              <div className="mt-2 flex flex-wrap gap-1.5">
+                                {cc.instagram_url && <a href={cc.instagram_url} target="_blank" rel="noopener noreferrer" className="rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-3 py-1 text-[10px] font-black text-white transition hover:scale-105">📸 Instagram</a>}
+                                {cc.youtube_url   && <a href={cc.youtube_url}   target="_blank" rel="noopener noreferrer" className="rounded-full bg-gradient-to-r from-rose-600 to-red-600 px-3 py-1 text-[10px] font-black text-white transition hover:scale-105">▶ YouTube</a>}
+                                {cc.facebook_url  && <a href={cc.facebook_url}  target="_blank" rel="noopener noreferrer" className="rounded-full bg-blue-600 px-3 py-1 text-[10px] font-black text-white transition hover:scale-105">👥 Facebook</a>}
+                                {cc.other_url     && <a href={cc.other_url}     target="_blank" rel="noopener noreferrer" className="rounded-full border border-slate-300 px-3 py-1 text-[10px] font-black text-slate-700 transition hover:scale-105 dark:border-slate-600 dark:text-slate-300">🔗 Other</a>}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
               </div>

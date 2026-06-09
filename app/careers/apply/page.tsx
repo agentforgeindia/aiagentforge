@@ -9,6 +9,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Link as LinkIcon } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import PageDoodles from "@/app/components/PageDoodles";
+import CandidateStatusBanner from "@/app/careers/CandidateStatusBanner";
 
 const CC_PITCH_SCRIPT = `🎯 AgentForge — India's Own AI Platform for Businesses
 
@@ -123,6 +124,8 @@ function ApplyForm() {
 
     const cid = json.candidate_id as string;
     setCandidateId(cid);
+    // Save so CandidateStatusBanner can poll for stage updates
+    if (typeof window !== "undefined") localStorage.setItem("__cc_id", cid);
     setLoading(false);
 
     if (isCC) {
@@ -280,6 +283,7 @@ function ApplyForm() {
     <main className="relative min-h-screen bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee44,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_35%)]" />
       <PageDoodles variant="apply" glow={false} grid />
+      <CandidateStatusBanner />
 
       <div className="relative z-10 mx-auto max-w-lg px-5 py-14">
         {/* Step indicator */}

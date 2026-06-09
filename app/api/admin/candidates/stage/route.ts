@@ -1,7 +1,8 @@
 // POST /api/admin/candidates/stage
-// Updates candidate stage. If role=content-creator AND stage becomes
-// selected/offer_accepted/hired → upsert content_creator_social record so
-// the influencer automatically appears in the Influencer Hub.
+// 1. Updates candidate stage.
+// 2. Inserts a candidate_notification so frontend dashboard shows a toast.
+// 3. If role=content-creator AND stage = selected/offer_accepted/hired
+//    → upsert content_creator_social so they appear in Influencer Hub.
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -14,9 +15,20 @@ const db = createClient(
 
 function generateReferralCode(name: string): string {
   const base = name.replace(/[^a-zA-Z]/g, "").toUpperCase().slice(0, 5);
-  const rand = Math.random().toString(36).toUpperCase().slice(2, 6);
+  const rand  = Math.random().toString(36).toUpperCase().slice(2, 6);
   return `AF${base}${rand}`;
 }
+
+// Stages that get a candidate-facing notification
+const NOTIFY_MAP: Record<string, { title: string; body: string }> = {
+  selected:         { title: "🎉 You've been selected!", body: "Congratulations! Our team has selected you. We will be in touch with the next steps shortly." },
+  offer_sent:       { title: "📨 Offer letter sent!", body: "An offer has been sent to you. Please check your email and respond." },
+  offer_accepted:   { title: "✅ Offer confirmed!", body: "Your offer has been confirmed. Welcome to the team — next steps coming soon!" },
+  hired:            { title: "🚀 You're Hired! Welcome aboard!", body: "You are now officially part of AgentForge. Our team will contact you for onboarding." },
+  interview_scheduled: { title: "📅 Interview Scheduled", body: "Your interview has been scheduled. Please check your email or WhatsApp for the details." },
+  rejected:         { title: "Application Update", body: "Thank you for your interest in AgentForge. Unfortunately, we won't be moving forward at this time. We wish you the best!" },
+  talent_pool:      { title: "🌟 Added to Talent Pool", body: "You've been added to our talent pool for future opportunities. We will reach out when a suitable role opens up." },
+};
 
 const INFLUENCER_STAGES = new Set(["selected", "offer_accepted", "hired"]);
 
@@ -27,54 +39,61 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: "Missing fields" }, { status: 400 });
     }
 
-    // 1. Update candidate stage
+    // 1. Fetch candidate info (needed for notification + influencer sync)
+    const { data: cand } = await db
+      .from("candidates")
+      .select("id, name, email, mobile, role_slug, stage")
+      .eq("id", candidate_id)
+      .maybeSingle();
+
+    if (!cand) return NextResponse.json({ ok: false, error: "Candidate not found" }, { status: 404 });
+
+    // 2. Update stage
     const { error: stageErr } = await db
       .from("candidates")
       .update({ stage, updated_at: new Date().toISOString() })
       .eq("id", candidate_id);
     if (stageErr) throw stageErr;
 
-    // 2. If content-creator reaching a positive stage → auto-sync hub record
-    if (INFLUENCER_STAGES.has(stage)) {
-      const { data: cand } = await db
-        .from("candidates")
-        .select("id, name, email, mobile, role_slug")
-        .eq("id", candidate_id)
+    // 3. Insert candidate-facing notification if this stage has a message
+    const notif = NOTIFY_MAP[stage];
+    if (notif) {
+      try {
+        await db.from("candidate_notifications").insert({
+          candidate_id,
+          type:  "stage_update",
+          title: notif.title,
+          body:  notif.body,
+          stage,
+        });
+      } catch {}
+    }
+
+    // 4. Content-creator → auto-sync influencer hub record
+    if (INFLUENCER_STAGES.has(stage) && cand.role_slug === "content-creator") {
+      const { data: existing } = await db
+        .from("content_creator_social")
+        .select("id, referral_code, referral_status")
+        .eq("candidate_id", candidate_id)
         .maybeSingle();
 
-      if (cand?.role_slug === "content-creator") {
-        // Check if record already exists
-        const { data: existing } = await db
-          .from("content_creator_social")
-          .select("id, referral_code, referral_status")
-          .eq("candidate_id", candidate_id)
-          .maybeSingle();
+      if (!existing) {
+        let code = generateReferralCode(cand.name);
+        const { data: clash } = await db
+          .from("content_creator_social").select("id").eq("referral_code", code).maybeSingle();
+        if (clash) code = generateReferralCode(cand.name + Date.now());
 
-        if (!existing) {
-          // Generate unique referral code
-          let code = generateReferralCode(cand.name);
-          // Ensure uniqueness
-          const { data: clash } = await db
-            .from("content_creator_social")
-            .select("id")
-            .eq("referral_code", code)
-            .maybeSingle();
-          if (clash) code = generateReferralCode(cand.name + Date.now());
-
-          await db.from("content_creator_social").insert({
-            candidate_id: cand.id,
-            referral_code: code,
-            referral_status: "active",
-            ai_score: 50,
-            ai_verdict: "admin_approved",
-          });
-        } else if (existing.referral_status !== "active") {
-          // Re-activate if previously inactive
-          await db
-            .from("content_creator_social")
-            .update({ referral_status: "active" })
-            .eq("candidate_id", candidate_id);
-        }
+        await db.from("content_creator_social").insert({
+          candidate_id,
+          referral_code:   code,
+          referral_status: "active",
+          ai_score:        50,
+          ai_verdict:      "admin_approved",
+        });
+      } else if (existing.referral_status !== "active") {
+        await db.from("content_creator_social")
+          .update({ referral_status: "active" })
+          .eq("candidate_id", candidate_id);
       }
     }
 

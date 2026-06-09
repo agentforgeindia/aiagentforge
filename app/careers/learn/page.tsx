@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import PageDoodles from "@/app/components/PageDoodles";
+import CandidateStatusBanner from "@/app/careers/CandidateStatusBanner";
 
 type Module = { id: string; role_slug: string | null; module_order: number; title: string; content: string };
 
@@ -91,6 +92,9 @@ function LearnInner() {
   const role   = params.get("role") ?? "telecaller";
   const cid    = params.get("cid") ?? "";
 
+  // Save cid to localStorage so notification banner can poll stage updates
+  if (cid && typeof window !== "undefined") localStorage.setItem("__cc_id", cid);
+
   const isCC = role === "content-creator";
 
   const [modules, setModules]   = useState<Module[]>([]);
@@ -159,6 +163,7 @@ function LearnInner() {
     <main className="relative min-h-screen bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee44,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_35%)]" />
       <PageDoodles variant="training" glow={false} grid />
+      <CandidateStatusBanner />
 
       <div className="relative z-10 mx-auto max-w-2xl px-5 py-14">
         {/* Progress bar */}
