@@ -59,6 +59,15 @@ export default function RoleAccessPage() {
     return { enabled, total: FEATURE_CATALOG.length };
   }, [activeRole]);
 
+  // Features COMMON to every non-founder role (founder always has all, so
+  // we exclude it to find the genuinely-shared baseline).
+  const commonFeatures = useMemo(() => {
+    const team = roles.filter(r => r.id !== "founder");
+    if (team.length === 0) return [];
+    return FEATURE_CATALOG.filter(f => team.every(r => roleHasPerm(f.perm, r.permissions)));
+  }, [roles]);
+  const commonHrefs = useMemo(() => new Set(commonFeatures.map(f => f.href)), [commonFeatures]);
+
   if (loadingAuth) {
     return <main className="flex min-h-screen items-center justify-center text-sm text-slate-500">Checking access…</main>;
   }
@@ -87,6 +96,29 @@ export default function RoleAccessPage() {
         </button>
       }
     >
+      {/* Common to all roles */}
+      {!loading && commonFeatures.length > 0 && (
+        <div className="mb-4 rounded-xl border border-cyan-200/60 bg-cyan-50/60 p-4 dark:border-cyan-400/20 dark:bg-cyan-500/5">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-black text-cyan-800 dark:text-cyan-200">🔑 Common to every role</p>
+            <span className="text-[11px] font-bold text-cyan-700 dark:text-cyan-300">{commonFeatures.length} features</span>
+          </div>
+          <p className={`mt-0.5 text-[11px] ${adminMutedCls}`}>Every team role (except Founder) can access these by default.</p>
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
+            {commonFeatures.map(f => (
+              <span key={f.href} className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-cyan-700 shadow-sm dark:bg-white/10 dark:text-cyan-200">
+                <Check className="h-3 w-3" /> {f.label}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      {!loading && commonFeatures.length === 0 && (
+        <div className={`mb-4 rounded-xl border border-amber-200/60 bg-amber-50/60 p-3 text-[12px] font-bold text-amber-800 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-200`}>
+          ⚠️ No feature is common to all roles — each role has a different access set.
+        </div>
+      )}
+
       {/* Role tabs — right aligned (right → left) */}
       <div className="mb-4 flex flex-wrap justify-end gap-1.5">
         {loading ? (
@@ -156,6 +188,9 @@ export default function RoleAccessPage() {
                           ? <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                           : <Lock className="h-3.5 w-3.5 text-slate-400" />}
                         <span className={f.enabled ? "font-bold" : "font-medium line-through decoration-slate-300"}>{f.label}</span>
+                        {f.enabled && commonHrefs.has(f.href) && (
+                          <span className="rounded-full bg-cyan-100 px-1.5 py-0.5 text-[9px] font-black text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-300">common</span>
+                        )}
                       </span>
                       {f.enabled && (
                         <Link href={f.href} className="text-slate-400 transition hover:text-slate-700 dark:hover:text-slate-200">
