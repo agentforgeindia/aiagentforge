@@ -1,7 +1,7 @@
 ﻿"use client";
 
 // ============================================================
-// /admin/customers â€" signed-up users with corporate styling.
+// /admin/customers — signed-up users with corporate styling.
 // ============================================================
 
 import Link from "next/link";
@@ -35,7 +35,7 @@ type PlanFilter = "all" | "Starter" | "Pro Creator" | "Empire" | "Free";
 type HealthFilter = "all" | "healthy" | "active" | "at_risk" | "churn_risk" | "churned";
 
 export default function AdminCustomersPage() {
-  // RBAC-driven access â€" no hard-coded email allowlist. Roles +
+  // RBAC-driven access — no hard-coded email allowlist. Roles +
   // permissions live in admin_roles / admin_users.
   const {
     loading: loadingAuth,
@@ -104,7 +104,7 @@ export default function AdminCustomersPage() {
   if (loadingAuth) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">
-        Checking accessâ€¦
+        Checking access…
       </main>
     );
   }
@@ -203,7 +203,7 @@ export default function AdminCustomersPage() {
       {/* List */}
       <div className={`${adminCardCls} mt-4`}>
         {loadingRows ? (
-          <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
+          <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
         ) : filtered.length === 0 ? (
           <p className={`p-8 text-center text-sm ${adminMutedCls}`}>
             {rows.length === 0
@@ -313,7 +313,7 @@ function HealthChip({
   return (
     <span
       className={`inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] ${cls}`}
-      title={`Health score: ${score ?? "â€""} / 100`}
+      title={`Health score: ${score ?? "—"} / 100`}
     >
       {label}
       {score !== null && (
