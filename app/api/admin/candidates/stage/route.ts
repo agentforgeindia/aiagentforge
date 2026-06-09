@@ -87,6 +87,8 @@ export async function POST(req: NextRequest) {
         .eq("candidate_id", candidate_id)
         .maybeSingle();
 
+      let finalCode: string;
+
       if (!existing) {
         let code = generateReferralCode(cand.name);
         const { data: clash } = await db
@@ -100,10 +102,26 @@ export async function POST(req: NextRequest) {
           ai_score:        50,
           ai_verdict:      "admin_approved",
         });
-      } else if (existing.referral_status !== "active") {
-        await db.from("content_creator_social")
-          .update({ referral_status: "active" })
-          .eq("candidate_id", candidate_id);
+        finalCode = code;
+      } else {
+        if (existing.referral_status !== "active") {
+          await db.from("content_creator_social")
+            .update({ referral_status: "active" })
+            .eq("candidate_id", candidate_id);
+        }
+        finalCode = existing.referral_code;
+      }
+
+      // ── CRITICAL: Sync influencer referral code → profiles.referral_code ──
+      // This makes process_referral() work when new users sign up via
+      // ?ref=<influencer_code> — without this, signups are never attributed.
+      if (finalCode && cand.email) {
+        try {
+          await db
+            .from("profiles")
+            .update({ referral_code: finalCode })
+            .eq("email", cand.email);
+        } catch {}
       }
     }
 

@@ -3,7 +3,7 @@
 
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 
 // Workshop slots. Seat tracking + ₹99 payment handled by our own
@@ -85,7 +85,7 @@ const workshopGalleryImages = [
 
 const learnItems = [
   { icon: "⬆️", title: "Upload Textile Prints", desc: "Right way to upload textile designs for clean AI outputs." },
-  { icon: "✨", title: "Generate AI Mockups", desc: "Create premium garment and decor mockups live." },
+  { icon: "✨", title: "Generate AI Mockups", desc: "Create premium garment and decor mockups instantly." },
   { icon: "👕", title: "Men / Women / Kids", desc: "Generate multiple categories from one design." },
   { icon: "🏠", title: "Home Decor Mockups", desc: "Cushions, curtains, bedsheets, table covers and more." },
   { icon: "💬", title: "WhatsApp Catalogue", desc: "Create visuals ready for client sharing." },
@@ -138,6 +138,52 @@ export default function WebinarLandingPage() {
 
   const [seats, setSeats] = useState<Record<string, SeatInfo>>({});
   const [busySlot, setBusySlot] = useState<string | null>(null);
+
+  // Background radio — plays while the visitor is on the page.
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [audioOn, setAudioOn] = useState(false);
+
+  useEffect(() => {
+    const el = audioRef.current;
+    if (!el) return;
+    el.volume = 0.35;
+
+    const tryPlay = () =>
+      el
+        .play()
+        .then(() => setAudioOn(true))
+        .catch(() => {});
+
+    tryPlay();
+
+    // Browsers block autoplay-with-sound until a user gesture.
+    // Kick it off on the visitor's first interaction.
+    const onFirstGesture = () => {
+      if (el.paused) tryPlay();
+      remove();
+    };
+    const events = ["pointerdown", "keydown", "scroll", "touchstart"];
+    const remove = () =>
+      events.forEach((e) => window.removeEventListener(e, onFirstGesture));
+    events.forEach((e) =>
+      window.addEventListener(e, onFirstGesture, { passive: true }),
+    );
+
+    return remove;
+  }, []);
+
+  const toggleAudio = () => {
+    const el = audioRef.current;
+    if (!el) return;
+    if (el.paused) {
+      el.play()
+        .then(() => setAudioOn(true))
+        .catch(() => {});
+    } else {
+      el.pause();
+      setAudioOn(false);
+    }
+  };
 
   const fetchSeats = async () => {
     try {
@@ -354,13 +400,25 @@ export default function WebinarLandingPage() {
             <img src="/af-logo.png" alt="AgentForge" className="h-10 w-auto" />
             <div className="hidden sm:block">
               <p className="text-xs font-black uppercase tracking-[0.2em] text-violet-500">
-                Live Sunday Workshop
+                AI Textile Workshop
               </p>
               <p className={`text-xs ${mutedText}`}>TextilePrints to Mockup AI</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleAudio}
+              aria-label={audioOn ? "Mute music" : "Play music"}
+              className={`rounded-full border px-3 py-2 text-xs font-black ${
+                isDark
+                  ? "border-white/15 bg-white/10 text-white"
+                  : "border-slate-200 bg-white text-slate-800"
+              }`}
+            >
+              {audioOn ? "🔊" : "🔇"}
+            </button>
             <button
               type="button"
               onClick={() => setTheme(isDark ? "light" : "dark")}
@@ -434,7 +492,7 @@ export default function WebinarLandingPage() {
           </p>
 
           <div className="mt-7 flex flex-wrap gap-3">
-            {["Live AI Demo", "Certificate Included", "Beginner Friendly", "WhatsApp Catalogue Ready"].map((item) => (
+            {["Hands-on AI Demo", "Certificate Included", "Beginner Friendly", "WhatsApp Catalogue Ready"].map((item) => (
               <span
                 key={item}
                 className={`rounded-full border px-4 py-2 text-sm font-bold ${
@@ -463,7 +521,7 @@ export default function WebinarLandingPage() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <CTA label="Join Workshop Now — ₹99" />
             <p className={`text-sm font-bold ${mutedText}`}>
-              4 Live Slots • 20–28 June • Limited Seats
+              4 Slots • 20–28 June • Limited Seats
             </p>
           </div>
         </div>
@@ -475,7 +533,7 @@ export default function WebinarLandingPage() {
                 Upload → Generate → Done
               </span>
               <span className="rounded-full bg-amber-300 px-3 py-2 text-xs font-black text-slate-950">
-                AI Live
+                AI Powered
               </span>
             </div>
 
@@ -514,7 +572,7 @@ export default function WebinarLandingPage() {
             Pick a Workshop Date
           </h2>
           <p className={`mx-auto mt-3 max-w-2xl text-base ${mutedText}`}>
-            Saturday batch live at 7:00 PM • Sunday batch live at 3:00 PM • Limited seats per slot
+            Saturday batch at 7:00 PM • Sunday batch at 3:00 PM • Limited seats per slot
           </p>
         </div>
 
@@ -557,7 +615,7 @@ export default function WebinarLandingPage() {
 
                 <h3 className="mt-4 text-2xl font-black">{slot.date}</h3>
                 <p className={`mt-1 text-sm font-bold ${mutedText}`}>
-                  Live at {slot.time} IST
+                  Starts at {slot.time} IST
                 </p>
                 <div className="mt-4 text-3xl font-black text-violet-500">₹99</div>
 
@@ -753,7 +811,7 @@ export default function WebinarLandingPage() {
       },
       {
         q: " B. Is this workshop beginner friendly?",
-        a: "Yes. You do not need AI or design experience. We will show the process step-by-step with live examples.",
+        a: "Yes. You do not need AI or design experience. We will show the process step-by-step with real examples.",
       },
       {
         q: " C. Will I get a certificate?",
@@ -795,7 +853,7 @@ export default function WebinarLandingPage() {
             Be Part Of India’s First TextilePrints to Mockup AI Workshop
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg font-medium text-white/85">
-            Live demo, certificate, AI workflow and practical textile AI training.
+            Hands-on demo, certificate, AI workflow and practical textile AI training.
           </p>
           <div className="mt-8">
             <a
@@ -832,6 +890,13 @@ export default function WebinarLandingPage() {
 >
   Register Now
 </a>
+
+      <audio
+        ref={audioRef}
+        src="/AgentForge_Radio.m4a"
+        loop
+        preload="auto"
+      />
 
       {selectedImage && (
         <div

@@ -167,7 +167,7 @@ export default function WorkshopThankYouPage() {
 
             {[
               "Workshop joining link",
-              "Live workshop updates",
+              "Workshop schedule & updates",
               "Bonus AI resources & announcements",
             ].map((item) => (
               <div

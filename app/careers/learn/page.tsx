@@ -419,7 +419,15 @@ function LearnInner() {
 
           {cid ? (
             allDone ? (
-              <a href={`/careers/test/${cid}`}
+              <a
+                href={`/careers/test/${cid}`}
+                onClick={() => {
+                  // Mark training as done before navigating to test
+                  fetch("/api/careers/training-done", {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ candidate_id: cid }),
+                  }).catch(() => {});
+                }}
                 className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 px-9 py-4 text-sm font-black text-white shadow-xl shadow-emerald-500/30 transition hover:scale-105 active:scale-95 sm:text-base">
                 <Sparkles className="h-4 w-4" />
                 Start Assessment →

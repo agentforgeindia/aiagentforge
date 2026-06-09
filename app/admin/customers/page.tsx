@@ -27,6 +27,8 @@ type CustomerRow = {
   created_at: string | null;
   health_score: number | null;
   health_status: string | null;
+  referred_by: string | null;
+  billing_phone: string | null;
 };
 
 type PlanFilter = "all" | "Starter" | "Pro Creator" | "Empire" | "Free";
@@ -55,30 +57,36 @@ export default function AdminCustomersPage() {
     if (!canViewCustomers) return;
     setLoadingRows(true);
     (async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(
-          "id, email, full_name, credits, plan, updated_at, created_at, health_score, health_status",
-        )
-        .order("updated_at", { ascending: false })
-        .limit(500);
-      if (!error && data) setRows(data as CustomerRow[]);
+      // Use service-role API to bypass RLS — anon client misses records
+      // where updated_at is null or RLS policy doesn't match.
+      const { data: session } = await supabase.auth.getSession();
+      const token = session.session?.access_token ?? "";
+      const res = await fetch("/api/admin/customers", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const json = await res.json();
+      if (json.ok) setRows(json.profiles as CustomerRow[]);
       setLoadingRows(false);
     })();
   }, [canViewCustomers, refreshKey]);
+
+  // Normalize plan: null / "free" / "Free" → "Free" for consistent comparison
+  function normPlan(p: string | null) {
+    if (!p || p.toLowerCase() === "free") return "Free";
+    return p;
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
       if (planFilter !== "all") {
-        const effectivePlan = r.plan ?? "Free";
-        if (effectivePlan !== planFilter) return false;
+        if (normPlan(r.plan) !== planFilter) return false;
       }
       if (healthFilter !== "all") {
         if ((r.health_status ?? "") !== healthFilter) return false;
       }
       if (q) {
-        const hay = `${r.email ?? ""} ${r.full_name ?? ""}`.toLowerCase();
+        const hay = `${r.email ?? ""} ${r.full_name ?? ""} ${r.billing_phone ?? ""}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -86,9 +94,11 @@ export default function AdminCustomersPage() {
   }, [rows, planFilter, healthFilter, search]);
 
   const stats = useMemo(() => {
-    const total = rows.length;
-    const paying = rows.filter((r) => r.plan && r.plan !== "Free").length;
-    return { total, paying };
+    const total   = rows.length;
+    const free    = rows.filter(r => normPlan(r.plan) === "Free").length;
+    const paying  = rows.filter(r => normPlan(r.plan) !== "Free").length;
+    const referred = rows.filter(r => !!r.referred_by).length;
+    return { total, free, paying, referred };
   }, [rows]);
 
   if (loadingAuth) {
@@ -117,7 +127,7 @@ export default function AdminCustomersPage() {
       doodleType="customers"
       breadcrumbs={[{ label: "Customers" }]}
       title="Customers"
-      subtitle={`${stats.total} total Â· ${stats.paying} on a paid plan`}
+      subtitle={`${stats.total} total · ${stats.free} free · ${stats.paying} paid · ${stats.referred} via referral`}
       email={authEmail}
       actions={
         <>
@@ -208,27 +218,37 @@ export default function AdminCustomersPage() {
                   href={`/admin/customers/${r.id}`}
                   className="flex items-center gap-4 px-4 py-3 transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
                 >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="truncate text-sm font-bold">
-                        {r.full_name?.trim() || r.email || "â€”"}
+                  <div className=”min-w-0 flex-1”>
+                    <div className=”flex flex-wrap items-center gap-2”>
+                      <p className=”truncate text-sm font-bold”>
+                        {r.full_name?.trim() || r.email || “—“}
                       </p>
                       <PlanChip plan={r.plan} />
                       <HealthChip status={r.health_status} score={r.health_score} />
+                      {r.referred_by && (
+                        <span className=”inline-flex items-center gap-0.5 rounded-md bg-purple-50 px-1.5 py-0.5 text-[10px] font-bold text-purple-600 dark:bg-purple-500/10 dark:text-purple-300”>
+                          🔗 ref:{r.referred_by}
+                        </span>
+                      )}
                     </div>
                     <p className={`mt-0.5 truncate text-xs ${adminMutedCls}`}>
-                      {r.email ?? "(no email)"}
+                      {r.email ?? “(no email)”}
+                      {r.billing_phone && ` · ${r.billing_phone}`}
+                      {“ · “}
+                      {r.created_at
+                        ? new Date(r.created_at).toLocaleDateString(“en-IN”, { day: “2-digit”, month: “short”, year: “numeric” })
+                        : “—“}
                     </p>
                   </div>
-                  <div className="hidden text-right sm:block">
-                    <p className="text-sm font-bold tabular-nums">
-                      {Number(r.credits).toLocaleString("en-IN")}
+                  <div className=”hidden text-right sm:block”>
+                    <p className=”text-sm font-bold tabular-nums”>
+                      {Number(r.credits).toLocaleString(“en-IN”)}
                     </p>
                     <p className={`text-[10px] uppercase tracking-[0.16em] ${adminMutedCls}`}>
                       credits
                     </p>
                   </div>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+                  <ChevronRight className=”h-4 w-4 shrink-0 text-slate-400” />
                 </Link>
               </li>
             ))}
@@ -251,7 +271,9 @@ const PLAN_STYLES: Record<string, string> = {
 };
 
 function PlanChip({ plan }: { plan: string | null }) {
-  const effective = plan ?? "Free";
+  // Normalize "free" → "Free" so style lookup always works
+  const raw = plan ?? "free";
+  const effective = raw.toLowerCase() === "free" ? "Free" : raw;
   const cls = PLAN_STYLES[effective] ?? PLAN_STYLES.Free;
   return (
     <span
