@@ -134,4 +134,35 @@ order by pay.razorpay_payment_id, pay.created_at asc;
 --        sum(commission_amount)      as total_commission
 --   from public.referral_earnings
 --  group by referral_code;
+
+-- ── 5. Admin view: separate company REVENUE (sale value) from the
+--       PAYOUT owed to the influencer (their 10%). ─────────────────
+create or replace view public.v_admin_influencers as
+select
+  c.id                        as candidate_id,
+  c.name,
+  c.email,
+  c.mobile,
+  c.stage,
+  c.created_at,
+  css.referral_code,
+  css.referral_status,
+  css.instagram_url,
+  css.youtube_url,
+  css.followers_count,
+  css.avg_views,
+  css.niche,
+  css.ai_score,
+  (select count(*) from public.profiles p where p.referred_by = css.referral_code) as total_signups,
+  (select count(*) from public.referral_earnings re where re.referral_code = css.referral_code) as total_purchases,
+  -- company revenue = actual sale value
+  (select coalesce(sum(purchase_amount),0) from public.referral_earnings re where re.referral_code = css.referral_code) as total_revenue,
+  -- payout owed to creator = their 10%
+  (select coalesce(sum(commission_amount),0) from public.referral_earnings re where re.referral_code = css.referral_code) as total_earnings,
+  (select count(*) from public.influencer_video_submissions ivs where ivs.candidate_id = c.id) as videos_submitted,
+  (select count(*) from public.influencer_video_submissions ivs where ivs.candidate_id = c.id and ivs.status = 'approved') as videos_approved
+from public.candidates c
+join public.content_creator_social css on css.candidate_id = c.id
+where c.role_slug = 'content-creator'
+order by c.created_at desc;
 -- ============================================================

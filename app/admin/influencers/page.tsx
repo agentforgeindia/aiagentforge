@@ -21,7 +21,7 @@ type Influencer = {
   referral_code: string; referral_status: string; stage: string;
   instagram_url?: string; youtube_url?: string; twitter_url?: string;
   niche?: string; bio?: string; followers_count?: string;
-  total_signups: number; total_purchases: number; total_earnings: number;
+  total_signups: number; total_purchases: number; total_earnings: number; total_revenue?: number;
   videos_submitted: number; videos_approved: number; created_at: string;
 };
 
@@ -85,6 +85,20 @@ export default function InfluencerAdminPage() {
 
   const [expandedInf, setExpandedInf] = useState<string | null>(null);
   const [videoFilter, setVideoFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [infSignups, setInfSignups]   = useState<Record<string, { full_name: string; email: string; created_at: string }[]>>({});
+  const [signupsLoading, setSignupsLoading] = useState<string | null>(null);
+
+  async function loadSignups(candidateId: string, referralCode: string) {
+    if (infSignups[candidateId] !== undefined) return; // already loaded
+    setSignupsLoading(candidateId);
+    const { data } = await supabase
+      .from("profiles")
+      .select("full_name, email, created_at")
+      .eq("referred_by", referralCode)
+      .order("created_at", { ascending: false });
+    setInfSignups(prev => ({ ...prev, [candidateId]: data ?? [] }));
+    setSignupsLoading(null);
+  }
 
   async function getToken() {
     const { data } = await supabase.auth.getSession();
@@ -233,7 +247,8 @@ export default function InfluencerAdminPage() {
   // ── Derived stats ──────────────────────────────────────────────
   const totalSignups   = influencers.reduce((s, i) => s + (i.total_signups ?? 0), 0);
   const totalPurchases = influencers.reduce((s, i) => s + (i.total_purchases ?? 0), 0);
-  const totalEarnings  = influencers.reduce((s, i) => s + (i.total_earnings ?? 0), 0);
+  const totalEarnings  = influencers.reduce((s, i) => s + (i.total_earnings ?? 0), 0);   // payout owed to creators
+  const totalRevenue   = influencers.reduce((s, i) => s + (i.total_revenue ?? 0), 0);    // company sale value
   const totalReactions = reactions.length;
   const totalComments  = hubComments.length + vidComments.length;
 
@@ -267,9 +282,9 @@ export default function InfluencerAdminPage() {
         {[
           { label: "Influencers",  value: influencers.length,              icon: <Users className="h-5 w-5 text-indigo-500" /> },
           { label: "Signups",      value: totalSignups,                    icon: <Users className="h-5 w-5 text-cyan-500" /> },
-          { label: "Purchases",    value: totalPurchases,                  icon: <ShoppingBag className="h-5 w-5 text-purple-500" /> },
-          { label: "Reactions",    value: totalReactions,                  icon: <ThumbsUp className="h-5 w-5 text-pink-500" /> },
-          { label: "Revenue",      value: `₹${totalEarnings.toFixed(0)}`,  icon: <IndianRupee className="h-5 w-5 text-emerald-500" />, hi: true },
+          { label: "Sales",        value: totalPurchases,                  icon: <ShoppingBag className="h-5 w-5 text-purple-500" /> },
+          { label: "Revenue",      value: `₹${totalRevenue.toFixed(0)}`,   icon: <IndianRupee className="h-5 w-5 text-emerald-500" />, hi: true },
+          { label: "Payout owed",  value: `₹${totalEarnings.toFixed(0)}`,  icon: <IndianRupee className="h-5 w-5 text-amber-500" /> },
         ].map(s => (
           <div key={s.label} className={`${adminCardCls} p-4`}>
             {s.icon}
@@ -472,7 +487,11 @@ export default function InfluencerAdminPage() {
                       className={`rounded border border-slate-200 px-2.5 py-1 text-[10px] font-bold text-slate-500 hover:text-indigo-600 dark:border-slate-700`}>
                       <ExternalLink className="inline h-3 w-3" /> Dashboard
                     </a>
-                    <button onClick={() => setExpandedInf(isExpanded ? null : inf.candidate_id)}
+                    <button onClick={() => {
+                        const next = isExpanded ? null : inf.candidate_id;
+                        setExpandedInf(next);
+                        if (next && inf.referral_code) loadSignups(inf.candidate_id, inf.referral_code);
+                      }}
                       className={`rounded border border-slate-200 p-1 text-slate-400 dark:border-slate-700`}>
                       {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </button>
@@ -503,6 +522,52 @@ export default function InfluencerAdminPage() {
                         <p className={`text-xs leading-relaxed ${adminMutedCls}`}>{inf.bio || "—"}</p>
                       </div>
                     </div>
+                    {/* ── Signups via referral link ── */}
+                    <div className="mt-4">
+                      <div className="mb-2 flex items-center gap-2">
+                        <p className={`text-[10px] font-bold uppercase tracking-wider ${adminMutedCls}`}>
+                          👥 Signups via Referral Link
+                        </p>
+                        {inf.referral_code && (
+                          <span className={`font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 ${adminMutedCls}`}>
+                            ?ref={inf.referral_code}
+                          </span>
+                        )}
+                      </div>
+                      {signupsLoading === inf.candidate_id ? (
+                        <p className={`text-xs ${adminMutedCls}`}>Loading…</p>
+                      ) : !infSignups[inf.candidate_id] ? (
+                        <p className={`text-xs ${adminMutedCls}`}>—</p>
+                      ) : infSignups[inf.candidate_id].length === 0 ? (
+                        <p className={`text-xs ${adminMutedCls}`}>No signups yet via this referral link.</p>
+                      ) : (
+                        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40">
+                                <th className={`px-3 py-2 text-left text-[10px] font-black uppercase tracking-wider ${adminMutedCls}`}>#</th>
+                                <th className={`px-3 py-2 text-left text-[10px] font-black uppercase tracking-wider ${adminMutedCls}`}>Name</th>
+                                <th className={`px-3 py-2 text-left text-[10px] font-black uppercase tracking-wider ${adminMutedCls}`}>Email</th>
+                                <th className={`px-3 py-2 text-left text-[10px] font-black uppercase tracking-wider ${adminMutedCls}`}>Signed Up</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {infSignups[inf.candidate_id].map((s, i) => (
+                                <tr key={s.email} className="border-b border-slate-100 last:border-0 dark:border-slate-800">
+                                  <td className={`px-3 py-2 font-mono ${adminMutedCls}`}>{i + 1}</td>
+                                  <td className="px-3 py-2 font-semibold">{s.full_name || "—"}</td>
+                                  <td className={`px-3 py-2 ${adminMutedCls}`}>{s.email}</td>
+                                  <td className={`px-3 py-2 ${adminMutedCls}`}>
+                                    {new Date(s.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+
                     {/* Their videos */}
                     {infVids.length > 0 && (
                       <div className="mt-3">
