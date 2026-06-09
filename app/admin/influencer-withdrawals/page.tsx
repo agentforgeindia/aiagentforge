@@ -37,7 +37,9 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function AdminWithdrawalsPage() {
-  const { loading: loadingAuth, isAdmin, email: authEmail } = useAdminPermissions();
+  const { loading: loadingAuth, has, email: authEmail } = useAdminPermissions();
+  // Payouts are money — founder / finance access only.
+  const isAdmin = has("finance.view");
 
   const [rows, setRows] = useState<Row[]>([]);
   const [loadingRows, setLoadingRows] = useState(true);

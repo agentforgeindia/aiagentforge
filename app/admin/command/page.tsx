@@ -25,9 +25,9 @@ type TeamRow = { member: string; leads: number; won: number };
 type Data = { live: Live; goals: Goals; team: TeamRow[]; error?: string };
 
 export default function CommandCenterPage() {
-  const { loading: pLoading, isAdmin, has, email } = useAdminPermissions();
-  // Founder-only: wildcard. Fallback to dashboard.view for safety.
-  const canView = has("*") || isAdmin;
+  const { loading: pLoading, has, email } = useAdminPermissions();
+  // Founder-only cockpit — wildcard permission only.
+  const canView = has("*");
 
   const [data, setData]       = useState<Data | null>(null);
   const [loading, setLoading] = useState(true);
