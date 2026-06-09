@@ -125,6 +125,8 @@ export default function AdminLeadsPage() {
   // Quick stage pill (groups statuses into intuitive buckets).
   const [stageFilter, setStageFilter] = useState<StageId>("all");
   const [search, setSearch] = useState("");
+  // Date sort — newest first by default. Applies to both Pipeline + Free signups.
+  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
 
   // Top-level view tabs — "Pipeline" (the leads table itself) vs
   // "Free signups" (virtual leads pulled from profiles).
@@ -227,7 +229,7 @@ export default function AdminLeadsPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return rows.filter((r) => {
+    const out = rows.filter((r) => {
       if (!matchesStage(stageFilter, r.status)) return false;
       if (sourceFilter !== "all" && r.source !== sourceFilter) return false;
       if (statusFilter !== "all" && r.status !== statusFilter) return false;
@@ -237,7 +239,25 @@ export default function AdminLeadsPage() {
       }
       return true;
     });
-  }, [rows, stageFilter, sourceFilter, statusFilter, search]);
+    // Sort by created date (newest or oldest first)
+    out.sort((a, b) => {
+      const ta = new Date(a.created_at).getTime();
+      const tb = new Date(b.created_at).getTime();
+      return sortDir === "desc" ? tb - ta : ta - tb;
+    });
+    return out;
+  }, [rows, stageFilter, sourceFilter, statusFilter, search, sortDir]);
+
+  // Free signups — apply the same date sort on the client.
+  const sortedSignups = useMemo(() => {
+    const out = [...signupRows];
+    out.sort((a, b) => {
+      const ta = new Date(a.created_at).getTime();
+      const tb = new Date(b.created_at).getTime();
+      return sortDir === "desc" ? tb - ta : ta - tb;
+    });
+    return out;
+  }, [signupRows, sortDir]);
 
   // Per-stage counts shown in the pill badges. Always counts the
   // base `rows` (not filtered) so the pill always shows the total
@@ -709,6 +729,17 @@ export default function AdminLeadsPage() {
             </span>
           )}
         </button>
+
+        {/* Date sort toggle — applies to both Pipeline + Free signups */}
+        <button
+          type="button"
+          onClick={() => setSortDir(d => (d === "desc" ? "asc" : "desc"))}
+          title="Sort by date"
+          className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+        >
+          {sortDir === "desc" ? "🆕 Newest first" : "📅 Oldest first"}
+          <span className="text-[10px]">{sortDir === "desc" ? "▼" : "▲"}</span>
+        </button>
       </div>
 
       {/* Free-signups view — virtual leads pulled from profiles */}
@@ -738,7 +769,7 @@ export default function AdminLeadsPage() {
             </p>
           ) : (
             <ul className="divide-y divide-slate-200 dark:divide-slate-800">
-              {signupRows.map((s) => (
+              {sortedSignups.map((s) => (
                 <li
                   key={s.id}
                   className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4"
