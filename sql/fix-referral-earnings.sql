@@ -86,6 +86,13 @@ end$$;
 revoke all on function public.record_referral_earning(uuid, text, numeric, text) from public, anon;
 grant execute on function public.record_referral_earning(uuid, text, numeric, text) to service_role;
 
+-- ── 2b. Remove fake/manual backfill payment rows ─────────────────
+--       These were inserted by hand during testing (payment_id like
+--       'manual_backfill%') and duplicate a real Razorpay payment.
+--       Deleting them leaves only genuine Razorpay transactions.
+delete from public.payments
+ where razorpay_payment_id like 'manual_backfill%';
+
 -- ── 3. REBUILD — wipe and re-derive one clean row per paid payment.
 --       Only payments that are NOT already withdrawn/paid keep their
 --       'pending' status. (We don't touch withdrawals here.) ───────
@@ -137,7 +144,11 @@ order by pay.razorpay_payment_id, pay.created_at asc;
 
 -- ── 5. Admin view: separate company REVENUE (sale value) from the
 --       PAYOUT owed to the influencer (their 10%). ─────────────────
-create or replace view public.v_admin_influencers as
+-- DROP first — a column was added/renamed, so CREATE OR REPLACE alone
+-- errors with "cannot change name of view column".
+drop view if exists public.v_admin_influencers;
+
+create view public.v_admin_influencers as
 select
   c.id                        as candidate_id,
   c.name,
