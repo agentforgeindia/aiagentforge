@@ -896,7 +896,7 @@ export default function AdminLeadsPage() {
         ) : filtered.length === 0 ? (
           <p className={`p-8 text-center text-sm ${adminMutedCls}`}>
             {rows.length === 0
-              ? “No leads recorded yet. Use \”New lead\” to add one.”
+              ? “No leads recorded yet. Use “New lead” to add one.”
               : "No leads match the current filter."}
           </p>
         ) : (
