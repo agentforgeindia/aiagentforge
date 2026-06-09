@@ -36,8 +36,8 @@ type StageLog = { id: string; stage: string; changed_at: string; changed_by?: st
 const PIPELINE: { key: string; label: string; emoji: string }[] = [
   { key: "applied",              label: "Applied",           emoji: "📝" },
   { key: "training_started",     label: "Training Started",  emoji: "📚" },
-  { key: "training_completed",   label: "Training Done",     emoji: "✅" },
-  { key: "assessment_started",   label: "Test Started",      emoji: "🧠" },
+  { key: "training_done",        label: "Training Done",     emoji: "✅" },
+  { key: "test_started",         label: "Test Started",      emoji: "🧠" },
   { key: "assessment_completed", label: "Test Submitted",    emoji: "📤" },
   { key: "passed",               label: "Passed",            emoji: "🎯" },
   { key: "interview_eligible",   label: "Interview Ready",   emoji: "📋" },
@@ -164,7 +164,17 @@ export default function CandidatesPage() {
   async function removeCandidate(id: string, name: string) {
     if (!isFounder) return;
     if (!window.confirm(`Remove "${name}" permanently?\n\nThis will delete the candidate and all related records. This action cannot be undone.`)) return;
-    await supabase.from("candidates").delete().eq("id", id);
+    // Service-role API — the anon-client delete was silently blocked by RLS,
+    // which is why deleted candidates kept reappearing on refresh.
+    const { data: sess } = await supabase.auth.getSession();
+    const token = sess.session?.access_token ?? "";
+    const res = await fetch("/api/admin/candidates/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ id }),
+    });
+    const json = await res.json();
+    if (!json.ok) { alert(json.error ?? "Delete failed."); return; }
     setRows((prev) => prev.filter((r) => r.id !== id));
     if (expanded === id) setExpanded(null);
   }
@@ -179,28 +189,38 @@ export default function CandidatesPage() {
     return true;
   });
 
-  // ── Stage Timeline component ──
+  // ── Stage Timeline component — purely log-driven, read-only ──
   function StageTimeline({ candidateId, currentStage }: { candidateId: string; currentStage: string }) {
     const logs = stageLogs[candidateId] ?? [];
+    // Build map: stage → earliest timestamp (in case of multiple entries)
     const logMap: Record<string, string> = {};
-    for (const l of logs) logMap[l.stage] = l.changed_at;
+    for (const l of logs) {
+      if (!logMap[l.stage] || l.changed_at < logMap[l.stage]) logMap[l.stage] = l.changed_at;
+    }
 
-    const currentIdx = stageIndex(currentStage);
     const isTerminal = TERMINAL.some(t => t.key === currentStage);
+    // Fallback: if no log data yet, treat currentStage as done
+    const haslogs = logs.length > 0;
 
     return (
       <div className="mt-4">
-        <p className={`mb-3 text-[10px] font-bold uppercase tracking-[0.16em] ${adminMutedCls}`}>
-          📍 Candidate Journey
-        </p>
+        <div className="mb-3 flex items-center justify-between">
+          <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${adminMutedCls}`}>
+            📍 Candidate Journey
+          </p>
+          <span className={`text-[10px] font-medium ${adminMutedCls}`}>
+            Auto-tracked · {logs.length} event{logs.length !== 1 ? "s" : ""}
+          </span>
+        </div>
         <div className="relative">
           {/* Connecting line */}
           <div className="absolute left-[15px] top-0 h-full w-0.5 bg-slate-200 dark:bg-slate-700" />
           <div className="space-y-1">
-            {PIPELINE.map((step, idx) => {
-              const done    = currentIdx > idx || (logMap[step.key] !== undefined);
-              const current = currentStage === step.key;
+            {PIPELINE.map((step) => {
               const ts      = logMap[step.key];
+              // A stage is "done" only if it has a log entry, OR it's the current stage (fallback if trigger not yet run)
+              const done    = ts !== undefined || (!haslogs && step.key === currentStage);
+              const current = currentStage === step.key && !isTerminal;
               return (
                 <div key={step.key} className="relative flex items-start gap-3 pl-9">
                   {/* Node */}
@@ -209,13 +229,13 @@ export default function CandidatesPage() {
                       ? "border-indigo-500 bg-indigo-500 text-white shadow-md shadow-indigo-500/30"
                       : done
                       ? "border-emerald-500 bg-emerald-500 text-white"
-                      : "border-slate-300 bg-white text-slate-400 dark:border-slate-600 dark:bg-slate-800"
+                      : "border-slate-200 bg-white text-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-600"
                   }`}>
                     {done && !current ? "✓" : step.emoji}
                   </div>
                   {/* Label */}
-                  <div className={`py-1 ${current ? "font-black text-indigo-600 dark:text-indigo-300" : done ? "text-slate-700 dark:text-slate-200" : adminMutedCls}`}>
-                    <span className="text-xs font-semibold">{step.label}</span>
+                  <div className={`py-1 ${current ? "font-black text-indigo-600 dark:text-indigo-300" : done ? "text-slate-700 dark:text-slate-200 font-semibold" : `${adminMutedCls} opacity-50`}`}>
+                    <span className="text-xs">{step.label}</span>
                     {ts && (
                       <span className={`ml-2 text-[10px] ${adminMutedCls}`}>
                         {new Date(ts).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
@@ -409,15 +429,18 @@ export default function CandidatesPage() {
                     </div>
                   </button>
                   <div className="flex shrink-0 items-center gap-2">
-                    <div className="flex items-center gap-1">
-                      <span className="text-[11px]">{STAGE_EMOJI[c.stage]}</span>
-                      {canManage ? (
-                        <select className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] dark:border-slate-700 dark:bg-slate-900" value={c.stage} onChange={e => setStage(c.id, e.target.value)}>
-                          {ALL_STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-                        </select>
-                      ) : (
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold dark:bg-slate-800">{STAGE_LABEL[c.stage]}</span>
-                      )}
+                    {/* Current stage badge — read only */}
+                  <div className="flex items-center gap-1.5">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black ${
+                        c.stage === "hired"         ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                        : c.stage === "rejected"    ? "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300"
+                        : c.stage === "selected"    ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300"
+                        : c.stage === "passed"      ? "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300"
+                        : c.stage === "talent_pool" ? "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300"
+                        :                             "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                      }`}>
+                        {STAGE_EMOJI[c.stage]} {STAGE_LABEL[c.stage] ?? c.stage}
+                      </span>
                     </div>
                     {isFounder && (
                       <button type="button" title="Remove" onClick={() => removeCandidate(c.id, c.name)} className="flex h-7 w-7 items-center justify-center rounded-md border border-rose-200 text-rose-400 transition hover:border-rose-400 hover:bg-rose-50 dark:border-rose-500/30">
@@ -433,6 +456,66 @@ export default function CandidatesPage() {
                   <div className="border-t border-slate-100 p-4 dark:border-slate-800">
                     {/* ── Stage Timeline ── */}
                     <StageTimeline candidateId={c.id} currentStage={c.stage} />
+
+                    {/* ── Admin Actions (context-aware, no manual dropdown) ── */}
+                    {canManage && c.stage !== "hired" && (
+                      <div className="mt-4">
+                        <p className={`mb-2 text-[10px] font-bold uppercase tracking-[0.16em] ${adminMutedCls}`}>
+                          🎛️ Admin Actions
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {/* Next-step action */}
+                          {c.stage === "passed" && (
+                            <button onClick={() => setStage(c.id, "interview_eligible")} className="rounded-lg bg-indigo-50 border border-indigo-200 px-3 py-1.5 text-xs font-black text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:border-indigo-400/30 dark:text-indigo-300 transition">
+                              📋 Mark Interview Ready
+                            </button>
+                          )}
+                          {c.stage === "interview_eligible" && (
+                            <button onClick={() => setStage(c.id, "interview_scheduled")} className="rounded-lg bg-indigo-50 border border-indigo-200 px-3 py-1.5 text-xs font-black text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:border-indigo-400/30 dark:text-indigo-300 transition">
+                              📅 Interview Scheduled
+                            </button>
+                          )}
+                          {c.stage === "interview_scheduled" && (
+                            <button onClick={() => setStage(c.id, "selected")} className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-xs font-black text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-400/30 dark:text-emerald-300 transition">
+                              ⭐ Select Candidate
+                            </button>
+                          )}
+                          {c.stage === "selected" && (
+                            <button onClick={() => setStage(c.id, "offer_sent")} className="rounded-lg bg-blue-50 border border-blue-200 px-3 py-1.5 text-xs font-black text-blue-700 hover:bg-blue-100 dark:bg-blue-500/10 dark:border-blue-400/30 dark:text-blue-300 transition">
+                              📨 Send Offer
+                            </button>
+                          )}
+                          {c.stage === "offer_sent" && (
+                            <button onClick={() => setStage(c.id, "offer_accepted")} className="rounded-lg bg-blue-50 border border-blue-200 px-3 py-1.5 text-xs font-black text-blue-700 hover:bg-blue-100 dark:bg-blue-500/10 dark:border-blue-400/30 dark:text-blue-300 transition">
+                              🤝 Offer Accepted
+                            </button>
+                          )}
+                          {c.stage === "offer_accepted" && (
+                            <button onClick={() => setStage(c.id, "hired")} className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-xs font-black text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-400/30 dark:text-emerald-300 transition">
+                              🚀 Mark as Hired
+                            </button>
+                          )}
+                          {/* Reject — always available unless already terminal */}
+                          {!["rejected","talent_pool"].includes(c.stage) && (
+                            <button onClick={() => { if (window.confirm(`Reject ${c.name}?`)) setStage(c.id, "rejected"); }} className="rounded-lg bg-rose-50 border border-rose-200 px-3 py-1.5 text-xs font-black text-rose-600 hover:bg-rose-100 dark:bg-rose-500/10 dark:border-rose-400/30 dark:text-rose-400 transition">
+                              ❌ Reject
+                            </button>
+                          )}
+                          {/* Talent Pool */}
+                          {!["rejected","talent_pool","hired"].includes(c.stage) && (
+                            <button onClick={() => setStage(c.id, "talent_pool")} className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-1.5 text-xs font-black text-amber-700 hover:bg-amber-100 dark:bg-amber-500/10 dark:border-amber-400/30 dark:text-amber-400 transition">
+                              🌟 Talent Pool
+                            </button>
+                          )}
+                          {/* Reinstate from rejected */}
+                          {c.stage === "rejected" && (
+                            <button onClick={() => setStage(c.id, "passed")} className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs font-black text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-300 transition">
+                              ↩️ Reinstate to Passed
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     {/* ── Scores ── */}
                     <p className={`mb-2 mt-5 text-[10px] font-bold uppercase tracking-[0.16em] ${adminMutedCls}`}>Scores (0–100)</p>
