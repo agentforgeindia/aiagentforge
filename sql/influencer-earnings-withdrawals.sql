@@ -131,6 +131,24 @@ create table if not exists public.influencer_withdrawals (
 
 create index if not exists iw_candidate_idx on public.influencer_withdrawals (candidate_id);
 
+-- RazorpayX payout columns (added idempotently for existing installs)
+alter table public.influencer_withdrawals
+  add column if not exists payout_id        text,   -- RazorpayX payout id (pout_...)
+  add column if not exists contact_id       text,   -- RazorpayX contact id (cont_...)
+  add column if not exists fund_account_id  text,   -- RazorpayX fund account id (fa_...)
+  add column if not exists payout_mode      text,   -- UPI | IMPS | NEFT
+  add column if not exists failure_reason   text;
+
+-- Allow the new 'failed' status as well.
+do $$
+begin
+  alter table public.influencer_withdrawals drop constraint if exists influencer_withdrawals_status_check;
+  alter table public.influencer_withdrawals
+    add constraint influencer_withdrawals_status_check
+    check (status in ('requested','processing','paid','rejected','failed'));
+exception when others then null;
+end$$;
+
 alter table public.influencer_withdrawals enable row level security;
 drop policy if exists "iw_public_read" on public.influencer_withdrawals;
 create policy "iw_public_read" on public.influencer_withdrawals for select using (true);
@@ -153,6 +171,7 @@ declare
   v_earned    numeric;
   v_withdrawn numeric;
   v_available numeric;
+  v_id        uuid;
 begin
   select referral_code into v_code
     from public.content_creator_social where candidate_id = p_cid limit 1;
@@ -182,7 +201,8 @@ begin
   end if;
 
   insert into public.influencer_withdrawals (candidate_id, referral_code, amount, upi_id, status)
-  values (p_cid, upper(v_code), v_available, p_upi, 'requested');
+  values (p_cid, upper(v_code), v_available, p_upi, 'requested')
+  returning id into v_id;
 
   -- Notify admin (best-effort)
   begin
@@ -193,7 +213,7 @@ begin
   exception when others then null;
   end;
 
-  return jsonb_build_object('ok', true, 'amount', v_available);
+  return jsonb_build_object('ok', true, 'amount', v_available, 'withdrawal_id', v_id);
 exception when others then
   return jsonb_build_object('ok', false, 'error', sqlerrm);
 end$$;

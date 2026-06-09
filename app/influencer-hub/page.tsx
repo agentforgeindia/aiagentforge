@@ -476,12 +476,18 @@ export default function InfluencerHubPage() {
     const [withdrawing, setWithdrawing] = useState(false);
     const [withdrawMsg, setWithdrawMsg] = useState<string | null>(null);
     const [withdrawErr, setWithdrawErr] = useState<string | null>(null);
+    const [upiInput, setUpiInput] = useState("");
+    const [showUpiForm, setShowUpiForm] = useState(false);
 
     function copyLink() {
       if (!dashData?.referral_link) return;
       navigator.clipboard.writeText(dashData.referral_link);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+
+    function isValidUpiClient(u: string) {
+      return /^[\w.\-]{2,}@[a-zA-Z]{2,}$/.test(u.trim());
     }
 
     async function requestWithdraw() {
@@ -492,7 +498,11 @@ export default function InfluencerHubPage() {
         setWithdrawErr("No balance available to withdraw yet.");
         return;
       }
-      if (!window.confirm(`Request withdrawal of ₹${avail.toLocaleString("en-IN")}?\n\nThe amount will be transferred to your registered account within 24 hours.`)) {
+      if (!isValidUpiClient(upiInput)) {
+        setWithdrawErr("Please enter a valid UPI ID (e.g. yourname@okhdfc).");
+        return;
+      }
+      if (!window.confirm(`Withdraw ₹${avail.toLocaleString("en-IN")} to ${upiInput.trim()}?\n\nThe amount will be transferred to this UPI within 24 hours.`)) {
         return;
       }
       setWithdrawing(true);
@@ -502,11 +512,13 @@ export default function InfluencerHubPage() {
         const r = await fetch("/api/careers/influencer/withdraw-earnings", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cid }),
+          body: JSON.stringify({ cid, upi: upiInput.trim() }),
         });
         const d = await r.json();
         if (d.ok) {
           setWithdrawMsg(d.message || "Withdrawal requested! Transfer within 24 hours.");
+          setShowUpiForm(false);
+          setUpiInput("");
           // Refresh dashboard so the pending state shows.
           loadDashboard(cid);
         } else {
@@ -629,15 +641,46 @@ export default function InfluencerHubPage() {
                     Transferring within 24 hours
                   </p>
                 </div>
+              ) : showUpiForm ? (
+                <div className="w-full sm:w-72">
+                  <label className={`mb-1 block text-[10px] font-black uppercase tracking-wider ${muted}`}>
+                    Your UPI ID
+                  </label>
+                  <input
+                    value={upiInput}
+                    onChange={e => setUpiInput(e.target.value)}
+                    placeholder="yourname@okhdfc"
+                    autoFocus
+                    className={inputCls}
+                  />
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={requestWithdraw}
+                      disabled={withdrawing}
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <IndianRupee className="h-4 w-4" />
+                      {withdrawing ? "Processing…" : "Confirm Withdraw"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowUpiForm(false); setWithdrawErr(null); }}
+                      className={`rounded-full border px-4 py-2.5 text-sm font-bold ${darkMode ? "border-white/10 text-white/60" : "border-slate-200 text-slate-500"}`}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <button
                   type="button"
-                  onClick={requestWithdraw}
-                  disabled={withdrawing || (dashData.available_balance ?? 0) <= 0}
+                  onClick={() => { setShowUpiForm(true); setWithdrawErr(null); setWithdrawMsg(null); }}
+                  disabled={(dashData.available_balance ?? 0) <= 0}
                   className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-3 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <IndianRupee className="h-4 w-4" />
-                  {withdrawing ? "Requesting…" : "Withdraw Earnings"}
+                  Withdraw Earnings
                 </button>
               )}
             </div>

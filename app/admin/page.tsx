@@ -120,6 +120,7 @@ const TILES: Tile[] = [
 
   // ── Influencers ──────────────────────────────────────────────
   { group: "Influencers", href: "/admin/influencers", label: "Influencer Hub", description: "Creator profiles, video approvals, pin/delete, scripts, likes, comments, revenue.", icon: <Star className="h-4 w-4" />, perm: "marketing.view" },
+  { group: "Influencers", href: "/admin/influencer-withdrawals", label: "Withdrawals", description: "Creator payout requests — auto UPI via RazorpayX, mark paid, retry, reject.", icon: <Wallet className="h-4 w-4" />, perm: "marketing.view" },
 
   // ── Content ──────────────────────────────────────────────────
   { group: "Content", href: "/admin/posts",          label: "Content",        description: "Blog, news and product updates.",                        icon: <FileText className="h-4 w-4" />,        perm: "content.view" },
