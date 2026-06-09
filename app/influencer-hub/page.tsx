@@ -272,9 +272,9 @@ export default function InfluencerHubPage() {
     }
   }
 
-  // ── Styles ──
-  const bg      = darkMode ? "bg-[#0a0d14]" : "bg-[#f1f3f8]";
-  const card    = darkMode ? "bg-[#111827] border-white/10" : "bg-white border-slate-200";
+  // ── Styles ── (home-screen background colours)
+  const bg      = darkMode ? "bg-[#070b14]" : "bg-[#fff8e8]";
+  const card    = darkMode ? "bg-[#111827]/90 border-white/10" : "bg-white/90 border-slate-200";
   const muted   = darkMode ? "text-slate-400" : "text-slate-500";
   const inputCls = `w-full rounded-full border px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400/30 ${darkMode ? "border-white/10 bg-white/5 text-white placeholder-white/30" : "border-slate-200 bg-slate-50 text-slate-800 placeholder-slate-400"}`;
   const fmtAgo = (d: string) => {
@@ -472,68 +472,11 @@ export default function InfluencerHubPage() {
   function DashboardTab() {
     const [copied, setCopied] = useState(false);
 
-    // Withdraw flow
-    const [withdrawing, setWithdrawing] = useState(false);
-    const [withdrawMsg, setWithdrawMsg] = useState<string | null>(null);
-    const [withdrawErr, setWithdrawErr] = useState<string | null>(null);
-    const [upiInput, setUpiInput] = useState("");
-    const [showUpiForm, setShowUpiForm] = useState(false);
-    const [confirmOpen, setConfirmOpen] = useState(false);
-
     function copyLink() {
       if (!dashData?.referral_link) return;
       navigator.clipboard.writeText(dashData.referral_link);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    }
-
-    function isValidUpiClient(u: string) {
-      return /^[\w.\-]{2,}@[a-zA-Z]{2,}$/.test(u.trim());
-    }
-
-    // Step 1 — validate, then open the custom confirm modal.
-    function requestWithdraw() {
-      if (!dashData) return;
-      const avail = dashData.available_balance ?? 0;
-      if (avail <= 0) {
-        setWithdrawErr("No balance available to withdraw yet.");
-        return;
-      }
-      if (!isValidUpiClient(upiInput)) {
-        setWithdrawErr("Please enter a valid UPI ID (e.g. yourname@okhdfc).");
-        return;
-      }
-      setWithdrawErr(null);
-      setConfirmOpen(true);
-    }
-
-    // Step 2 — user confirmed in the modal → fire the request.
-    async function doWithdraw() {
-      if (!dashData) return;
-      const cid = dashData.candidate.id;
-      setConfirmOpen(false);
-      setWithdrawing(true);
-      setWithdrawErr(null);
-      setWithdrawMsg(null);
-      try {
-        const r = await fetch("/api/careers/influencer/withdraw-earnings", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cid, upi: upiInput.trim() }),
-        });
-        const d = await r.json();
-        if (d.ok) {
-          setWithdrawMsg(d.message || "Withdrawal requested! Transfer within 24 hours.");
-          setShowUpiForm(false);
-          setUpiInput("");
-          loadDashboard(cid);
-        } else {
-          setWithdrawErr(d.error || "Could not request withdrawal.");
-        }
-      } catch {
-        setWithdrawErr("Network error. Please try again.");
-      }
-      setWithdrawing(false);
     }
 
     // Not logged in yet
@@ -564,67 +507,31 @@ export default function InfluencerHubPage() {
       );
     }
 
-    const { candidate, social, referral_link, stats, purchase_list, signup_list, videos, video_engagement } = dashData;
-    const pending = purchase_list.filter(e => e.status === "pending").reduce((s, e) => s + e.commission_amount, 0);
-    const paid    = purchase_list.filter(e => e.status === "paid").reduce((s, e) => s + e.commission_amount, 0);
+    const { candidate, social, referral_link, videos, video_engagement } = dashData;
 
-    const videoStatusColor: Record<string, string> = {
-      approved: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
-      pending:  "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
-      rejected: "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300",
+    // Build a simple notifications feed from video status + engagement.
+    const notifications: { icon: string; title: string; sub?: string; tone: "emerald" | "rose" | "amber" | "purple" }[] = [];
+    for (const v of videos) {
+      const eng = video_engagement[v.id] ?? { reactions: {}, comments: 0, views: 0 };
+      const totalR = Object.values(eng.reactions).reduce((a, b) => a + b, 0);
+      const label = v.caption?.trim() || (v.platform ? v.platform.charAt(0).toUpperCase() + v.platform.slice(1) + " video" : "Your video");
+      if (v.status === "approved") notifications.push({ icon: "🎉", title: `"${label}" was approved!`, sub: "It's live on the hub — share it on your socials.", tone: "emerald" });
+      else if (v.status === "rejected") notifications.push({ icon: "✏️", title: `"${label}" needs changes`, sub: v.admin_note || "Please review and re-upload from your Full Dashboard.", tone: "rose" });
+      else notifications.push({ icon: "⏳", title: `"${label}" is under review`, sub: "We'll notify you here once it's approved.", tone: "amber" });
+      if (totalR > 0 || eng.comments > 0) notifications.push({ icon: "🔥", title: `${totalR} reactions · ${eng.comments} comments`, sub: `on your ${v.platform ?? ""} video`, tone: "purple" });
+    }
+    const toneCls: Record<string, string> = {
+      emerald: "border-emerald-300/40 bg-emerald-50 dark:border-emerald-400/20 dark:bg-emerald-500/10",
+      rose:    "border-rose-300/40 bg-rose-50 dark:border-rose-400/20 dark:bg-rose-500/10",
+      amber:   "border-amber-300/40 bg-amber-50 dark:border-amber-400/20 dark:bg-amber-500/10",
+      purple:  "border-purple-300/40 bg-purple-50 dark:border-purple-400/20 dark:bg-purple-500/10",
     };
+    const approvedVideos = videos.filter(v => v.status === "approved");
 
     return (
       <div className="mx-auto max-w-2xl space-y-5 py-6">
 
-        {/* ── Custom withdraw confirmation modal ── */}
-        {confirmOpen && (
-          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setConfirmOpen(false)} />
-            <div className={`relative z-10 w-full max-w-sm rounded-3xl border p-6 shadow-2xl ${card}`}>
-              <div className="text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg">
-                  <IndianRupee className="h-7 w-7" />
-                </div>
-                <h3 className="mt-4 text-lg font-black">Confirm Withdrawal</h3>
-                <p className={`mt-1 text-sm ${muted}`}>You're about to withdraw</p>
-                <p className="mt-1 text-3xl font-black text-emerald-600 dark:text-emerald-400">
-                  ₹{(dashData.available_balance ?? 0).toLocaleString("en-IN")}
-                </p>
-              </div>
-
-              <div className={`mt-4 rounded-2xl border p-3 ${darkMode ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-slate-50"}`}>
-                <p className={`text-[10px] font-black uppercase tracking-wider ${muted}`}>Transfer to UPI</p>
-                <p className="mt-0.5 font-mono text-sm font-bold">{upiInput.trim()}</p>
-              </div>
-
-              <div className="mt-3 flex items-start gap-2 rounded-2xl border border-amber-300/40 bg-amber-50 px-3 py-2.5 text-[11px] font-bold text-amber-700 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-300">
-                <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                <span>The amount will be transferred to this UPI within 24 hours.</span>
-              </div>
-
-              <div className="mt-5 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setConfirmOpen(false)}
-                  className={`flex-1 rounded-full border py-3 text-sm font-bold ${darkMode ? "border-white/10 text-white/70" : "border-slate-200 text-slate-600"}`}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={doWithdraw}
-                  className="flex-1 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 py-3 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-[1.02]"
-                >
-                  Yes, Withdraw
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-
-        {/* Header card */}
+        {/* Header card (profile + referral link) */}
         <div className={`rounded-2xl border p-5 ${card}`}>
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -656,115 +563,49 @@ export default function InfluencerHubPage() {
           )}
         </div>
 
-        {/* Stats cards */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            { label: "Signups", value: stats.signups, icon: "👥", color: "from-blue-400 to-indigo-500" },
-            { label: "Sales",   value: stats.purchases, icon: "🛒", color: "from-emerald-400 to-teal-500" },
-            { label: "Earned",  value: `₹${stats.earnings.toLocaleString("en-IN")}`, icon: "💰", color: "from-purple-400 to-pink-500" },
-            { label: "Pending", value: `₹${pending.toLocaleString("en-IN")}`, icon: "⏳", color: "from-amber-400 to-orange-500" },
-          ].map(s => (
-            <div key={s.label} className={`rounded-2xl border p-4 ${card}`}>
-              <div className={`inline-flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br ${s.color} text-white shadow text-sm`}>{s.icon}</div>
-              <p className={`mt-2 text-[10px] font-black uppercase tracking-wider ${muted}`}>{s.label}</p>
-              <p className="mt-0.5 text-xl font-black">{s.value}</p>
-            </div>
-          ))}
-        </div>
+        {/* Earnings access lives on the Full Dashboard only */}
+        <Link href={`/careers/influencer/dashboard?cid=${candidate.id}`}
+          className="flex items-center justify-between rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 px-5 py-4 text-white shadow-lg shadow-purple-500/20 transition hover:scale-[1.01]">
+          <span className="flex items-center gap-2 text-sm font-black"><IndianRupee className="h-4 w-4" /> Earnings, signups &amp; withdrawals</span>
+          <span className="text-sm font-black">Open Full Dashboard →</span>
+        </Link>
 
-        {/* Withdraw card */}
-        <div className={`rounded-2xl border p-5 ${card}`}>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className={`text-[10px] font-black uppercase tracking-wider ${muted}`}>Available to withdraw</p>
-              <p className="mt-0.5 text-3xl font-black text-emerald-600 dark:text-emerald-400">
-                ₹{(dashData.available_balance ?? 0).toLocaleString("en-IN")}
-              </p>
-              <p className={`mt-1 text-[11px] ${muted}`}>
-                💸 Payouts are transferred to your registered account within 24 hours.
-              </p>
-            </div>
-            <div className="shrink-0">
-              {dashData.pending_withdrawal ? (
-                <div className="rounded-xl border border-amber-300/40 bg-amber-50 px-4 py-3 text-center dark:border-amber-400/20 dark:bg-amber-500/10">
-                  <p className="text-xs font-black text-amber-700 dark:text-amber-300">
-                    ⏳ ₹{dashData.pending_withdrawal.amount.toLocaleString("en-IN")} requested
-                  </p>
-                  <p className="mt-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">
-                    Transferring within 24 hours
-                  </p>
-                </div>
-              ) : showUpiForm ? (
-                <div className="w-full sm:w-72">
-                  <label className={`mb-1 block text-[10px] font-black uppercase tracking-wider ${muted}`}>
-                    Your UPI ID
-                  </label>
-                  <input
-                    value={upiInput}
-                    onChange={e => setUpiInput(e.target.value)}
-                    placeholder="yourname@okhdfc"
-                    autoFocus
-                    className={inputCls}
-                  />
-                  <div className="mt-2 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={requestWithdraw}
-                      disabled={withdrawing}
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      <IndianRupee className="h-4 w-4" />
-                      {withdrawing ? "Processing…" : "Confirm Withdraw"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setShowUpiForm(false); setWithdrawErr(null); }}
-                      className={`rounded-full border px-4 py-2.5 text-sm font-bold ${darkMode ? "border-white/10 text-white/60" : "border-slate-200 text-slate-500"}`}
-                    >
-                      Cancel
-                    </button>
+        {/* ── Notifications ── */}
+        <div className={`rounded-2xl border ${card}`}>
+          <p className="px-5 py-4 font-black">🔔 Notifications</p>
+          {notifications.length === 0 ? (
+            <p className={`px-5 pb-5 text-sm ${muted}`}>No activity yet. Upload a video to get started!</p>
+          ) : (
+            <div className="space-y-2 px-5 pb-5">
+              {notifications.slice(0, 8).map((n, i) => (
+                <div key={i} className={`flex items-start gap-3 rounded-xl border px-4 py-3 ${toneCls[n.tone]}`}>
+                  <span className="text-lg leading-none">{n.icon}</span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold leading-snug">{n.title}</p>
+                    {n.sub && <p className={`mt-0.5 text-[11px] ${muted}`}>{n.sub}</p>}
                   </div>
                 </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => { setShowUpiForm(true); setWithdrawErr(null); setWithdrawMsg(null); }}
-                  disabled={(dashData.available_balance ?? 0) <= 0}
-                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-3 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <IndianRupee className="h-4 w-4" />
-                  Withdraw Earnings
-                </button>
-              )}
+              ))}
             </div>
-          </div>
-          {withdrawMsg && (
-            <div className="mt-3 flex items-start gap-2 rounded-xl border border-emerald-300/40 bg-emerald-50 px-4 py-3 text-xs font-bold text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-300">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{withdrawMsg}</span>
-            </div>
-          )}
-          {withdrawErr && (
-            <p className="mt-3 rounded-xl border border-rose-300/40 bg-rose-50 px-4 py-2.5 text-xs font-bold text-rose-700 dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-300">
-              {withdrawErr}
-            </p>
           )}
         </div>
 
-        {/* Videos section */}
+        {/* ── My Approved Videos (with reactions) ── */}
         <div className={`rounded-2xl border ${card}`}>
           <div className="flex items-center justify-between px-5 py-4">
-            <p className="font-black">🎬 My Videos</p>
+            <p className="font-black">🎬 My Approved Videos</p>
             <Link href={`/careers/influencer/dashboard?cid=${candidate.id}`}
               className="flex items-center gap-1.5 rounded-full bg-purple-600 px-3 py-1.5 text-xs font-black text-white transition hover:bg-purple-500">
-              <Edit3 className="h-3 w-3" /> Full Dashboard
+              <Edit3 className="h-3 w-3" /> Manage / Upload
             </Link>
           </div>
-          {videos.length === 0 ? (
-            <p className={`px-5 pb-5 text-sm ${muted}`}>No videos submitted yet.</p>
+          {approvedVideos.length === 0 ? (
+            <p className={`px-5 pb-5 text-sm ${muted}`}>
+              No approved videos yet. Once the team approves your upload, it appears here with live reactions.
+            </p>
           ) : (
             <div className="space-y-3 px-5 pb-5">
-              {videos.map(v => {
+              {approvedVideos.map(v => {
                 const eng = video_engagement[v.id] ?? { reactions: {}, comments: 0, views: 0 };
                 const totalReactions = Object.values(eng.reactions).reduce((a, b) => a + b, 0);
                 return (
@@ -773,15 +614,10 @@ export default function InfluencerHubPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           {v.platform && <PlatformBadge platform={v.platform} />}
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${videoStatusColor[v.status] ?? videoStatusColor.pending}`}>
-                            {v.status.charAt(0).toUpperCase() + v.status.slice(1)}
-                          </span>
+                          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">Approved</span>
                           {v.is_pinned && <span className="rounded-full bg-yellow-100 px-2 py-0.5 text-[10px] font-black text-yellow-700">📌 Pinned</span>}
                         </div>
                         {v.caption && <p className={`mt-1.5 text-xs ${muted} line-clamp-2`}>{v.caption}</p>}
-                        {v.admin_note && v.status === "rejected" && (
-                          <p className="mt-1 text-xs font-bold text-rose-500">Note: {v.admin_note}</p>
-                        )}
                       </div>
                       <a href={v.video_url} target="_blank" rel="noopener noreferrer"
                         className="shrink-0 flex items-center gap-1 rounded-lg bg-purple-600 px-2.5 py-1.5 text-[10px] font-black text-white transition hover:bg-purple-500">
@@ -801,82 +637,6 @@ export default function InfluencerHubPage() {
             </div>
           )}
         </div>
-
-        {/* ── Referral Signups ── */}
-        <div className={`rounded-2xl border ${card}`}>
-          <div className="flex items-center justify-between px-5 py-4">
-            <p className="font-black">👥 Signups via Your Link</p>
-            <span className={`text-xs font-black px-2.5 py-1 rounded-full ${
-              (signup_list?.length ?? 0) > 0
-                ? "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300"
-                : darkMode ? "bg-white/5 text-white/40" : "bg-slate-100 text-slate-400"
-            }`}>{signup_list?.length ?? 0} total</span>
-          </div>
-          {!signup_list || signup_list.length === 0 ? (
-            <div className="px-5 pb-5">
-              <p className={`text-sm ${muted}`}>No signups yet. Share your referral link to start tracking!</p>
-              {referral_link && (
-                <div className={`mt-3 flex items-center gap-2 rounded-xl border px-3 py-2 ${darkMode ? "border-white/5 bg-white/5" : "border-slate-100 bg-slate-50"}`}>
-                  <span className="text-xs font-mono font-bold truncate flex-1">{referral_link}</span>
-                  <button onClick={copyLink} className="shrink-0 text-xs font-black text-purple-600 dark:text-purple-300 hover:underline">Copy</button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="px-5 pb-5 space-y-2">
-              {signup_list.map((s, i) => (
-                <div key={i} className={`flex items-center justify-between rounded-xl border px-4 py-3 ${darkMode ? "border-white/5 bg-white/5" : "border-slate-100 bg-slate-50"}`}>
-                  <div className="flex items-center gap-3">
-                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-black text-white bg-gradient-to-br from-blue-400 to-indigo-500`}>
-                      {(s.full_name || s.email || "?").charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold">{s.full_name || "User"}</p>
-                      <p className={`text-[11px] ${muted}`}>{s.email}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className={`text-[11px] font-bold ${muted}`}>
-                      {new Date(s.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                    </p>
-                    <span className="text-[10px] font-black text-blue-500">✅ Signed up</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Recent earnings — show ONLY the influencer's reward (their 10%),
-            never the package price / company revenue. */}
-        {purchase_list.length > 0 && (
-          <div className={`rounded-2xl border ${card}`}>
-            <p className="px-5 py-4 font-black">🎉 Your Reward History</p>
-            <div className="space-y-2 px-5 pb-5">
-              {purchase_list.slice(0, 5).map((e, i) => (
-                <div key={i} className={`flex items-center justify-between rounded-xl border px-4 py-3 ${darkMode ? "border-white/5 bg-white/5" : "border-slate-100 bg-slate-50"}`}>
-                  <div>
-                    <p className="text-sm font-black">✅ New sale via your link</p>
-                    <p className={`text-[10px] ${muted}`}>{new Date(e.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-black text-emerald-600">+₹{e.commission_amount.toLocaleString("en-IN")}</p>
-                    <span className={`text-[10px] font-black ${e.status === "paid" ? "text-emerald-500" : "text-amber-500"}`}>
-                      {e.status === "paid" ? "✅ Paid out" : "⏳ Pending payout"}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="text-center">
-          <Link href={`/careers/influencer/dashboard?cid=${candidate.id}`}
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-8 py-3 text-sm font-black text-white shadow-xl transition hover:scale-[1.02]">
-            View Full Dashboard →
-          </Link>
-        </div>
       </div>
     );
   }
@@ -893,7 +653,7 @@ export default function InfluencerHubPage() {
       <PageDoodles variant="influencer" glow grid />
 
       {/* Top bar */}
-      <div className={`sticky top-[72px] z-30 border-b ${darkMode ? "bg-[#0a0d14]/95 border-white/10" : "bg-[#f1f3f8]/95 border-slate-200"} backdrop-blur`}>
+      <div className={`sticky top-[72px] z-30 border-b ${darkMode ? "bg-[#070b14]/90 border-white/10" : "bg-[#fff8e8]/90 border-slate-200"} backdrop-blur`}>
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-center gap-3">
             <h1 className="hidden text-lg font-black sm:block">🌟 Influencer Hub</h1>
@@ -907,14 +667,23 @@ export default function InfluencerHubPage() {
               ))}
             </div>
           </div>
-          <Link href="/careers/influencer"
-            className="hidden items-center gap-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 text-xs font-black text-white shadow transition hover:scale-[1.02] sm:inline-flex">
-            <Star className="h-3.5 w-3.5" /> Become a Creator
-          </Link>
+          {/* Joined creators → Go to Dashboard. Everyone else → Become a Creator. */}
+          {dashData ? (
+            <button
+              onClick={() => setActiveTab("dashboard")}
+              className="hidden items-center gap-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 text-xs font-black text-white shadow transition hover:scale-[1.02] sm:inline-flex">
+              <Star className="h-3.5 w-3.5" /> Go to Dashboard
+            </button>
+          ) : (
+            <Link href="/careers/influencer"
+              className="hidden items-center gap-1.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 text-xs font-black text-white shadow transition hover:scale-[1.02] sm:inline-flex">
+              <Star className="h-3.5 w-3.5" /> Become a Creator
+            </Link>
+          )}
         </div>
       </div>
 
-      <div className="mx-auto max-w-5xl px-4 py-6">
+      <div className="relative z-10 mx-auto max-w-5xl px-4 py-6">
         {/* Feed Tab */}
         {activeTab === "feed" && (
           hubLoading ? (

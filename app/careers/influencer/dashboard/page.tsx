@@ -20,6 +20,8 @@ type DashData = {
   };
   referral_link: string;
   stats: { signups: number; purchases: number; earnings: number };
+  available_balance?: number;
+  pending_withdrawal?: { id: string; amount: number; status: string; requested_at: string } | null;
   signup_list: { full_name: string; email: string; created_at: string }[];
   purchase_list: { commission_amount: number; purchase_amount: number; status: string; created_at: string; order_id: string }[];
   scripts: { id: string; title: string; description: string; script_text: string; video_ref?: string; created_at: string }[];
@@ -51,9 +53,57 @@ function Dashboard() {
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
 
-  // Withdraw
+  // Withdraw application (leave programme)
   const [withdrawing, setWithdrawing] = useState(false);
   const [withdrawn, setWithdrawn] = useState(false);
+
+  // Withdraw earnings (payout)
+  const [upiInput, setUpiInput] = useState("");
+  const [showUpiForm, setShowUpiForm] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [payingOut, setPayingOut] = useState(false);
+  const [payoutMsg, setPayoutMsg] = useState<string | null>(null);
+  const [payoutErr, setPayoutErr] = useState<string | null>(null);
+
+  function isValidUpiClient(u: string) {
+    return /^[\w.\-]{2,}@[a-zA-Z]{2,}$/.test(u.trim());
+  }
+  function openPayoutConfirm() {
+    if (!data) return;
+    const avail = data.available_balance ?? 0;
+    if (avail <= 0) { setPayoutErr("No balance available to withdraw yet."); return; }
+    if (!isValidUpiClient(upiInput)) { setPayoutErr("Please enter a valid UPI ID (e.g. yourname@okhdfc)."); return; }
+    setPayoutErr(null);
+    setConfirmOpen(true);
+  }
+  async function doPayout() {
+    if (!data || !cid) return;
+    setConfirmOpen(false);
+    setPayingOut(true);
+    setPayoutErr(null);
+    setPayoutMsg(null);
+    try {
+      const r = await fetch("/api/careers/influencer/withdraw-earnings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cid, upi: upiInput.trim() }),
+      });
+      const d = await r.json();
+      if (d.ok) {
+        setPayoutMsg(d.message || "Withdrawal requested! Transfer within 24 hours.");
+        setShowUpiForm(false);
+        setUpiInput("");
+        const refresh = await fetch(`/api/careers/influencer/dashboard?cid=${cid}`);
+        const rd = await refresh.json();
+        if (rd.ok) setData(rd);
+      } else {
+        setPayoutErr(d.error || "Could not request withdrawal.");
+      }
+    } catch {
+      setPayoutErr("Network error. Please try again.");
+    }
+    setPayingOut(false);
+  }
 
   useEffect(() => {
     if (!cid) { setError("Invalid link — dashboard ID missing."); setLoading(false); return; }
@@ -252,6 +302,85 @@ function Dashboard() {
             <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Your Earnings</p>
           </div>
         </div>
+
+        {/* ── Withdraw earnings card ── */}
+        <div className="mb-6 rounded-2xl border border-emerald-400/20 bg-emerald-500/[0.04] p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-emerald-300">Available to withdraw</p>
+              <p className="mt-0.5 text-3xl font-black text-emerald-300">
+                ₹{(data.available_balance ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+              </p>
+              <p className="mt-1 text-[11px] text-white/40">💸 Payouts are transferred to your UPI within 24 hours.</p>
+            </div>
+            <div className="shrink-0">
+              {data.pending_withdrawal ? (
+                <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-center">
+                  <p className="text-xs font-black text-amber-300">⏳ ₹{data.pending_withdrawal.amount.toLocaleString("en-IN", { maximumFractionDigits: 2 })} requested</p>
+                  <p className="mt-0.5 text-[10px] font-bold text-amber-400">Transferring within 24 hours</p>
+                </div>
+              ) : showUpiForm ? (
+                <div className="w-full sm:w-72">
+                  <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-white/40">Your UPI ID</label>
+                  <input value={upiInput} onChange={e => setUpiInput(e.target.value)} placeholder="yourname@okhdfc" autoFocus className={inpCls} />
+                  <div className="mt-2 flex gap-2">
+                    <button type="button" onClick={openPayoutConfirm} disabled={payingOut}
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-[1.02] disabled:opacity-40">
+                      <IndianRupee className="h-4 w-4" />{payingOut ? "Processing…" : "Continue"}
+                    </button>
+                    <button type="button" onClick={() => { setShowUpiForm(false); setPayoutErr(null); }}
+                      className="rounded-full border border-white/10 px-4 py-2.5 text-sm font-bold text-white/60">Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <button type="button" onClick={() => { setShowUpiForm(true); setPayoutErr(null); setPayoutMsg(null); }}
+                  disabled={(data.available_balance ?? 0) <= 0}
+                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-3 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40">
+                  <IndianRupee className="h-4 w-4" /> Withdraw Earnings
+                </button>
+              )}
+            </div>
+          </div>
+          {payoutMsg && (
+            <div className="mt-3 flex items-start gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-xs font-bold text-emerald-300">
+              <Check className="mt-0.5 h-4 w-4 shrink-0" /><span>{payoutMsg}</span>
+            </div>
+          )}
+          {payoutErr && (
+            <p className="mt-3 rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-2.5 text-xs font-bold text-rose-300">{payoutErr}</p>
+          )}
+        </div>
+
+        {/* ── Withdraw confirm modal ── */}
+        {confirmOpen && (
+          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setConfirmOpen(false)} />
+            <div className="relative z-10 w-full max-w-sm rounded-3xl border border-white/10 bg-[#0f172a] p-6 shadow-2xl">
+              <div className="text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg">
+                  <IndianRupee className="h-7 w-7" />
+                </div>
+                <h3 className="mt-4 text-lg font-black">Confirm Withdrawal</h3>
+                <p className="mt-1 text-sm text-white/50">You're about to withdraw</p>
+                <p className="mt-1 text-3xl font-black text-emerald-300">₹{(data.available_balance ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}</p>
+              </div>
+              <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+                <p className="text-[10px] font-black uppercase tracking-wider text-white/40">Transfer to UPI</p>
+                <p className="mt-0.5 font-mono text-sm font-bold">{upiInput.trim()}</p>
+              </div>
+              <div className="mt-3 flex items-start gap-2 rounded-2xl border border-amber-400/20 bg-amber-500/10 px-3 py-2.5 text-[11px] font-bold text-amber-300">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>The amount will be transferred to this UPI within 24 hours.</span>
+              </div>
+              <div className="mt-5 flex gap-2">
+                <button type="button" onClick={() => setConfirmOpen(false)}
+                  className="flex-1 rounded-full border border-white/10 py-3 text-sm font-bold text-white/70">Cancel</button>
+                <button type="button" onClick={doPayout}
+                  className="flex-1 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 py-3 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-[1.02]">Yes, Withdraw</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Tabs + upload */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
