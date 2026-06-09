@@ -71,6 +71,7 @@ const TILES: Tile[] = [
   // ── Command ──────────────────────────────────────────────────
   { group: "Command", href: "/admin/command",        label: "Command Center", description: "Founder cockpit — live numbers, goals, cash, team output.", icon: <Crosshair className="h-4 w-4" />,      perm: "dashboard.view" },
   { group: "Command", href: "/admin/dashboard",      label: "War Room",       description: "Revenue, signups, pipeline, alerts — all at a glance.",   icon: <LayoutDashboard className="h-4 w-4" />, perm: "dashboard.view" },
+  { group: "Command", href: "/admin/role-access",    label: "Role Access",    description: "Founder view — see exactly which features each role can access.", icon: <ShieldQuestion className="h-4 w-4" />, perm: "*" },
 
   // ── Sales & CRM ──────────────────────────────────────────────
   { group: "Sales & CRM", href: "/admin/customers",      label: "Customers",      description: "Signed-up users, plans, balances, notes.",                icon: <Users className="h-4 w-4" />,          perm: "customers.view" },
