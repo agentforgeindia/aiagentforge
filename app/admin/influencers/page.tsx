@@ -56,14 +56,25 @@ export default function InfluencerAdminPage() {
   const { loading: pLoading, has } = useAdminPermissions();
   const canView = has("marketing.view");
 
-  const [tab, setTab] = useState<"influencers" | "videos" | "scripts" | "comments">("influencers");
+  type CCApplicant = {
+    id: string; name: string; email: string | null; mobile: string; stage: string; created_at: string;
+    cc?: {
+      ai_score?: number; ai_verdict?: string; referral_status: string; referral_code: string;
+      niche?: string; followers_count?: string; avg_views?: string;
+      instagram_url?: string; youtube_url?: string; facebook_url?: string; other_url?: string;
+    } | null;
+  };
+
+  const [tab, setTab] = useState<"applications" | "influencers" | "videos" | "scripts" | "comments">("applications");
   const [influencers, setInfluencers] = useState<Influencer[]>([]);
+  const [applicants, setApplicants]   = useState<CCApplicant[]>([]);
   const [videos, setVideos]           = useState<VideoRow[]>([]);
   const [scripts, setScripts]         = useState<Script[]>([]);
   const [hubComments, setHubComments] = useState<HubComment[]>([]);
   const [vidComments, setVidComments] = useState<VideoComment[]>([]);
   const [reactions, setReactions]     = useState<ReactionRow[]>([]);
   const [loading, setLoading]         = useState(true);
+  const [appActing, setAppActing]     = useState<string | null>(null);
 
   const [showScriptForm, setShowScriptForm] = useState(false);
   const [scriptForm, setScriptForm] = useState({ title: "", description: "", script_text: "", video_ref: "" });
@@ -104,6 +115,25 @@ export default function InfluencerAdminPage() {
     // Reactions
     const { data: rx } = await supabase.from("influencer_video_reactions").select("video_id, reaction_type");
 
+    // CC Applicants — all content-creator candidates with their social data
+    const { data: appCands } = await supabase
+      .from("candidates")
+      .select("id, name, email, mobile, stage, created_at")
+      .eq("role_slug", "content-creator")
+      .order("created_at", { ascending: false });
+
+    if (appCands) {
+      const ids = appCands.map((c: any) => c.id);
+      const { data: socials } = ids.length
+        ? await supabase.from("content_creator_social")
+            .select("candidate_id, ai_score, ai_verdict, referral_status, referral_code, niche, followers_count, avg_views, instagram_url, youtube_url, facebook_url, other_url")
+            .in("candidate_id", ids)
+        : { data: [] };
+      const socialMap: Record<string, any> = {};
+      for (const s of socials ?? []) socialMap[s.candidate_id] = s;
+      setApplicants(appCands.map((c: any) => ({ ...c, cc: socialMap[c.id] ?? null })));
+    }
+
     if (infData.ok) setInfluencers(infData.influencers ?? []);
 
     setVideos((vids ?? []).map((v: any) => ({
@@ -118,6 +148,30 @@ export default function InfluencerAdminPage() {
   }
 
   useEffect(() => { if (canView) load(); }, [canView]);
+
+  // ── Approve / Reject CC applicant ─────────────────────────────
+  async function approveApplicant(candidateId: string, action: "approve" | "reject") {
+    setAppActing(candidateId);
+    if (action === "approve") {
+      // Set stage → selected + referral_status → active via our stage API (auto-creates social record if needed)
+      await fetch("/api/admin/candidates/stage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ candidate_id: candidateId, stage: "selected", changed_by: "admin" }),
+      });
+      // Also ensure referral_status = active in social table
+      await supabase.from("content_creator_social").update({ referral_status: "active" }).eq("candidate_id", candidateId);
+    } else {
+      await fetch("/api/admin/candidates/stage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ candidate_id: candidateId, stage: "rejected", changed_by: "admin" }),
+      });
+      await supabase.from("content_creator_social").update({ referral_status: "inactive" }).eq("candidate_id", candidateId);
+    }
+    setAppActing(null);
+    load();
+  }
 
   // ── Video actions ──────────────────────────────────────────────
   async function reviewVideo(id: string, status: "approved" | "rejected") {
@@ -228,7 +282,8 @@ export default function InfluencerAdminPage() {
       {/* ── Tabs + actions ── */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
-          {TAB("influencers", "👥 Influencers", influencers.length)}
+          {TAB("applications", "📋 Applications", applicants.length)}
+          {TAB("influencers", "👥 Active", influencers.length)}
           {TAB("videos", "🎬 Videos", videos.length)}
           {TAB("scripts", "📜 Scripts", scripts.length)}
           {TAB("comments", "💬 Comments", totalComments)}
@@ -244,6 +299,135 @@ export default function InfluencerAdminPage() {
           )}
         </div>
       </div>
+
+      {/* ════════ Applications Tab ════════ */}
+      {tab === "applications" && (
+        <div className="space-y-3">
+          {loading ? (
+            <p className={`py-8 text-center text-sm ${adminMutedCls}`}>Loading…</p>
+          ) : applicants.length === 0 ? (
+            <div className={`${adminCardCls} p-8 text-center text-sm ${adminMutedCls}`}>No content creator applications yet.</div>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-1.5 text-[11px] font-bold">
+                {["all","applied","selected","hired","rejected"].map(s => {
+                  const count = s === "all" ? applicants.length : applicants.filter(a => a.stage === s).length;
+                  return <span key={s} className="rounded-full border border-slate-200 px-2.5 py-0.5 dark:border-slate-700">{s === "all" ? "All" : s.charAt(0).toUpperCase()+s.slice(1)} ({count})</span>;
+                })}
+              </div>
+              {applicants.map(a => {
+                const cc = a.cc;
+                const verdictCls: Record<string, string> = {
+                  strong_influencer: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+                  moderate:          "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+                  not_fit:           "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300",
+                  admin_approved:    "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+                };
+                const stageCls: Record<string, string> = {
+                  selected: "bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300",
+                  hired:    "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+                  rejected: "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300",
+                  applied:  "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300",
+                };
+                const isActing = appActing === a.id;
+                return (
+                  <div key={a.id} className={`${adminCardCls} p-4`}>
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      {/* Left: info */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 to-purple-500 text-xs font-black text-white">
+                            {a.name?.charAt(0)?.toUpperCase() ?? "?"}
+                          </div>
+                          <p className="font-bold">{a.name}</p>
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${stageCls[a.stage] ?? stageCls.applied}`}>{a.stage}</span>
+                          {cc?.ai_score != null && (
+                            <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-black text-purple-700 dark:bg-purple-500/15 dark:text-purple-300">
+                              🤖 {cc.ai_score}/100
+                            </span>
+                          )}
+                          {cc?.ai_verdict && (
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${verdictCls[cc.ai_verdict] ?? verdictCls.moderate}`}>
+                              {cc.ai_verdict === "strong_influencer" ? "✅ Strong" : cc.ai_verdict === "moderate" ? "⚡ Moderate" : cc.ai_verdict === "admin_approved" ? "👑 Admin" : "❌ Not Fit"}
+                            </span>
+                          )}
+                          {cc?.referral_status === "active" && (
+                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">🟢 Active</span>
+                          )}
+                        </div>
+                        <p className={`mt-1 text-[11px] ${adminMutedCls}`}>{a.mobile}{a.email && ` · ${a.email}`}</p>
+                        {/* Social stats */}
+                        {cc && (
+                          <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px]">
+                            {cc.niche          && <span className={adminMutedCls}>🎯 {cc.niche}</span>}
+                            {cc.followers_count && <span className={adminMutedCls}>👥 {Number(cc.followers_count).toLocaleString("en-IN")} followers</span>}
+                            {cc.avg_views      && <span className={adminMutedCls}>👁 {cc.avg_views} avg views</span>}
+                            {cc.referral_code  && <span className={`font-mono font-black ${adminMutedCls}`}>🔗 {cc.referral_code}</span>}
+                          </div>
+                        )}
+                        {/* Social links */}
+                        {cc && (
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {cc.instagram_url && <a href={cc.instagram_url} target="_blank" rel="noopener noreferrer" className="rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-3 py-1 text-[10px] font-black text-white hover:scale-105 transition">📸 Instagram</a>}
+                            {cc.youtube_url   && <a href={cc.youtube_url}   target="_blank" rel="noopener noreferrer" className="rounded-full bg-gradient-to-r from-rose-600 to-red-600 px-3 py-1 text-[10px] font-black text-white hover:scale-105 transition">▶ YouTube</a>}
+                            {cc.facebook_url  && <a href={cc.facebook_url}  target="_blank" rel="noopener noreferrer" className="rounded-full bg-blue-600 px-3 py-1 text-[10px] font-black text-white hover:scale-105 transition">👥 Facebook</a>}
+                            {cc.other_url     && <a href={cc.other_url}     target="_blank" rel="noopener noreferrer" className="rounded-full border border-slate-300 px-3 py-1 text-[10px] font-black text-slate-700 hover:scale-105 transition dark:border-slate-600 dark:text-slate-300">🔗 Other</a>}
+                          </div>
+                        )}
+                        <p className={`mt-1.5 text-[10px] ${adminMutedCls}`}>
+                          Applied: {new Date(a.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                        </p>
+                      </div>
+
+                      {/* Right: actions */}
+                      {a.stage !== "hired" && (
+                        <div className="flex flex-col gap-2">
+                          {a.stage !== "selected" && a.stage !== "rejected" && (
+                            <>
+                              <button
+                                onClick={() => approveApplicant(a.id, "approve")}
+                                disabled={isActing}
+                                className={`${adminPrimaryBtnCls} text-xs`}
+                              >
+                                <Check className="h-3.5 w-3.5" /> Approve
+                              </button>
+                              <button
+                                onClick={() => approveApplicant(a.id, "reject")}
+                                disabled={isActing}
+                                className="inline-flex items-center gap-1.5 rounded-md border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-600 transition hover:bg-rose-100 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300 disabled:opacity-50"
+                              >
+                                <X className="h-3.5 w-3.5" /> Reject
+                              </button>
+                            </>
+                          )}
+                          {a.stage === "selected" && (
+                            <button
+                              onClick={() => approveApplicant(a.id, "reject")}
+                              disabled={isActing}
+                              className="inline-flex items-center gap-1.5 rounded-md border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-600 transition hover:bg-rose-100 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300 disabled:opacity-50"
+                            >
+                              <X className="h-3.5 w-3.5" /> Revoke
+                            </button>
+                          )}
+                          {a.stage === "rejected" && (
+                            <button
+                              onClick={() => approveApplicant(a.id, "approve")}
+                              disabled={isActing}
+                              className={`${adminSecondaryBtnCls} text-xs`}
+                            >
+                              <Check className="h-3.5 w-3.5" /> Re-approve
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
+      )}
 
       {/* ════════ Influencers Tab ════════ */}
       {tab === "influencers" && (

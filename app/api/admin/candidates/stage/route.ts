@@ -34,7 +34,8 @@ const INFLUENCER_STAGES = new Set(["selected", "offer_accepted", "hired"]);
 
 export async function POST(req: NextRequest) {
   try {
-    const { candidate_id, stage } = await req.json();
+    const body = await req.json();
+    const { candidate_id, stage, changed_by } = body;
     if (!candidate_id || !stage) {
       return NextResponse.json({ ok: false, error: "Missing fields" }, { status: 400 });
     }
@@ -54,6 +55,15 @@ export async function POST(req: NextRequest) {
       .update({ stage, updated_at: new Date().toISOString() })
       .eq("id", candidate_id);
     if (stageErr) throw stageErr;
+
+    // 2b. Write stage log (also written by DB trigger, but explicit here for changed_by)
+    try {
+      await db.from("candidate_stage_log").insert({
+        candidate_id,
+        stage,
+        changed_by: changed_by ?? "admin",
+      });
+    } catch {}
 
     // 3. Insert candidate-facing notification if this stage has a message
     const notif = NOTIFY_MAP[stage];
