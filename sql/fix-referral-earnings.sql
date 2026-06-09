@@ -148,7 +148,10 @@ order by pay.razorpay_payment_id, pay.created_at asc;
 -- errors with "cannot change name of view column".
 drop view if exists public.v_admin_influencers;
 
-create view public.v_admin_influencers as
+-- security_invoker = true → the view runs with the querying user's
+-- permissions/RLS, not the creator's (fixes Supabase SECURITY DEFINER lint).
+create view public.v_admin_influencers
+with (security_invoker = true) as
 select
   c.id                        as candidate_id,
   c.name,
