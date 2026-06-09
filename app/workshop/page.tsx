@@ -627,6 +627,22 @@ export default function WebinarLandingPage() {
             );
           })}
         </div>
+
+        <p className={`mx-auto mt-6 max-w-2xl text-center text-xs leading-6 ${mutedText}`}>
+          Join karke aap hamari{" "}
+          <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-bold text-violet-500 underline">
+            Terms &amp; Conditions
+          </a>
+          ,{" "}
+          <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="font-bold text-violet-500 underline">
+            Privacy Policy
+          </a>{" "}
+          aur{" "}
+          <a href="/refund-policy" target="_blank" rel="noopener noreferrer" className="font-bold text-violet-500 underline">
+            Refund Policy
+          </a>{" "}
+          se agree karte hain.
+        </p>
       </section>
 
       <SectionWrap eyebrow="AI Mockup Gallery" title="See What You Can Create">
@@ -859,8 +875,40 @@ export default function WebinarLandingPage() {
     The textile industry is changing fast. Be early.
   </p>
 
-  
+
 </div>
+
+      {/* Compliance footer */}
+      <footer
+        className={`mx-auto mt-12 max-w-7xl border-t px-4 py-8 text-center md:px-8 ${
+          isDark ? "border-white/10" : "border-slate-200"
+        }`}
+      >
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs font-bold">
+          {[
+            { label: "Terms & Conditions", href: "/terms" },
+            { label: "Privacy Policy", href: "/privacy-policy" },
+            { label: "Refund Policy", href: "/refund-policy" },
+            { label: "Contact / Support", href: "/support" },
+          ].map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`transition hover:text-violet-500 ${mutedText}`}
+            >
+              {item.label}
+            </a>
+          ))}
+        </div>
+        <p className={`mt-4 text-xs ${mutedText}`}>
+          © {new Date().getFullYear()} AgentForge AI. All rights reserved.
+        </p>
+        <p className={`mt-1 text-[11px] ${mutedText}`}>
+          Secure payments powered by Razorpay.
+        </p>
+      </footer>
 
 
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-white/90 p-3 shadow-2xl backdrop-blur-xl md:hidden">
