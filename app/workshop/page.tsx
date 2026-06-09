@@ -409,18 +409,6 @@ export default function WebinarLandingPage() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={toggleAudio}
-              aria-label={audioOn ? "Mute music" : "Play music"}
-              className={`rounded-full border px-3 py-2 text-xs font-black ${
-                isDark
-                  ? "border-white/15 bg-white/10 text-white"
-                  : "border-slate-200 bg-white text-slate-800"
-              }`}
-            >
-              {audioOn ? "🔊" : "🔇"}
-            </button>
-            <button
-              type="button"
               onClick={() => setTheme(isDark ? "light" : "dark")}
               className={`rounded-full border px-4 py-2 text-xs font-black ${
                 isDark
@@ -897,6 +885,43 @@ export default function WebinarLandingPage() {
         loop
         preload="auto"
       />
+
+      {/* Floating AgentForge Radio — autoplays, tap to mute */}
+      <div className="fixed bottom-40 right-4 z-[60] flex flex-col items-center gap-1.5 md:bottom-6 md:right-6">
+        <button
+          type="button"
+          onClick={toggleAudio}
+          aria-label={audioOn ? "Tap to mute radio" : "Tap to play radio"}
+          title={audioOn ? "Tap to mute" : "Tap to play"}
+          className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 via-blue-600 to-violet-700 shadow-2xl shadow-violet-500/40 transition hover:scale-105 active:scale-95"
+        >
+          {audioOn && (
+            <>
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-violet-500/40" />
+              <span className="absolute -inset-2 animate-pulse rounded-full border border-cyan-300/50" />
+            </>
+          )}
+          <span
+            className={`relative text-2xl transition ${
+              audioOn ? "" : "opacity-60 grayscale"
+            }`}
+          >
+            📻
+          </span>
+          {!audioOn && (
+            <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[9px] shadow">
+              🔇
+            </span>
+          )}
+        </button>
+        <span
+          className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wide shadow ${
+            isDark ? "bg-white/10 text-white/80" : "bg-white text-slate-700"
+          }`}
+        >
+          {audioOn ? "Tap to mute" : "Tap to play"}
+        </span>
+      </div>
 
       {selectedImage && (
         <div
