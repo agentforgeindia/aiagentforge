@@ -10,7 +10,7 @@ import { useTheme } from "@/app/components/ThemeProvider";
 import PageDoodles from "@/app/components/PageDoodles";
 
 const PERKS = [
-  { Icon: TrendingUp, title: "Earn on Every Sale",    desc: "Earn a commission on every purchase made through your unique referral link — no cap, no expiry." },
+  { Icon: TrendingUp, title: "Earn on Every Sale",    desc: "Earn a 10% reward on every sale made through your unique referral link — no cap, no expiry." },
   { Icon: Gift,       title: "Real-time Tracking",    desc: "See your signups, purchases and earnings in real time on your personal dashboard." },
   { Icon: Users,      title: "Brand Collabs",         desc: "Top partners get featured campaigns, exclusive deals and monthly collaboration reviews." },
   { Icon: BadgeCheck, title: "AI-Scored Profile",     desc: "Our AI analyses your reach and eligibility — no manual review wait." },
@@ -35,7 +35,7 @@ const FAQS = [
   { q: "How is my profile scored?",         a: "Our AI looks at number of platforms, follower count, average views, and content niche. Qualifying creators get their referral code immediately." },
   { q: "When do I get my referral code?",   a: "Right after you apply and get approved. Our team reviews your application and activates your referral programme." },
   { q: "How do I track my earnings?",       a: "Log in to your personal Influencer Dashboard. You'll see all signups, purchases and earnings in real time." },
-  { q: "When does commission get paid?",    a: "Payments are processed monthly. Our team will confirm your payment details once you are approved." },
+  { q: "When does my reward get paid?",    a: "Payments are processed monthly. Our team will confirm your payment details once you are approved." },
   { q: "Is there a minimum payout?",        a: "Our team will share payout details directly with you once you join. Everything is explained in your dashboard." },
 ];
 
@@ -128,7 +128,7 @@ export default function InfluencerPage() {
             <br />into income.
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-base font-medium leading-relaxed text-black/60 dark:text-white/60">
-            Partner with AgentForge AI. Share your link. Earn commission on every purchase through your referral.
+            Partner with AgentForge AI. Share your link. Earn rewards on every sale through your referral.
             No investment. No minimum followers. Just real reach.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -184,8 +184,8 @@ export default function InfluencerPage() {
         <div className="mt-16 overflow-hidden rounded-[2rem] bg-gradient-to-r from-pink-500 via-purple-600 to-cyan-500 p-10 text-center text-white shadow-2xl">
           <p className="text-[11px] font-black uppercase tracking-[0.28em] text-white/70">Your Earning Potential</p>
           <p className="mt-2 text-5xl font-black">Earn Every Month</p>
-          <p className="mt-3 text-base font-bold text-white/80">Commission on every purchase — forever, no cap</p>
-          <p className="mt-3 text-sm font-medium text-white/65">Share once. Earn as long as your link stays active. Commission rates are shared with approved partners.</p>
+          <p className="mt-3 text-base font-bold text-white/80">Rewards on every sale — forever, no cap</p>
+          <p className="mt-3 text-sm font-medium text-white/65">Share once. Earn as long as your link stays active. Reward rates are shared with approved partners.</p>
           <Link href="/careers/apply?role=content_creator"
             className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-black text-purple-700 shadow-xl transition hover:scale-[1.03]">
             Get My Referral Code <ArrowRight className="h-4 w-4" />

@@ -244,12 +244,12 @@ function Dashboard() {
           <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center">
             <ShoppingBag className="mx-auto h-5 w-5 text-purple-400" />
             <p className="mt-2 text-2xl font-black tabular-nums">{stats.purchases}</p>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Purchases</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Sales</p>
           </div>
           <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/5 p-4 text-center">
             <IndianRupee className="mx-auto h-5 w-5 text-emerald-400" />
             <p className="mt-2 text-2xl font-black tabular-nums text-emerald-300">₹{stats.earnings.toFixed(0)}</p>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Earned</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Your Earnings</p>
           </div>
         </div>
 
@@ -259,7 +259,7 @@ function Dashboard() {
             {TAB("scripts", "📜 Scripts", scripts.length)}
             {TAB("videos", "🎬 My Videos", videos.length)}
             {TAB("signups", "👤 Signups", stats.signups)}
-            {TAB("purchases", "💳 Purchases", stats.purchases)}
+            {TAB("purchases", "💰 My Earnings", stats.purchases)}
             {TAB("profile", "✏️ My Profile")}
             {TAB("howto", "❓ How It Works")}
           </div>
@@ -381,26 +381,26 @@ function Dashboard() {
           </div>
         )}
 
-        {/* ── Tab: Purchases ── */}
+        {/* ── Tab: Sales (influencer earnings only — no company revenue) ── */}
         {activeTab === "purchases" && (
           <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04]">
             {purchase_list.length === 0 ? (
-              <p className="p-6 text-center text-sm text-white/40">No purchases yet. Keep sharing your link!</p>
+              <p className="p-6 text-center text-sm text-white/40">No sales yet. Keep sharing your link!</p>
             ) : (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/10 text-left text-[10px] font-black uppercase tracking-wider text-white/40">
-                    <th className="px-4 py-3">Date</th><th className="px-4 py-3">Purchase</th><th className="px-4 py-3">Your Earnings</th><th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">Date</th><th className="px-4 py-3">Sale</th><th className="px-4 py-3">Your Reward (10%)</th><th className="px-4 py-3">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {purchase_list.map((p, i) => (
                     <tr key={i} className="border-b border-white/5 hover:bg-white/[0.03]">
                       <td className="px-4 py-3 text-xs text-white/40">{fmt(p.created_at)}</td>
-                      <td className="px-4 py-3 font-medium text-white">₹{p.purchase_amount?.toFixed(0) ?? "—"}</td>
-                      <td className="px-4 py-3 font-black text-emerald-300">₹{p.commission_amount?.toFixed(0) ?? "—"}</td>
+                      <td className="px-4 py-3 font-medium text-white">✅ Sale via your link</td>
+                      <td className="px-4 py-3 font-black text-emerald-300">+₹{p.commission_amount?.toFixed(0) ?? "—"}</td>
                       <td className="px-4 py-3">
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${p.status === "paid" ? "bg-emerald-500/20 text-emerald-300" : p.status === "cleared" ? "bg-cyan-500/20 text-cyan-300" : "bg-amber-500/20 text-amber-300"}`}>{p.status}</span>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${p.status === "paid" ? "bg-emerald-500/20 text-emerald-300" : p.status === "cleared" ? "bg-cyan-500/20 text-cyan-300" : "bg-amber-500/20 text-amber-300"}`}>{p.status === "paid" ? "Paid out" : p.status === "cleared" ? "Cleared" : "Pending"}</span>
                       </td>
                     </tr>
                   ))}
@@ -463,7 +463,7 @@ function Dashboard() {
           <div className="space-y-3">
             {[
               { icon: "🔗", title: "Share Your Referral Link", desc: "Copy your referral link above and share it on Instagram, YouTube, WhatsApp, Facebook — everywhere. When someone clicks your link and signs up, they are linked to you permanently." },
-              { icon: "💰", title: "Earn on Every Purchase",   desc: "When anyone who signed up through your link buys a plan on AgentForge, you earn a commission. Your dashboard shows your exact earnings in real time." },
+              { icon: "💰", title: "Earn on Every Sale",   desc: "When anyone who signed up through your link buys a plan on AgentForge, you earn a 10% reward. Your dashboard shows your exact earnings in real time." },
               { icon: "📜", title: "Pick a Script — Make a Video", desc: "We send you scripts from time to time. Pick a script, make a short video or reel using it, and upload it here. We review and approve it. Once approved, post it on your social media." },
               { icon: "📊", title: "Track in Real Time",       desc: "Your dashboard shows every signup and every purchase made through your link — with dates, amounts and earnings. Payments are settled monthly." },
               { icon: "📱", title: "Where to Share",           desc: "Instagram Reels and Stories, YouTube Shorts, WhatsApp Business groups (textile / jewellery dealers), LinkedIn posts. Before/after AI photo comparisons perform best." },

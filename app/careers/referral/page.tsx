@@ -90,7 +90,7 @@ function ReferralInner() {
         </h1>
         <p className="mt-2 text-sm font-medium text-black/55 dark:text-white/55">
           Enter your referral code to see how many purchases were made through your link.
-          Earn <b>10% commission</b> on every purchase. 48-hour clearing period applies.
+          Earn <b>10% reward</b> on every sale. 48-hour clearing period applies.
         </p>
 
         {/* Search */}
@@ -140,7 +140,7 @@ function ReferralInner() {
               <SummaryCard label="Paid Out"      amount={totalPaid}    color="from-emerald-400 to-emerald-600" Icon={CheckCircle2} />
             </div>
             <p className="mt-2 text-[10px] font-bold text-black/40 dark:text-white/30">
-              * Pending amounts clear within 48 hours of confirmed purchase. Commission = 10% per sale.
+              * Pending amounts clear within 48 hours of confirmed sale. Reward = 10% per sale.
             </p>
 
             {/* Transactions */}
@@ -176,8 +176,8 @@ function ReferralInner() {
           <p className="text-sm font-black text-purple-800 dark:text-purple-200">How the Referral Programme Works</p>
           <ul className="mt-3 space-y-2 text-sm font-medium text-black/70 dark:text-white/70">
             <li>🔗 Share your unique referral link on social media, WhatsApp, or anywhere</li>
-            <li>💰 Earn 10% commission on every purchase made through your link</li>
-            <li>⏱️ 48-hour clearing period — commission confirms after payment is verified</li>
+            <li>💰 Earn 10% reward on every sale made through your link</li>
+            <li>⏱️ 48-hour clearing period — reward confirms after payment is verified</li>
             <li>📊 Enter your code on this page anytime to track your earnings</li>
             <li>📞 Monthly reviews — strong performance means continued and upgraded collaboration</li>
           </ul>

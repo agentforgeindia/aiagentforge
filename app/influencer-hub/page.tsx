@@ -794,21 +794,22 @@ export default function InfluencerHubPage() {
           )}
         </div>
 
-        {/* Recent earnings */}
+        {/* Recent earnings — show ONLY the influencer's reward (their 10%),
+            never the package price / company revenue. */}
         {purchase_list.length > 0 && (
           <div className={`rounded-2xl border ${card}`}>
-            <p className="px-5 py-4 font-black">💰 Recent Earnings</p>
+            <p className="px-5 py-4 font-black">🎉 Your Reward History</p>
             <div className="space-y-2 px-5 pb-5">
               {purchase_list.slice(0, 5).map((e, i) => (
                 <div key={i} className={`flex items-center justify-between rounded-xl border px-4 py-3 ${darkMode ? "border-white/5 bg-white/5" : "border-slate-100 bg-slate-50"}`}>
                   <div>
-                    <p className="text-sm font-black">₹{e.purchase_amount.toLocaleString("en-IN")} purchase</p>
-                    <p className={`text-[10px] ${muted}`}>{new Date(e.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</p>
+                    <p className="text-sm font-black">✅ New sale via your link</p>
+                    <p className={`text-[10px] ${muted}`}>{new Date(e.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-black text-emerald-600">+₹{e.commission_amount.toLocaleString("en-IN")}</p>
                     <span className={`text-[10px] font-black ${e.status === "paid" ? "text-emerald-500" : "text-amber-500"}`}>
-                      {e.status === "paid" ? "✅ Paid" : "⏳ Pending"}
+                      {e.status === "paid" ? "✅ Paid out" : "⏳ Pending payout"}
                     </span>
                   </div>
                 </div>
