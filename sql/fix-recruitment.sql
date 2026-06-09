@@ -73,6 +73,6 @@ begin
 end;
 $$;
 
-revoke all on function public.recruitment_overview() from public;
-grant execute on function public.recruitment_overview() to authenticated, service_role, anon;
+revoke all on function public.recruitment_overview() from public, anon;
+grant execute on function public.recruitment_overview() to authenticated, service_role;
 -- ============================================================

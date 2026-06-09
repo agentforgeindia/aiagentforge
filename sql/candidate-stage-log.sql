@@ -13,7 +13,7 @@ CREATE INDEX IF NOT EXISTS idx_csl_candidate ON candidate_stage_log(candidate_id
 
 -- Auto-log the initial 'applied' stage when a candidate is inserted
 CREATE OR REPLACE FUNCTION fn_log_candidate_stage()
-RETURNS trigger LANGUAGE plpgsql AS $$
+RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$
 BEGIN
   -- Only log if stage actually changed (or new row)
   IF TG_OP = 'INSERT' OR OLD.stage IS DISTINCT FROM NEW.stage THEN
