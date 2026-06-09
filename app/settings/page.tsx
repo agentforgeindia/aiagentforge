@@ -138,15 +138,13 @@ export default function SettingsPage() {
         const result = await res.json();
 
         if (!res.ok) {
-          alert(result.error || "Account delete failed.");
+          alert(result.error || "Account delete failed. Please try again.");
           return;
         }
 
+        // Sign out locally and redirect to signup
         await supabase.auth.signOut();
-
-        alert("Your account has been deleted.");
-
-        window.location.href = "/";
+        window.location.href = "/signup";
       } catch (err) {
         console.error(err);
         alert("Something went wrong.");
