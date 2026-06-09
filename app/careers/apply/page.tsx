@@ -4,7 +4,7 @@
 // Candidate fills signup details → redirected to /careers/learn?role=X&cid=UUID
 // Content Creators: video upload + AgentForge pitch script shown after submit
 
-import { Suspense, useRef, useState } from "react";
+import { Suspense, useRef, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Link as LinkIcon } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -91,6 +91,21 @@ function ApplyForm() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const isCC = f.role_slug === "content-creator";
+
+  // ── Auth gate for Content Creator ──────────────────────────────────────────
+  const [authChecked, setAuthChecked] = useState(false);
+  const [authUser, setAuthUser]       = useState<{ email: string; id: string } | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      const u = data.session?.user ?? null;
+      setAuthUser(u ? { email: u.email ?? "", id: u.id } : null);
+      // Auto-fill email if logged in
+      if (u?.email) setF(p => ({ ...p, email: u.email ?? p.email }));
+      setAuthChecked(true);
+    });
+  }, []);
+  // ───────────────────────────────────────────────────────────────────────────
 
   function up(k: string, v: string)  { setF((p) => ({ ...p, [k]: v })); }
   function upc(k: string, v: string) { setCc((p) => ({ ...p, [k]: v })); }
@@ -279,6 +294,70 @@ function ApplyForm() {
     );
   }
 
+  // ── CC Auth loading state (don't flash form before check completes) ─────────
+  if (isCC && !authChecked) {
+    return (
+      <main className="relative min-h-screen bg-[#fff8e8] dark:bg-[#070b14] flex items-center justify-center">
+        <PageDoodles variant="apply" glow={false} grid />
+        <div className="relative z-10 text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-purple-400/30 border-t-purple-500" />
+          <p className="mt-4 text-sm font-bold text-black/50 dark:text-white/40">Checking account…</p>
+        </div>
+      </main>
+    );
+  }
+
+  // ── CC Auth Gate ────────────────────────────────────────────────────────────
+  if (isCC && authChecked && !authUser) {
+    return (
+      <main className="relative min-h-screen bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
+        <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#f472b644,transparent_40%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_40%)]" />
+        <PageDoodles variant="apply" glow={false} grid />
+        <div className="relative z-10 flex min-h-screen items-center justify-center px-5 py-16">
+          <div className="w-full max-w-md rounded-3xl border-2 border-purple-300/50 bg-white/90 p-8 shadow-2xl backdrop-blur-xl dark:border-purple-400/30 dark:bg-white/[0.06]">
+            <div className="mb-6 text-center">
+              <p className="text-5xl">🔐</p>
+              <h1 className="mt-4 text-2xl font-black">AgentForge Account Required</h1>
+              <p className="mt-2 text-sm font-medium text-black/60 dark:text-white/55 leading-relaxed">
+                To apply as a <span className="font-black text-purple-600 dark:text-purple-400">Content Creator</span>, you must first have an active AgentForge account.
+              </p>
+            </div>
+
+            <div className="mb-6 rounded-2xl border border-amber-300/50 bg-amber-50/80 p-4 dark:border-amber-400/20 dark:bg-amber-500/5">
+              <p className="text-[13px] font-black text-amber-800 dark:text-amber-300">📌 Why is this required?</p>
+              <p className="mt-1 text-xs font-medium text-black/65 dark:text-white/55 leading-relaxed">
+                Content creators promote AgentForge and earn commissions. Only registered AgentForge users can join the creator program — this ensures you're already familiar with what you'll be promoting.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <a
+                href="/login"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 py-3.5 text-sm font-black text-white shadow-xl shadow-purple-500/30 transition hover:scale-[1.02] active:scale-95"
+              >
+                🚀 Login to AgentForge
+              </a>
+              <a
+                href="/signup"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-purple-300/50 bg-white/70 py-3.5 text-sm font-black text-purple-700 transition hover:bg-purple-50 dark:border-purple-400/30 dark:bg-purple-400/10 dark:text-purple-300 dark:hover:bg-purple-400/20"
+              >
+                ✨ Create a Free Account
+              </a>
+              <button
+                type="button"
+                onClick={() => setF(p => ({ ...p, role_slug: "telecaller" }))}
+                className="w-full rounded-2xl py-2.5 text-xs font-bold text-black/45 hover:text-black/70 dark:text-white/35 dark:hover:text-white/60 transition"
+              >
+                ← Apply for a different role instead
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+  // ───────────────────────────────────────────────────────────────────────────
+
   return (
     <main className="relative min-h-screen bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee44,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_35%)]" />
@@ -308,7 +387,7 @@ function ApplyForm() {
           <div className="mt-4 flex items-center gap-2 rounded-xl border border-cyan-200/50 bg-white/70 px-4 py-2.5 backdrop-blur dark:border-cyan-400/20 dark:bg-white/[0.06]">
             <span className="text-sm font-black text-slate-800 dark:text-white">{selectedRole.label}</span>
             <span className="ml-auto rounded-full bg-gradient-to-r from-cyan-400/20 to-blue-600/20 px-2.5 py-0.5 text-[11px] font-black text-cyan-700 dark:text-cyan-300">
-              💰 {selectedRole.salary}
+              🏠 Work From Home
             </span>
           </div>
         )}
@@ -329,9 +408,19 @@ function ApplyForm() {
             <input className={input} placeholder="State" value={f.state} onChange={(e) => up("state", e.target.value)} />
           </div>
 
-          {/* Content Creator — Social Media Links */}
+          {/* Content Creator — Auth badge + Social Media Links */}
           {isCC && (
             <div className="space-y-3 rounded-2xl border border-purple-200/60 bg-purple-50/50 p-4 dark:border-purple-400/20 dark:bg-purple-500/5">
+              {/* Verified AgentForge account badge */}
+              {authUser && (
+                <div className="flex items-center gap-2 rounded-xl border border-green-300/50 bg-green-50/80 px-3 py-2 dark:border-green-400/20 dark:bg-green-500/5">
+                  <span className="text-base">✅</span>
+                  <div>
+                    <p className="text-[11px] font-black text-green-700 dark:text-green-400">AgentForge Account Verified</p>
+                    <p className="text-[10px] font-medium text-black/50 dark:text-white/40">{authUser.email}</p>
+                  </div>
+                </div>
+              )}
               <p className="text-[11px] font-black uppercase tracking-[0.2em] text-purple-700 dark:text-purple-300">
                 📱 Social Media Profiles (required)
               </p>

@@ -126,6 +126,16 @@ export default function TestPage() {
       .catch(() => {});
   }, [id]);
 
+  // Auto-track test_started stage
+  useEffect(() => {
+    if (id) {
+      fetch("/api/careers/test-start", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ candidate_id: id }),
+      }).catch(() => {});
+    }
+  }, [id]);
+
   // ── Start test ──
   async function start() {
     setPhase("loading");
@@ -422,10 +432,14 @@ export default function TestPage() {
 
         {result.passed ? (
           <div className="mt-5 rounded-2xl border border-emerald-200/60 bg-emerald-50/60 p-4 text-center dark:border-emerald-400/20 dark:bg-emerald-500/5">
-            <p className="text-lg font-black text-emerald-800 dark:text-emerald-200">🎊 Our HR Team Will Call You Soon!</p>
+            <p className="text-lg font-black text-emerald-800 dark:text-emerald-200">🎊 You&apos;re through to the next round!</p>
             <p className="mt-1.5 text-[12px] font-medium text-black/60 dark:text-white/50">
-              Our HR team will reach out via WhatsApp or call, explain the next steps, and confirm your salary.
+              One last step — share a few details and verify your location, so our HR team can schedule your interview.
             </p>
+            <a href={`/careers/details/${id}`}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2.5 text-xs font-black text-white shadow transition hover:scale-[1.02]">
+              📍 Complete Profile &amp; Verify Location →
+            </a>
           </div>
         ) : (
           <div className="mt-5 rounded-2xl border border-amber-200/60 bg-amber-50/60 p-4 text-center dark:border-amber-400/20 dark:bg-amber-500/5">

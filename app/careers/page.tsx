@@ -77,17 +77,10 @@ const JOURNEY = [
 
 const BENEFITS = [
   { Icon: Home,    label: "Work From Home (WFH)" },
-  { Icon: Wallet,  label: "Fixed Salary + Incentive" },
+  { Icon: Wallet,  label: "Career Growth" },
   { Icon: Clock,   label: "Flexible 8-hour shift" },
-  { Icon: Star,    label: "Overtime = Extra Incentive" },
+  { Icon: Star,    label: "Hired on Merit" },
 ];
-
-const SALARY_MAP: Record<string, { label: string; cls: string }> = {
-  "₹5,000 + Incentive":  { label: "₹5,000 + Incentive",  cls: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-400/20" },
-  "₹8,000 + Incentive":  { label: "₹8,000 + Incentive",  cls: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-400/20" },
-  "₹10,000 + Incentive": { label: "₹10,000 + Incentive", cls: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-400/20" },
-  "Referral Commission": { label: "10% Referral Commission", cls: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-400/20" },
-};
 
 export default function CareersPage() {
   const [roles, setRoles] = useState<Role[]>([]);
@@ -128,7 +121,7 @@ export default function CareersPage() {
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-base font-medium leading-relaxed text-black/60 dark:text-white/60">
             No resume required. Complete a short training, pass the skill test — and get hired on merit.
-            All roles are <b>Work From Home</b>. Flexible hours. Fixed salary + incentive.
+            All roles are <b>Work From Home</b> with flexible hours.
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <a href="#roles"
@@ -173,7 +166,7 @@ export default function CareersPage() {
               <><span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">{totalOpenings}+ openings</span> — pick your role</>
             ) : "Open Positions"}
           </h2>
-          <p className="mt-2 text-sm text-black/50 dark:text-white/50">8 hours/day · Flexible timing · Overtime = Extra Incentive</p>
+          <p className="mt-2 text-sm text-black/50 dark:text-white/50">8 hours/day · Flexible timing · Work From Home</p>
         </div>
 
         {loading ? (
@@ -226,7 +219,6 @@ export default function CareersPage() {
 function RoleCard({ r, office }: { r: Role; office?: boolean }) {
   const Ic = ROLE_ICON[r.slug] ?? Circle;
   const wt = WORK_TYPE[r.work_type ?? (office ? "office" : "wfh")];
-  const sal = r.salary_display ? SALARY_MAP[r.salary_display] ?? null : null;
 
   return (
     <Link href={`/careers/apply?role=${r.slug}`}
@@ -253,16 +245,6 @@ function RoleCard({ r, office }: { r: Role; office?: boolean }) {
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
         {wt && (
           <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${wt.cls}`}>{wt.label}</span>
-        )}
-        {sal && (
-          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${sal.cls}`}>
-            💰 {sal.label}
-          </span>
-        )}
-        {r.is_referral_based && !sal && (
-          <span className="rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-[10px] font-black text-purple-700 dark:border-purple-400/20 dark:bg-purple-500/10 dark:text-purple-300">
-            🔗 10% Referral
-          </span>
         )}
       </div>
     </Link>
