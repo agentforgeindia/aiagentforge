@@ -155,6 +155,7 @@ export async function POST(request: Request) {
         p_user_id: userId,
         p_order_id: razorpay_order_id,
         p_amount: plan.amount,
+        p_payment_id: razorpay_payment_id,
       });
     } catch (e) {
       console.error("[verify-payment] record_referral_earning failed:", e);

@@ -144,6 +144,7 @@ export async function POST(request: Request) {
         p_user_id: userId,
         p_order_id: razorpayOrderId,
         p_amount: plan.amount,
+        p_payment_id: razorpayPaymentId,
       });
     } catch (e) {
       console.error("[razorpay-webhook] record_referral_earning failed:", e);
