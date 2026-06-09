@@ -1,7 +1,7 @@
 ﻿"use client";
 
 // ============================================================
-// /admin/customers â€” signed-up users with corporate styling.
+// /admin/customers â€" signed-up users with corporate styling.
 // ============================================================
 
 import Link from "next/link";
@@ -35,7 +35,7 @@ type PlanFilter = "all" | "Starter" | "Pro Creator" | "Empire" | "Free";
 type HealthFilter = "all" | "healthy" | "active" | "at_risk" | "churn_risk" | "churned";
 
 export default function AdminCustomersPage() {
-  // RBAC-driven access â€” no hard-coded email allowlist. Roles +
+  // RBAC-driven access â€" no hard-coded email allowlist. Roles +
   // permissions live in admin_roles / admin_users.
   const {
     loading: loadingAuth,
@@ -218,37 +218,37 @@ export default function AdminCustomersPage() {
                   href={`/admin/customers/${r.id}`}
                   className="flex items-center gap-4 px-4 py-3 transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
                 >
-                  <div className=”min-w-0 flex-1”>
-                    <div className=”flex flex-wrap items-center gap-2”>
-                      <p className=”truncate text-sm font-bold”>
-                        {r.full_name?.trim() || r.email || “—“}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate text-sm font-bold">
+                        {r.full_name?.trim() || r.email || "—"}
                       </p>
                       <PlanChip plan={r.plan} />
                       <HealthChip status={r.health_status} score={r.health_score} />
                       {r.referred_by && (
-                        <span className=”inline-flex items-center gap-0.5 rounded-md bg-purple-50 px-1.5 py-0.5 text-[10px] font-bold text-purple-600 dark:bg-purple-500/10 dark:text-purple-300”>
+                        <span className="inline-flex items-center gap-0.5 rounded-md bg-purple-50 px-1.5 py-0.5 text-[10px] font-bold text-purple-600 dark:bg-purple-500/10 dark:text-purple-300">
                           🔗 ref:{r.referred_by}
                         </span>
                       )}
                     </div>
                     <p className={`mt-0.5 truncate text-xs ${adminMutedCls}`}>
-                      {r.email ?? “(no email)”}
+                      {r.email ?? "(no email)"}
                       {r.billing_phone && ` · ${r.billing_phone}`}
-                      {“ · “}
+                      {" · "}
                       {r.created_at
-                        ? new Date(r.created_at).toLocaleDateString(“en-IN”, { day: “2-digit”, month: “short”, year: “numeric” })
-                        : “—“}
+                        ? new Date(r.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+                        : "—"}
                     </p>
                   </div>
-                  <div className=”hidden text-right sm:block”>
-                    <p className=”text-sm font-bold tabular-nums”>
-                      {Number(r.credits).toLocaleString(“en-IN”)}
+                  <div className="hidden text-right sm:block">
+                    <p className="text-sm font-bold tabular-nums">
+                      {Number(r.credits).toLocaleString("en-IN")}
                     </p>
                     <p className={`text-[10px] uppercase tracking-[0.16em] ${adminMutedCls}`}>
                       credits
                     </p>
                   </div>
-                  <ChevronRight className=”h-4 w-4 shrink-0 text-slate-400” />
+                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
                 </Link>
               </li>
             ))}
@@ -313,7 +313,7 @@ function HealthChip({
   return (
     <span
       className={`inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] ${cls}`}
-      title={`Health score: ${score ?? "â€”"} / 100`}
+      title={`Health score: ${score ?? "â€""} / 100`}
     >
       {label}
       {score !== null && (
