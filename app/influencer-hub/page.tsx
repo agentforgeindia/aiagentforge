@@ -478,6 +478,7 @@ export default function InfluencerHubPage() {
     const [withdrawErr, setWithdrawErr] = useState<string | null>(null);
     const [upiInput, setUpiInput] = useState("");
     const [showUpiForm, setShowUpiForm] = useState(false);
+    const [confirmOpen, setConfirmOpen] = useState(false);
 
     function copyLink() {
       if (!dashData?.referral_link) return;
@@ -490,9 +491,9 @@ export default function InfluencerHubPage() {
       return /^[\w.\-]{2,}@[a-zA-Z]{2,}$/.test(u.trim());
     }
 
-    async function requestWithdraw() {
+    // Step 1 — validate, then open the custom confirm modal.
+    function requestWithdraw() {
       if (!dashData) return;
-      const cid = dashData.candidate.id;
       const avail = dashData.available_balance ?? 0;
       if (avail <= 0) {
         setWithdrawErr("No balance available to withdraw yet.");
@@ -502,9 +503,15 @@ export default function InfluencerHubPage() {
         setWithdrawErr("Please enter a valid UPI ID (e.g. yourname@okhdfc).");
         return;
       }
-      if (!window.confirm(`Withdraw ₹${avail.toLocaleString("en-IN")} to ${upiInput.trim()}?\n\nThe amount will be transferred to this UPI within 24 hours.`)) {
-        return;
-      }
+      setWithdrawErr(null);
+      setConfirmOpen(true);
+    }
+
+    // Step 2 — user confirmed in the modal → fire the request.
+    async function doWithdraw() {
+      if (!dashData) return;
+      const cid = dashData.candidate.id;
+      setConfirmOpen(false);
       setWithdrawing(true);
       setWithdrawErr(null);
       setWithdrawMsg(null);
@@ -519,7 +526,6 @@ export default function InfluencerHubPage() {
           setWithdrawMsg(d.message || "Withdrawal requested! Transfer within 24 hours.");
           setShowUpiForm(false);
           setUpiInput("");
-          // Refresh dashboard so the pending state shows.
           loadDashboard(cid);
         } else {
           setWithdrawErr(d.error || "Could not request withdrawal.");
@@ -570,6 +576,53 @@ export default function InfluencerHubPage() {
 
     return (
       <div className="mx-auto max-w-2xl space-y-5 py-6">
+
+        {/* ── Custom withdraw confirmation modal ── */}
+        {confirmOpen && (
+          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setConfirmOpen(false)} />
+            <div className={`relative z-10 w-full max-w-sm rounded-3xl border p-6 shadow-2xl ${card}`}>
+              <div className="text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg">
+                  <IndianRupee className="h-7 w-7" />
+                </div>
+                <h3 className="mt-4 text-lg font-black">Confirm Withdrawal</h3>
+                <p className={`mt-1 text-sm ${muted}`}>You're about to withdraw</p>
+                <p className="mt-1 text-3xl font-black text-emerald-600 dark:text-emerald-400">
+                  ₹{(dashData.available_balance ?? 0).toLocaleString("en-IN")}
+                </p>
+              </div>
+
+              <div className={`mt-4 rounded-2xl border p-3 ${darkMode ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-slate-50"}`}>
+                <p className={`text-[10px] font-black uppercase tracking-wider ${muted}`}>Transfer to UPI</p>
+                <p className="mt-0.5 font-mono text-sm font-bold">{upiInput.trim()}</p>
+              </div>
+
+              <div className="mt-3 flex items-start gap-2 rounded-2xl border border-amber-300/40 bg-amber-50 px-3 py-2.5 text-[11px] font-bold text-amber-700 dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-300">
+                <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>The amount will be transferred to this UPI within 24 hours.</span>
+              </div>
+
+              <div className="mt-5 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmOpen(false)}
+                  className={`flex-1 rounded-full border py-3 text-sm font-bold ${darkMode ? "border-white/10 text-white/70" : "border-slate-200 text-slate-600"}`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={doWithdraw}
+                  className="flex-1 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 py-3 text-sm font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-[1.02]"
+                >
+                  Yes, Withdraw
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
 
         {/* Header card */}
         <div className={`rounded-2xl border p-5 ${card}`}>
