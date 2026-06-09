@@ -8,6 +8,7 @@ import { useSearchParams } from "next/navigation";
 import { Copy, Check, Users, ShoppingBag, IndianRupee, Video, ChevronDown, ChevronUp, Upload, AlertTriangle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import PageDoodles from "@/app/components/PageDoodles";
 
 type DashData = {
   candidate: { id: string; name: string; email: string; stage: string };
@@ -186,6 +187,7 @@ function Dashboard() {
   return (
     <main className="relative min-h-screen bg-[#070b14] text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#a855f744,transparent_50%),radial-gradient(circle_at_bottom_right,#ec489933,transparent_50%)]" />
+      <PageDoodles variant="influencer" glow={false} grid />
 
       <div className="relative z-10 mx-auto max-w-3xl px-4 py-10 sm:px-6">
 

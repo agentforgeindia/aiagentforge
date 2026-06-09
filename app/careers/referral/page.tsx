@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Search, TrendingUp, Clock, CheckCircle2, IndianRupee, Copy, Share2 } from "lucide-react";
+import PageDoodles from "@/app/components/PageDoodles";
 
 type Earning = {
   id: string;
@@ -78,6 +79,7 @@ function ReferralInner() {
   return (
     <main className="relative min-h-screen bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee44,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_35%)]" />
+      <PageDoodles variant="careers" glow={false} grid />
 
       <div className="relative z-10 mx-auto max-w-2xl px-5 py-14">
         <span className="inline-flex items-center gap-2 rounded-full border border-purple-300/60 bg-white/80 px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.28em] text-purple-700 shadow-md backdrop-blur dark:border-purple-400/30 dark:bg-white/10 dark:text-purple-200">

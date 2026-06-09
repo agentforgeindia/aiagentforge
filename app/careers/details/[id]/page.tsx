@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { MapPin, Navigation, CheckCircle2, Building2 } from "lucide-react";
+import PageDoodles from "@/app/components/PageDoodles";
 
 // ── AgentForge office location (UPDATE these to the real coords) ──
 const OFFICE = { lat: 19.26621226817183, lng: 72.96567637084333, label: "AgentForge HQ" };
@@ -114,6 +115,7 @@ export default function DetailsPage() {
   return (
     <main className="relative min-h-screen bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee44,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_35%)]" />
+      <PageDoodles variant="careers" glow={false} grid />
 
       <div className="relative z-10 mx-auto max-w-lg px-5 py-14">
         {done ? (

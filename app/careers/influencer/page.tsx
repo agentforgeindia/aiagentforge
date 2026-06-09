@@ -75,6 +75,7 @@ export default function InfluencerPage() {
   return (
     <main className="relative min-h-screen bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#f472b644,transparent_40%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_40%)]" />
+      <PageDoodles variant="influencer" glow={false} grid />
 
       <div className="relative z-10 mx-auto max-w-4xl px-5 py-20">
 

@@ -7,6 +7,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Shield, CheckCircle2, Copy, Eye, EyeOff, Lock } from "lucide-react";
+import PageDoodles from "@/app/components/PageDoodles";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RazorpayInstance = any;
@@ -83,6 +84,7 @@ export default function PaymentPage() {
   return (
     <main className="relative min-h-screen bg-[#fff8e8] text-[#111827] dark:bg-[#070b14] dark:text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee44,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf633,transparent_35%)]" />
+      <PageDoodles variant="careers" glow={false} grid />
 
       <div className="relative z-10 mx-auto max-w-md px-5 py-14">
         <div className="rounded-3xl border border-cyan-200/40 bg-white/85 p-8 shadow-xl shadow-cyan-200/20 backdrop-blur dark:border-cyan-400/20 dark:bg-white/[0.05]">
