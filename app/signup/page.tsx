@@ -65,6 +65,11 @@ export default function SignupPage() {
     // Pick up first-touch attribution captured by UtmCapture.
     const utm = getStoredUtm();
 
+    // Read referral code BEFORE profile upsert so we can embed it directly.
+    // This is the guaranteed path — process_referral() is a bonus for credits
+    // but can fail if the referrer's profile code isn't synced yet.
+    const refCode = typeof window !== "undefined" ? localStorage.getItem("af_ref_code") : null;
+
     const { error } = await supabase.from("profiles").upsert(
       {
         id: userId,
@@ -81,6 +86,8 @@ export default function SignupPage() {
         referrer: utm.referrer ?? null,
         landing_path: utm.landing_path ?? null,
         first_seen_at: utm.first_seen_at ?? null,
+        // ── Referral attribution — write directly so dashboard always tracks ──
+        ...(refCode ? { referred_by: refCode.trim().toUpperCase() } : {}),
       },
       { onConflict: "id" },
     );
@@ -94,18 +101,14 @@ export default function SignupPage() {
     // One-shot — don't attribute the next user on the same device.
     clearStoredUtm();
 
-    // Referral reward — if the user signed up via a referral link,
-    // grant credits to the referrer + a welcome bonus to this user.
-    // process_referral() uses auth.uid() — works when Supabase auto-confirms
-    // the account (no email verification step). For email-confirmation flows,
-    // auth/callback handles it after the user clicks the verify link.
+    // Also call process_referral() for credit rewards (idempotent, best-effort).
+    // May fail if referrer's profile code isn't synced — that's fine, referred_by is already set above.
     try {
-      const refCode = typeof window !== "undefined" ? localStorage.getItem("af_ref_code") : null;
       if (refCode) {
         await supabase.rpc("process_referral", { p_ref_code: refCode });
         localStorage.removeItem("af_ref_code");
       }
-    } catch { /* ignore referral errors — auth/callback is the fallback */ }
+    } catch { /* ignore — attribution already written above */ }
 
     return true;
   }

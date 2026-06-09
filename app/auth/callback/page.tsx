@@ -36,6 +36,7 @@ export default function AuthCallback() {
               // Pick up the first-touch attribution captured by
               // UtmCapture on the visitor's landing page.
               const utm = getStoredUtm();
+              const refCode = localStorage.getItem("af_ref_code");
 
               await supabase.from("profiles").upsert(
                 {
@@ -55,6 +56,8 @@ export default function AuthCallback() {
                   referrer: utm.referrer ?? null,
                   landing_path: utm.landing_path ?? null,
                   first_seen_at: utm.first_seen_at ?? null,
+                  // Direct referral attribution — always write so dashboard tracks
+                  ...(refCode ? { referred_by: refCode.trim().toUpperCase() } : {}),
                 },
                 { onConflict: "id" },
               );
