@@ -1,22 +1,45 @@
 "use client";
 
 // Workshop certificate generator.
-// User apna naam + date bharte hain, preview dikhta hai, aur original
-// certificate template (public/Workshop/certificate-template.png) ke
-// upar naam/date overlay karke PDF download ho jaata hai.
+// Candidate enters name + email + picks a workshop date, sees a live
+// preview, and downloads the official certificate as a PDF. Each
+// download is logged to the backend (name, email, date).
 
 import { useEffect, useRef, useState } from "react";
 
-const TEMPLATE_SRC = "/Workshop/certificate-template.png";
+// ?v bump karo jab bhi template image replace karo — taaki browser
+// purani cached image na dikhaye.
+const TEMPLATE_SRC = "/Workshop/certificate-template.png?v=2";
 
-// Placement (template ke width/height ke fraction me). Preview dekh ke
-// agar thoda upar/neeche/left/right chahiye to ye 4 number tweak kar do.
-const NAME_X = 0.515;
-const NAME_Y = 0.595;
-const DATE_X = 0.805;
-const DATE_Y = 0.82;
+// Placement (as a fraction of the template width/height). Tweak these
+// four numbers if the name/date needs nudging on the certificate.
+const NAME_X = 0.505;
+const NAME_Y = 0.505;
+const DATE_X = 0.77;
+const DATE_Y = 0.815;
 
-// Name font ke liye elegant serif Google se load karte hain.
+// Fixed workshop dates — candidate can only pick one of these four.
+const WORKSHOP_DATES = [
+  { value: "2026-06-20", label: "20 June 2026" },
+  { value: "2026-06-21", label: "21 June 2026" },
+  { value: "2026-06-27", label: "27 June 2026" },
+  { value: "2026-06-28", label: "28 June 2026" },
+];
+
+// Decorative background doodles.
+const DOODLES = [
+  { icon: "🧵", left: "6%", top: "14%" },
+  { icon: "✂️", left: "16%", top: "70%" },
+  { icon: "🪡", left: "30%", top: "22%" },
+  { icon: "👕", left: "44%", top: "78%" },
+  { icon: "🎓", left: "58%", top: "16%" },
+  { icon: "🧶", left: "70%", top: "72%" },
+  { icon: "🏆", left: "84%", top: "24%" },
+  { icon: "✨", left: "90%", top: "62%" },
+  { icon: "🧣", left: "10%", top: "44%" },
+  { icon: "📜", left: "78%", top: "46%" },
+];
+
 const FONT_FAMILY = '"Playfair Display", Georgia, serif';
 const FONT_CSS =
   "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap";
@@ -35,7 +58,6 @@ function loadScript(src: string): Promise<boolean> {
 }
 
 function formatDate(value: string): string {
-  // value = "yyyy-mm-dd" from <input type="date">
   if (!value) return "";
   const [y, m, d] = value.split("-").map(Number);
   const months = [
@@ -46,18 +68,46 @@ function formatDate(value: string): string {
   return `${d} ${months[m - 1]} ${y}`;
 }
 
+// Dates unlock one-by-one. Date 20 (index 0) is always enabled.
+// Each next date unlocks once the PREVIOUS workshop date has arrived.
+// Returns the highest enabled index (the latest unlocked date).
+function computeEnabledIdx(): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  let maxIdx = 0;
+  for (let i = 1; i < WORKSHOP_DATES.length; i++) {
+    if (today >= new Date(WORKSHOP_DATES[i - 1].value)) maxIdx = i;
+    else break;
+  }
+  return maxIdx;
+}
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
 export default function CertificatePage() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
 
   const [name, setName] = useState("");
-  const [dateValue, setDateValue] = useState("");
+  const [email, setEmail] = useState("");
+  const [dateValue, setDateValue] = useState(WORKSHOP_DATES[0].value);
+  const [enabledIdx, setEnabledIdx] = useState(0);
   const [imgReady, setImgReady] = useState(false);
   const [fontReady, setFontReady] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
   const formattedDate = formatDate(dateValue);
-  const canDownload = name.trim().length > 0 && formattedDate.length > 0;
+  const canDownload =
+    name.trim().length > 0 && isValidEmail(email) && formattedDate.length > 0;
+
+  // Unlock dates based on today, and select the latest unlocked one.
+  useEffect(() => {
+    const idx = computeEnabledIdx();
+    setEnabledIdx(idx);
+    setDateValue(WORKSHOP_DATES[idx].value);
+  }, []);
 
   // Load template image once.
   useEffect(() => {
@@ -108,8 +158,8 @@ export default function CertificatePage() {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillStyle = hasName ? "#312e81" : "rgba(49,46,129,0.35)";
-    let fontSize = Math.round(W * 0.043);
-    const maxWidth = W * 0.55;
+    let fontSize = Math.round(W * 0.034);
+    const maxWidth = W * 0.5;
     ctx.font = `700 ${fontSize}px ${FONT_FAMILY}`;
     while (ctx.measureText(displayName).width > maxWidth && fontSize > 18) {
       fontSize -= 2;
@@ -124,14 +174,30 @@ export default function CertificatePage() {
     ctx.fillText(displayDate, W * DATE_X, H * DATE_Y);
   }, [name, formattedDate, imgReady, fontReady]);
 
-  const handleDownloadPdf = async () => {
+  const handleDownload = async () => {
     if (!canDownload || !canvasRef.current) return;
     setDownloading(true);
     try {
+      // Log the download to the backend (best-effort).
+      try {
+        await fetch("/api/workshop/certificate-log", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: name.trim(),
+            email: email.trim(),
+            date: formattedDate,
+          }),
+        });
+      } catch {
+        /* never block the download over logging */
+      }
+
       const ok = await loadScript(JSPDF_SRC);
       const jsPDF = ok ? (window as any).jspdf?.jsPDF : null;
       const canvas = canvasRef.current;
       const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
+      const fileBase = `AgentForge-Certificate-${name.trim().replace(/\s+/g, "-")}`;
 
       if (jsPDF) {
         const pdf = new jsPDF({
@@ -140,12 +206,12 @@ export default function CertificatePage() {
           format: [canvas.width, canvas.height],
         });
         pdf.addImage(dataUrl, "JPEG", 0, 0, canvas.width, canvas.height);
-        pdf.save(`AgentForge-Certificate-${name.trim().replace(/\s+/g, "-")}.pdf`);
+        pdf.save(`${fileBase}.pdf`);
       } else {
-        // CDN block ho gaya to image fallback.
+        // Fallback if the CDN is blocked.
         const a = document.createElement("a");
         a.href = dataUrl;
-        a.download = `AgentForge-Certificate-${name.trim().replace(/\s+/g, "-")}.jpg`;
+        a.download = `${fileBase}.jpg`;
         a.click();
       }
     } finally {
@@ -155,32 +221,57 @@ export default function CertificatePage() {
 
   return (
     <main className="relative isolate min-h-screen overflow-hidden px-4 py-10 text-slate-950">
-      {/* Background */}
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,#22d3ee20,transparent_30%),radial-gradient(circle_at_top_right,#8b5cf620,transparent_35%),linear-gradient(180deg,#f7fbff_0%,#eef8ff_55%,#fffaf5_100%)]" />
+      {/* Background + doodles */}
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee20,transparent_30%),radial-gradient(circle_at_top_right,#8b5cf620,transparent_35%),radial-gradient(circle_at_bottom,#f59e0b15,transparent_30%),linear-gradient(180deg,#f7fbff_0%,#eef8ff_55%,#fffaf5_100%)]" />
+        {DOODLES.map((d, i) => (
+          <div
+            key={i}
+            className="absolute rounded-[1.6rem] bg-white/70 p-3 text-3xl shadow-xl backdrop-blur-md"
+            style={{
+              left: d.left,
+              top: d.top,
+              animation: `floatDoodle ${10 + i}s ease-in-out infinite`,
+              animationDelay: `${i * 0.6}s`,
+            }}
+          >
+            {d.icon}
+          </div>
+        ))}
+      </div>
 
       <style jsx global>{`
+        @keyframes floatDoodle {
+          0% { transform: translate(0, 0) rotate(0deg); }
+          50% { transform: translate(22px, -18px) rotate(5deg); }
+          100% { transform: translate(0, 0) rotate(0deg); }
+        }
         body:has(.cert-page) header,
         body:has(.cert-page) footer {
           display: none !important;
         }
       `}</style>
 
-      <section className="cert-page mx-auto max-w-5xl">
+      <section className="cert-page relative z-10 mx-auto max-w-5xl">
         <div className="mb-8 text-center">
           <div className="mb-4 inline-flex rounded-full bg-cyan-50 px-6 py-3 text-xs font-black uppercase tracking-[0.24em] text-cyan-700">
-            Workshop Certificate
+            🎉 Congratulations
           </div>
           <h1 className="bg-gradient-to-r from-cyan-500 via-blue-600 to-violet-700 bg-clip-text text-3xl font-black tracking-tight text-transparent sm:text-5xl">
-            Download Your Certificate
+            Claim Your Certificate
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-sm font-medium leading-6 text-slate-600">
-            Apna naam aur completion date bharo — preview neeche update hoga —
-            phir PDF download karo.
+            Well done! You&apos;ve successfully completed the{" "}
+            <span className="font-bold text-violet-600">
+              TextilePrints to Mockup AI Workshop
+            </span>
+            . Enter your details, pick your workshop date, and download your
+            official certificate.
           </p>
         </div>
 
         {/* Form */}
-        <div className="mx-auto mb-8 grid max-w-2xl gap-4 sm:grid-cols-2">
+        <div className="mx-auto mb-8 grid max-w-3xl gap-4 rounded-[2rem] border border-white/60 bg-white/80 p-6 shadow-xl backdrop-blur-xl sm:grid-cols-3">
           <div>
             <label className="mb-1 block text-xs font-black uppercase tracking-[0.16em] text-slate-500">
               Full Name
@@ -196,30 +287,45 @@ export default function CertificatePage() {
           </div>
           <div>
             <label className="mb-1 block text-xs font-black uppercase tracking-[0.16em] text-slate-500">
-              Completion Date
+              Email
             </label>
             <input
-              type="date"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-800 shadow-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-200"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-black uppercase tracking-[0.16em] text-slate-500">
+              Workshop Date
+            </label>
+            <select
               value={dateValue}
               onChange={(e) => setDateValue(e.target.value)}
               className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-800 shadow-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-200"
-            />
+            >
+              {WORKSHOP_DATES.map((d, i) => (
+                <option key={d.value} value={d.value} disabled={i > enabledIdx}>
+                  {d.label}
+                  {i > enabledIdx ? " 🔒 (locked)" : ""}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
         {/* Preview */}
         <div className="mx-auto max-w-4xl overflow-hidden rounded-[2rem] border border-white/60 bg-white p-3 shadow-2xl shadow-cyan-100/60">
-          <canvas
-            ref={canvasRef}
-            className="h-auto w-full rounded-[1.5rem]"
-          />
+          <canvas ref={canvasRef} className="h-auto w-full rounded-[1.5rem]" />
         </div>
 
         {/* Download */}
         <div className="mt-8 text-center">
           <button
             type="button"
-            onClick={handleDownloadPdf}
+            onClick={handleDownload}
             disabled={!canDownload || downloading}
             className={`inline-flex items-center justify-center rounded-2xl px-10 py-5 text-sm font-black uppercase tracking-[0.12em] text-white shadow-2xl transition ${
               canDownload && !downloading
@@ -231,10 +337,10 @@ export default function CertificatePage() {
               ? "Generating…"
               : canDownload
                 ? "Download Certificate (PDF) →"
-                : "Fill name & date to download"}
+                : "Enter name & email to download"}
           </button>
           <p className="mt-4 text-xs font-semibold text-slate-500">
-            Certificate AgentForge AI Workshop ke liye hai.
+            Your certificate is for the AgentForge AI Workshop.
           </p>
         </div>
       </section>
