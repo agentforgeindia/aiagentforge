@@ -466,7 +466,7 @@ export const BLOG_POSTS: BlogPost[] = [
       { type: "h2", text: "6. Credit-based pricing, not 'per minute'" },
       {
         type: "p",
-        text: "Indian businesses prefer monthly credit packs over per-second or per-token pricing. You want to budget. AgentForge: Starter ₹1,999 → 1,800 credits → 120 images. Pro Creator ₹9,999 → 12,000 credits → 800 images. Empire ₹39,999 → 50,000 credits → 3,000+ images for factories.",
+        text: "Indian businesses prefer monthly credit packs over per-second or per-token pricing. You want to budget. AgentForge: Starter ₹1,999 → 1,800 credits → 120 images. Pro Creator ₹9,999 → 9,000 credits → 600 images. Empire ₹39,999 → 36,000 credits → 2,400 images for factories.",
       },
 
       { type: "h2", text: "7. Local support" },
@@ -1227,8 +1227,8 @@ export const BLOG_POSTS: BlogPost[] = [
       { type: "h3", text: "Standard generation tiers" },
       { type: "ul", items: [
         "Starter (₹1,999/month): 1,800 credits — approximately ₹15–₹25 per image",
-        "Pro Creator (₹9,999/month): 12,000 credits — approximately ₹11–₹18 per image",
-        "Empire (₹39,999/month): 50,000 credits — approximately ₹8–₹13 per image with bulk stacking",
+        "Pro Creator (₹9,999/month): 9,000 credits — approximately ₹17 per standard image",
+        "Empire (₹39,999/month): 36,000 credits — approximately ₹17 per image with free branding & bulk",
       ]},
       {
         type: "p",
@@ -1624,8 +1624,8 @@ export const BLOG_POSTS: BlogPost[] = [
       { type: "h2", text: "Pricing — built for Indian businesses" },
       { type: "ul", items: [
         "Starter — ₹1,999/month — 1,800 credits — ~120 images",
-        "Pro Creator — ₹9,999/month — 12,000 credits — ~800 images",
-        "Empire — ₹39,999/month — 50,000 credits — 3,000+ images",
+        "Pro Creator — ₹9,999/month — 9,000 credits — ~600 images",
+        "Empire — ₹39,999/month — 36,000 credits — ~2,400 images",
         "Free tier — 100 credits on signup — no card required",
       ]},
       { type: "quote", text: "INR pricing. GST invoicing. Razorpay payments. WhatsApp support. This is India-first, not India-adapted." },
@@ -1708,8 +1708,8 @@ export const BLOG_POSTS: BlogPost[] = [
       { type: "h2", text: "7. INR pricing, GST invoicing, Razorpay payments" },
       { type: "ul", items: [
         "Starter — ₹1,999/month — 1,800 credits — ~120 images",
-        "Pro Creator — ₹9,999/month — 12,000 credits — ~800 images",
-        "Empire — ₹39,999/month — 50,000 credits — 3,000+ images",
+        "Pro Creator — ₹9,999/month — 9,000 credits — ~600 images",
+        "Empire — ₹39,999/month — 36,000 credits — ~2,400 images",
         "Free tier — 100 credits on signup — no card required",
         "All plans GST-invoiced. Razorpay UPI / cards / netbanking.",
       ]},

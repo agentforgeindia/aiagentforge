@@ -848,6 +848,10 @@ export default function Home() {
   const [accessories, setAccessories] = useState<string[]>(["None"]);
   const [outputSize, setOutputSize] = useState("1080x1080");
   const [quality, setQuality] = useState("Premium");
+  // Delivery format: individual images vs a single catalogue PDF.
+  const [deliveryMode, setDeliveryMode] = useState<"images" | "catalogue">(
+    "images",
+  );
   const [customInstruction, setCustomInstruction] = useState("");
 
   const [customModelType, setCustomModelType] = useState("");
@@ -1249,26 +1253,13 @@ export default function Home() {
     const normalizedSize = sizeValue.trim().toLowerCase();
     const normalizedQuality = qualityValue.trim().toLowerCase();
 
-    let baseCredits = 15;
-
-    if ((normalizedSize === "1080x1080" || normalizedSize === "2000x2000") && normalizedQuality === "premium") {
-      baseCredits = 15;
-    } else if (
-      (normalizedSize === "1080x1080" || normalizedSize === "2000x2000") &&
-      normalizedQuality === "ultra hd"
-    ) {
-      baseCredits = 20;
-    } else if (
-      normalizedSize === "1080x1920" &&
-      normalizedQuality === "premium"
-    ) {
-      baseCredits = 17;
-    } else if (
-      normalizedSize === "1080x1920" &&
-      normalizedQuality === "ultra hd"
-    ) {
-      baseCredits = 20;
-    }
+    // New pricing (49% margin model):
+    //   Premium = 15 credits, Ultra HD = 30 credits.
+    //   Mobile / Portrait (9:16) = +2 credits.
+    const isUltra = normalizedQuality === "ultra hd";
+    const isMobile = normalizedSize === "1080x1920";
+    let baseCredits = isUltra ? 30 : 15;
+    if (isMobile) baseCredits += 2;
 
     const details = brandDetails || {
       company_name: useCompanyName ? companyName.trim() : "",
@@ -1277,11 +1268,14 @@ export default function Home() {
       address: useCompanyAddress ? companyAddress.trim() : "",
     };
 
-    const extraCredits =
-      (details.company_name?.trim() ? 1 : 0) +
-      (details.phone_number?.trim() ? 1 : 0) +
-      (details.website?.trim() ? 1 : 0) +
-      (details.address?.trim() ? 1 : 0);
+    // Empire users get branding (logo / name / phone / website /
+    // address) free — no extra credits.
+    const extraCredits = isEmpireUser
+      ? 0
+      : (details.company_name?.trim() ? 1 : 0) +
+        (details.phone_number?.trim() ? 1 : 0) +
+        (details.website?.trim() ? 1 : 0) +
+        (details.address?.trim() ? 1 : 0);
 
     return baseCredits + extraCredits;
   };
@@ -3428,6 +3422,37 @@ export default function Home() {
                           )}
                         </div>
                       </div>
+
+                      <div className="mt-5">
+                        <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                          Delivery Format
+                        </p>
+                        <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4">
+                          {[
+                            { key: "images", title: "Individual Images" },
+                            { key: "catalogue", title: "Catalogue (PDF)" },
+                          ].map((opt) => (
+                            <OptionCard
+                              key={opt.key}
+                              title={opt.title}
+                              active={deliveryMode === opt.key}
+                              onClick={() =>
+                                setDeliveryMode(
+                                  opt.key as "images" | "catalogue",
+                                )
+                              }
+                              darkMode={darkMode}
+                            />
+                          ))}
+                        </div>
+                        {deliveryMode === "catalogue" && (
+                          <p className={`mt-2 text-xs ${muted}`}>
+                            Catalogue mode: all generated designs come as one PDF
+                            — only the catalogue PDF will be available to
+                            download.
+                          </p>
+                        )}
+                      </div>
                     </section>
 
                     <div className="pt-2">
@@ -3539,37 +3564,50 @@ export default function Home() {
                               </p>
                             </div>
 
-                            <div className="grid gap-3 sm:grid-cols-2">
+                            {deliveryMode === "catalogue" ? (
                               <button
-                                onClick={requestDownload}
-                                className="flex items-center justify-center gap-3 rounded-2xl bg-emerald-500 px-5 py-3 font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-105 active:scale-95"
+                                onClick={handleDownloadPDF}
+                                className="flex w-full items-center justify-center gap-3 rounded-2xl bg-emerald-500 px-5 py-4 font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-[1.02] active:scale-95"
                               >
-                                <span>Download HD</span>
+                                📄 Download Catalogue (PDF){items.filter(it => it.status === "done").length > 1 ? ` — ${items.filter(it => it.status === "done").length} pages` : ""}
                               </button>
+                            ) : (
+                              <>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                  <button
+                                    onClick={requestDownload}
+                                    className="flex items-center justify-center gap-3 rounded-2xl bg-emerald-500 px-5 py-3 font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-105 active:scale-95"
+                                  >
+                                    <span>Download HD</span>
+                                  </button>
 
-                              <button
-                                onClick={handleNativeShare}
-                                className="flex items-center justify-center gap-3 rounded-2xl bg-blue-500 px-5 py-3 font-black text-white shadow-lg shadow-blue-500/20 transition hover:scale-105 active:scale-95"
+                                  <button
+                                    onClick={handleNativeShare}
+                                    className="flex items-center justify-center gap-3 rounded-2xl bg-blue-500 px-5 py-3 font-black text-white shadow-lg shadow-blue-500/20 transition hover:scale-105 active:scale-95"
+                                  >
+                                    <span>Share Now</span>
+                                  </button>
+                                </div>
+
+                                <button
+                                  onClick={handleDownloadPDF}
+                                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-300/50 bg-rose-50 px-5 py-2.5 text-sm font-black text-rose-700 shadow transition hover:scale-[1.02] dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-300"
+                                >
+                                  📄 Download as PDF {items.filter(it => it.status === "done").length > 1 ? `(${items.filter(it => it.status === "done").length} pages)` : ""}
+                                </button>
+                              </>
+                            )}
+
+                            {deliveryMode !== "catalogue" && (
+                              <a
+                                href={whatsappLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-3 flex w-full items-center justify-center gap-3 rounded-2xl bg-[#25D366] px-5 py-3 font-black text-white shadow-lg shadow-green-500/20 transition hover:scale-105 active:scale-95"
                               >
-                                <span>Share Now</span>
-                              </button>
-                            </div>
-
-                            <button
-                              onClick={handleDownloadPDF}
-                              className="mt-1 flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-300/50 bg-rose-50 px-5 py-2.5 text-sm font-black text-rose-700 shadow transition hover:scale-[1.02] dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-300"
-                            >
-                              📄 Download as PDF {items.filter(it => it.status === "done").length > 1 ? `(${items.filter(it => it.status === "done").length} pages)` : ""}
-                            </button>
-
-                            <a
-                              href={whatsappLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="mt-3 flex w-full items-center justify-center gap-3 rounded-2xl bg-[#25D366] px-5 py-3 font-black text-white shadow-lg shadow-green-500/20 transition hover:scale-105 active:scale-95"
-                            >
-                              <span>Share on WhatsApp</span>
-                            </a>
+                                <span>Share on WhatsApp</span>
+                              </a>
+                            )}
 
                             <Link
                               href="/my-creations"

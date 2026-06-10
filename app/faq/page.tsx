@@ -66,7 +66,7 @@ const SECTIONS: Section[] = [
       },
       {
         q: "What plans do you offer?",
-        a: "Starter (₹1,999 — 1,800 credits ≈ 120 generations), Pro Creator (₹9,999 — 12,000 credits ≈ 800 generations), Empire (₹39,999 — 50,000 credits with bulk-studio access). See /pricing for the full breakdown.",
+        a: "Starter (₹1,999 — 1,800 credits ≈ 120 generations), Pro Creator (₹9,999 — 9,000 credits ≈ 600 generations), Empire (₹39,999 — 36,000 credits with free branding + bulk-studio access). See /pricing for the full breakdown.",
       },
       {
         q: "Do credits expire?",
