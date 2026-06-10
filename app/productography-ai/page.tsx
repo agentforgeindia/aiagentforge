@@ -608,7 +608,8 @@ export default function ProductographyPage() {
     const q = quality.toLowerCase();
     const s = outputSize;
     let base = 15;
-    if (q.includes("ultra")) base += 5;
+    // Ultra HD = 30 (real 4K). Premium = 15. Mobile/portrait = +2.
+    if (q.includes("ultra")) base += 15;
     if (s === "1080x1920" || s === "1920x1080") base += 2;
     // Branding (logo + fields): +1 each — FREE for Empire.
     if (!isEmpireUser) {

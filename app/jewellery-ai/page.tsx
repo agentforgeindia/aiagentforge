@@ -1010,7 +1010,7 @@ export default function JewelleryAIPage() {
   }, [customJewellery, jewelleryType, moreJewellery]);
 
   const credits = useMemo(() => {
-    const base = quality === "Ultra HD" ? 20 : outputSize.includes("Mobile") ? 17 : 15;
+    const base = quality === "Ultra HD" ? 30 : outputSize.includes("Mobile") ? 17 : 15;
     // Branding overlays: +1 each — FREE for Empire users.
     const brandingCredits = isEmpireFromProfile(profile)
       ? 0
