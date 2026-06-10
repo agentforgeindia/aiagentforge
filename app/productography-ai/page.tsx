@@ -282,6 +282,13 @@ const isFreeAccountFromProfile = (profile: any): boolean => {
   return !paid;
 };
 
+const brandPositions: [string, string][] = [
+  ["top-left", "Top Left"],
+  ["top-right", "Top Right"],
+  ["bottom-left", "Bottom Left"],
+  ["bottom-right", "Bottom Right"],
+];
+
 // Empire (or Founder/Unlimited) — gets branding overlays free.
 const isEmpireFromProfile = (profile: any): boolean => {
   const planText = String(
@@ -559,6 +566,12 @@ export default function ProductographyPage() {
   const [useCompanyWebsite, setUseCompanyWebsite] = useState(false);
   const [useCompanyAddress, setUseCompanyAddress] = useState(false);
   const [useCompanyLogo, setUseCompanyLogo] = useState(false);
+  // Overlay placement (corner) for each branding element.
+  const [companyNamePosition, setCompanyNamePosition] = useState("bottom-left");
+  const [companyPhonePosition, setCompanyPhonePosition] = useState("bottom-right");
+  const [companyWebsitePosition, setCompanyWebsitePosition] = useState("bottom-left");
+  const [companyAddressPosition, setCompanyAddressPosition] = useState("bottom-right");
+  const [logoPosition, setLogoPosition] = useState("top-right");
   const [productTextEnabled, setProductTextEnabled] = useState(false);
 
   const logoInputRef = useRef<HTMLInputElement | null>(null);
@@ -936,7 +949,15 @@ export default function ProductographyPage() {
       ctx.drawImage(baseImg, 0, 0);
 
       if (companyLogoImg) {
-        drawLogoInCorner(ctx, canvas.width, canvas.height, companyLogoImg, "top-right", 0.14, 1);
+        drawLogoInCorner(
+          ctx,
+          canvas.width,
+          canvas.height,
+          companyLogoImg,
+          logoPosition as "top-right" | "bottom-right" | "top-left" | "bottom-left",
+          0.14,
+          1,
+        );
       }
       if (afLogoImg) {
         drawLogoInCorner(ctx, canvas.width, canvas.height, afLogoImg, "bottom-right", 0.10, 0.88);
@@ -1047,6 +1068,13 @@ export default function ProductographyPage() {
       website: useCompanyWebsite ? companyWebsite.trim() : "",
       address: useCompanyAddress ? companyAddress.trim() : "",
       logo_url: useCompanyLogo ? companyLogoUrl.trim() : "",
+      positions: {
+        company_name: companyNamePosition,
+        phone_number: companyPhonePosition,
+        website: companyWebsitePosition,
+        address: companyAddressPosition,
+        logo: logoPosition,
+      },
     };
 
     const dbRow = {
@@ -1124,6 +1152,11 @@ export default function ProductographyPage() {
         company_phone: brandDetails.phone_number,
         company_website: brandDetails.website,
         company_address: brandDetails.address,
+        company_name_position: companyNamePosition,
+        company_phone_position: companyPhonePosition,
+        company_website_position: companyWebsitePosition,
+        company_address_position: companyAddressPosition,
+        logo_position: logoPosition,
         af_watermark: isFreeAccount,
         reserve_second_corner: isFreeAccount,
         custom_instruction: customInstruction,
@@ -1809,50 +1842,87 @@ export default function ProductographyPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className={`flex items-center gap-2 text-xs font-bold ${muted}`}>
-                      <input type="checkbox" checked={useCompanyLogo} onChange={(e) => setUseCompanyLogo(e.target.checked)} />
-                      Use logo on output
-                    </label>
+                    <div className="flex items-center justify-between gap-2">
+                      <label className={`flex items-center gap-2 text-xs font-bold ${muted}`}>
+                        <input type="checkbox" checked={useCompanyLogo} onChange={(e) => setUseCompanyLogo(e.target.checked)} />
+                        Use logo on output
+                      </label>
+                      <select
+                        value={logoPosition}
+                        disabled={!useCompanyLogo}
+                        onChange={(e) => setLogoPosition(e.target.value)}
+                        aria-label="Logo position"
+                        className={`max-w-[130px] rounded-lg border px-2 py-1.5 text-[11px] font-bold outline-none ${darkMode ? "border-white/10 bg-black/30 text-white disabled:text-white/30" : "border-black/10 bg-white text-black disabled:text-black/30"}`}
+                      >
+                        {brandPositions.map(([v, t]) => (
+                          <option key={v} value={v}>{t}</option>
+                        ))}
+                      </select>
+                    </div>
+
                     <input
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
                       placeholder="Company name"
                       className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:border-cyan-400 ${darkMode ? "border-white/10 bg-black/20 text-white" : "border-black/10 bg-white text-black"}`}
                     />
-                    <label className={`flex items-center gap-2 text-xs font-bold ${muted}`}>
-                      <input type="checkbox" checked={useCompanyName} onChange={(e) => setUseCompanyName(e.target.checked)} />
-                      Show company name
-                    </label>
+                    <div className="flex items-center justify-between gap-2">
+                      <label className={`flex items-center gap-2 text-xs font-bold ${muted}`}>
+                        <input type="checkbox" checked={useCompanyName} onChange={(e) => setUseCompanyName(e.target.checked)} />
+                        Show company name
+                      </label>
+                      <select value={companyNamePosition} disabled={!useCompanyName} onChange={(e) => setCompanyNamePosition(e.target.value)} aria-label="Company name position" className={`max-w-[130px] rounded-lg border px-2 py-1.5 text-[11px] font-bold outline-none ${darkMode ? "border-white/10 bg-black/30 text-white disabled:text-white/30" : "border-black/10 bg-white text-black disabled:text-black/30"}`}>
+                        {brandPositions.map(([v, t]) => (<option key={v} value={v}>{t}</option>))}
+                      </select>
+                    </div>
+
                     <input
                       value={companyWebsite}
                       onChange={(e) => setCompanyWebsite(e.target.value)}
                       placeholder="Website"
                       className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:border-cyan-400 ${darkMode ? "border-white/10 bg-black/20 text-white" : "border-black/10 bg-white text-black"}`}
                     />
-                    <label className={`flex items-center gap-2 text-xs font-bold ${muted}`}>
-                      <input type="checkbox" checked={useCompanyWebsite} onChange={(e) => setUseCompanyWebsite(e.target.checked)} />
-                      Show website
-                    </label>
+                    <div className="flex items-center justify-between gap-2">
+                      <label className={`flex items-center gap-2 text-xs font-bold ${muted}`}>
+                        <input type="checkbox" checked={useCompanyWebsite} onChange={(e) => setUseCompanyWebsite(e.target.checked)} />
+                        Show website
+                      </label>
+                      <select value={companyWebsitePosition} disabled={!useCompanyWebsite} onChange={(e) => setCompanyWebsitePosition(e.target.value)} aria-label="Website position" className={`max-w-[130px] rounded-lg border px-2 py-1.5 text-[11px] font-bold outline-none ${darkMode ? "border-white/10 bg-black/30 text-white disabled:text-white/30" : "border-black/10 bg-white text-black disabled:text-black/30"}`}>
+                        {brandPositions.map(([v, t]) => (<option key={v} value={v}>{t}</option>))}
+                      </select>
+                    </div>
+
                     <input
                       value={companyPhone}
                       onChange={(e) => setCompanyPhone(e.target.value)}
                       placeholder="Phone / WhatsApp"
                       className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:border-cyan-400 ${darkMode ? "border-white/10 bg-black/20 text-white" : "border-black/10 bg-white text-black"}`}
                     />
-                    <label className={`flex items-center gap-2 text-xs font-bold ${muted}`}>
-                      <input type="checkbox" checked={useCompanyPhone} onChange={(e) => setUseCompanyPhone(e.target.checked)} />
-                      Show phone
-                    </label>
+                    <div className="flex items-center justify-between gap-2">
+                      <label className={`flex items-center gap-2 text-xs font-bold ${muted}`}>
+                        <input type="checkbox" checked={useCompanyPhone} onChange={(e) => setUseCompanyPhone(e.target.checked)} />
+                        Show phone
+                      </label>
+                      <select value={companyPhonePosition} disabled={!useCompanyPhone} onChange={(e) => setCompanyPhonePosition(e.target.value)} aria-label="Phone position" className={`max-w-[130px] rounded-lg border px-2 py-1.5 text-[11px] font-bold outline-none ${darkMode ? "border-white/10 bg-black/30 text-white disabled:text-white/30" : "border-black/10 bg-white text-black disabled:text-black/30"}`}>
+                        {brandPositions.map(([v, t]) => (<option key={v} value={v}>{t}</option>))}
+                      </select>
+                    </div>
+
                     <input
                       value={companyAddress}
                       onChange={(e) => setCompanyAddress(e.target.value)}
                       placeholder="Address (optional)"
                       className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:border-cyan-400 ${darkMode ? "border-white/10 bg-black/20 text-white" : "border-black/10 bg-white text-black"}`}
                     />
-                    <label className={`flex items-center gap-2 text-xs font-bold ${muted}`}>
-                      <input type="checkbox" checked={useCompanyAddress} onChange={(e) => setUseCompanyAddress(e.target.checked)} />
-                      Show address
-                    </label>
+                    <div className="flex items-center justify-between gap-2">
+                      <label className={`flex items-center gap-2 text-xs font-bold ${muted}`}>
+                        <input type="checkbox" checked={useCompanyAddress} onChange={(e) => setUseCompanyAddress(e.target.checked)} />
+                        Show address
+                      </label>
+                      <select value={companyAddressPosition} disabled={!useCompanyAddress} onChange={(e) => setCompanyAddressPosition(e.target.value)} aria-label="Address position" className={`max-w-[130px] rounded-lg border px-2 py-1.5 text-[11px] font-bold outline-none ${darkMode ? "border-white/10 bg-black/30 text-white disabled:text-white/30" : "border-black/10 bg-white text-black disabled:text-black/30"}`}>
+                        {brandPositions.map(([v, t]) => (<option key={v} value={v}>{t}</option>))}
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -40,16 +40,14 @@ export default function Navbar() {
   const navLinks = [
     { label: "Home", href: "/" },
     { label: "Gallery", href: "/gallery" },
-    { label: "Influencer Hub", href: "/influencer-hub" },
     { label: "Tutorials", href: "/tutorials" },
     { label: "Pricing", href: "/pricing" },
-    { label: "About", href: "/about" },
   ];
 
   const careerLinks = [
     { label: "🏠 Careers Home",         href: "/careers",              desc: "Open roles & salary info" },
     { label: "📝 Apply Now",             href: "/careers/apply",        desc: "Submit your application" },
-    { label: "🌟 Influencer Programme",  href: "/careers/influencer",   desc: "Earn 10% commission as a creator" },
+    { label: "🌟 Influencer Programme",  href: "/influencer-hub",       desc: "Earn 10% commission as a creator" },
     { label: "📊 Referral Tracker",      href: "/careers/referral",     desc: "Track your earnings" },
   ];
   const [showProfile, setShowProfile] = useState(false);
