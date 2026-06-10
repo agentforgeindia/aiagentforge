@@ -8,6 +8,7 @@ interface Props {
   agent?: string;
   onClose: () => void;
   onCreditsAwarded: (credits: number) => void;
+  onNeverAskAgain?: () => void;
 }
 
 export default function RatingFeedbackModal({
@@ -15,6 +16,7 @@ export default function RatingFeedbackModal({
   agent,
   onClose,
   onCreditsAwarded,
+  onNeverAskAgain,
 }: Props) {
   const [rating, setRating] = useState(0);
   const [hovered, setHovered] = useState(0);
@@ -167,6 +169,15 @@ export default function RatingFeedbackModal({
             {submitting ? "Saving..." : "Submit & Kamao 🎉"}
           </button>
         </div>
+
+        {onNeverAskAgain && (
+          <button
+            onClick={onNeverAskAgain}
+            className="mt-3 w-full text-center text-[11px] font-medium text-gray-400 underline-offset-2 hover:text-gray-600 hover:underline dark:hover:text-gray-300"
+          >
+            Never ask again
+          </button>
+        )}
       </div>
     </div>
   );

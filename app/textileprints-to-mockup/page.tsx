@@ -848,10 +848,10 @@ export default function Home() {
   const [accessories, setAccessories] = useState<string[]>(["None"]);
   const [outputSize, setOutputSize] = useState("1080x1080");
   const [quality, setQuality] = useState("Premium");
-  // Delivery format: individual images vs a single catalogue PDF.
-  const [deliveryMode, setDeliveryMode] = useState<"images" | "catalogue">(
-    "images",
-  );
+  // Logo overlay corner (same position options as the branding fields).
+  const [logoPosition, setLogoPosition] = useState("top-right");
+  // Full-screen output popup visibility.
+  const [resultModalOpen, setResultModalOpen] = useState(false);
   const [customInstruction, setCustomInstruction] = useState("");
 
   const [customModelType, setCustomModelType] = useState("");
@@ -1588,9 +1588,17 @@ export default function Home() {
       // 1. Base output
       ctx.drawImage(baseImg, 0, 0);
 
-      // 2. Company logo — top-right, 14% width
+      // 2. Company logo — user-chosen corner, 7% width
       if (companyLogoImg) {
-        drawLogoInCorner(ctx, canvas.width, canvas.height, companyLogoImg, "top-right", 0.07, 0.95);
+        drawLogoInCorner(
+          ctx,
+          canvas.width,
+          canvas.height,
+          companyLogoImg,
+          logoPosition as "top-right" | "bottom-right" | "top-left" | "bottom-left",
+          0.07,
+          0.95,
+        );
       }
 
       // 3. AF logo — bottom-right, 10% width, slightly translucent
@@ -2117,9 +2125,11 @@ export default function Home() {
     );
     setActiveId(item.id);
 
-    // Show rating/feedback modal after generation completes
+    // Rating is asked AFTER the user downloads — not now. We only
+    // remember which generation the rating will be tied to.
     setRatingGenerationId(generationId);
-    setShowRatingModal(true);
+    // Pop the full-screen output viewer.
+    setResultModalOpen(true);
   };
 
   const hasSavedPhoneNumber = (profileData: any) => {
@@ -2306,9 +2316,21 @@ export default function Home() {
     ? `https://wa.me/?text=${encodeURIComponent(`Generated with AgentForge\n${previewResult}`)}`
     : "#";
 
-  const requestDownload = () => {
-    if (!reviewedResult) { setDownloadAfterReview(true); setShowRatingModal(true); return; }
-    handleDownloadResult();
+  const RATING_NEVER_KEY = "textile_rating_never_ask";
+  const maybeAskRating = () => {
+    if (reviewedResult) return;
+    if (
+      typeof window !== "undefined" &&
+      localStorage.getItem(RATING_NEVER_KEY) === "1"
+    )
+      return;
+    setShowRatingModal(true);
+  };
+
+  // Download first, then ask for a rating (once).
+  const requestDownload = async () => {
+    await handleDownloadResult();
+    maybeAskRating();
   };
 
   const handleDownloadResult = async () => {
@@ -2352,6 +2374,7 @@ export default function Home() {
     const url = URL.createObjectURL(blob);
     const w = window.open(url, "_blank");
     if (w) { setTimeout(() => { w.print(); setTimeout(() => URL.revokeObjectURL(url), 3000); }, 600); }
+    maybeAskRating();
   };
 
   const pageBg = darkMode
@@ -3011,7 +3034,7 @@ export default function Home() {
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-bold">Logo on output</p>
                         <p className={`text-[11px] ${muted}`}>
-                          {companyLogoUrl ? "Uploaded — appears top-right of generated image" : "Optional. Will overlay top-right corner."}
+                          {companyLogoUrl ? "Uploaded — choose the corner below" : "Optional. Choose the corner below."}
                         </p>
                       </div>
                       {companyLogoUrl && (
@@ -3028,15 +3051,35 @@ export default function Home() {
                       )}
                     </div>
 
-                    <label className={`mb-3 flex items-center gap-2 text-xs font-bold ${muted}`}>
-                      <input
-                        type="checkbox"
-                        checked={useCompanyLogo}
-                        disabled={!companyLogoUrl}
-                        onChange={(e) => setUseCompanyLogo(e.target.checked)}
-                      />
-                      Use logo on output
-                    </label>
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <label className={`flex items-center gap-2 text-xs font-bold ${muted}`}>
+                        <input
+                          type="checkbox"
+                          checked={useCompanyLogo}
+                          disabled={!companyLogoUrl}
+                          onChange={(e) => setUseCompanyLogo(e.target.checked)}
+                        />
+                        Use logo on output
+                      </label>
+
+                      <select
+                        value={logoPosition}
+                        disabled={!useCompanyLogo || !companyLogoUrl}
+                        onChange={(e) => setLogoPosition(e.target.value)}
+                        aria-label="Logo position"
+                        className={`max-w-[150px] rounded-xl border px-2 py-1.5 text-[11px] font-bold outline-none ${
+                          darkMode
+                            ? "border-white/10 bg-black/30 text-white disabled:text-white/30"
+                            : "border-black/10 bg-white text-black disabled:text-black/30"
+                        }`}
+                      >
+                        {brandPositions.map(([value, title]) => (
+                          <option key={value} value={value}>
+                            {title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
                     {/* Merged: each field has its input + inline "Show" checkbox + position select */}
                     <div className="space-y-4">
@@ -3558,36 +3601,6 @@ export default function Home() {
                         </div>
                       </div>
 
-                      <div className="mt-5">
-                        <p className="text-xs font-black uppercase tracking-widest text-slate-400">
-                          Delivery Format
-                        </p>
-                        <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4">
-                          {[
-                            { key: "images", title: "Individual Images" },
-                            { key: "catalogue", title: "Catalogue (PDF)" },
-                          ].map((opt) => (
-                            <OptionCard
-                              key={opt.key}
-                              title={opt.title}
-                              active={deliveryMode === opt.key}
-                              onClick={() =>
-                                setDeliveryMode(
-                                  opt.key as "images" | "catalogue",
-                                )
-                              }
-                              darkMode={darkMode}
-                            />
-                          ))}
-                        </div>
-                        {deliveryMode === "catalogue" && (
-                          <p className={`mt-2 text-xs ${muted}`}>
-                            Catalogue mode: all generated designs come as one PDF
-                            — only the catalogue PDF will be available to
-                            download.
-                          </p>
-                        )}
-                      </div>
                     </section>
 
                     <div className="pt-2">
@@ -3620,66 +3633,27 @@ export default function Home() {
                         )}
                       </button>
                     </div>
-                    {showResult && (
+                    {showResult && resultModalOpen && (
                       <div
                         ref={resultRef}
-                        className={`mt-6 overflow-hidden rounded-[1.5rem] border shadow-2xl backdrop-blur-xl sm:rounded-[2.5rem] ${card}`}
+                        className="fixed inset-0 z-[900] flex items-start justify-center overflow-y-auto bg-black/80 p-3 backdrop-blur-sm sm:p-6"
                       >
-                        <div className="flex flex-col">
+                        <div className={`relative my-auto w-full max-w-xl overflow-hidden rounded-[1.5rem] border shadow-2xl sm:rounded-[2.5rem] ${card}`}>
+                          <button
+                            type="button"
+                            onClick={() => setResultModalOpen(false)}
+                            aria-label="Close"
+                            className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-xl leading-none text-white transition hover:bg-black/60"
+                          >
+                            ✕
+                          </button>
+
                           <div className="bg-black/5 p-3 sm:p-5">
-                            {previewResult ? (
-                              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                <div className="text-center">
-                                  {previewImage ? (
-                                    <img src={previewImage} alt="Uploaded textile design" className="mx-auto max-h-[260px] w-full rounded-2xl object-cover shadow-lg sm:max-h-[360px]" />
-                                  ) : (
-                                    <div className={`flex h-[200px] w-full items-center justify-center rounded-2xl border-2 border-dashed ${darkMode ? "border-white/20" : "border-black/15"}`}><span className="text-3xl opacity-30">📷</span></div>
-                                  )}
-                                  <p className={`mt-2 text-xs font-bold ${muted}`}>Your Design</p>
-                                </div>
-                                <div className="text-center">
-                                  <img src={previewResult} alt="Final AI textile mockup generated using AgentForge" className="mx-auto max-h-[360px] w-full rounded-2xl object-cover shadow-2xl shadow-cyan-400/20 transition hover:scale-[1.02]" />
-                                  <p className={`mt-2 text-xs font-bold ${muted}`}>AI Mockup</p>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="flex min-h-[400px] w-full flex-col items-center justify-center gap-5 p-5 text-center">
-                                {/* Animated logo */}
-                                <div className="relative h-20 w-20">
-                                  <div className="absolute inset-0 animate-ping rounded-full bg-cyan-400 opacity-30" />
-                                  <div className="absolute -inset-2 animate-pulse rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 opacity-40 blur-2xl" />
-                                  <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white shadow-2xl ring-4 ring-cyan-400/60">
-                                    <img
-                                      src="/af-logo.png"
-                                      alt="AgentForge"
-                                      className="h-full w-full object-cover"
-                                    />
-                                  </div>
-                                </div>
-
-                                <div>
-                                  <h4 className="text-xl font-black sm:text-2xl">
-                                    <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">
-                                      AI is crafting your mockup
-                                    </span>
-                                  </h4>
-                                  <p className={`mt-1 text-xs ${muted}`}>
-                                    Please don&apos;t refresh — your premium visual is on the way.
-                                  </p>
-                                </div>
-
-                                <div className={`w-full max-w-sm rounded-2xl border p-4 text-left shadow-inner ${
-                                  darkMode ? "border-white/10 bg-white/[0.04]" : "border-cyan-200/70 bg-white/80"
-                                }`}>
-                                  <AIThinkingSteps
-                                    steps={TEXTILE_THINKING_STEPS}
-                                    intervalMs={2200}
-                                    darkMode={darkMode}
-                                    title="Generation pipeline"
-                                  />
-                                </div>
-                              </div>
-                            )}
+                            <img
+                              src={previewResult || ""}
+                              alt="Final AI textile mockup generated using AgentForge"
+                              className="mx-auto max-h-[55vh] w-auto rounded-2xl object-contain shadow-2xl shadow-cyan-400/20"
+                            />
                           </div>
 
                           <div className="p-4 sm:p-6 lg:p-8">
@@ -3699,50 +3673,37 @@ export default function Home() {
                               </p>
                             </div>
 
-                            {deliveryMode === "catalogue" ? (
+                            <div className="grid gap-3 sm:grid-cols-2">
                               <button
-                                onClick={handleDownloadPDF}
-                                className="flex w-full items-center justify-center gap-3 rounded-2xl bg-emerald-500 px-5 py-4 font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-[1.02] active:scale-95"
+                                onClick={requestDownload}
+                                className="flex items-center justify-center gap-3 rounded-2xl bg-emerald-500 px-5 py-3 font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-105 active:scale-95"
                               >
-                                📄 Download Catalogue (PDF){items.filter(it => it.status === "done").length > 1 ? ` — ${items.filter(it => it.status === "done").length} pages` : ""}
+                                <span>Download HD</span>
                               </button>
-                            ) : (
-                              <>
-                                <div className="grid gap-3 sm:grid-cols-2">
-                                  <button
-                                    onClick={requestDownload}
-                                    className="flex items-center justify-center gap-3 rounded-2xl bg-emerald-500 px-5 py-3 font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-105 active:scale-95"
-                                  >
-                                    <span>Download HD</span>
-                                  </button>
 
-                                  <button
-                                    onClick={handleNativeShare}
-                                    className="flex items-center justify-center gap-3 rounded-2xl bg-blue-500 px-5 py-3 font-black text-white shadow-lg shadow-blue-500/20 transition hover:scale-105 active:scale-95"
-                                  >
-                                    <span>Share Now</span>
-                                  </button>
-                                </div>
-
-                                <button
-                                  onClick={handleDownloadPDF}
-                                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-300/50 bg-rose-50 px-5 py-2.5 text-sm font-black text-rose-700 shadow transition hover:scale-[1.02] dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-300"
-                                >
-                                  📄 Download as PDF {items.filter(it => it.status === "done").length > 1 ? `(${items.filter(it => it.status === "done").length} pages)` : ""}
-                                </button>
-                              </>
-                            )}
-
-                            {deliveryMode !== "catalogue" && (
-                              <a
-                                href={whatsappLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-3 flex w-full items-center justify-center gap-3 rounded-2xl bg-[#25D366] px-5 py-3 font-black text-white shadow-lg shadow-green-500/20 transition hover:scale-105 active:scale-95"
+                              <button
+                                onClick={handleNativeShare}
+                                className="flex items-center justify-center gap-3 rounded-2xl bg-blue-500 px-5 py-3 font-black text-white shadow-lg shadow-blue-500/20 transition hover:scale-105 active:scale-95"
                               >
-                                <span>Share on WhatsApp</span>
-                              </a>
-                            )}
+                                <span>Share Now</span>
+                              </button>
+                            </div>
+
+                            <button
+                              onClick={handleDownloadPDF}
+                              className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-300/50 bg-rose-50 px-5 py-2.5 text-sm font-black text-rose-700 shadow transition hover:scale-[1.02] dark:border-rose-400/20 dark:bg-rose-500/10 dark:text-rose-300"
+                            >
+                              📄 Download as PDF {items.filter(it => it.status === "done").length > 1 ? `(${items.filter(it => it.status === "done").length} pages)` : ""}
+                            </button>
+
+                            <a
+                              href={whatsappLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-3 flex w-full items-center justify-center gap-3 rounded-2xl bg-[#25D366] px-5 py-3 font-black text-white shadow-lg shadow-green-500/20 transition hover:scale-105 active:scale-95"
+                            >
+                              <span>Share on WhatsApp</span>
+                            </a>
 
                             <Link
                               href="/my-creations"
@@ -3954,7 +3915,12 @@ export default function Home() {
           onClose={() => {
             setShowRatingModal(false);
             setReviewedResult(true);
-            if (downloadAfterReview) { setDownloadAfterReview(false); handleDownloadResult(); }
+          }}
+          onNeverAskAgain={() => {
+            if (typeof window !== "undefined")
+              localStorage.setItem(RATING_NEVER_KEY, "1");
+            setShowRatingModal(false);
+            setReviewedResult(true);
           }}
           onCreditsAwarded={(credits) => {
             setShowRatingModal(false);
@@ -3962,7 +3928,6 @@ export default function Home() {
             setCongratsCredits(credits);
             setShowCongratsPopup(true);
             refreshProfile();
-            if (downloadAfterReview) { setDownloadAfterReview(false); handleDownloadResult(); }
           }}
         />
       )}
