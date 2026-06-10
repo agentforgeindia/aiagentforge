@@ -282,6 +282,26 @@ const isFreeAccountFromProfile = (profile: any): boolean => {
   return !paid;
 };
 
+// Empire (or Founder/Unlimited) — gets branding overlays free.
+const isEmpireFromProfile = (profile: any): boolean => {
+  const planText = String(
+    profile?.plan ||
+      profile?.package ||
+      profile?.current_plan ||
+      profile?.subscription_plan ||
+      profile?.plan_name ||
+      "",
+  ).toLowerCase();
+  return Boolean(
+    profile?.is_empire ||
+      profile?.empire_pack ||
+      profile?.has_empire ||
+      planText.includes("empire") ||
+      planText.includes("founder") ||
+      planText.includes("unlimited"),
+  );
+};
+
 // ============================================================
 // OptionCard — supports SVG file (from /icons/ or /jewellery-icon/)
 // with lucide icon fallback
@@ -568,6 +588,8 @@ export default function ProductographyPage() {
 
   const isFreeAccount = useMemo(() => isFreeAccountFromProfile(profile), [profile]);
   const canBulk = useMemo(() => hasBulkAccess(profile?.plan), [profile]);
+  // Empire users get branding overlays free (same as the Textile page).
+  const isEmpireUser = isEmpireFromProfile(profile);
 
   const requiredCredits = (() => {
     const q = quality.toLowerCase();
@@ -575,11 +597,14 @@ export default function ProductographyPage() {
     let base = 15;
     if (q.includes("ultra")) base += 5;
     if (s === "1080x1920" || s === "1920x1080") base += 2;
-    if (useCompanyLogo && companyLogoUrl) base += 1;
-    if (useCompanyName && companyName.trim()) base += 1;
-    if (useCompanyPhone && companyPhone.trim()) base += 1;
-    if (useCompanyWebsite && companyWebsite.trim()) base += 1;
-    if (useCompanyAddress && companyAddress.trim()) base += 1;
+    // Branding (logo + fields): +1 each — FREE for Empire.
+    if (!isEmpireUser) {
+      if (useCompanyLogo && companyLogoUrl) base += 1;
+      if (useCompanyName && companyName.trim()) base += 1;
+      if (useCompanyPhone && companyPhone.trim()) base += 1;
+      if (useCompanyWebsite && companyWebsite.trim()) base += 1;
+      if (useCompanyAddress && companyAddress.trim()) base += 1;
+    }
     return base;
   })();
 
@@ -769,7 +794,7 @@ export default function ProductographyPage() {
     // Bulk plan check — multiple files require bulk access
     if (files.length > 1 && !canBulk) {
       alert(
-        "Bulk generation is available on Empire / Founder / Unlimited plans. Please upload one product at a time or upgrade.",
+        "Bulk generation is available on Pro and Empire plans. Please upload one product at a time, or upgrade to Pro or Empire.",
       );
       e.target.value = "";
       return;
@@ -1988,7 +2013,7 @@ export default function ProductographyPage() {
                               <Sparkles className="h-5 w-5" />
                               <span>
                                 {readyItems.length > 1 && !canBulk
-                                  ? "Upgrade to Empire Pack for Bulk"
+                                  ? "Upgrade to Pro or Empire for Bulk"
                                   : readyItems.length > 1
                                     ? `Generate ${readyItems.length} Shoots (${totalCreditsNeeded} Credits)`
                                     : `Start Product Shoot (${totalCreditsNeeded} Credits)`}

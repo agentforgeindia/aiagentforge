@@ -117,6 +117,30 @@ const isEmpireProfile = (profile: any) => {
   );
 };
 
+// Bulk generation is available on Pro + Empire (and Founder/Unlimited).
+// (Branding-free stays Empire-only via isEmpireProfile above.)
+const isBulkProfile = (profile: any) => {
+  const planText = String(
+    profile?.plan ||
+      profile?.package ||
+      profile?.current_plan ||
+      profile?.subscription_plan ||
+      profile?.plan_name ||
+      "",
+  ).toLowerCase();
+
+  return Boolean(
+    profile?.is_empire ||
+      profile?.empire_pack ||
+      profile?.has_empire ||
+      planText.includes("empire") ||
+      planText.includes("founder") ||
+      planText.includes("unlimited") ||
+      planText.includes("pro") ||
+      planText.includes("creator"),
+  );
+};
+
 type IconName =
   | "pattern"
   | "mensWear"
@@ -817,6 +841,7 @@ export default function Home() {
 
   const [profile, setProfile] = useState<any>(null);
   const isEmpireUser = isEmpireProfile(profile);
+  const isBulkUser = isBulkProfile(profile);
 
   const [items, setItems] = useState<GenItem[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -1742,11 +1767,13 @@ export default function Home() {
     const canUseBulk =
       planText.includes("empire") ||
       planText.includes("founder") ||
-      planText.includes("unlimited");
+      planText.includes("unlimited") ||
+      planText.includes("pro") ||
+      planText.includes("creator");
 
     if (files.length > 1 && !canUseBulk) {
       alert(
-        "Bulk generation is available only with Empire, Founder Unlimited, or Unlimited plans. Please upload one design at a time or upgrade for bulk creation.",
+        "Bulk generation is available on Pro and Empire plans. Please upload one design at a time, or upgrade to Pro or Empire for bulk creation.",
       );
 
       e.target.value = "";
@@ -2676,19 +2703,19 @@ export default function Home() {
             <div className="mb-5 sm:mb-6">
               <h2 className="text-2xl font-black sm:text-3xl">Create Your AI Textile Mockup</h2>
               <p className={`mt-2 text-sm sm:text-base ${muted}`}>
-                Upload one textile design on normal packs. Bulk creation is
-                unlocked for Empire Pack users only.
+                Upload one textile design on the Starter pack. Bulk creation is
+                unlocked for Pro &amp; Empire pack users.
               </p>
               <div
                 className={`mt-4 inline-flex rounded-full px-4 py-2 text-xs font-black ${
-                  isEmpireUser
+                  isBulkUser
                     ? "border border-emerald-400/30 bg-emerald-400/10 text-emerald-600"
                     : "border border-amber-400/30 bg-amber-400/10 text-amber-600"
                 }`}
               >
-                {isEmpireUser
-                  ? "Empire Pack Active — Bulk Unlocked"
-                  : "Bulk Locked — Upgrade to Empire Pack"}
+                {isBulkUser
+                  ? "Bulk Unlocked — Pro / Empire Pack Active"
+                  : "Bulk Locked — Upgrade to Pro or Empire"}
               </div>
             </div>
 
@@ -2718,12 +2745,12 @@ export default function Home() {
                         <UploadCloud className="h-8 w-8" />
                       </div>
                       <p className="text-lg font-semibold">
-                        {isEmpireUser ? "Upload Textile Design(s)" : "Upload Textile Design"}
+                        {isBulkUser ? "Upload Textile Design(s)" : "Upload Textile Design"}
                       </p>
                       <p className={`mt-2 text-sm ${muted}`}>
-                        {isEmpireUser
+                        {isBulkUser
                           ? "Select one or multiple files — PNG, JPG, JPEG, WEBP"
-                          : "Normal packs support one design at a time — upgrade to Empire Pack for bulk creation"}
+                          : "Starter pack supports one design at a time — upgrade to Pro or Empire for bulk creation"}
                       </p>
                       <p className="mt-2 text-xs font-bold text-cyan-600">
                         Design code on the image is auto-detected via OCR
@@ -2733,7 +2760,7 @@ export default function Home() {
                   <input
                     type="file"
                     accept="image/*"
-                    multiple={isEmpireUser}
+                    multiple={isBulkUser}
                     onChange={handleUpload}
                     className="hidden"
                   />
@@ -3623,8 +3650,8 @@ export default function Home() {
                           <>
                             <Sparkles className="h-5 w-5" />
                             <span>
-                              {readyItems.length > 1 && !isEmpireUser
-                                ? "Upgrade to Empire Pack for Bulk"
+                              {readyItems.length > 1 && !isBulkUser
+                                ? "Upgrade to Pro or Empire for Bulk"
                                 : readyItems.length > 1
                                   ? `Generate ${readyItems.length} Mockups (${totalCreditsNeeded} Credits)`
                                   : `Start Royal Generation (${requiredCredits} Credits)`}

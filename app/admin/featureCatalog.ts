@@ -17,6 +17,7 @@ export const FEATURE_CATALOG: Feature[] = [
   // Command
   { group: "Command", href: "/admin/command",   label: "Command Center", perm: "dashboard.view" },
   { group: "Command", href: "/admin/dashboard", label: "War Room",       perm: "dashboard.view" },
+  { group: "Command", href: "/admin/announcements", label: "Announcements", perm: "customers.view" },
 
   // Sales & CRM
   { group: "Sales & CRM", href: "/admin/customers",      label: "Customers",         perm: "customers.view" },

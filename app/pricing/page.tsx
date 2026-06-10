@@ -81,6 +81,7 @@ const plans: Plan[] = [
       "Premium shoot styles included",
       "Regenerate variations for better results",
       "Multiple model generation",
+      "Bulk generation — multiple designs at once",
       "Mobile story & catalogue-ready outputs",
       "Custom branding on outputs",
       "Advanced article presentation",
@@ -101,7 +102,6 @@ const plans: Plan[] = [
     features: [
       "Everything included in Pro Creator",
       "Free branding on all outputs (logo, name, contact, website)",
-      "Exclusive bulk generation (multiple designs at once)",
       "Bulk production workflow for factories",
       "High-volume catalogue generation",
       "Priority generation queue",

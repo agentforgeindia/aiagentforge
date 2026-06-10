@@ -9,6 +9,7 @@ import { useAuth } from "./AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { BadgeCheck } from "lucide-react";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
+import NotificationBell from "./NotificationBell";
 
 const agents = [
   { title: "TextilePrints to Mockup AI", desc: "Textile design → fashion mockup", link: "/textileprints-to-mockup", isNew: true },
@@ -272,6 +273,9 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Notification bell — updates for users */}
+          {isLoggedIn && <NotificationBell />}
+
           {/* Credits badge — visible only when logged in (sm+) */}
           {isLoggedIn && (
             <Link

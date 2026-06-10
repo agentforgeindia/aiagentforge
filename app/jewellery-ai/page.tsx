@@ -646,6 +646,26 @@ const isFreeAccountFromProfile = (profile: any): boolean => {
   return !paid;
 };
 
+// Empire (or Founder/Unlimited) — gets branding overlays free.
+const isEmpireFromProfile = (profile: any): boolean => {
+  const planText = String(
+    profile?.plan ||
+      profile?.package ||
+      profile?.current_plan ||
+      profile?.subscription_plan ||
+      profile?.plan_name ||
+      "",
+  ).toLowerCase();
+  return Boolean(
+    profile?.is_empire ||
+      profile?.empire_pack ||
+      profile?.has_empire ||
+      planText.includes("empire") ||
+      planText.includes("founder") ||
+      planText.includes("unlimited"),
+  );
+};
+
 // ============================================================
 // HERO PRODUCT SLIDER DATA — Jewellery showcase
 // ============================================================
@@ -978,12 +998,14 @@ export default function JewelleryAIPage() {
 
   const credits = useMemo(() => {
     const base = quality === "Ultra HD" ? 20 : outputSize.includes("Mobile") ? 17 : 15;
-    const brandingCredits =
-      (useCompanyLogo && companyLogoPreview ? 1 : 0) +
-      (useCompanyName && companyName.trim() ? 1 : 0) +
-      (useCompanyWebsite && companyWebsite.trim() ? 1 : 0) +
-      (useCompanyPhone && companyPhone.trim() ? 1 : 0) +
-      (useCompanyAddress && companyAddress.trim() ? 1 : 0);
+    // Branding overlays: +1 each — FREE for Empire users.
+    const brandingCredits = isEmpireFromProfile(profile)
+      ? 0
+      : (useCompanyLogo && companyLogoPreview ? 1 : 0) +
+        (useCompanyName && companyName.trim() ? 1 : 0) +
+        (useCompanyWebsite && companyWebsite.trim() ? 1 : 0) +
+        (useCompanyPhone && companyPhone.trim() ? 1 : 0) +
+        (useCompanyAddress && companyAddress.trim() ? 1 : 0);
 
     const perImageCredits = base + brandingCredits;
     return generationMode === "single" ? perImageCredits : Math.max(uploads.length, 1) * perImageCredits;
@@ -1002,6 +1024,7 @@ export default function JewelleryAIPage() {
     companyPhone,
     useCompanyAddress,
     companyAddress,
+    profile,
   ]);
 
   const previewImage = uploads[0]?.preview || null;
@@ -2328,7 +2351,7 @@ if (!response.ok) {
                 Same practical flow as the Textile page — upload on the left, step-wise controls on the right, and final summary.
               </p>
               <div className="mt-4 inline-flex rounded-full border border-amber-400/30 bg-amber-400/10 px-4 py-2 text-xs font-black text-amber-600">
-                Bulk Locked — Upgrade to Empire Pack
+                Bulk creation — available on Pro & Empire packs
               </div>
             </div>
 
