@@ -916,10 +916,94 @@ export default function ProductographyPage() {
     ctx.restore();
   };
 
+  // ── Canvas text overlay (article + branding) — fixed small size ──
+  type TextOverlayData = {
+    article?: string;
+    articlePosition?: string;
+    lines: { text: string; position: string }[];
+    color: "white" | "black";
+  };
+
+  const roundRectPath = (
+    ctx: CanvasRenderingContext2D,
+    x: number, y: number, w: number, h: number, r: number,
+  ) => {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  };
+
+  const hasOverlayText = (o?: TextOverlayData) =>
+    !!(o && (o.article?.trim() || o.lines.some((l) => l.text?.trim())));
+
+  const drawTextOverlay = (
+    ctx: CanvasRenderingContext2D,
+    W: number,
+    H: number,
+    overlay: TextOverlayData,
+  ) => {
+    const fontPx = Math.max(13, Math.round(H * 0.016));
+    const inset = Math.round(W * 0.03);
+    const padX = Math.round(fontPx * 0.6);
+    const padY = Math.round(fontPx * 0.4);
+    const gap = Math.round(fontPx * 0.5);
+    const radius = Math.round(fontPx * 0.4);
+    const lineH = fontPx + padY * 2;
+    const normCorner = (p?: string) => {
+      const k = (p || "bottom-left").toLowerCase();
+      const right = k.includes("right");
+      const top = k.includes("top");
+      return `${top ? "top" : "bottom"}-${right ? "right" : "left"}`;
+    };
+    const buckets: Record<string, string[]> = {
+      "top-left": [], "top-right": [], "bottom-left": [], "bottom-right": [],
+    };
+    if (overlay.article?.trim())
+      buckets[normCorner(overlay.articlePosition)].push(overlay.article.trim());
+    for (const l of overlay.lines)
+      if (l.text?.trim()) buckets[normCorner(l.position)].push(l.text.trim());
+
+    ctx.save();
+    ctx.font = `600 ${fontPx}px Inter, Arial, sans-serif`;
+    ctx.textBaseline = "top";
+    const textColor = overlay.color === "black" ? "#161616" : "#ffffff";
+    const pillColor =
+      overlay.color === "black" ? "rgba(255,255,255,0.85)" : "rgba(15,15,15,0.55)";
+    for (const corner of Object.keys(buckets)) {
+      const lines = buckets[corner];
+      if (!lines.length) continue;
+      const isRight = corner.includes("right");
+      const isBottom = corner.includes("bottom");
+      const blockH = lines.length * lineH + (lines.length - 1) * gap;
+      let y = isBottom ? H - inset - blockH : inset;
+      for (const text of lines) {
+        const tw = ctx.measureText(text).width;
+        const pillW = tw + padX * 2;
+        const x = isRight ? W - inset - pillW : inset;
+        ctx.fillStyle = pillColor;
+        roundRectPath(ctx, x, y, pillW, lineH, radius);
+        ctx.fill();
+        ctx.fillStyle = textColor;
+        ctx.fillText(text, x + padX, y + padY);
+        y += lineH + gap;
+      }
+    }
+    ctx.restore();
+  };
+
   const compositeLogoOnImage = async (
     baseImageUrl: string,
     cLogoUrl: string | null,
     showAfWatermark: boolean,
+    textOverlay?: TextOverlayData,
   ): Promise<Blob | null> => {
     try {
       const baseImg = await loadImageAsElement(baseImageUrl);
@@ -938,7 +1022,8 @@ export default function ProductographyPage() {
           : Promise.resolve(null),
       ]);
 
-      if (!companyLogoImg && !afLogoImg) return null;
+      if (!companyLogoImg && !afLogoImg && !hasOverlayText(textOverlay))
+        return null;
 
       const canvas = document.createElement("canvas");
       canvas.width = baseImg.naturalWidth;
@@ -961,6 +1046,10 @@ export default function ProductographyPage() {
       }
       if (afLogoImg) {
         drawLogoInCorner(ctx, canvas.width, canvas.height, afLogoImg, "bottom-right", 0.10, 0.88);
+      }
+
+      if (hasOverlayText(textOverlay)) {
+        drawTextOverlay(ctx, canvas.width, canvas.height, textOverlay!);
       }
 
       return await new Promise<Blob | null>((resolve) => {
@@ -990,20 +1079,24 @@ export default function ProductographyPage() {
       companyLogoUrl?: string;
       afWatermark?: boolean;
       generationId: string;
+      textOverlay?: TextOverlayData;
     },
   ): Promise<string> => {
-    const { companyLogoUrl: cLogo, afWatermark, generationId } = options;
+    const { companyLogoUrl: cLogo, afWatermark, generationId, textOverlay } =
+      options;
 
     const safeCompanyLogo =
       cLogo && !cLogo.startsWith("data:") && !cLogo.startsWith("blob:") ? cLogo : null;
 
-    if (!safeCompanyLogo && !afWatermark) return rawOutputUrl;
+    if (!safeCompanyLogo && !afWatermark && !hasOverlayText(textOverlay))
+      return rawOutputUrl;
 
     try {
       const compositeBlob = await compositeLogoOnImage(
         rawOutputUrl,
         safeCompanyLogo,
         Boolean(afWatermark),
+        textOverlay,
       );
       if (!compositeBlob) return rawOutputUrl;
 
@@ -1187,6 +1280,17 @@ export default function ProductographyPage() {
           companyLogoUrl: useCompanyLogo ? companyLogoUrl : undefined,
           afWatermark: isFreeAccount,
           generationId,
+          textOverlay: {
+            article: productTextEnabled ? item.productCode?.trim() || "" : "",
+            articlePosition: "top-left",
+            lines: [
+              { text: useCompanyName ? companyName.trim() : "", position: companyNamePosition },
+              { text: useCompanyPhone ? companyPhone.trim() : "", position: companyPhonePosition },
+              { text: useCompanyWebsite ? companyWebsite.trim() : "", position: companyWebsitePosition },
+              { text: useCompanyAddress ? companyAddress.trim() : "", position: companyAddressPosition },
+            ],
+            color: "white",
+          },
         })
       : rawFinalImage;
 

@@ -1326,11 +1326,95 @@ const drawLogoInCorner = (
   ctx.restore();
 };
 
+// ── Canvas text overlay (branding) — fixed small size ──
+type TextOverlayData = {
+  article?: string;
+  articlePosition?: string;
+  lines: { text: string; position: string }[];
+  color: "white" | "black";
+};
+
+const roundRectPath = (
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number, w: number, h: number, r: number,
+) => {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+};
+
+const hasOverlayText = (o?: TextOverlayData) =>
+  !!(o && (o.article?.trim() || o.lines.some((l) => l.text?.trim())));
+
+const drawTextOverlay = (
+  ctx: CanvasRenderingContext2D,
+  W: number,
+  H: number,
+  overlay: TextOverlayData,
+) => {
+  const fontPx = Math.max(13, Math.round(H * 0.016));
+  const inset = Math.round(W * 0.03);
+  const padX = Math.round(fontPx * 0.6);
+  const padY = Math.round(fontPx * 0.4);
+  const gap = Math.round(fontPx * 0.5);
+  const radius = Math.round(fontPx * 0.4);
+  const lineH = fontPx + padY * 2;
+  const normCorner = (p?: string) => {
+    const k = (p || "bottom-left").toLowerCase();
+    const right = k.includes("right");
+    const top = k.includes("top");
+    return `${top ? "top" : "bottom"}-${right ? "right" : "left"}`;
+  };
+  const buckets: Record<string, string[]> = {
+    "top-left": [], "top-right": [], "bottom-left": [], "bottom-right": [],
+  };
+  if (overlay.article?.trim())
+    buckets[normCorner(overlay.articlePosition)].push(overlay.article.trim());
+  for (const l of overlay.lines)
+    if (l.text?.trim()) buckets[normCorner(l.position)].push(l.text.trim());
+
+  ctx.save();
+  ctx.font = `600 ${fontPx}px Inter, Arial, sans-serif`;
+  ctx.textBaseline = "top";
+  const textColor = overlay.color === "black" ? "#161616" : "#ffffff";
+  const pillColor =
+    overlay.color === "black" ? "rgba(255,255,255,0.85)" : "rgba(15,15,15,0.55)";
+  for (const corner of Object.keys(buckets)) {
+    const lines = buckets[corner];
+    if (!lines.length) continue;
+    const isRight = corner.includes("right");
+    const isBottom = corner.includes("bottom");
+    const blockH = lines.length * lineH + (lines.length - 1) * gap;
+    let y = isBottom ? H - inset - blockH : inset;
+    for (const text of lines) {
+      const tw = ctx.measureText(text).width;
+      const pillW = tw + padX * 2;
+      const x = isRight ? W - inset - pillW : inset;
+      ctx.fillStyle = pillColor;
+      roundRectPath(ctx, x, y, pillW, lineH, radius);
+      ctx.fill();
+      ctx.fillStyle = textColor;
+      ctx.fillText(text, x + padX, y + padY);
+      y += lineH + gap;
+    }
+  }
+  ctx.restore();
+};
+
 const compositeLogoOnImage = async (
   baseImageUrl: string,
   companyLogoUrl: string | null,
   showAfWatermark: boolean,
   logoCorner: "top-right" | "bottom-right" | "top-left" | "bottom-left" = "top-right",
+  textOverlay?: TextOverlayData,
 ): Promise<Blob | null> => {
   try {
     const baseImg = await loadImageAsElement(baseImageUrl);
@@ -1352,7 +1436,8 @@ const compositeLogoOnImage = async (
     ]);
 
     // Nothing to overlay → bail
-    if (!companyLogoImg && !afLogoImg) return null;
+    if (!companyLogoImg && !afLogoImg && !hasOverlayText(textOverlay))
+      return null;
 
     const canvas = document.createElement("canvas");
     canvas.width = baseImg.naturalWidth;
@@ -1371,6 +1456,11 @@ const compositeLogoOnImage = async (
     // 3. AF watermark logo — bottom-right, 10% width, slightly translucent
     if (afLogoImg) {
       drawLogoInCorner(ctx, canvas.width, canvas.height, afLogoImg, "bottom-right", 0.10, 0.88);
+    }
+
+    // 4. Branding text overlay (fixed small size)
+    if (hasOverlayText(textOverlay)) {
+      drawTextOverlay(ctx, canvas.width, canvas.height, textOverlay!);
     }
 
     return await new Promise<Blob | null>((resolve) => {
@@ -1401,9 +1491,11 @@ const applyLogoOverlay = async (
     afWatermark?: boolean;
     generationId: string;
     logoPosition?: string;
+    textOverlay?: TextOverlayData;
   },
 ): Promise<string> => {
-  const { companyLogoUrl, afWatermark, generationId, logoPosition } = options;
+  const { companyLogoUrl, afWatermark, generationId, logoPosition, textOverlay } =
+    options;
 
   // Sanitize company logo URL — accept only real http(s) URLs
   const safeCompanyLogo =
@@ -1414,7 +1506,7 @@ const applyLogoOverlay = async (
       : null;
 
   // Nothing to overlay → return raw
-  if (!safeCompanyLogo && !afWatermark) {
+  if (!safeCompanyLogo && !afWatermark && !hasOverlayText(textOverlay)) {
     return rawOutputUrl;
   }
 
@@ -1424,6 +1516,7 @@ const applyLogoOverlay = async (
       safeCompanyLogo,
       Boolean(afWatermark),
       (logoPosition as "top-right" | "bottom-right" | "top-left" | "bottom-left") || "top-right",
+      textOverlay,
     );
     if (!compositeBlob) return rawOutputUrl;
 
@@ -1875,6 +1968,15 @@ if (!response.ok) {
         afWatermark: isFreeAccount,
         generationId,
         logoPosition,
+        textOverlay: {
+          lines: [
+            { text: useCompanyName ? companyName.trim() : "", position: companyNamePosition },
+            { text: useCompanyPhone ? companyPhone.trim() : "", position: companyPhonePosition },
+            { text: useCompanyWebsite ? companyWebsite.trim() : "", position: companyWebsitePosition },
+            { text: useCompanyAddress ? companyAddress.trim() : "", position: companyAddressPosition },
+          ],
+          color: "white",
+        },
       });
 
       track({
@@ -1910,6 +2012,15 @@ if (!response.ok) {
           afWatermark: isFreeAccount,
           generationId,
           logoPosition,
+          textOverlay: {
+            lines: [
+              { text: useCompanyName ? companyName.trim() : "", position: companyNamePosition },
+              { text: useCompanyPhone ? companyPhone.trim() : "", position: companyPhonePosition },
+              { text: useCompanyWebsite ? companyWebsite.trim() : "", position: companyWebsitePosition },
+              { text: useCompanyAddress ? companyAddress.trim() : "", position: companyAddressPosition },
+            ],
+            color: "white",
+          },
         });
         track({
           name: "generation_completed",
