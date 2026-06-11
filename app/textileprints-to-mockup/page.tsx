@@ -1969,19 +1969,9 @@ export default function Home() {
         showFaceExpression
           ? `Model face expression: ${resolvedFaceExpression}`
           : "No face expression needed because no human face/model is selected.",
-        `Article number color must be auto-selected according to final creative contrast.`,
-        selectedBrandDetails.company_name
-          ? `Add company name "${selectedBrandDetails.company_name}" at ${companyNamePosition}.`
-          : "",
-        selectedBrandDetails.phone_number
-          ? `Add phone number "${selectedBrandDetails.phone_number}" at ${companyPhonePosition}.`
-          : "",
-        selectedBrandDetails.website
-          ? `Add website "${selectedBrandDetails.website}" at ${companyWebsitePosition}.`
-          : "",
-        selectedBrandDetails.address
-          ? `Add address "${selectedBrandDetails.address}" at ${companyAddressPosition}.`
-          : "",
+        // Branding + article text is composited on the frontend (canvas).
+        // The AI must NOT render any text — otherwise it doubles.
+        "DO NOT render or add ANY text in the image — no company name, phone number, website, address, article number, code, watermark, label or branding anywhere. Keep all corners clean and completely text-free.",
       ]
         .filter(Boolean)
         .join(" | "),
@@ -2036,25 +2026,26 @@ export default function Home() {
         pose: resolvedPose,
 
         design_number: item.designNumber.trim(),
-        text_on_image: item.designNumber.trim(),
-        article_number: item.designNumber.trim(),
+        // Text is composited on the frontend (canvas) — don't let the AI render it.
+        text_on_image: "",
+        article_number: "",
 
         watermark_position: watermarkPosition,
         article_position: watermarkPosition,
         watermark_color: "auto",
         article_color: "auto",
 
-        company_name: selectedBrandDetails.company_name,
-        company_phone: selectedBrandDetails.phone_number,
-        company_website: selectedBrandDetails.website,
-        company_address: selectedBrandDetails.address,
+        company_name: "",
+        company_phone: "",
+        company_website: "",
+        company_address: "",
 
         company_name_position: companyNamePosition,
         company_phone_position: companyPhonePosition,
         company_website_position: companyWebsitePosition,
         company_address_position: companyAddressPosition,
 
-        brand_details: selectedBrandDetails,
+        brand_details: {},
         custom_instruction: payload.custom_instruction,
       }),
     });

@@ -1797,11 +1797,12 @@ const WEBHOOK_URL =
       required_credits: credits,
       af_watermark: isFreeAccount,
       company_details: {
-        logo_url: logoUrl,
-        company_name: useCompanyName ? companyName.trim() : "",
-        website: useCompanyWebsite ? companyWebsite.trim() : "",
-        phone: useCompanyPhone ? companyPhone.trim() : "",
-        address: useCompanyAddress ? companyAddress.trim() : "",
+        // Branding text is composited on the frontend (canvas) — AI must not render it.
+        logo_url: "",
+        company_name: "",
+        website: "",
+        phone: "",
+        address: "",
         positions: {
           company_name: companyNamePosition,
           phone: companyPhonePosition,
