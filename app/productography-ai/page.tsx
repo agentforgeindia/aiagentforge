@@ -1237,9 +1237,9 @@ export default function ProductographyPage() {
         output_quality: quality,
         required_credits: requiredCredits,
         credits_required: requiredCredits,
-        product_code: item.productCode.trim(),
         // Text/branding is composited on the frontend (canvas) —
         // the AI must NOT render it, otherwise it doubles.
+        product_code: "",
         article_number: "",
         text_on_image: "",
         brand_details: {},

@@ -2025,8 +2025,8 @@ export default function Home() {
         custom_pose: resolvedPose,
         pose: resolvedPose,
 
-        design_number: item.designNumber.trim(),
         // Text is composited on the frontend (canvas) — don't let the AI render it.
+        design_number: "",
         text_on_image: "",
         article_number: "",
 
@@ -3656,25 +3656,26 @@ export default function Home() {
                         ref={resultRef}
                         className="fixed inset-0 z-[900] flex items-start justify-center overflow-y-auto bg-black/80 p-3 backdrop-blur-sm sm:p-6"
                       >
-                        <div className={`relative my-auto w-full max-w-xl overflow-hidden rounded-[1.5rem] border shadow-2xl sm:rounded-[2.5rem] ${card}`}>
+                        <div className={`relative my-auto w-full max-w-5xl overflow-hidden rounded-[1.5rem] border shadow-2xl sm:rounded-[2.5rem] ${card}`}>
                           <button
                             type="button"
                             onClick={() => setResultModalOpen(false)}
                             aria-label="Close"
-                            className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-xl leading-none text-white transition hover:bg-black/60"
+                            className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-xl leading-none text-white transition hover:bg-black/60"
                           >
                             ✕
                           </button>
 
-                          <div className="bg-black/5 p-3 sm:p-5">
-                            <img
-                              src={previewResult || ""}
-                              alt="Final AI textile mockup generated using AgentForge"
-                              className="mx-auto max-h-[55vh] w-auto rounded-2xl object-contain shadow-2xl shadow-cyan-400/20"
-                            />
-                          </div>
+                          <div className="grid lg:grid-cols-[1.45fr_1fr]">
+                            <div className="flex items-center justify-center bg-gradient-to-br from-cyan-500/[0.08] via-black/[0.04] to-violet-500/[0.08] p-3 sm:p-5 lg:p-7">
+                              <img
+                                src={previewResult || ""}
+                                alt="Final AI textile mockup generated using AgentForge"
+                                className="mx-auto max-h-[42vh] w-auto rounded-2xl object-contain shadow-2xl shadow-cyan-400/20 lg:max-h-[80vh]"
+                              />
+                            </div>
 
-                          <div className="p-4 sm:p-6 lg:p-8">
+                          <div className="flex flex-col p-4 sm:p-6 lg:max-h-[84vh] lg:overflow-y-auto lg:p-8">
                             <div className="mb-5 sm:mb-6">
                               <span className="text-[11px] font-black uppercase tracking-[0.3em] text-cyan-600">
                                 Success
@@ -3776,6 +3777,7 @@ export default function Home() {
                                 lead to the most royal and crisp model outputs.
                               </p>
                             </div>
+                          </div>
                           </div>
                         </div>
                       </div>
