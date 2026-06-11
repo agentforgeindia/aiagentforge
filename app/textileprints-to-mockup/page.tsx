@@ -758,7 +758,6 @@ const apparelModelUsageOptions = [
   "Single Model",
   "Couple Model",
   "Family Scene",
-  "No Model / Flat Lay",
   "Mannequin",
 ];
 
