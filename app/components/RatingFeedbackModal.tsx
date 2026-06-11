@@ -85,11 +85,11 @@ export default function RatingFeedbackModal({
         {/* Header */}
         <div className="mb-1 text-center text-2xl">⭐</div>
         <h2 className="mb-1 text-center text-lg font-bold text-gray-900 dark:text-white">
-          Aapka result kaisa laga?
+          How was your result?
         </h2>
         <p className="mb-5 text-center text-sm text-gray-500 dark:text-gray-400">
-          Rating do aur{" "}
-          <span className="font-semibold text-cyan-600">credits kamao</span>!
+          Leave a rating and{" "}
+          <span className="font-semibold text-cyan-600">earn credits</span>!
         </p>
 
         {/* Stars */}
@@ -122,12 +122,12 @@ export default function RatingFeedbackModal({
             {rating === 5
               ? "Excellent! 🔥"
               : rating === 4
-                ? "Bahut accha! 👍"
+                ? "Really good! 👍"
                 : rating === 3
-                  ? "Theek hai 😊"
+                  ? "It's okay 😊"
                   : rating === 2
-                    ? "Thoda improve karo 🤔"
-                    : "Bahut bura 😞"}
+                    ? "Needs improvement 🤔"
+                    : "Not good 😞"}
           </p>
         )}
 
@@ -135,7 +135,7 @@ export default function RatingFeedbackModal({
         <textarea
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
-          placeholder="Kuch improve karna chahte ho? (optional) — +2 credits"
+          placeholder="Anything we can improve? (optional) — +2 credits"
           rows={3}
           className="mb-3 w-full resize-none rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-800 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
         />
@@ -144,7 +144,7 @@ export default function RatingFeedbackModal({
         {rating > 0 && (
           <div className="mb-4 rounded-xl bg-gradient-to-r from-cyan-50 to-blue-50 p-3 text-center dark:from-cyan-900/20 dark:to-blue-900/20">
             <p className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">
-              🎁 Aapko milenge:{" "}
+              🎁 You'll get:{" "}
               <span className="text-lg font-black">{previewCredits} credits</span>
             </p>
             <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
@@ -159,14 +159,14 @@ export default function RatingFeedbackModal({
             onClick={onClose}
             className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
           >
-            Baad mein
+            Later
           </button>
           <button
             onClick={handleSubmit}
             disabled={rating === 0 || submitting}
             className="flex-1 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 py-2.5 text-sm font-bold text-white shadow-lg shadow-cyan-500/25 transition hover:from-cyan-400 hover:to-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {submitting ? "Saving..." : "Submit & Kamao 🎉"}
+            {submitting ? "Saving..." : "Submit & Earn 🎉"}
           </button>
         </div>
 

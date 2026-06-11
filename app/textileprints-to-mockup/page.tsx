@@ -310,8 +310,12 @@ const exactIconFileByTitle: Record<string, string> = {
   "boys kurta": "kids-kurta",
   "kids t-shirt": "kids-T-shirt",
   "girls frock": "girls-frok",
+  "girls t-shirt": "kids-T-shirt",
+  "girls top & jeans": "girls-frok",
   "kids suit": "kids-suits",
   "kids night suit": "kids-night-suit",
+  "cord set": "co-ord set",
+  other: "custom-look",
   bedsheet: "bedsheet",
   curtain: "curtain",
   "pillow cover": "pillow-cover",
@@ -327,7 +331,8 @@ const exactIconFileByTitle: Record<string, string> = {
   scarf: "scarf",
   stole: "stole",
   "wall fabric panel": "wall fabric panel",
-  "carpet / rug": "sofa cover",
+  "carpet / rug": "interior styled setup",
+  "carpet & rug": "interior styled setup",
   "upholstery fabric": "upholstery fabric",
   "interior styled setup": "interior styled setup",
   "flat fabric layout": "flat fabric layout",
@@ -668,7 +673,6 @@ type TextileCategory =
   | "Ladies Wear"
   | "Kids Wear"
   | "Home Textile"
-  | "Decor & Accessories"
   | "Universal Fabric";
 
 const textileCategories: {
@@ -679,12 +683,7 @@ const textileCategories: {
   { title: "Men's Wear", icon: "shirt", hint: "Shirts, kurtas, suits" },
   { title: "Ladies Wear", icon: "dress", hint: "Suits, saree, kurti" },
   { title: "Kids Wear", icon: "tshirt", hint: "Kids fashion mockups" },
-  { title: "Home Textile", icon: "pattern", hint: "Bedsheets, curtains" },
-  {
-    title: "Decor & Accessories",
-    icon: "luxury",
-    hint: "Cushions, bags, rugs",
-  },
+  { title: "Home Textile", icon: "pattern", hint: "Bedsheets, bags, rugs" },
   { title: "Universal Fabric", icon: "pattern", hint: "Flat fabric preview" },
 ];
 
@@ -700,6 +699,7 @@ const productOptionsByCategory: Record<TextileCategory, string[]> = {
     "T-Shirt",
     "Hoodie",
     "Co-ord Set",
+    "Other",
   ],
   "Ladies Wear": [
     "Ladies Suit",
@@ -710,17 +710,23 @@ const productOptionsByCategory: Record<TextileCategory, string[]> = {
     "Gown",
     "Dress",
     "Dupatta",
-    "Blouse",
+    "Cord Set",
     "Sharara Suit",
     "Palazzo Suit",
+    "Scarf",
+    "Stole",
+    "Other",
   ],
   "Kids Wear": [
     "Boys Shirt",
     "Boys Kurta",
     "Kids T-Shirt",
     "Girls Frock",
+    "Girls T-Shirt",
+    "Girls Top & Jeans",
     "Kids Suit",
     "Kids Night Suit",
+    "Other",
   ],
   "Home Textile": [
     "Bedsheet",
@@ -733,16 +739,10 @@ const productOptionsByCategory: Record<TextileCategory, string[]> = {
     "Blanket",
     "Quilt",
     "Bathrobe",
-    "Luxury Bedroom Setup",
-  ],
-  "Decor & Accessories": [
     "Fabric Bag",
-    "Scarf",
-    "Stole",
-    "Wall Fabric Panel",
-    "Carpet / Rug",
-    "Upholstery Fabric",
-    "Interior Styled Setup",
+    "Carpet & Rug",
+    "Luxury Bedroom Setup",
+    "Other",
   ],
   "Universal Fabric": [
     "Flat Fabric Layout",
@@ -751,6 +751,7 @@ const productOptionsByCategory: Record<TextileCategory, string[]> = {
     "Folded Fabric Stack",
     "Close-up Texture",
     "Fabric Hanging Display",
+    "Other",
   ],
 };
 
@@ -809,6 +810,32 @@ const faceExpressionOptions = [
   "Serious",
   "Smiling",
   "Soft Look",
+];
+
+// Sub-options that appear only for specific products / shoot styles.
+const sofaSeaterOptions = ["2 Seater", "3 Seater", "5 Seater", "7 Seater"];
+const towelTypeOptions = ["Baby Towel", "Kids Towel", "Boy", "Girl"];
+const outdoorBackgroundOptions = [
+  "Royal Palace",
+  "Wedding Theme",
+  "Sea Face",
+  "Forest",
+  "Temple",
+  "Forts",
+  "River Site",
+  "Waterfall",
+  "Mountains",
+  "Garden",
+];
+const studioPoseOptions = [
+  "Auto",
+  "Standing Front",
+  "Three-Quarter Turn",
+  "Hand in Pocket",
+  "Looking Away",
+  "Seated Stool",
+  "Leaning Pose",
+  "Walking Toward Camera",
 ];
 
 const articlePositions = [
@@ -916,6 +943,14 @@ export default function Home() {
   const [faceExpression, setFaceExpression] = useState("Happy");
   const [customFaceExpression, setCustomFaceExpression] = useState("");
 
+  // Product-specific sub-selectors (open conditionally below the product grid).
+  const [sofaSeater, setSofaSeater] = useState("3 Seater");
+  const [towelType, setTowelType] = useState("Baby Towel");
+  const [otherProductDesc, setOtherProductDesc] = useState("");
+  // Shoot-style sub-selectors.
+  const [outdoorBackground, setOutdoorBackground] = useState("Royal Palace");
+  const [studioPose, setStudioPose] = useState("Auto");
+
   const [showPromptBox, setShowPromptBox] = useState(false);
   const [showTextBox, setShowTextBox] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
@@ -936,7 +971,6 @@ export default function Home() {
   );
   const isHomeLikeCategory =
     textileCategory === "Home Textile" ||
-    textileCategory === "Decor & Accessories" ||
     textileCategory === "Universal Fabric";
   const dynamicProducts =
     productOptionsByCategory[textileCategory] ||
@@ -1128,10 +1162,20 @@ export default function Home() {
     if (!saved) return;
 
     const s = JSON.parse(saved);
-    setTextileCategory(s.textileCategory || "Men's Wear");
+    // Guard against categories/products removed in a later release
+    // (e.g. the old "Decor & Accessories" category).
+    const savedCategory: TextileCategory = productOptionsByCategory[
+      s.textileCategory as TextileCategory
+    ]
+      ? (s.textileCategory as TextileCategory)
+      : "Men's Wear";
+    const savedProducts = productOptionsByCategory[savedCategory];
+    setTextileCategory(savedCategory);
     setModelUsage(s.modelUsage || "Single Model");
     setModelType(s.modelType || "Indian Model");
-    setProduct(s.product || "Men's Shirt");
+    setProduct(
+      savedProducts.includes(s.product) ? s.product : savedProducts[0],
+    );
     setShootStyle(s.shootStyle || "Outdoor Premium");
     setAccessories(Array.isArray(s.accessories) ? s.accessories : ["None"]);
     setOutputSize(s.outputSize || "1080x1080");
@@ -1498,7 +1542,7 @@ export default function Home() {
   ) => {
     // Font size relative to image height → stays small at any
     // resolution (1K, 2K, 4K all look the same proportionally).
-    const fontPx = Math.max(13, Math.round(H * 0.016));
+    const fontPx = Math.max(15, Math.round(H * 0.019));
     const inset = Math.round(W * 0.03);
     const padX = Math.round(fontPx * 0.6);
     const padY = Math.round(fontPx * 0.4);
@@ -1902,6 +1946,42 @@ export default function Home() {
     const resolvedShootStyle = customShootStyle.trim() || shootStyle;
     const resolvedQuality = customQuality.trim() || quality;
     const resolvedPose = customPose.trim() || pose;
+
+    // Conditional sub-selectors — only meaningful for specific products / styles.
+    const isOtherProduct = !customProduct.trim() && product === "Other";
+    const resolvedSofaSeater =
+      !customProduct.trim() && product === "Sofa Cover" ? sofaSeater : "";
+    const resolvedTowelType =
+      !customProduct.trim() && product === "Towel" ? towelType : "";
+    const resolvedOtherDesc = isOtherProduct ? otherProductDesc.trim() : "";
+    const resolvedOutdoorBackground =
+      !customShootStyle.trim() && shootStyle === "Outdoor Premium"
+        ? outdoorBackground
+        : "";
+    const resolvedStudioPose =
+      !customShootStyle.trim() &&
+      shootStyle === "Studio Professional" &&
+      !isHomeLikeCategory
+        ? studioPose
+        : "";
+
+    // Extra prompt hints folded into custom_instruction so the n8n
+    // prompt builder honours them even before reading the new fields.
+    const extraPromptHints = [
+      resolvedSofaSeater ? `Sofa size: ${resolvedSofaSeater}` : "",
+      resolvedTowelType ? `Towel type: ${resolvedTowelType}` : "",
+      isOtherProduct
+        ? resolvedOtherDesc
+          ? `Custom product (auto-detect + hint): ${resolvedOtherDesc}`
+          : "Custom product: AUTO-DETECT the garment/product type directly from the uploaded design image and style it correctly."
+        : "",
+      resolvedOutdoorBackground
+        ? `Outdoor background theme: ${resolvedOutdoorBackground} (premium, realistic, never old or rundown houses)`
+        : "",
+      resolvedStudioPose && resolvedStudioPose !== "Auto"
+        ? `Studio pose: ${resolvedStudioPose}`
+        : "",
+    ].filter(Boolean);
     const { output_size: resolvedOutputSize } = resolveOutputDimensions(customOutputSize.trim() || outputSize, resolvedQuality);
     const resolvedAccessories = resolveAccessories();
     const selectedBrandDetails = {
@@ -1966,6 +2046,7 @@ export default function Home() {
         customInstruction,
         `Category: ${textileCategory}`,
         `Model usage / interaction: ${modelUsage}`,
+        ...extraPromptHints,
         showFaceExpression
           ? `Model face expression: ${resolvedFaceExpression}`
           : "No face expression needed because no human face/model is selected.",
@@ -2018,6 +2099,14 @@ export default function Home() {
         quality: resolvedQuality,
         required_credits: itemCredits,
         credits_required: itemCredits,
+
+        // Conditional sub-selectors (empty string when not applicable).
+        sofa_seater: resolvedSofaSeater,
+        towel_type: resolvedTowelType,
+        auto_detect_product: isOtherProduct,
+        other_product_description: resolvedOtherDesc,
+        outdoor_background: resolvedOutdoorBackground,
+        studio_pose: resolvedStudioPose,
 
         face_expression: resolvedFaceExpression,
         model_expression: resolvedFaceExpression,
@@ -3314,14 +3403,12 @@ export default function Home() {
                               setCustomProduct("");
                               setModelUsage(
                                 item.title === "Home Textile" ||
-                                  item.title === "Decor & Accessories" ||
                                   item.title === "Universal Fabric"
                                   ? "No Model"
                                   : "Single Model",
                               );
                               setPose(
                                 item.title === "Home Textile" ||
-                                  item.title === "Decor & Accessories" ||
                                   item.title === "Universal Fabric"
                                   ? "Lifestyle Room View"
                                   : "Front Face",
@@ -3360,6 +3447,67 @@ export default function Home() {
                         "Or type your own — e.g. 'Men\\'s Blazer', 'Jacquard Curtain', 'Hotel Bedsheet'",
                         customProduct,
                         setCustomProduct,
+                      )}
+
+                      {/* Sofa Cover → seater size selector */}
+                      {!customProduct.trim() && product === "Sofa Cover" && (
+                        <div className="mt-5">
+                          <p className="mb-3 text-xs font-black uppercase tracking-widest text-cyan-600">
+                            Select Sofa Size
+                          </p>
+                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                            {sofaSeaterOptions.map((item) => (
+                              <OptionCard
+                                key={item}
+                                title={item}
+                                active={sofaSeater === item}
+                                onClick={() => setSofaSeater(item)}
+                                darkMode={darkMode}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Towel → towel type selector */}
+                      {!customProduct.trim() && product === "Towel" && (
+                        <div className="mt-5">
+                          <p className="mb-3 text-xs font-black uppercase tracking-widest text-cyan-600">
+                            Select Towel Type
+                          </p>
+                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                            {towelTypeOptions.map((item) => (
+                              <OptionCard
+                                key={item}
+                                title={item}
+                                active={towelType === item}
+                                onClick={() => setTowelType(item)}
+                                darkMode={darkMode}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Other → describe / AI auto-detect from upload */}
+                      {!customProduct.trim() && product === "Other" && (
+                        <div className="mt-5 rounded-2xl border border-cyan-400/30 bg-cyan-400/5 p-4">
+                          <p className="text-xs font-black uppercase tracking-widest text-cyan-600">
+                            Custom Product
+                          </p>
+                          <p className={`mt-1 text-xs ${muted}`}>
+                            Leave blank and our AI will auto-detect the product
+                            from your uploaded design — or describe it below for
+                            best results.
+                          </p>
+                          <textarea
+                            value={otherProductDesc}
+                            onChange={(e) => setOtherProductDesc(e.target.value)}
+                            rows={2}
+                            placeholder="e.g. 'Nehru jacket', 'Anarkali gown', 'prayer mat' — or leave blank for AI auto-detect"
+                            className={`mt-3 w-full resize-none rounded-xl border p-3 text-sm outline-none transition focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 ${darkMode ? "border-white/10 bg-white/[0.04] text-white placeholder-white/40" : "border-black/10 bg-white text-black placeholder-black/40"}`}
+                          />
+                        </div>
                       )}
                     </section>
                   </div>
@@ -3516,6 +3664,56 @@ export default function Home() {
                         customShootStyle,
                         setCustomShootStyle,
                       )}
+
+                      {/* Outdoor Premium → royal background theme selector */}
+                      {!customShootStyle.trim() &&
+                        shootStyle === "Outdoor Premium" && (
+                          <div className="mt-5 rounded-2xl border border-amber-400/30 bg-amber-400/5 p-4">
+                            <p className="text-xs font-black uppercase tracking-widest text-amber-600">
+                              Select Background Theme
+                            </p>
+                            <p className={`mt-1 text-xs ${muted}`}>
+                              Pick the outdoor backdrop. Default is a premium
+                              Royal Palace — no old/rundown houses.
+                            </p>
+                            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+                              {outdoorBackgroundOptions.map((item) => (
+                                <OptionCard
+                                  key={item}
+                                  title={item}
+                                  active={outdoorBackground === item}
+                                  onClick={() => setOutdoorBackground(item)}
+                                  darkMode={darkMode}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                      {/* Studio Professional → studio pose selector */}
+                      {!customShootStyle.trim() &&
+                        shootStyle === "Studio Professional" &&
+                        !isHomeLikeCategory && (
+                          <div className="mt-5 rounded-2xl border border-cyan-400/30 bg-cyan-400/5 p-4">
+                            <p className="text-xs font-black uppercase tracking-widest text-cyan-600">
+                              Select Studio Pose
+                            </p>
+                            <p className={`mt-1 text-xs ${muted}`}>
+                              Choose how the model is posed in the studio shot.
+                            </p>
+                            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+                              {studioPoseOptions.map((item) => (
+                                <OptionCard
+                                  key={item}
+                                  title={item}
+                                  active={studioPose === item}
+                                  onClick={() => setStudioPose(item)}
+                                  darkMode={darkMode}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
                     </section>
                   </div>
                 )}
@@ -3654,7 +3852,7 @@ export default function Home() {
                     {showResult && resultModalOpen && typeof document !== "undefined" && createPortal(
                       <div
                         ref={resultRef}
-                        className="fixed inset-0 z-[2000] flex items-start justify-center overflow-y-auto bg-black/80 p-3 backdrop-blur-sm sm:p-6"
+                        className="fixed inset-0 z-[2000] flex items-start justify-center overflow-y-auto bg-black/25 p-3 backdrop-blur-xl sm:p-6"
                       >
                         <div className={`relative my-auto w-full max-w-2xl overflow-hidden rounded-[1.5rem] border shadow-2xl sm:rounded-[2.5rem] ${card}`}>
                           <button
@@ -3675,21 +3873,9 @@ export default function Home() {
                           </div>
 
                           <div className="p-4 sm:p-6">
-                            <div className="mb-5 sm:mb-6">
-                              <span className="text-[11px] font-black uppercase tracking-[0.3em] text-cyan-600">
-                                Success
-                              </span>
-                              <h3 className="mt-2 text-2xl font-black sm:text-3xl">
-                                Generation Complete
-                              </h3>
-                              <p
-                                className={`mt-3 text-sm leading-relaxed ${muted}`}
-                              >
-                                Your premium model mockup is ready. You can now
-                                download it or share it directly with your
-                                clients.
-                              </p>
-                            </div>
+                            <h3 className="mb-4 text-center text-xl font-black sm:text-2xl">
+                              Your mockup is ready ✨
+                            </h3>
 
                             <div className="grid gap-3 sm:grid-cols-2">
                               <button
@@ -3725,9 +3911,9 @@ export default function Home() {
 
                             <Link
                               href="/my-creations"
-                              className={`mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border px-5 py-3 text-sm font-bold transition hover:scale-[1.01] ${darkMode ? "border-white/10 bg-white/[0.04] text-white/70 hover:border-cyan-400/30 hover:text-cyan-300" : "border-black/10 bg-cyan-50/70 text-black/70 hover:border-cyan-300 hover:text-cyan-700"}`}
+                              className={`mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border px-5 py-2.5 text-sm font-bold transition hover:scale-[1.01] ${darkMode ? "border-white/10 bg-white/[0.04] text-white/70 hover:border-cyan-400/30 hover:text-cyan-300" : "border-black/10 bg-cyan-50/70 text-black/70 hover:border-cyan-300 hover:text-cyan-700"}`}
                             >
-                              🎨 Your old creations are saved in <span className="ml-1 font-black text-cyan-600">My Creations</span>
+                              🎨 <span className="font-black text-cyan-600">My Creations</span>
                             </Link>
 
                             {items.filter((it) => it.resultUrl).length > 1 && (
@@ -3767,15 +3953,6 @@ export default function Home() {
                               </div>
                             )}
 
-                            <div className="mt-6 rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-4 sm:mt-8 sm:rounded-3xl sm:p-6">
-                              <p className="text-[11px] font-black uppercase tracking-widest text-cyan-600">
-                                Pro Tip
-                              </p>
-                              <p className="mt-3 text-sm font-bold leading-relaxed">
-                                High-res source images with clean backgrounds
-                                lead to the most royal and crisp model outputs.
-                              </p>
-                            </div>
                           </div>
                         </div>
                       </div>,
@@ -3783,6 +3960,20 @@ export default function Home() {
                     )}
                   </div>
                 )}
+
+                {/* Smart next-step guidance — tells the user what to do next. */}
+                <div className="mt-4 flex items-start gap-2 rounded-2xl border border-cyan-400/25 bg-cyan-400/[0.06] px-4 py-3">
+                  <span className="text-base leading-none">💡</span>
+                  <p className="text-xs font-semibold leading-relaxed text-cyan-700 dark:text-cyan-300">
+                    {builderStep === 1
+                      ? "Next: choose who wears it — tap Next Step to pick your Model & Look."
+                      : builderStep === 2
+                        ? "Next: set the Pose, Face Expression and Shoot Style for the perfect shot."
+                        : builderStep === 3
+                          ? "Next: add accessories, output size & your company branding, then generate."
+                          : "Final step — add branding (optional) and tap Start Generation. Your HD mockup is ~30s away."}
+                  </p>
+                </div>
 
                 <div
                   className={`sticky bottom-3 z-[90] mt-4 flex items-center justify-between gap-3 rounded-3xl border p-2 shadow-2xl backdrop-blur-xl sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none ${darkMode ? "border-white/10 bg-[#07111f]/92" : "border-black/10 bg-white/92"}`}
