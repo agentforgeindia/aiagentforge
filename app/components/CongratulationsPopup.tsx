@@ -41,9 +41,9 @@ export default function CongratulationsPopup({ credits, onClose }: Props) {
           +{credits} Credits
         </p>
         <p className="text-center text-sm font-medium text-white/80">
-          Aapne {credits} credit{credits !== 1 ? "s" : ""} jeet liye! 🎁
+          You&apos;ve earned {credits} credit{credits !== 1 ? "s" : ""}! 🎁
           <br />
-          Ye aapke account mein add ho gaye hain.
+          They&apos;ve been added to your account.
         </p>
 
         <button
@@ -53,7 +53,7 @@ export default function CongratulationsPopup({ credits, onClose }: Props) {
           }}
           className="mt-4 w-full rounded-xl bg-white/20 py-2.5 text-sm font-semibold hover:bg-white/30 transition"
         >
-          Shukriya! 🙏
+          Thank you! 🙏
         </button>
       </div>
     </div>

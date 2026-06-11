@@ -468,6 +468,306 @@ function VisualIcon({ icon, fileName }: { icon: IconName; fileName?: string }) {
   );
 }
 
+// ── Royal inline-SVG icons for the newer sub-options (sofa size,
+// towel type, outdoor/editorial background themes, studio poses,
+// "Other"). These are hand-drawn line glyphs in a premium gold
+// gradient — NOT the bitmap/SVG files used elsewhere — so each new
+// concept gets its own bespoke "royal" mark.
+function royalGlyph(name: string): React.ReactNode {
+  if (name.startsWith("sofa")) {
+    const n = parseInt(name.slice(4), 10) || 3;
+    const lines = [];
+    for (let i = 1; i < n; i++) {
+      const x = 16 + ((48 - 16) * i) / n;
+      lines.push(<line key={i} x1={x} y1="33" x2={x} y2="41" />);
+    }
+    return (
+      <>
+        <rect x="9" y="28" width="6" height="17" rx="2.5" />
+        <rect x="49" y="28" width="6" height="17" rx="2.5" />
+        <path d="M15 27h34a3 3 0 0 1 3 3v2H12v-2a3 3 0 0 1 3-3z" />
+        <rect x="12" y="32" width="40" height="10" rx="2.5" />
+        <path d="M14 45v4M50 45v4" />
+        {lines}
+      </>
+    );
+  }
+  switch (name) {
+    // ── Towels ──
+    case "towelBaby":
+      return (
+        <>
+          <path d="M20 25l12-9 12 9v21a4 4 0 0 1-4 4H24a4 4 0 0 1-4-4z" />
+          <path d="M26 21l6 4 6-4" />
+          <path d="M27 41h10" />
+        </>
+      );
+    case "towelKids":
+      return (
+        <>
+          <rect x="16" y="22" width="32" height="8" rx="3" />
+          <rect x="18" y="32" width="28" height="8" rx="3" />
+          <rect x="20" y="42" width="24" height="7" rx="3" />
+        </>
+      );
+    case "towelBoy":
+      return (
+        <>
+          <rect x="18" y="19" width="28" height="29" rx="4" />
+          <path d="M32 25l2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7z" />
+        </>
+      );
+    case "towelGirl":
+      return (
+        <>
+          <rect x="18" y="19" width="28" height="29" rx="4" />
+          <circle cx="32" cy="32" r="2.6" />
+          <circle cx="32" cy="27" r="2.4" />
+          <circle cx="27" cy="33" r="2.4" />
+          <circle cx="37" cy="33" r="2.4" />
+          <circle cx="29" cy="38" r="2.4" />
+          <circle cx="35" cy="38" r="2.4" />
+        </>
+      );
+    // ── Background themes ──
+    case "palace":
+      return (
+        <>
+          <path d="M12 50h40" />
+          <rect x="14" y="34" width="8" height="16" />
+          <rect x="42" y="34" width="8" height="16" />
+          <rect x="26" y="30" width="12" height="20" />
+          <path d="M26 30a6 6 0 0 1 12 0M14 34a4 4 0 0 1 8 0M42 34a4 4 0 0 1 8 0" />
+          <path d="M32 20v6" />
+        </>
+      );
+    case "wedding":
+      return (
+        <>
+          <path d="M17 50V27a15 15 0 0 1 30 0v23" />
+          <path d="M14 50h36" />
+          <path d="M32 31c-2-3-7-2.5-7 1.5 0 3 4 5 7 7.5 3-2.5 7-4.5 7-7.5 0-4-5-4.5-7-1.5z" />
+        </>
+      );
+    case "sea":
+      return (
+        <>
+          <circle cx="32" cy="23" r="7" />
+          <path d="M10 39q4-4 8 0t8 0 8 0 8 0 8 0" />
+          <path d="M10 47q4-4 8 0t8 0 8 0 8 0 8 0" />
+        </>
+      );
+    case "forest":
+      return (
+        <>
+          <path d="M32 14l9 13h-5l6 9h-6l5 8H21l5-8h-6l6-9h-5z" />
+          <path d="M30 44h4v8h-4z" />
+          <path d="M14 52h36" />
+        </>
+      );
+    case "temple":
+      return (
+        <>
+          <path d="M20 50V32l12-10 12 10v18" />
+          <path d="M24 32h16" />
+          <path d="M28 50V41h8v9" />
+          <path d="M32 15v7" />
+          <path d="M32 15l5 2-5 2" />
+        </>
+      );
+    case "fort":
+      return (
+        <>
+          <path d="M12 50V30h5v-5h5v5h5v-5h5v5h5v-5h5v5h5v20" />
+          <path d="M28 50V40a4 4 0 0 1 8 0v10" />
+        </>
+      );
+    case "river":
+      return (
+        <>
+          <path d="M12 24c8 0 8 8 16 8s8-8 16-8 8 8 8 8" />
+          <path d="M12 38c8 0 8 8 16 8s8-8 16-8 8 8 8 8" />
+        </>
+      );
+    case "waterfall":
+      return (
+        <>
+          <path d="M22 14h20" />
+          <path d="M24 16v22M30 16v26M36 16v22M42 16v24" />
+          <path d="M16 46q16 8 32 0M16 50q16 8 32 0" />
+        </>
+      );
+    case "mountains":
+      return (
+        <>
+          <path d="M8 48l12-20 8 12 8-16 12 24z" />
+          <path d="M16 36l4-6 3 4" />
+          <path d="M8 48h48" />
+        </>
+      );
+    case "garden":
+      return (
+        <>
+          <circle cx="32" cy="22" r="4" />
+          <circle cx="32" cy="16" r="3.4" />
+          <circle cx="26" cy="20" r="3.4" />
+          <circle cx="38" cy="20" r="3.4" />
+          <circle cx="28" cy="26" r="3.4" />
+          <circle cx="36" cy="26" r="3.4" />
+          <path d="M32 30v18" />
+          <path d="M32 38c-6 0-8-4-8-4M32 42c6 0 8-4 8-4" />
+          <path d="M14 52h36" />
+        </>
+      );
+    // ── Studio poses ──
+    case "poseStand":
+      return (
+        <>
+          <circle cx="32" cy="16" r="6" />
+          <path d="M32 22v18" />
+          <path d="M32 26l-8 8M32 26l8 8" />
+          <path d="M32 40l-6 12M32 40l6 12" />
+        </>
+      );
+    case "poseTurn":
+      return (
+        <>
+          <circle cx="30" cy="16" r="6" />
+          <path d="M31 22c-2 6-2 12 0 18" />
+          <path d="M31 26l-7 6M31 27l7 5" />
+          <path d="M31 40l-5 12M31 40l6 11" />
+        </>
+      );
+    case "posePocket":
+      return (
+        <>
+          <circle cx="32" cy="16" r="6" />
+          <path d="M32 22v18" />
+          <path d="M32 27l-8 7M32 27c5 2 6 6 4 9" />
+          <path d="M32 40l-6 12M32 40l6 12" />
+        </>
+      );
+    case "poseAway":
+      return (
+        <>
+          <circle cx="34" cy="16" r="6" />
+          <path d="M40 16h3" />
+          <path d="M32 22v18" />
+          <path d="M32 26l-8 7M32 26l7 6" />
+          <path d="M32 40l-6 12M32 40l6 12" />
+        </>
+      );
+    case "poseSit":
+      return (
+        <>
+          <circle cx="30" cy="14" r="5" />
+          <path d="M30 19v9l-8 3" />
+          <path d="M22 31v11" />
+          <path d="M30 24l8 4" />
+          <path d="M17 42h15" />
+          <path d="M20 42v8M30 42v8" />
+        </>
+      );
+    case "poseLean":
+      return (
+        <>
+          <circle cx="37" cy="16" r="6" />
+          <path d="M37 22l-7 18" />
+          <path d="M35 27l-9 4M35 27l8 5" />
+          <path d="M30 40l-6 12M30 40l4 12" />
+        </>
+      );
+    case "poseWalk":
+      return (
+        <>
+          <circle cx="32" cy="16" r="6" />
+          <path d="M32 22v16" />
+          <path d="M32 26l-7 4M32 26l8 3" />
+          <path d="M32 38l-9 11M32 38l7 12" />
+        </>
+      );
+    case "poseAuto":
+      return (
+        <>
+          <path d="M30 14c2 9 5 12 14 14-9 2-12 5-14 14-2-9-5-12-14-14 9-2 12-5 14-14z" />
+          <path d="M48 18v6M45 21h6" />
+        </>
+      );
+    // ── Other / auto-detect (premium gem) ──
+    case "other":
+    default:
+      return (
+        <>
+          <path d="M22 20h20l6 8-16 18L16 28z" />
+          <path d="M16 28h32M28 20l-6 8 10 18M36 20l6 8-10 18" />
+        </>
+      );
+  }
+}
+
+function RoyalIcon({ name }: { name: string }) {
+  return (
+    <svg
+      viewBox="0 0 64 64"
+      className="h-full w-full p-3"
+      fill="none"
+      stroke="url(#afRoyalGrad)"
+      strokeWidth={2.4}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient
+          id="afRoyalGrad"
+          x1="8"
+          y1="8"
+          x2="56"
+          y2="56"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#fbbf24" />
+          <stop offset="0.55" stopColor="#f59e0b" />
+          <stop offset="1" stopColor="#b45309" />
+        </linearGradient>
+      </defs>
+      {royalGlyph(name)}
+    </svg>
+  );
+}
+
+function optionGlyph(title: string): string {
+  const k = title.toLowerCase().trim();
+  if (k === "2 seater") return "sofa2";
+  if (k === "3 seater") return "sofa3";
+  if (k === "5 seater") return "sofa5";
+  if (k === "7 seater") return "sofa7";
+  if (k.includes("baby towel")) return "towelBaby";
+  if (k.includes("kids towel")) return "towelKids";
+  if (k === "boy") return "towelBoy";
+  if (k === "girl") return "towelGirl";
+  if (k.includes("royal palace")) return "palace";
+  if (k.includes("wedding")) return "wedding";
+  if (k.includes("sea")) return "sea";
+  if (k.includes("forest")) return "forest";
+  if (k.includes("temple")) return "temple";
+  if (k.includes("fort")) return "fort";
+  if (k.includes("river")) return "river";
+  if (k.includes("waterfall")) return "waterfall";
+  if (k.includes("mountain")) return "mountains";
+  if (k.includes("garden")) return "garden";
+  if (k.includes("standing")) return "poseStand";
+  if (k.includes("three-quarter") || k.includes("turn")) return "poseTurn";
+  if (k.includes("pocket")) return "posePocket";
+  if (k.includes("looking")) return "poseAway";
+  if (k.includes("seated") || k.includes("stool")) return "poseSit";
+  if (k.includes("leaning")) return "poseLean";
+  if (k.includes("walking")) return "poseWalk";
+  if (k === "auto") return "poseAuto";
+  return "other";
+}
+
 function optionIcon(title: string): IconName {
   const key = title.toLowerCase();
   if (key.includes("men's wear") || key.includes("mens wear"))
@@ -577,12 +877,14 @@ function OptionCard({
   icon,
   onClick,
   darkMode,
+  useGlyph,
 }: {
   title: string;
   active: boolean;
   icon?: IconName;
   onClick: () => void;
   darkMode: boolean;
+  useGlyph?: boolean;
 }) {
   const finalIcon = icon || optionIcon(title);
   const iconFile =
@@ -607,9 +909,19 @@ function OptionCard({
           active
             ? "shadow-lg shadow-cyan-400/25"
             : "shadow-sm"
+        } ${
+          useGlyph
+            ? darkMode
+              ? "bg-amber-400/10 ring-1 ring-amber-300/30"
+              : "bg-gradient-to-br from-amber-50 to-amber-100/60 ring-1 ring-amber-200/70"
+            : ""
         }`}
       >
-        <VisualIcon icon={finalIcon} fileName={iconFile} />
+        {useGlyph ? (
+          <RoyalIcon name={optionGlyph(title)} />
+        ) : (
+          <VisualIcon icon={finalIcon} fileName={iconFile} />
+        )}
       </div>
 
       <p
@@ -1955,7 +2267,8 @@ export default function Home() {
       !customProduct.trim() && product === "Towel" ? towelType : "";
     const resolvedOtherDesc = isOtherProduct ? otherProductDesc.trim() : "";
     const resolvedOutdoorBackground =
-      !customShootStyle.trim() && shootStyle === "Outdoor Premium"
+      !customShootStyle.trim() &&
+      (shootStyle === "Outdoor Premium" || shootStyle === "Luxury Editorial")
         ? outdoorBackground
         : "";
     const resolvedStudioPose =
@@ -1976,7 +2289,7 @@ export default function Home() {
           : "Custom product: AUTO-DETECT the garment/product type directly from the uploaded design image and style it correctly."
         : "",
       resolvedOutdoorBackground
-        ? `Outdoor background theme: ${resolvedOutdoorBackground} (premium, realistic, never old or rundown houses)`
+        ? `Background theme: ${resolvedOutdoorBackground} (premium, realistic, never old or rundown houses)`
         : "",
       resolvedStudioPose && resolvedStudioPose !== "Auto"
         ? `Studio pose: ${resolvedStudioPose}`
@@ -3439,6 +3752,7 @@ export default function Home() {
                               setCustomProduct("");
                             }}
                             darkMode={darkMode}
+                            useGlyph={item === "Other"}
                           />
                         ))}
                       </div>
@@ -3463,6 +3777,7 @@ export default function Home() {
                                 active={sofaSeater === item}
                                 onClick={() => setSofaSeater(item)}
                                 darkMode={darkMode}
+                                useGlyph
                               />
                             ))}
                           </div>
@@ -3483,6 +3798,7 @@ export default function Home() {
                                 active={towelType === item}
                                 onClick={() => setTowelType(item)}
                                 darkMode={darkMode}
+                                useGlyph
                               />
                             ))}
                           </div>
@@ -3665,15 +3981,16 @@ export default function Home() {
                         setCustomShootStyle,
                       )}
 
-                      {/* Outdoor Premium → royal background theme selector */}
+                      {/* Outdoor Premium / Luxury Editorial → royal background theme selector */}
                       {!customShootStyle.trim() &&
-                        shootStyle === "Outdoor Premium" && (
+                        (shootStyle === "Outdoor Premium" ||
+                          shootStyle === "Luxury Editorial") && (
                           <div className="mt-5 rounded-2xl border border-amber-400/30 bg-amber-400/5 p-4">
                             <p className="text-xs font-black uppercase tracking-widest text-amber-600">
                               Select Background Theme
                             </p>
                             <p className={`mt-1 text-xs ${muted}`}>
-                              Pick the outdoor backdrop. Default is a premium
+                              Pick the {shootStyle === "Luxury Editorial" ? "editorial" : "outdoor"} backdrop. Default is a premium
                               Royal Palace — no old/rundown houses.
                             </p>
                             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
@@ -3684,6 +4001,7 @@ export default function Home() {
                                   active={outdoorBackground === item}
                                   onClick={() => setOutdoorBackground(item)}
                                   darkMode={darkMode}
+                                  useGlyph
                                 />
                               ))}
                             </div>
@@ -3709,6 +4027,7 @@ export default function Home() {
                                   active={studioPose === item}
                                   onClick={() => setStudioPose(item)}
                                   darkMode={darkMode}
+                                  useGlyph
                                 />
                               ))}
                             </div>

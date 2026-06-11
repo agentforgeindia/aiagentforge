@@ -160,8 +160,8 @@ export default function BillingDetailsModal({
         {/* Body */}
         <div className="px-5 py-5">
           <p className="text-xs leading-5 text-slate-600 dark:text-slate-400">
-            Yeh details aapki bill mein print honge. Ek baar fill karo, agle
-            purchase pe automatic dikh jaayenge.
+            These details will be printed on your bill. Fill them once and
+            they&apos;ll appear automatically on your next purchase.
           </p>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">

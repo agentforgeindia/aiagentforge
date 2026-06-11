@@ -2562,7 +2562,7 @@ if (!response.ok) {
                           Analyzing your jewellery…
                         </p>
                         <p className="text-xs text-slate-500 dark:text-white/50">
-                          Best shoot style, model and props pick kar raha hoon.
+                          Picking the best shoot style, model and props.
                         </p>
                       </div>
                     ) : aiSuggestion ? (
@@ -2597,7 +2597,7 @@ if (!response.ok) {
                       </>
                     ) : (
                       <p className="text-xs text-slate-500 dark:text-white/50">
-                        Guidance ready. Upload kro to suggestions aa jaayengi.
+                        Guidance ready. Upload an image to see suggestions.
                       </p>
                     )}
                   </div>

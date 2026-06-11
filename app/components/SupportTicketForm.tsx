@@ -29,7 +29,7 @@ export default function SupportTicketForm() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!subject.trim() || !message.trim()) { setError("Subject aur message zaroori hai."); return; }
+    if (!subject.trim() || !message.trim()) { setError("Subject and message are required."); return; }
     setSaving(true); setError(null);
     // Prefill from logged-in session if available
     const { data: sess } = await supabase.auth.getSession();
@@ -47,7 +47,7 @@ export default function SupportTicketForm() {
       status: "open",
     });
     setSaving(false);
-    if (err) { setError("Ticket save nahi hua. Thodi der baad try karein."); return; }
+    if (err) { setError("Could not save your ticket. Please try again in a moment."); return; }
     setDone(true);
   }
 
