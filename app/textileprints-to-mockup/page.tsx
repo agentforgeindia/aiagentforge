@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
 import { useAuth } from "@/app/components/AuthProvider";
@@ -3651,10 +3652,10 @@ export default function Home() {
                         )}
                       </button>
                     </div>
-                    {showResult && resultModalOpen && (
+                    {showResult && resultModalOpen && typeof document !== "undefined" && createPortal(
                       <div
                         ref={resultRef}
-                        className="fixed inset-0 z-[900] flex items-start justify-center overflow-y-auto bg-black/80 p-3 backdrop-blur-sm sm:p-6"
+                        className="fixed inset-0 z-[2000] flex items-start justify-center overflow-y-auto bg-black/80 p-3 backdrop-blur-sm sm:p-6"
                       >
                         <div className={`relative my-auto w-full max-w-2xl overflow-hidden rounded-[1.5rem] border shadow-2xl sm:rounded-[2.5rem] ${card}`}>
                           <button
@@ -3778,7 +3779,8 @@ export default function Home() {
                             </div>
                           </div>
                         </div>
-                      </div>
+                      </div>,
+                      document.body,
                     )}
                   </div>
                 )}
