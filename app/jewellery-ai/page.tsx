@@ -252,20 +252,28 @@ const CAMERA_ANGLE_OPTIONS: OptionItem[] = [
 // Shoot Style — merged with Model Look (one unified selection covering both
 // shoot atmosphere AND model aesthetic). Hints describe what the user
 // should expect from the AI output for each selection.
+// SHOOT STYLE = only the scene / background / lighting (deduped).
+// Model ethnicity now lives in its own "Model Look" box (Step 3).
 const SHOOT_STYLE_OPTIONS: OptionItem[] = [
-  // Lighting / presentation
-  { label: "Luxury Studio", icon: Crown, hint: "Indian model in studio jewellery shoot", iconFile: "luxury-studio" },
-  { label: "White Catalogue", icon: Square, hint: "Young model on clean white BG", iconFile: "white-catalogue" },
-  { label: "Bridal Editorial", icon: Sparkles, hint: "Indian bride model + chosen styling", iconFile: "bridal-editorial" },
+  { label: "Luxury Studio", icon: Crown, hint: "Dark velvet premium studio", iconFile: "luxury-studio" },
+  { label: "White Background", icon: Square, hint: "Clean seamless white catalogue BG", iconFile: "white-catalogue" },
+  { label: "Bridal Editorial", icon: Sparkles, hint: "Bridal / festive rich styling", iconFile: "bridal-editorial" },
+  { label: "Luxury Editorial", icon: BadgeCheck, hint: "Fashion / cinematic editorial", iconFile: "luxury-editorial" },
   { label: "Macro Detail", icon: ScanSearch, hint: "Diamond / kundan stone focus", iconFile: "macro-detail" },
-  // Model looks (merged in)
-  { label: "Indian Model", icon: UserRound, hint: "Model auto-matched to jewellery type", iconFile: "indian-model" },
-  { label: "Bridal Look", icon: Crown, hint: "Indian bride, pose-matched", iconFile: "bridal-look" },
-  { label: "Luxury Editorial", icon: BadgeCheck, hint: "Western-dress model with your jewellery", iconFile: "luxury-editorial" },
-  // Textile-style shoot styles (open a background-theme or studio-pose box)
   { label: "Outdoor Premium", icon: ImageIcon, hint: "Premium outdoor backdrop — pick a theme" },
   { label: "Studio Professional", icon: Camera, hint: "Pro studio shoot — pick a pose" },
-  { label: "White Background", icon: Square, hint: "Clean seamless white studio BG" },
+];
+
+// Model Look (textile-parity) — which kind of model wears the jewellery.
+const JEWEL_MODEL_LOOK_OPTIONS: OptionItem[] = [
+  { label: "No Model", icon: Package, hint: "Product-only, no human", iconFile: "no-model" },
+  { label: "Indian Model", icon: UserRound, hint: "Indian / South-Asian", iconFile: "indian-model" },
+  { label: "Western Model", icon: UserRound, hint: "European / American look" },
+  { label: "Asian Model", icon: UserRound, hint: "East-Asian look" },
+  { label: "Middle Eastern Model", icon: UserRound, hint: "Middle-Eastern look" },
+  { label: "African Model", icon: UserRound, hint: "African look" },
+  { label: "European Model", icon: UserRound, hint: "European look" },
+  { label: "Custom-Look", icon: Sparkles, hint: "Describe your own" },
 ];
 
 // Background-theme + studio-pose sub-options (textile-parity), shown only
@@ -2033,6 +2041,11 @@ const WEBHOOK_URL =
     // ────────────────────────────────────────────────────────────
     const resolvedShootStyle = customShootStyle || shootStyle;
     const resolvedAccessory = customAccessory || accessory;
+    const resolvedModelLook =
+      modelLook === "Custom-Look"
+        ? customModelLook.trim() || "Indian Model"
+        : modelLook;
+    const isNoModelLook = modelLook === "No Model";
 
     // Map selected size → actual output dimensions
     const resolveJewelleryOutputSize = (sz: string): string => {
@@ -2126,6 +2139,17 @@ const WEBHOOK_URL =
       );
     }
 
+    // Model Look box (Step 3) — who wears the jewellery.
+    if (isNoModelLook) {
+      styleDirectives.push(
+        "PRODUCT_ONLY: No human model and no body part in the image. Show ONLY the uploaded jewellery in a premium product composition (flat-lay, surface or prop as per accessories). This overrides any model instruction from the shoot style.",
+      );
+    } else {
+      styleDirectives.push(
+        `MODEL_LOOK (${resolvedModelLook}): The model wearing the jewellery must clearly have ${resolvedModelLook} features and skin tone, rendered naturally and realistically. Style, makeup and outfit still adapt to suit the jewellery, but the model ethnicity/look matches this selection.`,
+      );
+    }
+
     const sharedSettings = {
       source_image_url: firstImageUrl,
       model_image_url: "",
@@ -2136,10 +2160,11 @@ const WEBHOOK_URL =
       jewellery_type: selectedJewelleryLabel,
       more_jewellery: moreJewellery,
       output_type: resolvedShootStyle,
-      model_type: modelType,
+      // Model usage is driven by the Model Look box now: No Model = product-only,
+      // anything else = a human model wearing the jewellery.
+      model_type: isNoModelLook ? "No Model" : "Female Model",
       pose: customPose || pose,
-      // model_look is now merged into shoot_style — send same value for backend compat
-      model_look: resolvedShootStyle,
+      model_look: resolvedModelLook,
       face_expression: faceExpression,
       shoot_style: resolvedShootStyle,
       outdoor_background:
@@ -3347,13 +3372,15 @@ if (!response.ok) {
 
                 {builderStep === 3 && (
                   <div className="space-y-4">
+                    {/* Model Look — which kind of model wears the jewellery */}
+                    <SelectionGrid title="Model Look" subtitle="Which model wears your jewellery — or No Model for product-only." options={JEWEL_MODEL_LOOK_OPTIONS} value={modelLook} onChange={setModelLook} />
+                    {modelLook === "Custom-Look" && (
+                      <TextInputBox label="Custom Model Look" value={customModelLook} onChange={setCustomModelLook} placeholder="Example: young Punjabi bride, mature elegant woman, male model for kada..." />
+                    )}
+
                     {/* Pose */}
                     <SelectionGrid title="Pose" subtitle="Body, hand, neck or ear pose for jewellery presentation." options={POSE_OPTIONS} value={pose} onChange={setPose} />
                     <TextInputBox label="Custom Pose" value={customPose} onChange={setCustomPose} placeholder="Example: hand near face, neck close-up, bride looking side..." />
-
-                    {/* Camera Angle (kept inside Pose step) */}
-                    <SelectionGrid title="Camera Angle" subtitle="Eye-level, 45°, top-down, side profile — controls the jewellery framing." options={CAMERA_ANGLE_OPTIONS} value={cameraAngle} onChange={setCameraAngle} />
-                    <TextInputBox label="Custom Camera Angle" value={customCameraAngle} onChange={setCustomCameraAngle} placeholder="Example: low angle hero shot, dramatic top-down, 30° tilt with bokeh..." />
                   </div>
                 )}
 
@@ -3391,8 +3418,8 @@ if (!response.ok) {
                       <div className="grid gap-3 sm:grid-cols-2">
                         <SummaryRow label="Jewellery" value={selectedJewelleryLabel} />
                         <SummaryRow label="Shoot Style" value={customShootStyle || shootStyle} />
+                        <SummaryRow label="Model Look" value={modelLook === "Custom-Look" ? (customModelLook || "Custom") : modelLook} />
                         <SummaryRow label="Pose" value={customPose || pose} />
-                        <SummaryRow label="Camera Angle" value={customCameraAngle || cameraAngle} />
                         <SummaryRow label="Face Expression" value={faceExpression} />
                         <SummaryRow label="Accessories" value={customAccessory || accessory} />
                         <SummaryRow label="Frame" value={`${outputSize} / ${quality}`} />
