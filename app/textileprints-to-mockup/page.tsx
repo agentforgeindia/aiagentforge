@@ -612,101 +612,101 @@ function royalGlyph(name: string): React.ReactNode {
     case "palace":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#fef3c7" />
-          <rect x="14" y="34" width="9" height="16" fill="#f59e0b" />
-          <rect x="41" y="34" width="9" height="16" fill="#f59e0b" />
-          <rect x="26" y="30" width="12" height="20" fill="#fbbf24" />
-          <path d="M26 30a6 6 0 0 1 12 0z" fill="#d97706" />
-          <path d="M14 34a4.5 4.5 0 0 1 9 0z" fill="#d97706" />
-          <path d="M41 34a4.5 4.5 0 0 1 9 0z" fill="#d97706" />
-          <rect x="30" y="41" width="4" height="9" fill="#92400e" />
-          <rect x="11" y="50" width="42" height="3" rx="1.5" fill="#b45309" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <rect x="14" y="34" width="9" height="16" fill="#3b82f6" />
+          <rect x="41" y="34" width="9" height="16" fill="#3b82f6" />
+          <rect x="26" y="30" width="12" height="20" fill="#22d3ee" />
+          <path d="M26 30a6 6 0 0 1 12 0z" fill="#6366f1" />
+          <path d="M14 34a4.5 4.5 0 0 1 9 0z" fill="#6366f1" />
+          <path d="M41 34a4.5 4.5 0 0 1 9 0z" fill="#6366f1" />
+          <rect x="30" y="41" width="4" height="9" fill="#1e40af" />
+          <rect x="11" y="50" width="42" height="3" rx="1.5" fill="#2563eb" />
         </>
       );
     case "wedding":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#ffe4e6" />
-          <path d="M18 50V28a14 14 0 0 1 28 0v22z" fill="#fda4af" />
-          <path d="M24 50V30a8 8 0 0 1 16 0v20z" fill="#ffe4e6" />
-          <path d="M32 30c-2-3-7.5-2.5-7.5 1.8 0 3.3 4.3 5.4 7.5 8.2 3.2-2.8 7.5-4.9 7.5-8.2 0-4.3-5.5-4.8-7.5-1.8z" fill="#e11d48" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <path d="M18 50V28a14 14 0 0 1 28 0v22z" fill="#a5b4fc" />
+          <path d="M24 50V30a8 8 0 0 1 16 0v20z" fill="#e0f2fe" />
+          <path d="M32 30c-2-3-7.5-2.5-7.5 1.8 0 3.3 4.3 5.4 7.5 8.2 3.2-2.8 7.5-4.9 7.5-8.2 0-4.3-5.5-4.8-7.5-1.8z" fill="#8b5cf6" />
         </>
       );
     case "sea":
       return (
         <>
           <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
-          <circle cx="32" cy="22" r="7" fill="#fbbf24" />
-          <path d="M8 38q4-5 8 0t8 0 8 0 8 0 8 0v8H8z" fill="#38bdf8" />
+          <circle cx="32" cy="22" r="7" fill="#38bdf8" />
+          <path d="M8 38q4-5 8 0t8 0 8 0 8 0 8 0v8H8z" fill="#22d3ee" />
           <path d="M8 45q4-5 8 0t8 0 8 0 8 0 8 0v7H8z" fill="#0ea5e9" />
         </>
       );
     case "forest":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#dcfce7" />
-          <path d="M32 14l9 13h-5l6 9h-6l5 8H21l5-8h-6l6-9h-5z" fill="#16a34a" />
-          <rect x="30" y="44" width="4" height="8" fill="#92400e" />
-          <rect x="14" y="50" width="36" height="3" rx="1.5" fill="#4ade80" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <path d="M32 14l9 13h-5l6 9h-6l5 8H21l5-8h-6l6-9h-5z" fill="#0ea5e9" />
+          <rect x="30" y="44" width="4" height="8" fill="#6366f1" />
+          <rect x="14" y="50" width="36" height="3" rx="1.5" fill="#38bdf8" />
         </>
       );
     case "temple":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#fef3c7" />
-          <path d="M20 50V32l12-10 12 10v18z" fill="#f59e0b" />
-          <rect x="28" y="40" width="8" height="10" fill="#b45309" />
-          <rect x="31" y="14" width="2" height="8" fill="#92400e" />
-          <path d="M33 15l6 2-6 2z" fill="#ef4444" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <path d="M20 50V32l12-10 12 10v18z" fill="#3b82f6" />
+          <rect x="28" y="40" width="8" height="10" fill="#1e40af" />
+          <rect x="31" y="14" width="2" height="8" fill="#6366f1" />
+          <path d="M33 15l6 2-6 2z" fill="#8b5cf6" />
         </>
       );
     case "fort":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e7e5e4" />
-          <path d="M12 50V30h5v-5h5v5h5v-5h5v5h5v-5h5v5h5v-5h5v5h5v20z" fill="#a8a29e" />
-          <path d="M28 50V41a4 4 0 0 1 8 0v9z" fill="#57534e" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <path d="M12 50V30h5v-5h5v5h5v-5h5v5h5v-5h5v5h5v-5h5v5h5v20z" fill="#38bdf8" />
+          <path d="M28 50V41a4 4 0 0 1 8 0v9z" fill="#3b82f6" />
         </>
       );
     case "river":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#dcfce7" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
           <path d="M2 24c10 0 10 8 20 8s10-8 20-8 10 8 20 8v8c-10 0-10-8-20-8s-10 8-20 8-10-8-20-8z" fill="#38bdf8" />
         </>
       );
     case "waterfall":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#cffafe" />
-          <rect x="20" y="14" width="24" height="4" rx="2" fill="#94a3b8" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <rect x="20" y="14" width="24" height="4" rx="2" fill="#6366f1" />
           <rect x="22" y="18" width="20" height="22" fill="#22d3ee" />
-          <path d="M16 44q16 8 32 0v8H16z" fill="#06b6d4" />
+          <path d="M16 44q16 8 32 0v8H16z" fill="#0ea5e9" />
         </>
       );
     case "mountains":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e2e8f0" />
-          <path d="M4 50l16-24 10 14 10-18 14 28z" fill="#64748b" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <path d="M4 50l16-24 10 14 10-18 14 28z" fill="#3b82f6" />
           <path d="M20 26l-4 6h8z" fill="#f8fafc" />
           <path d="M40 22l-4 6h8z" fill="#f8fafc" />
-          <rect x="4" y="50" width="56" height="3" fill="#475569" />
+          <rect x="4" y="50" width="56" height="3" fill="#1e40af" />
         </>
       );
     case "garden":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#dcfce7" />
-          <rect x="31" y="30" width="2.5" height="20" fill="#16a34a" />
-          <path d="M32 40c-7 0-9-5-9-5 5-1 9 1 9 5z" fill="#22c55e" />
-          <path d="M32 44c7 0 9-5 9-5-5-1-9 1-9 5z" fill="#22c55e" />
-          <circle cx="32" cy="20" r="4" fill="#f472b6" />
-          <circle cx="26" cy="24" r="4" fill="#f472b6" />
-          <circle cx="38" cy="24" r="4" fill="#f472b6" />
-          <circle cx="28" cy="30" r="4" fill="#f472b6" />
-          <circle cx="36" cy="30" r="4" fill="#f472b6" />
-          <circle cx="32" cy="25" r="3.5" fill="#fbbf24" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <rect x="31" y="30" width="2.5" height="20" fill="#0ea5e9" />
+          <path d="M32 40c-7 0-9-5-9-5 5-1 9 1 9 5z" fill="#38bdf8" />
+          <path d="M32 44c7 0 9-5 9-5-5-1-9 1-9 5z" fill="#38bdf8" />
+          <circle cx="32" cy="20" r="4" fill="#8b5cf6" />
+          <circle cx="26" cy="24" r="4" fill="#8b5cf6" />
+          <circle cx="38" cy="24" r="4" fill="#8b5cf6" />
+          <circle cx="28" cy="30" r="4" fill="#8b5cf6" />
+          <circle cx="36" cy="30" r="4" fill="#8b5cf6" />
+          <circle cx="32" cy="25" r="3.5" fill="#22d3ee" />
         </>
       );
     // ── Studio poses (flat violet figures) ──

@@ -262,7 +262,35 @@ const SHOOT_STYLE_OPTIONS: OptionItem[] = [
   { label: "Indian Model", icon: UserRound, hint: "Model auto-matched to jewellery type", iconFile: "indian-model" },
   { label: "Bridal Look", icon: Crown, hint: "Indian bride, pose-matched", iconFile: "bridal-look" },
   { label: "Luxury Editorial", icon: BadgeCheck, hint: "Western-dress model with your jewellery", iconFile: "luxury-editorial" },
-  { label: "Minimal Modern", icon: ShieldCheck, hint: "Royal model in royal attire", iconFile: "minimal-modern" },
+  // Textile-style shoot styles (open a background-theme or studio-pose box)
+  { label: "Outdoor Premium", icon: ImageIcon, hint: "Premium outdoor backdrop — pick a theme" },
+  { label: "Studio Professional", icon: Camera, hint: "Pro studio shoot — pick a pose" },
+  { label: "White Background", icon: Square, hint: "Clean seamless white studio BG" },
+];
+
+// Background-theme + studio-pose sub-options (textile-parity), shown only
+// when the matching shoot style is selected.
+const JEWEL_OUTDOOR_BG_OPTIONS = [
+  "Royal Palace",
+  "Wedding Theme",
+  "Sea Face",
+  "Forest",
+  "Temple",
+  "Forts",
+  "River Site",
+  "Waterfall",
+  "Mountains",
+  "Garden",
+];
+const JEWEL_STUDIO_POSE_OPTIONS = [
+  "Auto",
+  "Standing Front",
+  "Three-Quarter Turn",
+  "Hand in Pocket",
+  "Looking Away",
+  "Seated Stool",
+  "Leaning Pose",
+  "Walking Toward Camera",
 ];
 
 // 10 props covering temple, diamond, bridal and luxury flat-lay use cases.
@@ -361,16 +389,17 @@ function jewelGlyphName(label: string): string {
 }
 
 function JewelGlyphIcon({ name }: { name: string }) {
-  const G = "#f59e0b";
-  const GL = "#fbbf24";
-  const GD = "#d97706";
+  // Website-theme palette (cyan / blue / violet) — not gold.
+  const G = "#3b82f6";
+  const GL = "#22d3ee";
+  const GD = "#6366f1";
   let body: React.ReactNode = null;
   switch (name) {
     case "set":
       body = (
         <>
           <path d="M16 18l16 18 16-18" fill="none" stroke={G} strokeWidth="2.6" strokeLinejoin="round" strokeLinecap="round" />
-          <circle cx="32" cy="38" r="4" fill="#ef4444" />
+          <circle cx="32" cy="38" r="4" fill="#a855f7" />
           <circle cx="14" cy="20" r="3" fill={GL} />
           <circle cx="50" cy="20" r="3" fill={GL} />
         </>
@@ -394,7 +423,7 @@ function JewelGlyphIcon({ name }: { name: string }) {
           <path d="M26 14a6 4 0 0 1 12 0" fill="none" stroke={G} strokeWidth="2.2" />
           <path d="M32 14v14" stroke={G} strokeWidth="2.6" />
           <circle cx="32" cy="33" r="6" fill={GL} />
-          <circle cx="32" cy="33" r="2.5" fill="#ef4444" />
+          <circle cx="32" cy="33" r="2.5" fill="#a855f7" />
           <circle cx="32" cy="44" r="2.4" fill={GD} />
         </>
       );
@@ -402,10 +431,10 @@ function JewelGlyphIcon({ name }: { name: string }) {
     case "mangalsutra":
       body = (
         <>
-          <path d="M14 18c4 12 12 18 18 18s14-6 18-18" fill="none" stroke="#1f2937" strokeWidth="2.4" strokeDasharray="2.5 2.5" strokeLinecap="round" />
+          <path d="M14 18c4 12 12 18 18 18s14-6 18-18" fill="none" stroke="#6366f1" strokeWidth="2.4" strokeDasharray="2.5 2.5" strokeLinecap="round" />
           <circle cx="32" cy="38" r="5" fill={GL} />
-          <circle cx="29" cy="38" r="1.5" fill="#1f2937" />
-          <circle cx="35" cy="38" r="1.5" fill="#1f2937" />
+          <circle cx="29" cy="38" r="1.5" fill="#6366f1" />
+          <circle cx="35" cy="38" r="1.5" fill="#6366f1" />
         </>
       );
       break;
@@ -423,7 +452,7 @@ function JewelGlyphIcon({ name }: { name: string }) {
         <>
           <path d="M35 30q9 0 9 9" fill="none" stroke={G} strokeWidth="1.8" />
           <circle cx="29" cy="30" r="6" fill={GL} />
-          <circle cx="29" cy="30" r="2.4" fill="#ef4444" />
+          <circle cx="29" cy="30" r="2.4" fill="#a855f7" />
         </>
       );
       break;
@@ -446,7 +475,7 @@ function JewelGlyphIcon({ name }: { name: string }) {
       body = (
         <>
           <ellipse cx="32" cy="31" rx="14" ry="16" fill="none" stroke={G} strokeWidth="3" strokeDasharray="3 2.5" />
-          <circle cx="32" cy="49" r="3" fill="#ef4444" />
+          <circle cx="32" cy="49" r="3" fill="#a855f7" />
         </>
       );
       break;
@@ -463,7 +492,178 @@ function JewelGlyphIcon({ name }: { name: string }) {
   }
   return (
     <svg viewBox="0 0 64 64" className="h-full w-full" aria-hidden="true">
-      <rect x="2" y="2" width="60" height="60" rx="16" fill="#fef3c7" />
+      <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+      {body}
+    </svg>
+  );
+}
+
+// Website-theme (cyan / blue / violet) flat icons for the jewellery
+// background-theme and studio-pose sub-selectors.
+function jewelOptGlyphName(label: string): string {
+  const k = label.toLowerCase().trim();
+  if (k.includes("royal palace")) return "palace";
+  if (k.includes("wedding")) return "wedding";
+  if (k.includes("sea")) return "sea";
+  if (k.includes("forest")) return "forest";
+  if (k.includes("temple")) return "temple";
+  if (k.includes("fort")) return "fort";
+  if (k.includes("river")) return "river";
+  if (k.includes("waterfall")) return "waterfall";
+  if (k.includes("mountain")) return "mountains";
+  if (k.includes("garden")) return "garden";
+  if (k.includes("standing")) return "poseStand";
+  if (k.includes("three-quarter") || k.includes("turn")) return "poseTurn";
+  if (k.includes("pocket")) return "posePocket";
+  if (k.includes("looking")) return "poseAway";
+  if (k.includes("seated") || k.includes("stool")) return "poseSit";
+  if (k.includes("leaning")) return "poseLean";
+  if (k.includes("walking")) return "poseWalk";
+  return "poseAuto";
+}
+
+function jewelPersonPose(arms: [number, number], legs: [number, number], headDx = 0, seat = false): React.ReactNode {
+  const C = "#7c3aed";
+  const L = "#c4b5fd";
+  return (
+    <>
+      <rect x="2" y="2" width="60" height="60" rx="16" fill="#ede9fe" />
+      {seat && (
+        <>
+          <rect x="17" y="44" width="17" height="3" rx="1.5" fill={L} />
+          <rect x="18" y="46" width="3" height="7" rx="1.5" fill={L} />
+          <rect x="30" y="46" width="3" height="7" rx="1.5" fill={L} />
+        </>
+      )}
+      <rect x="29.2" y="33" width="4" height="16" rx="2" fill={C} transform={`rotate(${legs[0]} 31 34)`} />
+      <rect x="30.8" y="33" width="4" height="16" rx="2" fill={C} transform={`rotate(${legs[1]} 33 34)`} />
+      <rect x="28" y="20" width="3.6" height="13" rx="1.8" fill={C} transform={`rotate(${arms[0]} 30 21)`} />
+      <rect x="32.4" y="20" width="3.6" height="13" rx="1.8" fill={C} transform={`rotate(${arms[1]} 34 21)`} />
+      <rect x="28.5" y="19" width="7" height="16" rx="3.5" fill={C} />
+      <circle cx={32 + headDx} cy="13" r="5.5" fill={C} />
+    </>
+  );
+}
+
+function JewelOptIcon({ name }: { name: string }) {
+  let body: React.ReactNode = null;
+  switch (name) {
+    case "poseStand": return <svg viewBox="0 0 64 64" className="h-full w-full" aria-hidden="true">{jewelPersonPose([-12, 12], [-8, 8])}</svg>;
+    case "poseTurn": return <svg viewBox="0 0 64 64" className="h-full w-full" aria-hidden="true">{jewelPersonPose([-8, 22], [-5, 12], -3)}</svg>;
+    case "posePocket": return <svg viewBox="0 0 64 64" className="h-full w-full" aria-hidden="true">{jewelPersonPose([-12, 55], [-8, 8])}</svg>;
+    case "poseAway": return <svg viewBox="0 0 64 64" className="h-full w-full" aria-hidden="true">{jewelPersonPose([-12, 12], [-8, 8], 5)}</svg>;
+    case "poseSit": return <svg viewBox="0 0 64 64" className="h-full w-full" aria-hidden="true">{jewelPersonPose([-10, 10], [80, 95], 0, true)}</svg>;
+    case "poseLean": return <svg viewBox="0 0 64 64" className="h-full w-full" aria-hidden="true">{jewelPersonPose([-22, 8], [14, 20], 4)}</svg>;
+    case "poseWalk": return <svg viewBox="0 0 64 64" className="h-full w-full" aria-hidden="true">{jewelPersonPose([-26, 26], [-28, 28])}</svg>;
+    case "poseAuto":
+      return (
+        <svg viewBox="0 0 64 64" className="h-full w-full" aria-hidden="true">
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#ede9fe" />
+          <path d="M28 14c2 9 5 12 14 14-9 2-12 5-14 14-2-9-5-12-14-14 9-2 12-5 14-14z" fill="#8b5cf6" />
+          <path d="M47 16c1 4 2 5 6 6-4 1-5 2-6 6-1-4-2-5-6-6 4-1 5-2 6-6z" fill="#a855f7" />
+        </svg>
+      );
+    case "palace":
+      body = (
+        <>
+          <rect x="14" y="34" width="9" height="16" fill="#3b82f6" />
+          <rect x="41" y="34" width="9" height="16" fill="#3b82f6" />
+          <rect x="26" y="30" width="12" height="20" fill="#22d3ee" />
+          <path d="M26 30a6 6 0 0 1 12 0z" fill="#6366f1" />
+          <path d="M14 34a4.5 4.5 0 0 1 9 0z" fill="#6366f1" />
+          <path d="M41 34a4.5 4.5 0 0 1 9 0z" fill="#6366f1" />
+          <rect x="30" y="41" width="4" height="9" fill="#1e40af" />
+          <rect x="11" y="50" width="42" height="3" rx="1.5" fill="#2563eb" />
+        </>
+      );
+      break;
+    case "wedding":
+      body = (
+        <>
+          <path d="M18 50V28a14 14 0 0 1 28 0v22z" fill="#a5b4fc" />
+          <path d="M24 50V30a8 8 0 0 1 16 0v20z" fill="#e0f2fe" />
+          <path d="M32 30c-2-3-7.5-2.5-7.5 1.8 0 3.3 4.3 5.4 7.5 8.2 3.2-2.8 7.5-4.9 7.5-8.2 0-4.3-5.5-4.8-7.5-1.8z" fill="#8b5cf6" />
+        </>
+      );
+      break;
+    case "sea":
+      body = (
+        <>
+          <circle cx="32" cy="22" r="7" fill="#38bdf8" />
+          <path d="M8 38q4-5 8 0t8 0 8 0 8 0 8 0v8H8z" fill="#22d3ee" />
+          <path d="M8 45q4-5 8 0t8 0 8 0 8 0 8 0v7H8z" fill="#0ea5e9" />
+        </>
+      );
+      break;
+    case "forest":
+      body = (
+        <>
+          <path d="M32 14l9 13h-5l6 9h-6l5 8H21l5-8h-6l6-9h-5z" fill="#0ea5e9" />
+          <rect x="30" y="44" width="4" height="8" fill="#6366f1" />
+          <rect x="14" y="50" width="36" height="3" rx="1.5" fill="#38bdf8" />
+        </>
+      );
+      break;
+    case "temple":
+      body = (
+        <>
+          <path d="M20 50V32l12-10 12 10v18z" fill="#3b82f6" />
+          <rect x="28" y="40" width="8" height="10" fill="#1e40af" />
+          <rect x="31" y="14" width="2" height="8" fill="#6366f1" />
+          <path d="M33 15l6 2-6 2z" fill="#8b5cf6" />
+        </>
+      );
+      break;
+    case "fort":
+      body = (
+        <>
+          <path d="M12 50V30h5v-5h5v5h5v-5h5v5h5v-5h5v5h5v-5h5v5h5v20z" fill="#38bdf8" />
+          <path d="M28 50V41a4 4 0 0 1 8 0v9z" fill="#3b82f6" />
+        </>
+      );
+      break;
+    case "river":
+      body = <path d="M2 24c10 0 10 8 20 8s10-8 20-8 10 8 20 8v8c-10 0-10-8-20-8s-10 8-20 8-10-8-20-8z" fill="#38bdf8" />;
+      break;
+    case "waterfall":
+      body = (
+        <>
+          <rect x="20" y="14" width="24" height="4" rx="2" fill="#6366f1" />
+          <rect x="22" y="18" width="20" height="22" fill="#22d3ee" />
+          <path d="M16 44q16 8 32 0v8H16z" fill="#0ea5e9" />
+        </>
+      );
+      break;
+    case "mountains":
+      body = (
+        <>
+          <path d="M4 50l16-24 10 14 10-18 14 28z" fill="#3b82f6" />
+          <path d="M20 26l-4 6h8z" fill="#e0f2fe" />
+          <path d="M40 22l-4 6h8z" fill="#e0f2fe" />
+          <rect x="4" y="50" width="56" height="3" fill="#1e40af" />
+        </>
+      );
+      break;
+    case "garden":
+    default:
+      body = (
+        <>
+          <rect x="31" y="30" width="2.5" height="20" fill="#0ea5e9" />
+          <path d="M32 40c-7 0-9-5-9-5 5-1 9 1 9 5z" fill="#38bdf8" />
+          <path d="M32 44c7 0 9-5 9-5-5-1-9 1-9 5z" fill="#38bdf8" />
+          <circle cx="32" cy="20" r="4" fill="#8b5cf6" />
+          <circle cx="26" cy="24" r="4" fill="#8b5cf6" />
+          <circle cx="38" cy="24" r="4" fill="#8b5cf6" />
+          <circle cx="28" cy="30" r="4" fill="#8b5cf6" />
+          <circle cx="36" cy="30" r="4" fill="#8b5cf6" />
+          <circle cx="32" cy="25" r="3.5" fill="#22d3ee" />
+        </>
+      );
+      break;
+  }
+  return (
+    <svg viewBox="0 0 64 64" className="h-full w-full" aria-hidden="true">
+      <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
       {body}
     </svg>
   );
@@ -869,6 +1069,8 @@ export default function JewelleryAIPage() {
   const [modelLook, setModelLook] = useState("Indian Model");
   const [faceExpression, setFaceExpression] = useState("Soft Smile");
   const [shootStyle, setShootStyle] = useState("Luxury Studio");
+  const [jewelOutdoorBg, setJewelOutdoorBg] = useState("Royal Palace");
+  const [jewelStudioPose, setJewelStudioPose] = useState("Auto");
   const [accessory, setAccessory] = useState("No Accessories");
   const [cameraAngle, setCameraAngle] = useState("Auto Angle");
   const [customCameraAngle, setCustomCameraAngle] = useState("");
@@ -888,6 +1090,8 @@ export default function JewelleryAIPage() {
   const [showSignupPopup, setShowSignupPopup] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [ratingGenerationId, setRatingGenerationId] = useState<string | undefined>();
+  // Textile-style output popup (blurred backdrop, just the result + actions).
+  const [resultModalOpen, setResultModalOpen] = useState(false);
   // Gate download behind a review — user can VIEW the output freely,
   // but the first Download click asks for a rating first.
   const [reviewedResult, setReviewedResult] = useState(false);
@@ -1864,9 +2068,43 @@ const WEBHOOK_URL =
       );
     }
 
-    if (resolvedShootStyle === "Minimal Modern") {
+    if (resolvedShootStyle === "Outdoor Premium") {
       styleDirectives.push(
-        "YOUNG_MODEL_MINIMAL: ALWAYS include a YOUNG (20–28 yr) Indian female model. Match model archetype to jewellery type — bridal/heavy pieces → young bride styling; daily-wear pendants/light necklaces → young casual woman; statement → young fusion-styled woman. Clean minimal Scandinavian-influenced composition, soft neutral palette (cream, beige, sage), soft diffused window light, uncluttered backdrop. Modern D2C feel.",
+        "OUTDOOR_PREMIUM: Premium outdoor jewellery campaign. Include a YOUNG (20-28 yr) Indian female model wearing the uploaded jewellery, shot in a real premium outdoor location (see BACKGROUND_THEME). Natural golden-hour light, shallow depth of field, jewellery sharp and hero. Never an old, broken or rundown backdrop.",
+      );
+    }
+
+    if (resolvedShootStyle === "Studio Professional") {
+      styleDirectives.push(
+        "STUDIO_PROFESSIONAL: Professional studio jewellery shoot with a YOUNG (20-28 yr) Indian female model wearing the uploaded jewellery. Clean seamless studio backdrop, softbox + key + rim lighting, controlled metal reflections and stone brilliance. Use the selected STUDIO_POSE.",
+      );
+    }
+
+    if (resolvedShootStyle === "White Background") {
+      styleDirectives.push(
+        "WHITE_BACKGROUND: Pure plain white seamless studio background with even shadowless ecommerce catalogue lighting and a clean simple neutral-styled young model wearing the uploaded jewellery. Never dark, coloured, textured, prop-heavy or editorial.",
+      );
+    }
+
+    // Background theme box (Outdoor Premium / Luxury Editorial)
+    if (
+      (resolvedShootStyle === "Outdoor Premium" ||
+        resolvedShootStyle === "Luxury Editorial") &&
+      jewelOutdoorBg
+    ) {
+      styleDirectives.push(
+        `BACKGROUND_THEME (${jewelOutdoorBg}): Place the shoot in a premium, clean, aspirational ${jewelOutdoorBg} setting with a high-budget brand-campaign look. Keep the background softly out of focus so it complements the jewellery and never competes. STRICTLY NO old, broken, dilapidated or rundown houses or walls, no slums, no messy streets.`,
+      );
+    }
+
+    // Studio pose box (Studio Professional)
+    if (
+      resolvedShootStyle === "Studio Professional" &&
+      jewelStudioPose &&
+      jewelStudioPose !== "Auto"
+    ) {
+      styleDirectives.push(
+        `STUDIO_POSE (${jewelStudioPose}): Direct the model into a clean, professional "${jewelStudioPose}" studio pose while keeping the uploaded jewellery clearly visible and the hero of the frame.`,
       );
     }
 
@@ -1904,6 +2142,13 @@ const WEBHOOK_URL =
       model_look: resolvedShootStyle,
       face_expression: faceExpression,
       shoot_style: resolvedShootStyle,
+      outdoor_background:
+        resolvedShootStyle === "Outdoor Premium" ||
+        resolvedShootStyle === "Luxury Editorial"
+          ? jewelOutdoorBg
+          : "",
+      studio_pose:
+        resolvedShootStyle === "Studio Professional" ? jewelStudioPose : "",
       accessories: resolvedAccessory,
       camera_angle: customCameraAngle || cameraAngle,
       output_size: resolvedOutputSize,
@@ -2112,7 +2357,9 @@ if (!response.ok) {
       setGenerationProgress(100);
       refreshProfile?.();
       setRatingGenerationId(generationId);
-      setShowRatingModal(true);
+      // Show ONLY the output popup now. The rating popup is deferred until
+      // the user actually clicks Download (see requestDownload).
+      setResultModalOpen(true);
       window.setTimeout(() => setIsGenerating(false), 900);
       return;
     }
@@ -2154,7 +2401,8 @@ if (!response.ok) {
         setGenerationProgress(100);
         refreshProfile?.();
         setRatingGenerationId(generationId);
-        setShowRatingModal(true);
+        // Defer rating popup to Download click; just show the output now.
+        setResultModalOpen(true);
         window.setTimeout(() => setIsGenerating(false), 900);
         return;
       }
@@ -2236,6 +2484,64 @@ if (!response.ok) {
           }}
         />
       )}
+      {/* Output popup — blurred page behind, just the result + actions (textile-style) */}
+      {resultModalOpen && generatedOutputUrl && (
+        <div className="fixed inset-0 z-[900] flex items-start justify-center overflow-y-auto bg-black/25 p-3 backdrop-blur-xl sm:p-6">
+          <div className="relative my-auto w-full max-w-lg overflow-hidden rounded-[1.5rem] border border-white/10 bg-white shadow-2xl dark:bg-slate-950 sm:rounded-[2rem]">
+            <button
+              type="button"
+              onClick={() => setResultModalOpen(false)}
+              aria-label="Close"
+              className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-xl leading-none text-white transition hover:bg-black/60"
+            >
+              ✕
+            </button>
+
+            <div className="flex items-center justify-center bg-gradient-to-br from-cyan-500/[0.08] via-black/[0.03] to-violet-500/[0.08] p-3 sm:p-5">
+              <img
+                src={generatedOutputUrl}
+                alt="Generated jewellery visual"
+                className="mx-auto max-h-[62vh] w-auto rounded-2xl object-contain shadow-2xl shadow-cyan-400/20"
+              />
+            </div>
+
+            <div className="p-4 sm:p-6">
+              <h3 className="mb-4 text-center text-xl font-black sm:text-2xl">Your jewellery visual is ready ✨</h3>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={requestDownload}
+                  className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-5 py-3 font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-105 active:scale-95"
+                >
+                  Download HD
+                </button>
+                <button
+                  type="button"
+                  onClick={handleShareResult}
+                  className="flex items-center justify-center gap-2 rounded-2xl bg-blue-500 px-5 py-3 font-black text-white shadow-lg shadow-blue-500/20 transition hover:scale-105 active:scale-95"
+                >
+                  Share Now
+                </button>
+              </div>
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(`AI Jewellery visual ready: ${generatedOutputUrl}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-5 py-3 font-black text-white shadow-lg shadow-green-500/20 transition hover:scale-105 active:scale-95"
+              >
+                Share on WhatsApp
+              </a>
+              <Link
+                href="/my-creations"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-black/10 bg-cyan-50/70 px-5 py-2.5 text-sm font-bold text-black/70 transition hover:border-cyan-300 hover:text-cyan-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/70 dark:hover:border-cyan-400/30 dark:hover:text-cyan-300"
+              >
+                🎨 <span className="font-black text-cyan-600">My Creations</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showCongratsPopup && (
         <CongratulationsPopup
           credits={congratsCredits}
@@ -2986,6 +3292,52 @@ if (!response.ok) {
                   <div className="space-y-4">
                     {/* Shoot Style — now includes both shoot atmosphere AND model look */}
                     <SelectionGrid title="Shoot Style &amp; Model Look" subtitle="One unified pick — lighting, background, presentation, plus Indian/bridal/luxury model aesthetic." options={SHOOT_STYLE_OPTIONS} value={shootStyle} onChange={setShootStyle} />
+
+                    {/* Outdoor Premium / Luxury Editorial → background theme box */}
+                    {(shootStyle === "Outdoor Premium" || shootStyle === "Luxury Editorial") && (
+                      <div className="rounded-[1.35rem] border border-cyan-300/40 bg-cyan-400/10 p-4 dark:border-cyan-400/20">
+                        <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">Select Background Theme</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/50">Pick the {shootStyle === "Luxury Editorial" ? "editorial" : "outdoor"} backdrop. Default Royal Palace — premium, never old/rundown.</p>
+                        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                          {JEWEL_OUTDOOR_BG_OPTIONS.map((item) => {
+                            const isActive = jewelOutdoorBg === item;
+                            return (
+                              <button key={item} type="button" onClick={() => setJewelOutdoorBg(item)}
+                                className={clsx(
+                                  "group flex min-h-[108px] flex-col items-center justify-center rounded-[20px] border p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[124px]",
+                                  isActive ? "scale-[1.02] border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/60" : "border-slate-200 bg-white/90 hover:-translate-y-1 hover:border-cyan-300 hover:bg-white hover:shadow-lg dark:border-white/10 dark:bg-white/[0.045] dark:hover:bg-white/[0.08]",
+                                )}>
+                                <div className="mb-2 flex h-14 w-14 items-center justify-center overflow-hidden rounded-[18px] sm:h-16 sm:w-16"><JewelOptIcon name={jewelOptGlyphName(item)} /></div>
+                                <p className={clsx("text-[12px] font-black leading-4 sm:text-sm", isActive ? "text-cyan-700 dark:text-cyan-200" : "text-slate-700 dark:text-white/75")}>{item}</p>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Studio Professional → studio pose box */}
+                    {shootStyle === "Studio Professional" && (
+                      <div className="rounded-[1.35rem] border border-cyan-300/40 bg-cyan-400/10 p-4 dark:border-cyan-400/20">
+                        <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">Select Studio Pose</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/50">How the model is posed in the studio jewellery shot.</p>
+                        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                          {JEWEL_STUDIO_POSE_OPTIONS.map((item) => {
+                            const isActive = jewelStudioPose === item;
+                            return (
+                              <button key={item} type="button" onClick={() => setJewelStudioPose(item)}
+                                className={clsx(
+                                  "group flex min-h-[108px] flex-col items-center justify-center rounded-[20px] border p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[124px]",
+                                  isActive ? "scale-[1.02] border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/60" : "border-slate-200 bg-white/90 hover:-translate-y-1 hover:border-cyan-300 hover:bg-white hover:shadow-lg dark:border-white/10 dark:bg-white/[0.045] dark:hover:bg-white/[0.08]",
+                                )}>
+                                <div className="mb-2 flex h-14 w-14 items-center justify-center overflow-hidden rounded-[18px] sm:h-16 sm:w-16"><JewelOptIcon name={jewelOptGlyphName(item)} /></div>
+                                <p className={clsx("text-[12px] font-black leading-4 sm:text-sm", isActive ? "text-cyan-700 dark:text-cyan-200" : "text-slate-700 dark:text-white/75")}>{item}</p>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Accessories & Props (10 options after removing Bridal Red Pillow) */}
                     <SelectionGrid title="Accessories &amp; Props" subtitle="Background props — temple, diamond, bridal, flat-lay setups." options={ACCESSORY_OPTIONS} value={accessory} onChange={setAccessory} />
