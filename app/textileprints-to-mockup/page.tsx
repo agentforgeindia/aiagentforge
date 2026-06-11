@@ -4026,14 +4026,15 @@ export default function Home() {
 
                       {/* Studio Professional → studio pose selector */}
                       {!customShootStyle.trim() &&
-                        shootStyle === "Studio Professional" &&
-                        !isHomeLikeCategory && (
+                        shootStyle === "Studio Professional" && (
                           <div className="mt-5 rounded-2xl border border-cyan-400/30 bg-cyan-400/5 p-4">
                             <p className="text-xs font-black uppercase tracking-widest text-cyan-600">
                               Select Studio Pose
                             </p>
                             <p className={`mt-1 text-xs ${muted}`}>
-                              Choose how the model is posed in the studio shot.
+                              {isHomeLikeCategory
+                                ? "Choose the studio camera angle / pose for the shot."
+                                : "Choose how the model is posed in the studio shot."}
                             </p>
                             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                               {studioPoseOptions.map((item) => (
