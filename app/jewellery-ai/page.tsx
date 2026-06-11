@@ -156,7 +156,7 @@ const MORE_JEWELLERY_OPTIONS = [
   "Pendant",
   "Chain",
   "Anklet",
-  "Kada",
+  "Other",
 ];
 
 const MODEL_USAGE_BY_JEWELLERY: Record<string, OptionItem[]> = {
@@ -174,7 +174,6 @@ const MODEL_USAGE_BY_JEWELLERY: Record<string, OptionItem[]> = {
     { label: "Ear Close-up", icon: UserRound, hint: "Wearing detail", iconFile: "ear-close-up" },
     { label: "Female Model", icon: UserRound, hint: "Wearable luxury", iconFile: "female-model" },
     { label: "Bridal Model", icon: Crown, hint: "Wedding style", iconFile: "bridal-model" },
-    { label: "Bust Portrait", icon: Camera, hint: "Face + jewellery", iconFile: "bust-portrait" },
     { label: "Half Body", icon: UserRound, hint: "Lifestyle look", iconFile: "half-body" },
     { label: "Luxury Flat Lay", icon: ImageIcon, hint: "Velvet box", iconFile: "luxury-flat-ray" },
   ],
@@ -184,7 +183,6 @@ const MODEL_USAGE_BY_JEWELLERY: Record<string, OptionItem[]> = {
     { label: "Neck Close-up", icon: Gem, hint: "Detail shot", iconFile: "neck-close-up" },
     { label: "Female Model", icon: UserRound, hint: "Wearable luxury", iconFile: "female-model" },
     { label: "Bridal Model", icon: Crown, hint: "Heavy look", iconFile: "bridal-model" },
-    { label: "Bust Portrait", icon: Camera, hint: "Face + jewellery", iconFile: "bust-portrait" },
     { label: "Half Body", icon: UserRound, hint: "Outfit + necklace", iconFile: "half-body" },
     { label: "Luxury Flat Lay", icon: ImageIcon, hint: "Velvet box", iconFile: "luxury-flat-ray" },
   ],
@@ -203,7 +201,6 @@ const MODEL_USAGE_BY_JEWELLERY: Record<string, OptionItem[]> = {
     { label: "Couple Hands", icon: UserRound, hint: "Engagement feel", iconFile: "couple-hands" },
     { label: "Female Model", icon: UserRound, hint: "Wearable look", iconFile: "female-model" },
     { label: "Bridal Model", icon: Crown, hint: "Wedding rich", iconFile: "bridal-model" },
-    { label: "Bust Portrait", icon: Camera, hint: "Face + jewellery", iconFile: "bust-portrait" },
     { label: "Half Body", icon: UserRound, hint: "Lifestyle", iconFile: "half-body" },
     { label: "Full Body", icon: UserRound, hint: "Editorial", iconFile: "full-body" },
     { label: "Detail Close-up", icon: ScanSearch, hint: "Jewellery focus", iconFile: "detail-close-up" },
@@ -219,7 +216,6 @@ const POSE_OPTIONS: OptionItem[] = [
   { label: "Side Pose", icon: UserRound, hint: "45° model turn", iconFile: "side-pose" },
   { label: "Half Body", icon: UserRound, hint: "Half model frame", iconFile: "half-body" },
   { label: "Full Body", icon: UserRound, hint: "Full model frame", iconFile: "full-body" },
-  { label: "Bust Portrait", icon: Camera, hint: "Upper-half body — neck + face jewellery", iconFile: "bust-portrait" },
 
   // Hand poses (rings / bracelets) — AI must match gender to jewellery
   { label: "Hand Pose", icon: Hand, hint: "Hand matched to jewellery (male/female)", iconFile: "hand-close-up" },
@@ -228,7 +224,6 @@ const POSE_OPTIONS: OptionItem[] = [
 
   // Neck poses (necklace / mangalsutra)
   { label: "Neck Close-up", icon: Gem, hint: "Female neck shot — necklace focus", iconFile: "neck-close-up" },
-  { label: "Touching Necklace", icon: UserRound, hint: "Model wearing + hand touching necklace", iconFile: "neck-focus" },
 
   // Ear poses (earrings)
   { label: "Ear Close-up", icon: UserRound, hint: "Side pose, earring visible", iconFile: "ear-close-up" },
@@ -346,6 +341,132 @@ function fileToDataUrl(file: File) {
 
 function clsx(...items: Array<string | false | null | undefined>) {
   return items.filter(Boolean).join(" ");
+}
+
+// Flat, colourful inline-SVG icons for the "More Jewellery Options" grid
+// (these jewellery sub-types have no bitmap files). Same flat illustration
+// style as the rest of the picker — gold metal + gem accents on a soft tile.
+function jewelGlyphName(label: string): string {
+  const k = label.toLowerCase().trim();
+  if (k.includes("set")) return "set";
+  if (k.includes("payal")) return "payal";
+  if (k.includes("tikka")) return "tikka";
+  if (k.includes("mangal")) return "mangalsutra";
+  if (k.includes("bangle")) return "bangles";
+  if (k.includes("nose")) return "nosepin";
+  if (k.includes("pendant")) return "pendant";
+  if (k.includes("chain")) return "chain";
+  if (k.includes("anklet")) return "anklet";
+  return "other";
+}
+
+function JewelGlyphIcon({ name }: { name: string }) {
+  const G = "#f59e0b";
+  const GL = "#fbbf24";
+  const GD = "#d97706";
+  let body: React.ReactNode = null;
+  switch (name) {
+    case "set":
+      body = (
+        <>
+          <path d="M16 18l16 18 16-18" fill="none" stroke={G} strokeWidth="2.6" strokeLinejoin="round" strokeLinecap="round" />
+          <circle cx="32" cy="38" r="4" fill="#ef4444" />
+          <circle cx="14" cy="20" r="3" fill={GL} />
+          <circle cx="50" cy="20" r="3" fill={GL} />
+        </>
+      );
+      break;
+    case "payal":
+      body = (
+        <>
+          <path d="M14 28a18 11 0 0 0 36 0" fill="none" stroke={G} strokeWidth="3" strokeLinecap="round" />
+          <circle cx="20" cy="36" r="2.2" fill={GL} />
+          <circle cx="26" cy="39" r="2.2" fill={GL} />
+          <circle cx="32" cy="40" r="2.2" fill={GL} />
+          <circle cx="38" cy="39" r="2.2" fill={GL} />
+          <circle cx="44" cy="36" r="2.2" fill={GL} />
+        </>
+      );
+      break;
+    case "tikka":
+      body = (
+        <>
+          <path d="M26 14a6 4 0 0 1 12 0" fill="none" stroke={G} strokeWidth="2.2" />
+          <path d="M32 14v14" stroke={G} strokeWidth="2.6" />
+          <circle cx="32" cy="33" r="6" fill={GL} />
+          <circle cx="32" cy="33" r="2.5" fill="#ef4444" />
+          <circle cx="32" cy="44" r="2.4" fill={GD} />
+        </>
+      );
+      break;
+    case "mangalsutra":
+      body = (
+        <>
+          <path d="M14 18c4 12 12 18 18 18s14-6 18-18" fill="none" stroke="#1f2937" strokeWidth="2.4" strokeDasharray="2.5 2.5" strokeLinecap="round" />
+          <circle cx="32" cy="38" r="5" fill={GL} />
+          <circle cx="29" cy="38" r="1.5" fill="#1f2937" />
+          <circle cx="35" cy="38" r="1.5" fill="#1f2937" />
+        </>
+      );
+      break;
+    case "bangles":
+      body = (
+        <>
+          <ellipse cx="32" cy="25" rx="16" ry="5" fill="none" stroke={G} strokeWidth="3" />
+          <ellipse cx="32" cy="32" rx="16" ry="5" fill="none" stroke={GL} strokeWidth="3" />
+          <ellipse cx="32" cy="39" rx="16" ry="5" fill="none" stroke={GD} strokeWidth="3" />
+        </>
+      );
+      break;
+    case "nosepin":
+      body = (
+        <>
+          <path d="M35 30q9 0 9 9" fill="none" stroke={G} strokeWidth="1.8" />
+          <circle cx="29" cy="30" r="6" fill={GL} />
+          <circle cx="29" cy="30" r="2.4" fill="#ef4444" />
+        </>
+      );
+      break;
+    case "pendant":
+      body = (
+        <>
+          <path d="M18 16l14 16 14-16" fill="none" stroke={G} strokeWidth="2.6" strokeLinejoin="round" strokeLinecap="round" />
+          <path d="M32 32c-4 4-4 9 0 11 4-2 4-7 0-11z" fill="#22d3ee" />
+        </>
+      );
+      break;
+    case "chain":
+      body = (
+        <>
+          <path d="M16 16v14a16 13 0 0 0 32 0V16" fill="none" stroke={G} strokeWidth="3.4" strokeDasharray="3 2.5" strokeLinecap="round" />
+        </>
+      );
+      break;
+    case "anklet":
+      body = (
+        <>
+          <ellipse cx="32" cy="31" rx="14" ry="16" fill="none" stroke={G} strokeWidth="3" strokeDasharray="3 2.5" />
+          <circle cx="32" cy="49" r="3" fill="#ef4444" />
+        </>
+      );
+      break;
+    case "other":
+    default:
+      return (
+        <svg viewBox="0 0 64 64" className="h-full w-full" aria-hidden="true">
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#cffafe" />
+          <path d="M22 22h20l6 7-16 17L16 29z" fill="#22d3ee" />
+          <path d="M16 29l6-7h20l6 7z" fill="#67e8f9" />
+          <path d="M16 29h32l-16 17z" fill="#0e7490" fillOpacity="0.22" />
+        </svg>
+      );
+  }
+  return (
+    <svg viewBox="0 0 64 64" className="h-full w-full" aria-hidden="true">
+      <rect x="2" y="2" width="60" height="60" rx="16" fill="#fef3c7" />
+      {body}
+    </svg>
+  );
 }
 
 function OptionCard({
@@ -2821,18 +2942,32 @@ if (!response.ok) {
                     {jewelleryType === "More Options" && (
                       <div className="rounded-[1.35rem] border border-cyan-300/40 bg-cyan-400/10 p-4 dark:border-cyan-400/20">
                         <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">More Jewellery Options</p>
-                        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                          {MORE_JEWELLERY_OPTIONS.map((item) => (
-                            <label key={item} className="flex cursor-pointer items-center gap-2 rounded-2xl border border-black/10 bg-white/80 px-3 py-2 text-xs font-bold dark:border-white/10 dark:bg-white/[0.05]">
-                              <input type="checkbox" checked={moreJewellery.includes(item)} onChange={() => toggleMoreJewellery(item)} />
-                              {item}
-                            </label>
-                          ))}
+                        <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/50">Tap to select one or more. Pick &quot;Other&quot; and the AI will auto-detect the piece from your upload.</p>
+                        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                          {MORE_JEWELLERY_OPTIONS.map((item) => {
+                            const isActive = moreJewellery.includes(item);
+                            return (
+                              <button
+                                key={item}
+                                type="button"
+                                onClick={() => toggleMoreJewellery(item)}
+                                className={clsx(
+                                  "group relative flex min-h-[110px] flex-col items-center justify-center rounded-[22px] border p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[128px] sm:rounded-[24px]",
+                                  isActive
+                                    ? "scale-[1.025] border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/60"
+                                    : "border-slate-200 bg-white/90 hover:-translate-y-1 hover:border-cyan-300 hover:bg-white hover:shadow-lg dark:border-white/10 dark:bg-white/[0.045] dark:hover:bg-white/[0.08]",
+                                )}
+                              >
+                                <div className="mb-2 flex h-14 w-14 items-center justify-center overflow-hidden rounded-[18px] sm:h-16 sm:w-16">
+                                  <JewelGlyphIcon name={jewelGlyphName(item)} />
+                                </div>
+                                <p className={clsx("text-[12px] font-black leading-4 sm:text-sm", isActive ? "text-cyan-700 dark:text-cyan-200" : "text-slate-700 dark:text-white/75")}>{item}</p>
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
-
-                    <TextInputBox label="Other Jewellery / Custom Type" value={customJewellery} onChange={setCustomJewellery} placeholder="Example: Kundan choker, temple jewellery, custom pendant..." />
 
                     <div className="rounded-[1.35rem] border border-black/10 bg-white/70 p-4 dark:border-white/10 dark:bg-white/[0.045]">
                       <p className="text-xs font-black uppercase tracking-widest text-cyan-600">Jewellery Protection Notes</p>
@@ -2851,7 +2986,6 @@ if (!response.ok) {
                   <div className="space-y-4">
                     {/* Shoot Style — now includes both shoot atmosphere AND model look */}
                     <SelectionGrid title="Shoot Style &amp; Model Look" subtitle="One unified pick — lighting, background, presentation, plus Indian/bridal/luxury model aesthetic." options={SHOOT_STYLE_OPTIONS} value={shootStyle} onChange={setShootStyle} />
-                    <TextInputBox label="Custom Shoot Style" value={customShootStyle} onChange={setCustomShootStyle} placeholder="Example: Punjabi bridal with warm gold lighting, South Indian temple jewellery shoot, modern luxury campaign..." />
 
                     {/* Accessories & Props (10 options after removing Bridal Red Pillow) */}
                     <SelectionGrid title="Accessories &amp; Props" subtitle="Background props — temple, diamond, bridal, flat-lay setups." options={ACCESSORY_OPTIONS} value={accessory} onChange={setAccessory} />
