@@ -161,6 +161,21 @@ export async function POST(request: Request) {
       console.error("[verify-payment] record_referral_earning failed:", e);
     }
 
+    // Notify the buyer in their notification bell — only on the first
+    // credit (add_credits_for_payment is idempotent, so replays skip this).
+    if (result.added) {
+      try {
+        await supabaseAdmin.rpc("add_user_notification", {
+          p_user_id: userId,
+          p_title: "Payment successful ✅",
+          p_body: `${plan.credits.toLocaleString("en-IN")} credits added to your account (${planName} plan).`,
+          p_link: "/billing",
+        });
+      } catch (e) {
+        console.error("[verify-payment] add_user_notification failed:", e);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       alreadyProcessed: !result.added,

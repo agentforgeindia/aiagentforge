@@ -3,13 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import { Bell } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
+import { supabase } from "@/lib/supabase";
 
-type Ann = {
+type Item = {
   id: string;
   title: string;
   body?: string | null;
   link?: string | null;
   created_at: string;
+  kind: "broadcast" | "user";
+  is_read?: boolean;
 };
 
 const SEEN_KEY = "af_announce_last_seen";
@@ -26,19 +29,49 @@ function timeAgo(iso: string) {
 
 export default function NotificationBell() {
   const { darkMode } = useTheme();
-  const [items, setItems] = useState<Ann[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
   const [open, setOpen] = useState(false);
   const [lastSeen, setLastSeen] = useState(0);
+  const tokenRef = useRef<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+
+  const load = async () => {
+    const { data: session } = await supabase.auth.getSession();
+    const token = session.session?.access_token ?? null;
+    tokenRef.current = token;
+
+    const [annRes, userRes] = await Promise.all([
+      fetch("/api/announcements", { cache: "no-store" })
+        .then((r) => r.json())
+        .catch(() => ({})),
+      token
+        ? fetch("/api/user-notifications", {
+            cache: "no-store",
+            headers: { Authorization: `Bearer ${token}` },
+          })
+            .then((r) => r.json())
+            .catch(() => ({}))
+        : Promise.resolve({}),
+    ]);
+
+    const ann: Item[] = (annRes?.announcements ?? []).map((a: any) => ({
+      ...a,
+      kind: "broadcast" as const,
+    }));
+    const usr: Item[] = (userRes?.notifications ?? []).map((n: any) => ({
+      ...n,
+      kind: "user" as const,
+    }));
+    const merged = [...ann, ...usr].sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+    setItems(merged);
+  };
 
   useEffect(() => {
     setLastSeen(Number(localStorage.getItem(SEEN_KEY) || 0));
-    fetch("/api/announcements", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.announcements) setItems(d.announcements as Ann[]);
-      })
-      .catch(() => {});
+    load();
   }, []);
 
   useEffect(() => {
@@ -50,8 +83,10 @@ export default function NotificationBell() {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  const unread = items.filter(
-    (a) => new Date(a.created_at).getTime() > lastSeen,
+  const unread = items.filter((a) =>
+    a.kind === "user"
+      ? !a.is_read
+      : new Date(a.created_at).getTime() > lastSeen,
   ).length;
 
   const toggle = () => {
@@ -61,6 +96,16 @@ export default function NotificationBell() {
       const now = Date.now();
       localStorage.setItem(SEEN_KEY, String(now));
       setLastSeen(now);
+      // Mark personal notifications read.
+      if (tokenRef.current) {
+        fetch("/api/user-notifications", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${tokenRef.current}` },
+        }).catch(() => {});
+        setItems((prev) =>
+          prev.map((i) => (i.kind === "user" ? { ...i, is_read: true } : i)),
+        );
+      }
     }
   };
 
@@ -99,17 +144,17 @@ export default function NotificationBell() {
               darkMode ? "border-white/10" : "border-black/10"
             }`}
           >
-            Updates
+            Notifications
           </div>
           <div className="max-h-96 overflow-y-auto">
             {items.length === 0 ? (
               <p className={`px-4 py-8 text-center text-sm ${muted}`}>
-                No updates yet.
+                No notifications yet.
               </p>
             ) : (
               items.map((a) => (
                 <div
-                  key={a.id}
+                  key={`${a.kind}-${a.id}`}
                   className={`border-b px-4 py-3 last:border-b-0 ${
                     darkMode ? "border-white/5" : "border-black/5"
                   }`}
@@ -125,8 +170,6 @@ export default function NotificationBell() {
                     {a.link && (
                       <a
                         href={a.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
                         className="text-[11px] font-bold text-cyan-500 hover:underline"
                       >
                         View →
