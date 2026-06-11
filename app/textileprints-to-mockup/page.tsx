@@ -468,27 +468,102 @@ function VisualIcon({ icon, fileName }: { icon: IconName; fileName?: string }) {
   );
 }
 
-// ── Royal inline-SVG icons for the newer sub-options (sofa size,
-// towel type, outdoor/editorial background themes, studio poses,
-// "Other"). These are hand-drawn line glyphs in a premium gold
-// gradient — NOT the bitmap/SVG files used elsewhere — so each new
-// concept gets its own bespoke "royal" mark.
+// ── Flat colourful icons for the newer sub-options (sofa size,
+// towel type, background themes, studio poses, "Other"). Bespoke
+// inline SVGs drawn in the app's flat, multi-colour illustration
+// style (filled shapes on a soft tinted tile) — on-theme with the
+// rest of the picker, not the bitmap files used elsewhere.
+function personPose(opts: {
+  arms: [number, number];
+  legs: [number, number];
+  headDx?: number;
+  seat?: boolean;
+}): React.ReactNode {
+  const { arms, legs, headDx = 0, seat = false } = opts;
+  const C = "#7c3aed";
+  const L = "#a78bfa";
+  return (
+    <>
+      <rect x="2" y="2" width="60" height="60" rx="16" fill="#ede9fe" />
+      {seat && (
+        <>
+          <rect x="17" y="44" width="17" height="3" rx="1.5" fill={L} />
+          <rect x="18" y="46" width="3" height="7" rx="1.5" fill={L} />
+          <rect x="30" y="46" width="3" height="7" rx="1.5" fill={L} />
+        </>
+      )}
+      <rect
+        x="29.2"
+        y="33"
+        width="4"
+        height="16"
+        rx="2"
+        fill={C}
+        transform={`rotate(${legs[0]} 31 34)`}
+      />
+      <rect
+        x="30.8"
+        y="33"
+        width="4"
+        height="16"
+        rx="2"
+        fill={C}
+        transform={`rotate(${legs[1]} 33 34)`}
+      />
+      <rect
+        x="28"
+        y="20"
+        width="3.6"
+        height="13"
+        rx="1.8"
+        fill={C}
+        transform={`rotate(${arms[0]} 30 21)`}
+      />
+      <rect
+        x="32.4"
+        y="20"
+        width="3.6"
+        height="13"
+        rx="1.8"
+        fill={C}
+        transform={`rotate(${arms[1]} 34 21)`}
+      />
+      <rect x="28.5" y="19" width="7" height="16" rx="3.5" fill={C} />
+      <circle cx={32 + headDx} cy="13" r="5.5" fill={C} />
+    </>
+  );
+}
+
 function royalGlyph(name: string): React.ReactNode {
   if (name.startsWith("sofa")) {
     const n = parseInt(name.slice(4), 10) || 3;
-    const lines = [];
-    for (let i = 1; i < n; i++) {
-      const x = 16 + ((48 - 16) * i) / n;
-      lines.push(<line key={i} x1={x} y1="33" x2={x} y2="41" />);
+    const seatX0 = 15;
+    const seatW = 34;
+    const cw = seatW / n;
+    const cushions = [];
+    for (let i = 0; i < n; i++) {
+      cushions.push(
+        <rect
+          key={i}
+          x={seatX0 + i * cw + 1}
+          y="30"
+          width={cw - 2}
+          height="9"
+          rx="2"
+          fill="#93c5fd"
+        />,
+      );
     }
     return (
       <>
-        <rect x="9" y="28" width="6" height="17" rx="2.5" />
-        <rect x="49" y="28" width="6" height="17" rx="2.5" />
-        <path d="M15 27h34a3 3 0 0 1 3 3v2H12v-2a3 3 0 0 1 3-3z" />
-        <rect x="12" y="32" width="40" height="10" rx="2.5" />
-        <path d="M14 45v4M50 45v4" />
-        {lines}
+        <rect x="2" y="2" width="60" height="60" rx="16" fill="#dbeafe" />
+        <rect x="10" y="38" width="44" height="9" rx="3" fill="#2563eb" />
+        <rect x="8" y="27" width="9" height="20" rx="4" fill="#3b82f6" />
+        <rect x="47" y="27" width="9" height="20" rx="4" fill="#3b82f6" />
+        <rect x="14" y="24" width="36" height="14" rx="5" fill="#60a5fa" />
+        {cushions}
+        <rect x="13" y="46" width="4" height="5" rx="1" fill="#1e3a8a" />
+        <rect x="47" y="46" width="4" height="5" rx="1" fill="#1e3a8a" />
       </>
     );
   }
@@ -497,209 +572,175 @@ function royalGlyph(name: string): React.ReactNode {
     case "towelBaby":
       return (
         <>
-          <path d="M20 25l12-9 12 9v21a4 4 0 0 1-4 4H24a4 4 0 0 1-4-4z" />
-          <path d="M26 21l6 4 6-4" />
-          <path d="M27 41h10" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#fce7f3" />
+          <path d="M20 26l12-9 12 9v19a4 4 0 0 1-4 4H24a4 4 0 0 1-4-4z" fill="#f472b6" />
+          <path d="M20 26l12-9 12 9-6 3-6-4-6 4z" fill="#ec4899" />
+          <rect x="27" y="40" width="10" height="3" rx="1.5" fill="#fbcfe8" />
         </>
       );
     case "towelKids":
       return (
         <>
-          <rect x="16" y="22" width="32" height="8" rx="3" />
-          <rect x="18" y="32" width="28" height="8" rx="3" />
-          <rect x="20" y="42" width="24" height="7" rx="3" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#ccfbf1" />
+          <rect x="15" y="22" width="34" height="8" rx="3" fill="#0d9488" />
+          <rect x="17" y="31" width="30" height="8" rx="3" fill="#2dd4bf" />
+          <rect x="19" y="40" width="26" height="7" rx="3" fill="#5eead4" />
         </>
       );
     case "towelBoy":
       return (
         <>
-          <rect x="18" y="19" width="28" height="29" rx="4" />
-          <path d="M32 25l2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7z" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <rect x="17" y="18" width="30" height="30" rx="6" fill="#38bdf8" />
+          <path d="M32 24l2.6 5.3 5.8.9-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.9z" fill="#fbbf24" />
         </>
       );
     case "towelGirl":
       return (
         <>
-          <rect x="18" y="19" width="28" height="29" rx="4" />
-          <circle cx="32" cy="32" r="2.6" />
-          <circle cx="32" cy="27" r="2.4" />
-          <circle cx="27" cy="33" r="2.4" />
-          <circle cx="37" cy="33" r="2.4" />
-          <circle cx="29" cy="38" r="2.4" />
-          <circle cx="35" cy="38" r="2.4" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#ffe4e6" />
+          <rect x="17" y="18" width="30" height="30" rx="6" fill="#fb7185" />
+          <circle cx="32" cy="27" r="3" fill="#fcd34d" />
+          <circle cx="27" cy="31" r="3" fill="#fcd34d" />
+          <circle cx="37" cy="31" r="3" fill="#fcd34d" />
+          <circle cx="29" cy="37" r="3" fill="#fcd34d" />
+          <circle cx="35" cy="37" r="3" fill="#fcd34d" />
+          <circle cx="32" cy="32" r="3" fill="#f59e0b" />
         </>
       );
     // ── Background themes ──
     case "palace":
       return (
         <>
-          <path d="M12 50h40" />
-          <rect x="14" y="34" width="8" height="16" />
-          <rect x="42" y="34" width="8" height="16" />
-          <rect x="26" y="30" width="12" height="20" />
-          <path d="M26 30a6 6 0 0 1 12 0M14 34a4 4 0 0 1 8 0M42 34a4 4 0 0 1 8 0" />
-          <path d="M32 20v6" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#fef3c7" />
+          <rect x="14" y="34" width="9" height="16" fill="#f59e0b" />
+          <rect x="41" y="34" width="9" height="16" fill="#f59e0b" />
+          <rect x="26" y="30" width="12" height="20" fill="#fbbf24" />
+          <path d="M26 30a6 6 0 0 1 12 0z" fill="#d97706" />
+          <path d="M14 34a4.5 4.5 0 0 1 9 0z" fill="#d97706" />
+          <path d="M41 34a4.5 4.5 0 0 1 9 0z" fill="#d97706" />
+          <rect x="30" y="41" width="4" height="9" fill="#92400e" />
+          <rect x="11" y="50" width="42" height="3" rx="1.5" fill="#b45309" />
         </>
       );
     case "wedding":
       return (
         <>
-          <path d="M17 50V27a15 15 0 0 1 30 0v23" />
-          <path d="M14 50h36" />
-          <path d="M32 31c-2-3-7-2.5-7 1.5 0 3 4 5 7 7.5 3-2.5 7-4.5 7-7.5 0-4-5-4.5-7-1.5z" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#ffe4e6" />
+          <path d="M18 50V28a14 14 0 0 1 28 0v22z" fill="#fda4af" />
+          <path d="M24 50V30a8 8 0 0 1 16 0v20z" fill="#ffe4e6" />
+          <path d="M32 30c-2-3-7.5-2.5-7.5 1.8 0 3.3 4.3 5.4 7.5 8.2 3.2-2.8 7.5-4.9 7.5-8.2 0-4.3-5.5-4.8-7.5-1.8z" fill="#e11d48" />
         </>
       );
     case "sea":
       return (
         <>
-          <circle cx="32" cy="23" r="7" />
-          <path d="M10 39q4-4 8 0t8 0 8 0 8 0 8 0" />
-          <path d="M10 47q4-4 8 0t8 0 8 0 8 0 8 0" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <circle cx="32" cy="22" r="7" fill="#fbbf24" />
+          <path d="M8 38q4-5 8 0t8 0 8 0 8 0 8 0v8H8z" fill="#38bdf8" />
+          <path d="M8 45q4-5 8 0t8 0 8 0 8 0 8 0v7H8z" fill="#0ea5e9" />
         </>
       );
     case "forest":
       return (
         <>
-          <path d="M32 14l9 13h-5l6 9h-6l5 8H21l5-8h-6l6-9h-5z" />
-          <path d="M30 44h4v8h-4z" />
-          <path d="M14 52h36" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#dcfce7" />
+          <path d="M32 14l9 13h-5l6 9h-6l5 8H21l5-8h-6l6-9h-5z" fill="#16a34a" />
+          <rect x="30" y="44" width="4" height="8" fill="#92400e" />
+          <rect x="14" y="50" width="36" height="3" rx="1.5" fill="#4ade80" />
         </>
       );
     case "temple":
       return (
         <>
-          <path d="M20 50V32l12-10 12 10v18" />
-          <path d="M24 32h16" />
-          <path d="M28 50V41h8v9" />
-          <path d="M32 15v7" />
-          <path d="M32 15l5 2-5 2" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#fef3c7" />
+          <path d="M20 50V32l12-10 12 10v18z" fill="#f59e0b" />
+          <rect x="28" y="40" width="8" height="10" fill="#b45309" />
+          <rect x="31" y="14" width="2" height="8" fill="#92400e" />
+          <path d="M33 15l6 2-6 2z" fill="#ef4444" />
         </>
       );
     case "fort":
       return (
         <>
-          <path d="M12 50V30h5v-5h5v5h5v-5h5v5h5v-5h5v5h5v20" />
-          <path d="M28 50V40a4 4 0 0 1 8 0v10" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e7e5e4" />
+          <path d="M12 50V30h5v-5h5v5h5v-5h5v5h5v-5h5v5h5v-5h5v5h5v20z" fill="#a8a29e" />
+          <path d="M28 50V41a4 4 0 0 1 8 0v9z" fill="#57534e" />
         </>
       );
     case "river":
       return (
         <>
-          <path d="M12 24c8 0 8 8 16 8s8-8 16-8 8 8 8 8" />
-          <path d="M12 38c8 0 8 8 16 8s8-8 16-8 8 8 8 8" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#dcfce7" />
+          <path d="M2 24c10 0 10 8 20 8s10-8 20-8 10 8 20 8v8c-10 0-10-8-20-8s-10 8-20 8-10-8-20-8z" fill="#38bdf8" />
         </>
       );
     case "waterfall":
       return (
         <>
-          <path d="M22 14h20" />
-          <path d="M24 16v22M30 16v26M36 16v22M42 16v24" />
-          <path d="M16 46q16 8 32 0M16 50q16 8 32 0" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#cffafe" />
+          <rect x="20" y="14" width="24" height="4" rx="2" fill="#94a3b8" />
+          <rect x="22" y="18" width="20" height="22" fill="#22d3ee" />
+          <path d="M16 44q16 8 32 0v8H16z" fill="#06b6d4" />
         </>
       );
     case "mountains":
       return (
         <>
-          <path d="M8 48l12-20 8 12 8-16 12 24z" />
-          <path d="M16 36l4-6 3 4" />
-          <path d="M8 48h48" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e2e8f0" />
+          <path d="M4 50l16-24 10 14 10-18 14 28z" fill="#64748b" />
+          <path d="M20 26l-4 6h8z" fill="#f8fafc" />
+          <path d="M40 22l-4 6h8z" fill="#f8fafc" />
+          <rect x="4" y="50" width="56" height="3" fill="#475569" />
         </>
       );
     case "garden":
       return (
         <>
-          <circle cx="32" cy="22" r="4" />
-          <circle cx="32" cy="16" r="3.4" />
-          <circle cx="26" cy="20" r="3.4" />
-          <circle cx="38" cy="20" r="3.4" />
-          <circle cx="28" cy="26" r="3.4" />
-          <circle cx="36" cy="26" r="3.4" />
-          <path d="M32 30v18" />
-          <path d="M32 38c-6 0-8-4-8-4M32 42c6 0 8-4 8-4" />
-          <path d="M14 52h36" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#dcfce7" />
+          <rect x="31" y="30" width="2.5" height="20" fill="#16a34a" />
+          <path d="M32 40c-7 0-9-5-9-5 5-1 9 1 9 5z" fill="#22c55e" />
+          <path d="M32 44c7 0 9-5 9-5-5-1-9 1-9 5z" fill="#22c55e" />
+          <circle cx="32" cy="20" r="4" fill="#f472b6" />
+          <circle cx="26" cy="24" r="4" fill="#f472b6" />
+          <circle cx="38" cy="24" r="4" fill="#f472b6" />
+          <circle cx="28" cy="30" r="4" fill="#f472b6" />
+          <circle cx="36" cy="30" r="4" fill="#f472b6" />
+          <circle cx="32" cy="25" r="3.5" fill="#fbbf24" />
         </>
       );
-    // ── Studio poses ──
+    // ── Studio poses (flat violet figures) ──
     case "poseStand":
-      return (
-        <>
-          <circle cx="32" cy="16" r="6" />
-          <path d="M32 22v18" />
-          <path d="M32 26l-8 8M32 26l8 8" />
-          <path d="M32 40l-6 12M32 40l6 12" />
-        </>
-      );
+      return personPose({ arms: [-12, 12], legs: [-8, 8] });
     case "poseTurn":
-      return (
-        <>
-          <circle cx="30" cy="16" r="6" />
-          <path d="M31 22c-2 6-2 12 0 18" />
-          <path d="M31 26l-7 6M31 27l7 5" />
-          <path d="M31 40l-5 12M31 40l6 11" />
-        </>
-      );
+      return personPose({ arms: [-8, 22], legs: [-5, 12], headDx: -3 });
     case "posePocket":
-      return (
-        <>
-          <circle cx="32" cy="16" r="6" />
-          <path d="M32 22v18" />
-          <path d="M32 27l-8 7M32 27c5 2 6 6 4 9" />
-          <path d="M32 40l-6 12M32 40l6 12" />
-        </>
-      );
+      return personPose({ arms: [-12, 55], legs: [-8, 8] });
     case "poseAway":
-      return (
-        <>
-          <circle cx="34" cy="16" r="6" />
-          <path d="M40 16h3" />
-          <path d="M32 22v18" />
-          <path d="M32 26l-8 7M32 26l7 6" />
-          <path d="M32 40l-6 12M32 40l6 12" />
-        </>
-      );
+      return personPose({ arms: [-12, 12], legs: [-8, 8], headDx: 5 });
     case "poseSit":
-      return (
-        <>
-          <circle cx="30" cy="14" r="5" />
-          <path d="M30 19v9l-8 3" />
-          <path d="M22 31v11" />
-          <path d="M30 24l8 4" />
-          <path d="M17 42h15" />
-          <path d="M20 42v8M30 42v8" />
-        </>
-      );
+      return personPose({ arms: [-10, 10], legs: [80, 95], seat: true });
     case "poseLean":
-      return (
-        <>
-          <circle cx="37" cy="16" r="6" />
-          <path d="M37 22l-7 18" />
-          <path d="M35 27l-9 4M35 27l8 5" />
-          <path d="M30 40l-6 12M30 40l4 12" />
-        </>
-      );
+      return personPose({ arms: [-22, 8], legs: [14, 20], headDx: 4 });
     case "poseWalk":
-      return (
-        <>
-          <circle cx="32" cy="16" r="6" />
-          <path d="M32 22v16" />
-          <path d="M32 26l-7 4M32 26l8 3" />
-          <path d="M32 38l-9 11M32 38l7 12" />
-        </>
-      );
+      return personPose({ arms: [-26, 26], legs: [-28, 28] });
     case "poseAuto":
       return (
         <>
-          <path d="M30 14c2 9 5 12 14 14-9 2-12 5-14 14-2-9-5-12-14-14 9-2 12-5 14-14z" />
-          <path d="M48 18v6M45 21h6" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#ede9fe" />
+          <path d="M28 14c2 9 5 12 14 14-9 2-12 5-14 14-2-9-5-12-14-14 9-2 12-5 14-14z" fill="#a855f7" />
+          <path d="M47 16c1 4 2 5 6 6-4 1-5 2-6 6-1-4-2-5-6-6 4-1 5-2 6-6z" fill="#c084fc" />
         </>
       );
-    // ── Other / auto-detect (premium gem) ──
+    // ── Other / auto-detect (flat gem) ──
     case "other":
     default:
       return (
         <>
-          <path d="M22 20h20l6 8-16 18L16 28z" />
-          <path d="M16 28h32M28 20l-6 8 10 18M36 20l6 8-10 18" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="#cffafe" />
+          <path d="M22 20h20l7 8-17 18L15 28z" fill="#22d3ee" />
+          <path d="M15 28l7-8h20l7 8z" fill="#67e8f9" />
+          <path d="M15 28h34l-17 18z" fill="#0e7490" fillOpacity="0.22" />
         </>
       );
   }
@@ -709,29 +750,10 @@ function RoyalIcon({ name }: { name: string }) {
   return (
     <svg
       viewBox="0 0 64 64"
-      className="h-full w-full p-3"
-      fill="none"
-      stroke="url(#afRoyalGrad)"
-      strokeWidth={2.4}
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      className="h-full w-full"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      <defs>
-        <linearGradient
-          id="afRoyalGrad"
-          x1="8"
-          y1="8"
-          x2="56"
-          y2="56"
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop stopColor="#fbbf24" />
-          <stop offset="0.55" stopColor="#f59e0b" />
-          <stop offset="1" stopColor="#b45309" />
-        </linearGradient>
-      </defs>
       {royalGlyph(name)}
     </svg>
   );
@@ -909,12 +931,6 @@ function OptionCard({
           active
             ? "shadow-lg shadow-cyan-400/25"
             : "shadow-sm"
-        } ${
-          useGlyph
-            ? darkMode
-              ? "bg-amber-400/10 ring-1 ring-amber-300/30"
-              : "bg-gradient-to-br from-amber-50 to-amber-100/60 ring-1 ring-amber-200/70"
-            : ""
         }`}
       >
         {useGlyph ? (
