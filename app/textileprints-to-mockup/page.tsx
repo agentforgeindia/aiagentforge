@@ -893,6 +893,140 @@ function optionIcon(title: string): IconName {
   return "pattern";
 }
 
+// New themed UI icons (cropped from the design grids; white bg kept).
+const UI = (f: string) => `/ui-icons/${f}.png`;
+const PRODUCT_ICONS_BY_CATEGORY: Record<string, Record<string, string>> = {
+  "Men's Wear": {
+    "Men's Shirt": UI("p-mens-shirt"),
+    "Male Kurta": UI("p-male-kurta"),
+    "Pathani Suit": UI("p-pathani-suit"),
+    "2 Piece Suit": UI("p-2-piece-suit"),
+    "3 Piece Suit": UI("p-3-piece-suit"),
+    Blazer: UI("p-blazer"),
+    Waistcoat: UI("p-waistcoat"),
+    "T-Shirt": UI("p-t-shirt"),
+    Hoodie: UI("p-hoodie"),
+    "Co-ord Set": UI("p-co-ord-set"),
+    Other: UI("p-other"),
+  },
+  "Ladies Wear": {
+    "Ladies Suit": UI("pl-ladies-suit"),
+    "Salwar Kameez": UI("pl-salwar-kameez"),
+    Kurti: UI("pl-kurti"),
+    Saree: UI("pl-saree"),
+    Lehenga: UI("pl-lehenga"),
+    Gown: UI("pl-gown"),
+    Dress: UI("pl-dress"),
+    Dupatta: UI("pl-dupatta"),
+    "Cord Set": UI("pl-cord-set"),
+    "Sharara Suit": UI("pl-sharara-suit"),
+    "Palazzo Suit": UI("pl-palazzo-suit"),
+    Scarf: UI("pl-scarf"),
+    Stole: UI("pl-stole"),
+    Other: UI("pl-other"),
+  },
+  "Kids Wear": {
+    "Boys Shirt": UI("pk-boys-shirt"),
+    "Boys Kurta": UI("pk-boys-kurta"),
+    "Kids T-Shirt": UI("pk-kids-t-shirt"),
+    "Girls Frock": UI("pk-girls-frock"),
+    "Girls T-Shirt": UI("pk-girls-t-shirt"),
+    "Girls Top & Jeans": UI("pk-girls-top-jeans"),
+    "Kids Suit": UI("pk-kids-suit"),
+    "Kids Night Suit": UI("pk-kids-night-suit"),
+    Other: UI("pk-other"),
+  },
+  "Home Textile": {
+    Bedsheet: UI("ph-bedsheet"),
+    Curtain: UI("ph-curtain"),
+    "Pillow Cover": UI("ph-pillow-cover"),
+    "Cushion Cover": UI("ph-cushion-cover"),
+    "Sofa Cover": UI("ph-sofa-cover"),
+    "Table Cover": UI("ph-table-cover"),
+    Towel: UI("ph-towel"),
+    Blanket: UI("ph-blanket"),
+    Quilt: UI("ph-quilt"),
+    Bathrobe: UI("ph-bathrobe"),
+    "Fabric Bag": UI("ph-fabric-bag"),
+    "Carpet & Rug": UI("ph-carpet-rug"),
+    "Luxury Bedroom Setup": UI("ph-luxury-bedroom-setup"),
+    Other: UI("ph-other"),
+  },
+  "Universal Fabric": {
+    "Flat Fabric Layout": UI("pu-flat-fabric-layout"),
+    "Hanging Fabric": UI("pu-hanging-fabric"),
+    "Rolled Fabric": UI("pu-rolled-fabric"),
+    "Folded Fabric Stack": UI("pu-folded-fabric-stack"),
+    "Close-up Texture": UI("pu-close-up-texture"),
+    "Fabric Hanging Display": UI("pu-fabric-hanging-display"),
+    Other: UI("pu-other"),
+  },
+};
+const USAGE_ICONS: Record<string, string> = {
+  "Single Model": UI("u-single"),
+  "Couple Model": UI("u-couple"),
+  "Family Scene": UI("u-family"),
+  Mannequin: UI("u-mannequin"),
+};
+const POSE_ICONS: Record<string, string> = {
+  "Front Face": UI("pose-front-face"),
+  "Side Pose": UI("pose-side"),
+  "Walking Pose": UI("pose-walking"),
+  "Sitting Pose": UI("pose-sitting"),
+  "Close-up Shot": UI("pose-closeup"),
+  "Half Body": UI("pose-half-body"),
+  "Full Body": UI("pose-full-body"),
+  Auto: UI("pose-auto"),
+};
+const STUDIO_POSE_ICONS: Record<string, string> = {
+  Auto: UI("sp-auto"),
+  "Standing Front": UI("sp-standing-front"),
+  "Three-Quarter Turn": UI("sp-three-quarter-turn"),
+  "Hand in Pocket": UI("sp-hand-in-pocket"),
+  "Looking Away": UI("sp-looking-away"),
+  "Seated Stool": UI("sp-seated-stool"),
+  "Leaning Pose": UI("sp-leaning-pose"),
+  "Walking Toward Camera": UI("sp-walking-toward-camera"),
+};
+const BG_THEME_ICONS: Record<string, string> = {
+  "Royal Palace": UI("bg-royal-palace"),
+  "Wedding Theme": UI("bg-wedding-theme"),
+  "Sea Face": UI("bg-sea-face"),
+  Forest: UI("bg-forest"),
+  Temple: UI("bg-temple"),
+  Forts: UI("bg-forts"),
+  "River Site": UI("bg-river-site"),
+  Waterfall: UI("bg-waterfall"),
+  Mountains: UI("bg-mountains"),
+  Garden: UI("bg-garden"),
+};
+const FACE_EXPR_ICONS: Record<string, string> = {
+  Happy: UI("fe-happy"),
+  Confident: UI("fe-confident"),
+  Chill: UI("fe-chill"),
+  Serious: UI("fe-serious"),
+  Smiling: UI("fe-smiling"),
+  "Soft Look": UI("fe-soft-look"),
+};
+const SHOOT_STYLE_ICONS: Record<string, string> = {
+  "Outdoor Premium": UI("ss-outdoor-premium"),
+  "Studio Professional": UI("ss-studio-professional"),
+  "White Background": UI("ss-white-background"),
+  "Luxury Editorial": UI("ss-luxury-editorial"),
+};
+const ACCESSORY_ICONS: Record<string, string> = {
+  None: UI("acc-none"),
+  Sunglasses: UI("acc-sunglasses"),
+  Watch: UI("acc-watch"),
+  Bracelet: UI("acc-bracelet"),
+};
+const OUTPUT_ICONS: Record<string, string> = {
+  "Square (1:1)": UI("oq-square"),
+  "Mobile (9:16)": UI("oq-mobile"),
+  Premium: UI("oq-premium"),
+  "Ultra HD": UI("oq-ultra-hd"),
+};
+
 function OptionCard({
   title,
   active,
@@ -900,6 +1034,7 @@ function OptionCard({
   onClick,
   darkMode,
   useGlyph,
+  imgSrc,
 }: {
   title: string;
   active: boolean;
@@ -907,6 +1042,7 @@ function OptionCard({
   onClick: () => void;
   darkMode: boolean;
   useGlyph?: boolean;
+  imgSrc?: string;
 }) {
   const finalIcon = icon || optionIcon(title);
   const iconFile =
@@ -931,9 +1067,18 @@ function OptionCard({
           active
             ? "shadow-lg shadow-cyan-400/25"
             : "shadow-sm"
-        }`}
+        } ${imgSrc ? "bg-white" : ""}`}
       >
-        {useGlyph ? (
+        {imgSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imgSrc}
+            alt=""
+            loading="lazy"
+            aria-hidden="true"
+            className="block h-full w-full object-contain transition duration-300 group-hover:scale-105"
+          />
+        ) : useGlyph ? (
           <RoyalIcon name={optionGlyph(title)} />
         ) : (
           <VisualIcon icon={finalIcon} fileName={iconFile} />
@@ -3862,6 +4007,7 @@ export default function Home() {
                             }}
                             darkMode={darkMode}
                             useGlyph={item === "Other"}
+                            imgSrc={PRODUCT_ICONS_BY_CATEGORY[textileCategory]?.[item]}
                           />
                         ))}
                       </div>
@@ -3958,6 +4104,7 @@ export default function Home() {
                               }
                             }}
                             darkMode={darkMode}
+                            imgSrc={USAGE_ICONS[item]}
                           />
                         ))}
                       </div>
@@ -4063,6 +4210,7 @@ export default function Home() {
                               setCustomPose("");
                             }}
                             darkMode={darkMode}
+                            imgSrc={POSE_ICONS[item]}
                           />
                         ))}
                       </div>
@@ -4096,6 +4244,7 @@ export default function Home() {
                                 setCustomFaceExpression("");
                               }}
                               darkMode={darkMode}
+                              imgSrc={FACE_EXPR_ICONS[item]}
                             />
                           ))}
                         </div>
@@ -4132,6 +4281,7 @@ export default function Home() {
                               setCustomShootStyle("");
                             }}
                             darkMode={darkMode}
+                            imgSrc={SHOOT_STYLE_ICONS[item]}
                           />
                         ))}
                       </div>
@@ -4162,6 +4312,7 @@ export default function Home() {
                                   onClick={() => setOutdoorBackground(item)}
                                   darkMode={darkMode}
                                   useGlyph
+                                  imgSrc={BG_THEME_ICONS[item]}
                                 />
                               ))}
                             </div>
@@ -4189,6 +4340,7 @@ export default function Home() {
                                   onClick={() => setStudioPose(item)}
                                   darkMode={darkMode}
                                   useGlyph
+                                  imgSrc={STUDIO_POSE_ICONS[item]}
                                 />
                               ))}
                             </div>
@@ -4215,6 +4367,7 @@ export default function Home() {
                               active={accessories.includes(item)}
                               onClick={() => toggleAccessory(item)}
                               darkMode={darkMode}
+                              imgSrc={ACCESSORY_ICONS[item]}
                             />
                           ),
                         )}
@@ -4260,6 +4413,7 @@ export default function Home() {
                                   setCustomOutputSize("");
                                 }}
                                 darkMode={darkMode}
+                                imgSrc={OUTPUT_ICONS[item]}
                               />
                             ))}
                           </div>
@@ -4286,6 +4440,7 @@ export default function Home() {
                                   setCustomQuality("");
                                 }}
                                 darkMode={darkMode}
+                                imgSrc={OUTPUT_ICONS[item]}
                               />
                             ))}
                           </div>
