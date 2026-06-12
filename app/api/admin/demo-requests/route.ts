@@ -50,12 +50,15 @@ export async function GET(req: Request) {
   return NextResponse.json({ ok: true, requests: data ?? [], counts });
 }
 
-// POST { id }  → mark the demo as sent + create a lead from the number.
+// POST { id, name?, notes? }
+// Executive action: demo sent → promote to a lead so the calling team
+// can ring the client. The executive can set/update the client name and
+// add notes before promoting.
 export async function POST(req: Request) {
   if (!(await isAdmin(req.headers.get("authorization"))))
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { id } = await req.json().catch(() => ({}));
+  const { id, name, notes } = await req.json().catch(() => ({}));
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   const { data: dr, error: drErr } = await db
@@ -65,21 +68,29 @@ export async function POST(req: Request) {
     .maybeSingle();
   if (drErr || !dr) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  const leadName = String(name || "").trim() || `Demo lead — ${dr.agent}`;
+  const extraNotes = String(notes || "").trim();
+  const leadNotes = [
+    "Booked a customize demo — demo sent by executive.",
+    dr.output_desc ? `Desired output: ${dr.output_desc}` : "",
+    extraNotes ? `Executive notes: ${extraNotes}` : "",
+  ]
+    .filter(Boolean)
+    .join(" | ");
+
   let leadId = dr.lead_id as string | null;
 
-  // Create the lead only once.
+  // Promote → create the lead only once (calling team picks it up here).
   if (!leadId) {
     const { data: lead, error: leadErr } = await db
       .from("leads")
       .insert({
-        name: `Demo lead — ${dr.agent}`,
+        name: leadName,
         phone: dr.whatsapp,
         source: "whatsapp",
-        source_detail: `Customize Demo — ${dr.agent}`,
+        source_detail: `Customize Demo — ${dr.agent} (demo sent)`,
         status: "new",
-        notes: dr.output_desc
-          ? `Booked a customize demo. Desired output: ${dr.output_desc}`
-          : "Booked a customize demo.",
+        notes: leadNotes,
         tags: ["demo"],
       })
       .select("id")
@@ -90,7 +101,12 @@ export async function POST(req: Request) {
 
   const { error: upErr } = await db
     .from("demo_requests")
-    .update({ status: "demo_sent", lead_id: leadId, updated_at: new Date().toISOString() })
+    .update({
+      status: "demo_sent",
+      lead_id: leadId,
+      notes: extraNotes || null,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", id);
   if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
 

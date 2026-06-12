@@ -40,6 +40,9 @@ export default function AdminDemoRequestsPage() {
   const [loadingRows, setLoadingRows] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [promoteId, setPromoteId] = useState<string | null>(null);
+  const [pName, setPName] = useState("");
+  const [pNotes, setPNotes] = useState("");
 
   const token = useMemo(
     () => async () => {
@@ -62,16 +65,19 @@ export default function AdminDemoRequestsPage() {
     })();
   }, [canView, refreshKey, token]);
 
-  const markSent = async (id: string) => {
+  const openPromote = (id: string) => { setPromoteId(id); setPName(""); setPNotes(""); };
+
+  const promote = async (id: string) => {
     setBusyId(id);
     try {
       const res = await fetch("/api/admin/demo-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${await token()}` },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id, name: pName, notes: pNotes }),
       });
       const json = await res.json();
       if (!res.ok) { alert(json.error || "Could not update."); return; }
+      setPromoteId(null);
       setRefreshKey((k) => k + 1);
     } finally {
       setBusyId(null);
@@ -106,7 +112,7 @@ export default function AdminDemoRequestsPage() {
       doodleType="customers"
       breadcrumbs={[{ label: "Demo Requests" }]}
       title="Customize Demo Requests"
-      subtitle="Build the demo, send it on WhatsApp, then mark it sent — number flows to Leads"
+      subtitle="Own section for demo bookings. Build & send the demo, then Promote to Lead — calling team rings the client."
       email={authEmail}
       actions={
         <button type="button" onClick={() => setRefreshKey((k) => k + 1)} className={adminSecondaryBtnCls}>
@@ -140,7 +146,8 @@ export default function AdminDemoRequestsPage() {
         ) : (
           <ul className="divide-y divide-slate-200 dark:divide-slate-800">
             {rows.map((r) => (
-              <li key={r.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start">
+              <li key={r.id} className="p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
                 {r.design_url && (
                   <a href={r.design_url} target="_blank" rel="noreferrer" className="shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -176,17 +183,60 @@ export default function AdminDemoRequestsPage() {
                   {r.status === "new" ? (
                     <button
                       type="button"
-                      onClick={() => markSent(r.id)}
+                      onClick={() => (promoteId === r.id ? setPromoteId(null) : openPromote(r.id))}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      Promote to Lead
+                    </button>
+                  ) : (
+                    <span className="text-[11px] font-semibold text-emerald-600">Demo sent → in Leads</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Promote-to-Lead form (executive: demo sent → create lead) */}
+              {r.status === "new" && promoteId === r.id && (
+                <div className="mt-3 rounded-xl border border-emerald-300/50 bg-emerald-50/60 p-3 dark:border-emerald-400/20 dark:bg-emerald-500/5">
+                  <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                    Confirm the demo was sent on WhatsApp, then promote to a lead for the calling team.
+                  </p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    <input
+                      value={pName}
+                      onChange={(e) => setPName(e.target.value)}
+                      placeholder="Client name (optional)"
+                      className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-slate-900 dark:text-white"
+                    />
+                    <input
+                      value={r.whatsapp}
+                      readOnly
+                      className="rounded-lg border border-black/10 bg-slate-100 px-3 py-2 text-sm text-slate-500 dark:border-white/10 dark:bg-white/[0.04]"
+                    />
+                  </div>
+                  <textarea
+                    value={pNotes}
+                    onChange={(e) => setPNotes(e.target.value)}
+                    rows={2}
+                    placeholder="Notes for the calling team (what was sent, client interest, follow-up…)"
+                    className="mt-2 w-full resize-none rounded-lg border border-black/10 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-slate-900 dark:text-white"
+                  />
+                  <div className="mt-2 flex justify-end gap-2">
+                    <button type="button" onClick={() => setPromoteId(null)} className="rounded-lg px-3 py-2 text-xs font-bold text-slate-500">
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => promote(r.id)}
                       disabled={busyId === r.id}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
                     >
                       <CheckCircle2 className="h-4 w-4" />
-                      {busyId === r.id ? "..." : "Mark demo sent"}
+                      {busyId === r.id ? "Promoting…" : "Demo sent — Promote to Lead"}
                     </button>
-                  ) : (
-                    <span className="text-[11px] font-semibold text-emerald-600">→ in Leads</span>
-                  )}
+                  </div>
                 </div>
+              )}
               </li>
             ))}
           </ul>

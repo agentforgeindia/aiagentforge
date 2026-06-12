@@ -10,21 +10,16 @@
 import { useRef, useState } from "react";
 import { Sparkles, Upload, X, CheckCircle2 } from "lucide-react";
 
+// Only the live agents.
 const AGENTS = [
   "Textile Mockup",
   "Jewellery AI",
   "Productography",
-  "UGC Forge",
-  "TrendForge",
-  "Social Media Ads",
-  "Election Campaign",
-  "Other / Not sure",
 ];
 
 const SIZES = [
   "Square 1080×1080",
   "Mobile 1080×1920 (Story/Reel)",
-  "Landscape 1920×1080",
   "Not sure — you decide",
 ];
 
