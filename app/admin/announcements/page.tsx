@@ -31,6 +31,11 @@ export default function AdminAnnouncementsPage() {
   const canView = has("customers.view");
 
   const [rows, setRows] = useState<Ann[]>([]);
+  const [welcomeStats, setWelcomeStats] = useState<{
+    signups: number;
+    sent: number;
+    seen: number;
+  } | null>(null);
   const [loadingRows, setLoadingRows] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -56,6 +61,7 @@ export default function AdminAnnouncementsPage() {
       });
       const json = await res.json();
       if (json.ok) setRows(json.announcements as Ann[]);
+      if (json.welcomeStats) setWelcomeStats(json.welcomeStats);
       setLoadingRows(false);
     })();
   }, [canView, refreshKey, token]);
@@ -135,6 +141,34 @@ export default function AdminAnnouncementsPage() {
         </button>
       }
     >
+      {/* Welcome-notification reach */}
+      {welcomeStats && (
+        <div className={`${adminCardCls} mb-4 p-4`}>
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Welcome notification reach
+          </p>
+          <div className="mt-3 grid grid-cols-3 gap-3">
+            <div className="rounded-lg bg-slate-100 p-3 text-center dark:bg-white/[0.04]">
+              <p className="text-2xl font-black">{welcomeStats.sent}</p>
+              <p className={`mt-0.5 text-[11px] ${adminMutedCls}`}>Sent · of {welcomeStats.signups} signups</p>
+            </div>
+            <div className="rounded-lg bg-emerald-50 p-3 text-center dark:bg-emerald-500/10">
+              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{welcomeStats.seen}</p>
+              <p className={`mt-0.5 text-[11px] ${adminMutedCls}`}>Seen (opened bell)</p>
+            </div>
+            <div className="rounded-lg bg-slate-100 p-3 text-center dark:bg-white/[0.04]">
+              <p className="text-2xl font-black">
+                {welcomeStats.sent > 0
+                  ? Math.round((welcomeStats.seen / welcomeStats.sent) * 100)
+                  : 0}
+                %
+              </p>
+              <p className={`mt-0.5 text-[11px] ${adminMutedCls}`}>Seen rate</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Composer */}
       <div className={`${adminCardCls} space-y-3 p-4`}>
         <input

@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     description: "Step-by-step guides and help for AgentForge AI users.",
     url: `${SITE}/support`,
     siteName: "AgentForge AI",
-    images: [{ url: "/logo-new.jpg", width: 1200, height: 630, alt: "AgentForge Support" }],
+    images: [{ url: "/banner1.png", width: 1200, height: 630, alt: "AgentForge Support" }],
     locale: "en_IN",
     type: "website",
   },
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Support & Tutorials — AgentForge AI",
     description: "Help and tutorials for AgentForge AI users.",
-    images: ["/logo-new.jpg"],
+    images: ["/banner1.png"],
   },
 };
 

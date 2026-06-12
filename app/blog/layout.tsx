@@ -24,7 +24,7 @@ export const metadata: Metadata = {
       "Guides and case studies for Indian businesses replacing traditional shoots with AI catalogues.",
     url: `${SITE}/blog`,
     siteName: "AgentForge AI",
-    images: [{ url: "/logo-new.jpg", width: 1200, height: 630, alt: "AgentForge Blog" }],
+    images: [{ url: "/banner1.png", width: 1200, height: 630, alt: "AgentForge Blog" }],
     locale: "en_IN",
     type: "website",
   },
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "AgentForge Blog — AI Mockup, Photoshoot & Catalogue Guides",
     description: "Practical guides for Indian textile, jewellery and D2C brands using AI.",
-    images: ["/logo-new.jpg"],
+    images: ["/banner1.png"],
   },
 };
 

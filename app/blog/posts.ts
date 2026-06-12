@@ -370,7 +370,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       { type: "ul", items: [
         "Old: ₹4–8 lakh/month on photoshoots + 5–7 day delay per drop",
-        "New: ₹9,999/month (Pro Creator plan, 800 images) + same-day delivery",
+        "New: ₹9,999/month (Pro Creator plan, ~600 images) + same-day delivery",
         "Designs shipped per month: 30 → 80+",
         "Catalogue freshness: weekly → daily",
       ]},
@@ -545,7 +545,7 @@ export const BLOG_POSTS: BlogPost[] = [
       ]},
       { type: "h3", text: "New: AgentForge plan" },
       { type: "ul", items: [
-        "Pro Creator ₹9,999/month → 800 images",
+        "Pro Creator ₹9,999/month → ~600 images",
         "Per image: ~₹12",
         "60-piece catalogue cost: ~₹750",
       ]},

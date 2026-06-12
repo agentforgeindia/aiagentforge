@@ -25,6 +25,7 @@ export default function robots(): MetadataRoute.Robots {
           "/settings",              // User settings
           "/social-scheduler",      // Logged-in tool
           "/payment-success",       // Post-checkout page
+          "/invoice/",              // User-private invoices (financial docs)
           "/_next/",                // Next.js internals
           "/*.json$",               // Raw JSON files
           "/*?source=*",            // Tracking-param URLs (avoid dup-content)
@@ -48,6 +49,7 @@ export default function robots(): MetadataRoute.Robots {
           "/settings",
           "/social-scheduler",
           "/payment-success",
+          "/invoice/",
         ],
       },
 
@@ -66,6 +68,7 @@ export default function robots(): MetadataRoute.Robots {
           "/settings",
           "/social-scheduler",
           "/payment-success",
+          "/invoice/",
         ],
       },
 

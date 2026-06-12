@@ -34,7 +34,7 @@ export const metadata: Metadata = {
       "Flat fabric photo to model-worn AI mockup in 60 seconds. Built for Indian saree, kurti, kurta, lehenga, kidswear and home textile sellers.",
     url: `${SITE}/textileprints-to-mockup`,
     siteName: "AgentForge AI",
-    images: [{ url: "/logo-new.jpg", width: 1200, height: 630, alt: "Textile Prints to Mockup AI" }],
+    images: [{ url: "/banner1.png", width: 1200, height: 630, alt: "Textile Prints to Mockup AI" }],
     locale: "en_IN",
     type: "website",
   },
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     title: "Textile Prints to Mockup AI – Generate Fashion Mockups in Seconds",
     description:
       "AI textile mockups for saree, kurti, kurta and lehenga. Live in 60 seconds, no studio needed.",
-    images: ["/logo-new.jpg"],
+    images: ["/banner1.png"],
   },
 };
 

@@ -38,7 +38,32 @@ export async function GET(req: Request) {
     .limit(200);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true, announcements: data ?? [] });
+
+  // Welcome-notification reach: how many users were sent the welcome,
+  // and how many have actually opened it (is_read = true → seen).
+  const [{ count: welcomeTotal }, { count: welcomeRead }, { count: signups }] =
+    await Promise.all([
+      db
+        .from("user_notifications")
+        .select("id", { count: "exact", head: true })
+        .like("title", "Welcome to AgentForge%"),
+      db
+        .from("user_notifications")
+        .select("id", { count: "exact", head: true })
+        .like("title", "Welcome to AgentForge%")
+        .eq("is_read", true),
+      db.from("profiles").select("id", { count: "exact", head: true }),
+    ]);
+
+  return NextResponse.json({
+    ok: true,
+    announcements: data ?? [],
+    welcomeStats: {
+      signups: signups ?? 0,
+      sent: welcomeTotal ?? 0,
+      seen: welcomeRead ?? 0,
+    },
+  });
 }
 
 export async function POST(req: Request) {

@@ -23,7 +23,7 @@ export const metadata: Metadata = {
       "Browse live AI-generated mockups, jewellery shoots and product photography examples. 80+ catalogue-ready visuals.",
     url: `${SITE}/gallery`,
     siteName: "AgentForge AI",
-    images: [{ url: "/logo-new.jpg", width: 1200, height: 630, alt: "AgentForge AI Gallery" }],
+    images: [{ url: "/banner1.png", width: 1200, height: 630, alt: "AgentForge AI Gallery" }],
     locale: "en_IN",
     type: "website",
   },
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "AI Mockup Gallery — Textile, Jewellery & Product Visuals",
     description: "80+ live AI-generated mockups and product photoshoots — explore the gallery.",
-    images: ["/logo-new.jpg"],
+    images: ["/banner1.png"],
   },
 };
 

@@ -23,7 +23,7 @@ export const metadata: Metadata = {
       "Starter to Empire — credit-based AI plans for Indian textile, jewellery and product businesses. Bulk catalogue mode included.",
     url: `${SITE}/pricing`,
     siteName: "AgentForge AI",
-    images: [{ url: "/logo-new.jpg", width: 1200, height: 630, alt: "AgentForge Pricing" }],
+    images: [{ url: "/banner1.png", width: 1200, height: 630, alt: "AgentForge Pricing" }],
     locale: "en_IN",
     type: "website",
   },
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "AgentForge Pricing — AI Mockup & Photoshoot Plans India",
     description: "Credit-based AI plans for textile, jewellery and product businesses. From ₹1,999.",
-    images: ["/logo-new.jpg"],
+    images: ["/banner1.png"],
   },
 };
 
@@ -49,14 +49,14 @@ const PLAN_PRODUCTS = [
   {
     name: "AgentForge Pro Creator Plan",
     description:
-      "12,000 credits for ~800 standard AI generations. Most popular plan for sellers, agencies and growing brands.",
+      "9,000 credits for ~600 standard AI generations. Most popular plan for sellers, agencies and growing brands.",
     price: "9999",
     sku: "AF-PRO",
   },
   {
     name: "AgentForge Empire Plan",
     description:
-      "50,000 credits for 3,000+ AI generations. Bulk catalogue studio for factories, wholesalers and large teams.",
+      "36,000 credits for ~2,400 AI generations. Bulk catalogue studio for factories, wholesalers and large teams.",
     price: "39999",
     sku: "AF-EMPIRE",
   },

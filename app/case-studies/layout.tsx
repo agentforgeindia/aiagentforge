@@ -23,7 +23,7 @@ export const metadata: Metadata = {
       "Real numbers from Surat, Jaipur, Mumbai, Ludhiana, Bengaluru brands using AgentForge.",
     url: `${SITE}/case-studies`,
     siteName: "AgentForge AI",
-    images: [{ url: "/logo-new.jpg", width: 1200, height: 630, alt: "AgentForge AI Case Studies" }],
+    images: [{ url: "/banner1.png", width: 1200, height: 630, alt: "AgentForge AI Case Studies" }],
     locale: "en_IN",
     type: "website",
   },
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "AgentForge AI Case Studies — Real Indian Business Results",
     description: "Real client results from Surat, Jaipur, Mumbai and beyond.",
-    images: ["/logo-new.jpg"],
+    images: ["/banner1.png"],
   },
 };
 

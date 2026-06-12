@@ -25,7 +25,7 @@ export const metadata: Metadata = {
       "100% WFH. ₹5,000 basic + incentives. Free training. 5 job roles. Apply from anywhere in India — no experience required.",
     url: "https://www.aiagentforge.in/academy",
     siteName: "AgentForge AI",
-    images: [{ url: "/logo-new.jpg", width: 1200, height: 630 }],
+    images: [{ url: "/banner1.png", width: 1200, height: 630 }],
     locale: "en_IN",
     type: "website",
   },
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Work From Home Jobs India — AgentForge Academy",
     description: "Free training. ₹5,000 basic + incentives. 100% WFH. Apply now at AgentForge Academy.",
-    images: ["/logo-new.jpg"],
+    images: ["/banner1.png"],
   },
 };
 

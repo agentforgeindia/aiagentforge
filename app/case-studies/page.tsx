@@ -39,7 +39,7 @@ const CASE_STUDIES: CaseStudy[] = [
     ],
     story: [
       "A mid-scale Surat saree wholesaler was running 30 new designs a month — printed sarees, designer fabric, bridal pieces. Each design needed a sample stitched (₹800–₹2,000), a model booked (₹8,000–₹15,000), studio + MUA + photographer + post (₹15,000–₹30,000). Total: ₹4–8 lakh/month, 5–7 days per drop.",
-      "They moved to AgentForge's Pro Creator plan (₹9,999/month, 800 images) in early 2026. The workflow collapsed: designer approves print at 10 AM, AI generates 8–12 model-worn variants by 10:05 AM, article-code overlay added in 1 click, catalogue dropped in WhatsApp wholesaler groups by 10:30 AM.",
+      "They moved to AgentForge's Pro Creator plan (₹9,999/month, ~600 images) in early 2026. The workflow collapsed: designer approves print at 10 AM, AI generates 8–12 model-worn variants by 10:05 AM, article-code overlay added in 1 click, catalogue dropped in WhatsApp wholesaler groups by 10:30 AM.",
       "Within 60 days the wholesale buyer network had received 3x more designs than the same brand had shipped in the previous quarter. Conversion rate per WhatsApp drop improved because they could ship festive-themed variants on demand.",
     ],
     agentHref: "/textileprints-to-mockup",
@@ -85,7 +85,7 @@ const CASE_STUDIES: CaseStudy[] = [
     city: "Mumbai, Maharashtra",
     hero: "💎",
     before: "₹80,000 per bridal shoot. 60-piece catalogue = ₹4–5 lakh.",
-    after: "₹9,999/month for 800 images. Bridal campaigns in 1 day.",
+    after: "₹9,999/month for ~600 images. Bridal campaigns in 1 day.",
     quote:
       "We were spending more on photography than on inventory. Now our wedding-season catalogue ships in a day, and we look as premium as Tanishq on Instagram.",
     quoteAuthor: "Brand owner, Mumbai jewellery house",

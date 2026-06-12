@@ -617,7 +617,7 @@ router.push("/payment-success");
               <p className={`mx-auto mt-3 max-w-3xl text-sm leading-7 sm:text-base ${muted}`}>
                 If you do just 2 product shoots a month (≈₹40,000), that same budget gets you
                 AgentForge's <span className="font-black text-cyan-600">Empire plan</span>{" "}
-                — meaning <span className="font-black">3,000+ AI visuals</span> every month,
+                — meaning <span className="font-black">~2,400 AI visuals</span> every month,
                 plus the bulk catalogue workflow.
               </p>
             </div>

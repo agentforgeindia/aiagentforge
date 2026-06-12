@@ -122,7 +122,7 @@ export default function Page() {
         },
         {
           q: "What does this cost compared to a regular product shoot?",
-          a: "A regular product shoot in India costs ₹5,000–₹25,000 per session. AgentForge plans start at ₹1,999 for 1,800 credits — enough for ~120 hero shots. Empire plan covers 3,000+ images monthly.",
+          a: "A regular product shoot in India costs ₹5,000–₹25,000 per session. AgentForge plans start at ₹1,999 for 1,800 credits — enough for ~120 hero shots. The Empire plan at ₹39,999 covers ~2,400 images monthly.",
         },
       ]}
     />

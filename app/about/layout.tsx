@@ -19,7 +19,7 @@ export const metadata: Metadata = {
       "AgentForge AI is India's AI visual studio for textile, jewellery and product businesses.",
     url: `${SITE}/about`,
     siteName: "AgentForge AI",
-    images: [{ url: "/logo-new.jpg", width: 1200, height: 630, alt: "About AgentForge AI" }],
+    images: [{ url: "/banner1.png", width: 1200, height: 630, alt: "About AgentForge AI" }],
     locale: "en_IN",
     type: "website",
   },
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "About AgentForge AI",
     description: "India's AI visual studio for textile, jewellery and product businesses.",
-    images: ["/logo-new.jpg"],
+    images: ["/banner1.png"],
   },
 };
 

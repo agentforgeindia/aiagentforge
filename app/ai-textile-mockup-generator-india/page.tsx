@@ -70,7 +70,7 @@ export default function Page() {
         {
           icon: "📦",
           title: "Bulk catalogue mode",
-          desc: "Empire plan unlocks bulk generation — ship 3,000+ AI catalogue images every month for your factory or wholesale operation.",
+          desc: "Empire plan unlocks bulk generation — ship ~2,400 AI catalogue images every month for your factory or wholesale operation.",
         },
         {
           icon: "👨‍👩‍👧",
@@ -113,7 +113,7 @@ export default function Page() {
         },
         {
           q: "How much does it cost compared to a regular saree or kurta shoot?",
-          a: "A traditional shoot in India costs ₹15,000–₹50,000. AgentForge plans start at ₹1,999 for 1,800 credits — enough for ~120 catalogue images. The Empire plan at ₹39,999 covers 3,000+ images monthly.",
+          a: "A traditional shoot in India costs ₹15,000–₹50,000. AgentForge plans start at ₹1,999 for 1,800 credits — enough for ~120 catalogue images. The Empire plan at ₹39,999 covers ~2,400 images monthly.",
         },
         {
           q: "Does it work for bulk catalogue generation for my factory?",

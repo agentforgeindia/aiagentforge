@@ -98,7 +98,7 @@ export const metadata: Metadata = {
     siteName: "AgentForge AI",
     images: [
       {
-        url: "/logo-new.jpg",
+        url: "/banner1.png",
         width: 1200,
         height: 630,
         alt: "AgentForge AI — AI Textile Mockup Generator & Jewellery AI Studio",
@@ -113,7 +113,7 @@ export const metadata: Metadata = {
     title: "AI Textile Mockup Generator & Jewellery AI Studio | AgentForge AI",
     description:
       "Upload a photo. Get catalogue-ready AI visuals in 60 seconds. India's AI mockup & photoshoot platform.",
-    images: ["/logo-new.jpg"],
+    images: ["/banner1.png"],
   },
 };
 
@@ -226,7 +226,7 @@ export default function RootLayout({
                   name: "Pro Creator",
                   price: "9999",
                   priceCurrency: "INR",
-                  description: "12,000 credits · ~800 standard generations · Most Popular",
+                  description: "9,000 credits · ~600 standard generations · Most Popular",
                   url: "https://www.aiagentforge.in/pricing",
                 },
                 {
@@ -234,7 +234,7 @@ export default function RootLayout({
                   name: "Empire",
                   price: "39999",
                   priceCurrency: "INR",
-                  description: "50,000 credits · 3,000+ generations · Bulk Studio for factories",
+                  description: "36,000 credits · ~2,400 generations · Bulk Studio for factories",
                   url: "https://www.aiagentforge.in/pricing",
                 },
               ],

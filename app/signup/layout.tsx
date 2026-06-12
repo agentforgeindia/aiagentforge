@@ -19,7 +19,7 @@ export const metadata: Metadata = {
       "Create your AgentForge AI account and get 100 free credits. No card required.",
     url: `${SITE}/signup`,
     siteName: "AgentForge AI",
-    images: [{ url: "/logo-new.jpg", width: 1200, height: 630, alt: "Sign up to AgentForge AI" }],
+    images: [{ url: "/banner1.png", width: 1200, height: 630, alt: "Sign up to AgentForge AI" }],
     locale: "en_IN",
     type: "website",
   },
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Sign Up — Get 100 Free Credits | AgentForge AI",
     description: "Create an AgentForge AI account. 100 free credits. No card required.",
-    images: ["/logo-new.jpg"],
+    images: ["/banner1.png"],
   },
 };
 
