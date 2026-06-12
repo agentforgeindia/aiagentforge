@@ -484,7 +484,7 @@ function personPose(opts: {
   const L = "#a78bfa";
   return (
     <>
-      <rect x="2" y="2" width="60" height="60" rx="16" fill="#ede9fe" />
+      <rect x="2" y="2" width="60" height="60" rx="16" fill="none" />
       {seat && (
         <>
           <rect x="17" y="44" width="17" height="3" rx="1.5" fill={L} />
@@ -556,7 +556,7 @@ function royalGlyph(name: string): React.ReactNode {
     }
     return (
       <>
-        <rect x="2" y="2" width="60" height="60" rx="16" fill="#dbeafe" />
+        <rect x="2" y="2" width="60" height="60" rx="16" fill="none" />
         <rect x="10" y="38" width="44" height="9" rx="3" fill="#2563eb" />
         <rect x="8" y="27" width="9" height="20" rx="4" fill="#3b82f6" />
         <rect x="47" y="27" width="9" height="20" rx="4" fill="#3b82f6" />
@@ -572,7 +572,7 @@ function royalGlyph(name: string): React.ReactNode {
     case "towelBaby":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#fce7f3" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="none" />
           <path d="M20 26l12-9 12 9v19a4 4 0 0 1-4 4H24a4 4 0 0 1-4-4z" fill="#f472b6" />
           <path d="M20 26l12-9 12 9-6 3-6-4-6 4z" fill="#ec4899" />
           <rect x="27" y="40" width="10" height="3" rx="1.5" fill="#fbcfe8" />
@@ -581,7 +581,7 @@ function royalGlyph(name: string): React.ReactNode {
     case "towelKids":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#ccfbf1" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="none" />
           <rect x="15" y="22" width="34" height="8" rx="3" fill="#0d9488" />
           <rect x="17" y="31" width="30" height="8" rx="3" fill="#2dd4bf" />
           <rect x="19" y="40" width="26" height="7" rx="3" fill="#5eead4" />
@@ -590,7 +590,7 @@ function royalGlyph(name: string): React.ReactNode {
     case "towelBoy":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="none" />
           <rect x="17" y="18" width="30" height="30" rx="6" fill="#38bdf8" />
           <path d="M32 24l2.6 5.3 5.8.9-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.9z" fill="#fbbf24" />
         </>
@@ -598,7 +598,7 @@ function royalGlyph(name: string): React.ReactNode {
     case "towelGirl":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#ffe4e6" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="none" />
           <rect x="17" y="18" width="30" height="30" rx="6" fill="#fb7185" />
           <circle cx="32" cy="27" r="3" fill="#fcd34d" />
           <circle cx="27" cy="31" r="3" fill="#fcd34d" />
@@ -612,7 +612,7 @@ function royalGlyph(name: string): React.ReactNode {
     case "palace":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="none" />
           <rect x="14" y="34" width="9" height="16" fill="#3b82f6" />
           <rect x="41" y="34" width="9" height="16" fill="#3b82f6" />
           <rect x="26" y="30" width="12" height="20" fill="#22d3ee" />
@@ -626,7 +626,7 @@ function royalGlyph(name: string): React.ReactNode {
     case "wedding":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="none" />
           <path d="M18 50V28a14 14 0 0 1 28 0v22z" fill="#a5b4fc" />
           <path d="M24 50V30a8 8 0 0 1 16 0v20z" fill="#e0f2fe" />
           <path d="M32 30c-2-3-7.5-2.5-7.5 1.8 0 3.3 4.3 5.4 7.5 8.2 3.2-2.8 7.5-4.9 7.5-8.2 0-4.3-5.5-4.8-7.5-1.8z" fill="#8b5cf6" />
@@ -635,7 +635,7 @@ function royalGlyph(name: string): React.ReactNode {
     case "sea":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="none" />
           <circle cx="32" cy="22" r="7" fill="#38bdf8" />
           <path d="M8 38q4-5 8 0t8 0 8 0 8 0 8 0v8H8z" fill="#22d3ee" />
           <path d="M8 45q4-5 8 0t8 0 8 0 8 0 8 0v7H8z" fill="#0ea5e9" />
@@ -644,7 +644,7 @@ function royalGlyph(name: string): React.ReactNode {
     case "forest":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="none" />
           <path d="M32 14l9 13h-5l6 9h-6l5 8H21l5-8h-6l6-9h-5z" fill="#0ea5e9" />
           <rect x="30" y="44" width="4" height="8" fill="#6366f1" />
           <rect x="14" y="50" width="36" height="3" rx="1.5" fill="#38bdf8" />
@@ -653,7 +653,7 @@ function royalGlyph(name: string): React.ReactNode {
     case "temple":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="none" />
           <path d="M20 50V32l12-10 12 10v18z" fill="#3b82f6" />
           <rect x="28" y="40" width="8" height="10" fill="#1e40af" />
           <rect x="31" y="14" width="2" height="8" fill="#6366f1" />
@@ -663,7 +663,7 @@ function royalGlyph(name: string): React.ReactNode {
     case "fort":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="none" />
           <path d="M12 50V30h5v-5h5v5h5v-5h5v5h5v-5h5v5h5v-5h5v5h5v20z" fill="#38bdf8" />
           <path d="M28 50V41a4 4 0 0 1 8 0v9z" fill="#3b82f6" />
         </>
@@ -671,14 +671,14 @@ function royalGlyph(name: string): React.ReactNode {
     case "river":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="none" />
           <path d="M2 24c10 0 10 8 20 8s10-8 20-8 10 8 20 8v8c-10 0-10-8-20-8s-10 8-20 8-10-8-20-8z" fill="#38bdf8" />
         </>
       );
     case "waterfall":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="none" />
           <rect x="20" y="14" width="24" height="4" rx="2" fill="#6366f1" />
           <rect x="22" y="18" width="20" height="22" fill="#22d3ee" />
           <path d="M16 44q16 8 32 0v8H16z" fill="#0ea5e9" />
@@ -687,7 +687,7 @@ function royalGlyph(name: string): React.ReactNode {
     case "mountains":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="none" />
           <path d="M4 50l16-24 10 14 10-18 14 28z" fill="#3b82f6" />
           <path d="M20 26l-4 6h8z" fill="#f8fafc" />
           <path d="M40 22l-4 6h8z" fill="#f8fafc" />
@@ -697,7 +697,7 @@ function royalGlyph(name: string): React.ReactNode {
     case "garden":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#e0f2fe" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="none" />
           <rect x="31" y="30" width="2.5" height="20" fill="#0ea5e9" />
           <path d="M32 40c-7 0-9-5-9-5 5-1 9 1 9 5z" fill="#38bdf8" />
           <path d="M32 44c7 0 9-5 9-5-5-1-9 1-9 5z" fill="#38bdf8" />
@@ -727,7 +727,7 @@ function royalGlyph(name: string): React.ReactNode {
     case "poseAuto":
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#ede9fe" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="none" />
           <path d="M28 14c2 9 5 12 14 14-9 2-12 5-14 14-2-9-5-12-14-14 9-2 12-5 14-14z" fill="#a855f7" />
           <path d="M47 16c1 4 2 5 6 6-4 1-5 2-6 6-1-4-2-5-6-6 4-1 5-2 6-6z" fill="#c084fc" />
         </>
@@ -737,7 +737,7 @@ function royalGlyph(name: string): React.ReactNode {
     default:
       return (
         <>
-          <rect x="2" y="2" width="60" height="60" rx="16" fill="#cffafe" />
+          <rect x="2" y="2" width="60" height="60" rx="16" fill="none" />
           <path d="M22 20h20l7 8-17 18L15 28z" fill="#22d3ee" />
           <path d="M15 28l7-8h20l7 8z" fill="#67e8f9" />
           <path d="M15 28h34l-17 18z" fill="#0e7490" fillOpacity="0.22" />
@@ -1100,15 +1100,51 @@ const homeModelUsageOptions = [
   "Family Lifestyle Scene",
 ];
 
-const modelLookOptions = [
-  "Indian Model",
-  "Western Model",
-  "Asian Model",
-  "Middle Eastern Model",
-  "African Model",
-  "European Model",
-  "Custom-Look",
+// ── Gender/age-aware Model Look faces (cropped from the model grids,
+// white background removed → /public/model-faces/{group}-{ethnicity}.png)
+const MODEL_ETHNICITIES: { key: string; label: string }[] = [
+  { key: "indian", label: "Indian" },
+  { key: "western", label: "Western" },
+  { key: "asian", label: "Asian" },
+  { key: "middle-eastern", label: "Middle Eastern" },
+  { key: "african", label: "African" },
+  { key: "latin-american", label: "Latin American" },
 ];
+const MODEL_GROUP_NOUN: Record<string, string> = {
+  men: "Man",
+  women: "Woman",
+  boys: "Boy",
+  girls: "Girl",
+};
+// Which face set(s) to show, based on the Step-1 category + product.
+function modelGroupsFor(category: string, product: string): string[] {
+  const p = (product || "").toLowerCase();
+  if (category === "Men's Wear") return ["men"];
+  if (category === "Ladies Wear") return ["women"];
+  if (category === "Kids Wear") {
+    if (p.includes("girl")) return ["girls"];
+    if (p.includes("boy")) return ["boys"];
+    return ["boys", "girls"]; // generic kids → show both
+  }
+  return ["women", "men"]; // home / decor / universal → adults
+}
+type ModelLookItem = { value: string; label: string; img: string };
+function buildModelLookList(category: string, product: string): ModelLookItem[] {
+  const groups = modelGroupsFor(category, product);
+  const multi = groups.length > 1;
+  const out: ModelLookItem[] = [];
+  for (const g of groups) {
+    for (const e of MODEL_ETHNICITIES) {
+      const noun = MODEL_GROUP_NOUN[g];
+      out.push({
+        value: `${e.label} ${noun}`,
+        label: multi ? `${e.label} ${noun}` : e.label,
+        img: `/model-faces/${g}-${e.key}.png`,
+      });
+    }
+  }
+  return out;
+}
 
 const apparelPoseOptions = [
   "Front Face",
@@ -1222,7 +1258,7 @@ export default function Home() {
   const [textileCategory, setTextileCategory] =
     useState<TextileCategory>("Men\'s Wear");
   const [modelUsage, setModelUsage] = useState("Single Model");
-  const [modelType, setModelType] = useState("Indian Model");
+  const [modelType, setModelType] = useState("Indian Man");
   const [product, setProduct] = useState("Men\'s Shirt");
   const [shootStyle, setShootStyle] = useState("Outdoor Premium");
   const [accessories, setAccessories] = useState<string[]>(["None"]);
@@ -1303,6 +1339,19 @@ export default function Home() {
   const dynamicProducts =
     productOptionsByCategory[textileCategory] ||
     productOptionsByCategory["Men's Wear"];
+  // Gender/age-aware Model Look list for the current category + product.
+  const modelLookList = buildModelLookList(
+    textileCategory,
+    customProduct.trim() || product,
+  );
+  // Keep the selected model look valid when category/product changes.
+  useEffect(() => {
+    const list = buildModelLookList(textileCategory, customProduct.trim() || product);
+    setModelType((cur) =>
+      list.some((m) => m.value === cur) ? cur : list[0]?.value || "Indian Man",
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [textileCategory, product, customProduct]);
   const dynamicModelUsageOptions = isHomeLikeCategory
     ? homeModelUsageOptions
     : apparelModelUsageOptions;
@@ -3876,20 +3925,46 @@ export default function Home() {
                       </h4>
 
                       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
-                        {modelLookOptions.map((item) => (
-                          <OptionCard
-                            key={item}
-                            title={item}
-                            active={
-                              !customModelType.trim() && modelType === item
-                            }
-                            onClick={() => {
-                              setModelType(item);
-                              setCustomModelType("");
-                            }}
-                            darkMode={darkMode}
-                          />
-                        ))}
+                        {modelLookList.map((item) => {
+                          const isActive =
+                            !customModelType.trim() && modelType === item.value;
+                          return (
+                            <button
+                              key={item.value}
+                              type="button"
+                              onClick={() => {
+                                setModelType(item.value);
+                                setCustomModelType("");
+                              }}
+                              className={`group flex flex-col items-center rounded-[22px] border p-3 text-center transition-all duration-300 active:scale-[0.97] ${
+                                isActive
+                                  ? "scale-[1.02] border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/60"
+                                  : darkMode
+                                    ? "border-white/10 bg-white/[0.04] hover:-translate-y-0.5 hover:bg-white/[0.08]"
+                                    : "border-slate-200 bg-white/90 hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-lg hover:shadow-cyan-500/10"
+                              }`}
+                            >
+                              <div className="mb-2 h-20 w-20 overflow-hidden rounded-2xl bg-gradient-to-b from-slate-100/70 to-transparent dark:from-white/[0.06] sm:h-24 sm:w-24">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={item.img}
+                                  alt={item.label}
+                                  loading="lazy"
+                                  className="h-full w-full object-contain transition duration-300 group-hover:scale-105"
+                                />
+                              </div>
+                              <p
+                                className={`text-[12px] font-black leading-4 sm:text-sm ${
+                                  isActive
+                                    ? "text-cyan-700 dark:text-cyan-200"
+                                    : "text-slate-700 dark:text-white/75"
+                                }`}
+                              >
+                                {item.label}
+                              </p>
+                            </button>
+                          );
+                        })}
                       </div>
 
                       {renderCustomInput(
