@@ -88,6 +88,7 @@ export default function AdminLeadDetailPage() {
   const canDelete = has("leads.delete");
 
   const [lead, setLead] = useState<Lead | null>(null);
+  const [demo, setDemo] = useState<any | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [tasks, setTasks] = useState<Array<{
     id: string;
@@ -188,6 +189,22 @@ export default function AdminLeadDetailPage() {
       setActivities((a ?? []) as Activity[]);
       setTasks((tk ?? []) as typeof tasks);
       setLoading(false);
+
+      // If this lead came from a customize-demo booking, pull the demo
+      // details (service-role only — via the admin API).
+      try {
+        const { data: sess } = await supabase.auth.getSession();
+        const at = sess.session?.access_token;
+        if (at) {
+          const res = await fetch(`/api/admin/demo-requests?lead_id=${leadId}`, {
+            headers: { Authorization: `Bearer ${at}` },
+          });
+          const j = await res.json().catch(() => ({}));
+          setDemo(j.ok ? j.request : null);
+        }
+      } catch {
+        setDemo(null);
+      }
     })();
   }, [canView, leadId, refreshKey]);
 
@@ -807,6 +824,49 @@ export default function AdminLeadDetailPage() {
               )}
             </ul>
           </section>
+
+          {/* Customize Demo details (if this lead came from a demo booking) */}
+          {demo && (
+            <section className={`${adminCardCls} p-4`}>
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-600">
+                  Customize Demo {demo.status !== "new" ? "· Demo sent ✅" : "· Pending"}
+                </p>
+                <a href="/admin/demo-requests" className="text-[11px] font-bold text-cyan-600 hover:underline">All demos →</a>
+              </div>
+
+              <dl className="mt-3 grid gap-3 sm:grid-cols-3">
+                <Field label="Agent" value={demo.agent ?? "—"} />
+                <Field label="Device" value={demo.device ?? "—"} />
+                <Field label="Size / Quality" value={`${demo.output_size ?? "—"} · ${demo.quality ?? "—"}`} />
+                <Field label="Booked at" value={demo.created_at ? formatDateTime(demo.created_at) : "—"} />
+                <Field label="Demo sent at" value={demo.status !== "new" && demo.updated_at ? formatDateTime(demo.updated_at) : "—"} />
+                <Field label="Wants" value={demo.output_desc ?? "—"} />
+              </dl>
+
+              {/* Files: client design/logo + the demo we sent */}
+              <div className="mt-3 flex flex-wrap gap-4 text-[11px] font-bold">
+                {demo.design_url && <a href={demo.design_url} target="_blank" rel="noreferrer" className="text-cyan-600 hover:underline">Client design ↗</a>}
+                {demo.logo_url && <a href={demo.logo_url} target="_blank" rel="noreferrer" className="text-cyan-600 hover:underline">Client logo ↗</a>}
+                {demo.demo_video_url && <a href={demo.demo_video_url} target="_blank" rel="noreferrer" className="text-emerald-600 hover:underline">▶ Demo video ↗</a>}
+                {demo.demo_still_url && <a href={demo.demo_still_url} target="_blank" rel="noreferrer" className="text-emerald-600 hover:underline">Output still ↗</a>}
+                {demo.demo_output_url && !demo.demo_video_url && <a href={demo.demo_output_url} target="_blank" rel="noreferrer" className="text-emerald-600 hover:underline">Demo sent ↗</a>}
+              </div>
+
+              {demo.client_message && (
+                <div className="mt-3">
+                  <p className={`text-[10px] font-bold uppercase tracking-[0.14em] ${adminMutedCls}`}>Message sent to client</p>
+                  <p className="mt-1 whitespace-pre-line rounded-lg bg-slate-50 p-2 text-xs dark:bg-white/[0.04]">{demo.client_message}</p>
+                </div>
+              )}
+              {demo.notes && (
+                <div className="mt-2">
+                  <p className={`text-[10px] font-bold uppercase tracking-[0.14em] ${adminMutedCls}`}>Instructions for calling team</p>
+                  <p className="mt-1 rounded-lg bg-amber-50 p-2 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-200">{demo.notes}</p>
+                </div>
+              )}
+            </section>
+          )}
 
           {/* Source / attribution */}
           <section className={`${adminCardCls} p-4`}>

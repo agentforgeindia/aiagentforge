@@ -28,15 +28,30 @@ async function isAdmin(authHeader: string | null): Promise<boolean> {
   return !!row;
 }
 
+const SELECT_COLS =
+  "id, agent, output_desc, output_size, quality, device, whatsapp, design_url, logo_url, demo_video_url, demo_still_url, demo_output_url, client_message, notes, status, lead_id, created_at, updated_at";
+
 export async function GET(req: Request) {
   if (!(await isAdmin(req.headers.get("authorization"))))
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+  // Single demo for a given lead (used by the lead detail page).
+  const leadId = new URL(req.url).searchParams.get("lead_id");
+  if (leadId) {
+    const { data, error } = await db
+      .from("demo_requests")
+      .select(SELECT_COLS)
+      .eq("lead_id", leadId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true, request: data ?? null });
+  }
+
   const { data, error } = await db
     .from("demo_requests")
-    .select(
-      "id, agent, output_desc, output_size, quality, device, whatsapp, design_url, logo_url, demo_output_url, client_message, notes, status, lead_id, created_at",
-    )
+    .select(SELECT_COLS)
     .order("created_at", { ascending: false })
     .limit(300);
 
@@ -58,7 +73,7 @@ export async function POST(req: Request) {
   if (!(await isAdmin(req.headers.get("authorization"))))
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { id, name, notes, client_message, demo_output_url } = await req.json().catch(() => ({}));
+  const { id, name, notes, client_message, demo_video_url, demo_still_url } = await req.json().catch(() => ({}));
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   const { data: dr, error: drErr } = await db
@@ -71,11 +86,13 @@ export async function POST(req: Request) {
   const leadName = String(name || "").trim() || `Demo lead — ${dr.agent}`;
   const extraNotes = String(notes || "").trim();
   const clientMsg = String(client_message || "").trim();
-  const demoUrl = String(demo_output_url || "").trim();
+  const videoUrl = String(demo_video_url || "").trim();
+  const stillUrl = String(demo_still_url || "").trim();
   const leadNotes = [
     "Booked a customize demo — demo sent by executive.",
     dr.output_desc ? `Desired output: ${dr.output_desc}` : "",
-    demoUrl ? `Demo sent: ${demoUrl}` : "",
+    videoUrl ? `Demo video: ${videoUrl}` : "",
+    stillUrl ? `Output still: ${stillUrl}` : "",
     clientMsg ? `Message sent to client: ${clientMsg}` : "",
     extraNotes ? `For calling team: ${extraNotes}` : "",
   ]
@@ -110,7 +127,8 @@ export async function POST(req: Request) {
       lead_id: leadId,
       notes: extraNotes || null,
       client_message: clientMsg || null,
-      demo_output_url: demoUrl || null,
+      demo_video_url: videoUrl || null,
+      demo_still_url: stillUrl || null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);

@@ -22,7 +22,9 @@ create table if not exists public.demo_requests (
   whatsapp     text not null,
   design_url       text,
   logo_url         text,
-  demo_output_url  text,                -- the demo our team built & uploaded
+  demo_video_url   text,                -- the demo VIDEO our team built & uploaded
+  demo_still_url   text,                -- a still image of the output
+  demo_output_url  text,                -- (legacy) earlier single demo image
   client_message   text,                -- the WhatsApp message sent to the client
   status       text not null default 'new'
                check (status in ('new', 'demo_sent', 'lead_created')),
@@ -36,6 +38,8 @@ create table if not exists public.demo_requests (
 -- Add newer columns if the table already existed from an earlier run.
 alter table public.demo_requests add column if not exists device text;
 alter table public.demo_requests add column if not exists demo_output_url text;
+alter table public.demo_requests add column if not exists demo_video_url text;
+alter table public.demo_requests add column if not exists demo_still_url text;
 alter table public.demo_requests add column if not exists client_message text;
 
 create index if not exists demo_requests_status_idx

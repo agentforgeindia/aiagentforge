@@ -26,6 +26,8 @@ type DemoReq = {
   whatsapp: string;
   design_url: string | null;
   logo_url: string | null;
+  demo_video_url: string | null;
+  demo_still_url: string | null;
   demo_output_url: string | null;
   client_message: string | null;
   notes: string | null;
@@ -33,6 +35,8 @@ type DemoReq = {
   lead_id: string | null;
   created_at: string;
 };
+
+const VIDEO_MAX_MB = 50; // keep video files reasonable for storage
 
 // Copy-paste WhatsApp message templates the executive sends with the demo.
 const TEMPLATES: { label: string; text: string }[] = [
@@ -66,11 +70,13 @@ export default function AdminDemoRequestsPage() {
   const [pName, setPName] = useState("");
   const [pNotes, setPNotes] = useState("");
   const [pClientMsg, setPClientMsg] = useState("");
-  const [pDemoFile, setPDemoFile] = useState<File | null>(null);
+  const [pVideoFile, setPVideoFile] = useState<File | null>(null);
+  const [pStillFile, setPStillFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
-  const demoFileRef = useRef<HTMLInputElement | null>(null);
+  const videoRef = useRef<HTMLInputElement | null>(null);
+  const stillRef = useRef<HTMLInputElement | null>(null);
 
   const token = useMemo(
     () => async () => {
@@ -95,7 +101,7 @@ export default function AdminDemoRequestsPage() {
 
   const openPromote = (id: string) => {
     setPromoteId(id);
-    setPName(""); setPNotes(""); setPClientMsg(""); setPDemoFile(null);
+    setPName(""); setPNotes(""); setPClientMsg(""); setPVideoFile(null); setPStillFile(null);
   };
 
   const copyTemplate = async (text: string, idx: number) => {
@@ -116,28 +122,39 @@ export default function AdminDemoRequestsPage() {
     }
   };
 
-  const uploadDemoOutput = async (file: File): Promise<string> => {
+  const uploadToStorage = async (file: File, prefix: string): Promise<string> => {
     const safe = file.name.replace(/[^a-zA-Z0-9.-]/g, "-").slice(-40);
-    const path = `demo-outputs/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
+    const path = `${prefix}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
     const { error } = await supabase.storage.from("designs").upload(path, file, { cacheControl: "3600", upsert: false });
     if (error) throw error;
     return supabase.storage.from("designs").getPublicUrl(path).data.publicUrl;
   };
 
   const promote = async (id: string) => {
+    if (pVideoFile && pVideoFile.size > VIDEO_MAX_MB * 1024 * 1024) {
+      alert(`Video is too large. Max ${VIDEO_MAX_MB} MB.`);
+      return;
+    }
     setBusyId(id);
     try {
-      let demoUrl = "";
-      if (pDemoFile) {
+      let videoUrl = "";
+      let stillUrl = "";
+      if (pVideoFile || pStillFile) {
         setUploading(true);
-        try { demoUrl = await uploadDemoOutput(pDemoFile); }
-        catch { alert("Could not upload the demo image. Please try again."); return; }
-        finally { setUploading(false); }
+        try {
+          if (pVideoFile) videoUrl = await uploadToStorage(pVideoFile, "demo-videos");
+          if (pStillFile) stillUrl = await uploadToStorage(pStillFile, "demo-stills");
+        } catch {
+          alert("Could not upload the demo files. Please try again.");
+          return;
+        } finally {
+          setUploading(false);
+        }
       }
       const res = await fetch("/api/admin/demo-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${await token()}` },
-        body: JSON.stringify({ id, name: pName, notes: pNotes, client_message: pClientMsg, demo_output_url: demoUrl }),
+        body: JSON.stringify({ id, name: pName, notes: pNotes, client_message: pClientMsg, demo_video_url: videoUrl, demo_still_url: stillUrl }),
       });
       const json = await res.json();
       if (!res.ok) { alert(json.error || "Could not update."); return; }
@@ -292,13 +309,25 @@ export default function AdminDemoRequestsPage() {
                     {r.whatsapp} <ExternalLink className="h-3 w-3" />
                   </a>
                   {/* After demo sent — show what was sent */}
-                  {r.status !== "new" && (r.demo_output_url || r.client_message || r.notes) && (
+                  {r.status !== "new" && (r.demo_video_url || r.demo_still_url || r.demo_output_url || r.client_message || r.notes) && (
                     <div className="mt-2 rounded-lg border border-emerald-200/60 bg-emerald-50/50 p-2 text-[11px] dark:border-emerald-400/15 dark:bg-emerald-500/5">
-                      {r.demo_output_url && (
-                        <a href={r.demo_output_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-300">
-                          <ExternalLink className="h-3 w-3" /> View sent demo
-                        </a>
-                      )}
+                      <div className="flex flex-wrap items-center gap-3">
+                        {r.demo_video_url && (
+                          <a href={r.demo_video_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-300">
+                            <ExternalLink className="h-3 w-3" /> ▶ Demo video
+                          </a>
+                        )}
+                        {r.demo_still_url && (
+                          <a href={r.demo_still_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-bold text-cyan-700 dark:text-cyan-300">
+                            <ExternalLink className="h-3 w-3" /> Output still
+                          </a>
+                        )}
+                        {!r.demo_video_url && !r.demo_still_url && r.demo_output_url && (
+                          <a href={r.demo_output_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-bold text-emerald-700 dark:text-emerald-300">
+                            <ExternalLink className="h-3 w-3" /> View sent demo
+                          </a>
+                        )}
+                      </div>
                       {r.client_message && <p className="mt-1"><span className="font-bold">Msg to client:</span> {r.client_message}</p>}
                       {r.notes && <p className="mt-1"><span className="font-bold">For calling team:</span> {r.notes}</p>}
                     </div>
@@ -326,25 +355,47 @@ export default function AdminDemoRequestsPage() {
                   <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
                     Confirm the demo was sent on WhatsApp, then promote to a lead for the calling team.
                   </p>
-                  {/* Upload the demo our team created */}
-                  <div className="mt-2">
-                    <button
-                      type="button"
-                      onClick={() => demoFileRef.current?.click()}
-                      className="flex w-full items-center gap-3 rounded-lg border-2 border-dashed border-emerald-400/50 bg-white px-3 py-2.5 text-left text-sm dark:border-emerald-400/30 dark:bg-slate-900"
-                    >
-                      {pDemoFile ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={URL.createObjectURL(pDemoFile)} alt="" className="h-12 w-12 rounded-md object-cover" />
-                      ) : (
-                        <span className="flex h-12 w-12 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-600"><Upload className="h-5 w-5" /></span>
-                      )}
-                      <span className="min-w-0 flex-1 truncate font-semibold text-slate-700 dark:text-white/80">
-                        {pDemoFile ? pDemoFile.name : "Upload the demo you created (image)"}
-                      </span>
-                    </button>
-                    <input ref={demoFileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden"
-                      onChange={(e) => setPDemoFile(e.target.files?.[0] ?? null)} />
+                  {/* Upload the demo our team created — video + output still */}
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    {/* Demo video */}
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => videoRef.current?.click()}
+                        className="flex w-full items-center gap-3 rounded-lg border-2 border-dashed border-emerald-400/50 bg-white px-3 py-2.5 text-left text-sm dark:border-emerald-400/30 dark:bg-slate-900"
+                      >
+                        {pVideoFile ? (
+                          <video src={URL.createObjectURL(pVideoFile)} className="h-12 w-12 rounded-md object-cover" muted />
+                        ) : (
+                          <span className="flex h-12 w-12 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-600"><Upload className="h-5 w-5" /></span>
+                        )}
+                        <span className="min-w-0 flex-1 truncate font-semibold text-slate-700 dark:text-white/80">
+                          {pVideoFile ? pVideoFile.name : `Upload demo VIDEO (max ${VIDEO_MAX_MB}MB)`}
+                        </span>
+                      </button>
+                      <input ref={videoRef} type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden"
+                        onChange={(e) => setPVideoFile(e.target.files?.[0] ?? null)} />
+                    </div>
+                    {/* Output still */}
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => stillRef.current?.click()}
+                        className="flex w-full items-center gap-3 rounded-lg border-2 border-dashed border-cyan-400/50 bg-white px-3 py-2.5 text-left text-sm dark:border-cyan-400/30 dark:bg-slate-900"
+                      >
+                        {pStillFile ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={URL.createObjectURL(pStillFile)} alt="" className="h-12 w-12 rounded-md object-cover" />
+                        ) : (
+                          <span className="flex h-12 w-12 items-center justify-center rounded-md bg-cyan-500/10 text-cyan-600"><Upload className="h-5 w-5" /></span>
+                        )}
+                        <span className="min-w-0 flex-1 truncate font-semibold text-slate-700 dark:text-white/80">
+                          {pStillFile ? pStillFile.name : "Upload output STILL (image)"}
+                        </span>
+                      </button>
+                      <input ref={stillRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden"
+                        onChange={(e) => setPStillFile(e.target.files?.[0] ?? null)} />
+                    </div>
                   </div>
 
                   <div className="mt-2 grid gap-2 sm:grid-cols-2">
