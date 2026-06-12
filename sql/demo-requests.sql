@@ -20,8 +20,10 @@ create table if not exists public.demo_requests (
   quality      text,
   device       text,                 -- 'Mobile' | 'Computer'
   whatsapp     text not null,
-  design_url   text,
-  logo_url     text,
+  design_url       text,
+  logo_url         text,
+  demo_output_url  text,                -- the demo our team built & uploaded
+  client_message   text,                -- the WhatsApp message sent to the client
   status       text not null default 'new'
                check (status in ('new', 'demo_sent', 'lead_created')),
   task_id      uuid references public.tasks(id)  on delete set null,
@@ -31,8 +33,10 @@ create table if not exists public.demo_requests (
   updated_at   timestamptz not null default now()
 );
 
--- Add the device column if the table already existed from an earlier run.
+-- Add newer columns if the table already existed from an earlier run.
 alter table public.demo_requests add column if not exists device text;
+alter table public.demo_requests add column if not exists demo_output_url text;
+alter table public.demo_requests add column if not exists client_message text;
 
 create index if not exists demo_requests_status_idx
   on public.demo_requests (status, created_at desc);

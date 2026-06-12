@@ -35,7 +35,7 @@ export async function GET(req: Request) {
   const { data, error } = await db
     .from("demo_requests")
     .select(
-      "id, agent, output_desc, output_size, quality, device, whatsapp, design_url, logo_url, status, lead_id, created_at",
+      "id, agent, output_desc, output_size, quality, device, whatsapp, design_url, logo_url, demo_output_url, client_message, notes, status, lead_id, created_at",
     )
     .order("created_at", { ascending: false })
     .limit(300);
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
   if (!(await isAdmin(req.headers.get("authorization"))))
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { id, name, notes } = await req.json().catch(() => ({}));
+  const { id, name, notes, client_message, demo_output_url } = await req.json().catch(() => ({}));
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   const { data: dr, error: drErr } = await db
@@ -70,10 +70,14 @@ export async function POST(req: Request) {
 
   const leadName = String(name || "").trim() || `Demo lead — ${dr.agent}`;
   const extraNotes = String(notes || "").trim();
+  const clientMsg = String(client_message || "").trim();
+  const demoUrl = String(demo_output_url || "").trim();
   const leadNotes = [
     "Booked a customize demo — demo sent by executive.",
     dr.output_desc ? `Desired output: ${dr.output_desc}` : "",
-    extraNotes ? `Executive notes: ${extraNotes}` : "",
+    demoUrl ? `Demo sent: ${demoUrl}` : "",
+    clientMsg ? `Message sent to client: ${clientMsg}` : "",
+    extraNotes ? `For calling team: ${extraNotes}` : "",
   ]
     .filter(Boolean)
     .join(" | ");
@@ -105,6 +109,8 @@ export async function POST(req: Request) {
       status: "demo_sent",
       lead_id: leadId,
       notes: extraNotes || null,
+      client_message: clientMsg || null,
+      demo_output_url: demoUrl || null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);
