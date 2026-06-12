@@ -169,3 +169,32 @@ https://react.dev/link/hydration-mismatch
 ✓ Compiled in 1019ms
  GET /productography-ai 200 in 322ms (next.js: 190ms, application-code: 132ms)
  GET /productography-ai 200 in 1044ms (next.js: 4ms, application-code: 1040ms)
+[browser] The final argument passed to useEffect changed size between renders. The order and size of this array must remain constant.
+
+Previous: [Cosmetics, Single Model, Kids, Indian Boy, Auto, Ad Creative, Neon Studio, 1080x1080, Premium, , , , , , , , , , , , , , , false, false, false, false, false, false]
+Incoming: [Cosmetics, Single Model, Kids, Indian Boy, Auto, Ad Creative, Neon Studio, Royal Palace, 1080x1080, Premium, , , , , , , , , , , , , , , false, false, false, false, false, false] 
+    at ProductographyPage (app/productography-ai/page.tsx:772:37)
+    at Set.forEach (<anonymous>)
+  770 |       setBackground(s.background || "Plain White");
+  771 |       setBackgroundTheme(s.backgroundTheme || "Royal Palace");
+> 772 |       setStudioPose(s.studioPose || "Auto");
+      |                                     ^
+  773 |       setOutputSize(s.outputSize || "1080x1080");
+  774 |       setQuality(s.quality || "Premium");
+  775 |       setCustomCategory(s.customCategory || ""); (app/productography-ai/page.tsx:772:37)
+[browser] The final argument passed to useEffect changed size between renders. The order and size of this array must remain constant.
+
+Previous: [Cosmetics, Single Model, Kids, Indian Boy, Auto, Ad Creative, Neon Studio, Royal Palace, 1080x1080, Premium, , , , , , , , , , , , , , , false, false, false, false, false, false]
+Incoming: [Cosmetics, Single Model, Kids, Indian Boy, Auto, Ad Creative, Neon Studio, Royal Palace, Auto, 1080x1080, Premium, , , , , , , , , , , , , , , false, false, false, false, false, false] 
+    at ProductographyPage (app/productography-ai/page.tsx:798:12)
+    at Set.forEach (<anonymous>)
+  796 |   }, []);
+  797 |
+> 798 |   useEffect(() => {
+      |            ^
+  799 |     localStorage.setItem(
+  800 |       "productography_settings",
+  801 |       JSON.stringify({ (app/productography-ai/page.tsx:798:12)
+ GET /workshop 200 in 2.0s (next.js: 1846ms, application-code: 195ms)
+ GET /workshop/thankyou 200 in 1323ms (next.js: 1181ms, application-code: 142ms)
+ GET /productography-ai 200 in 1156ms (next.js: 170ms, application-code: 986ms)

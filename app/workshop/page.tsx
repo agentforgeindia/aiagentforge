@@ -16,6 +16,8 @@ const SLOTS = [
     day: "Saturday",
     time: "7:00 PM",
     dateTime: "2026-06-20T19:00:00+05:30",
+    paymentLink: "https://rzp.io/rzp/day1june20",
+    community: "https://chat.whatsapp.com/F4ZfEeVXEmv2NaTwe4aIbs",
   },
   {
     id: "21-june",
@@ -23,6 +25,8 @@ const SLOTS = [
     day: "Sunday",
     time: "3:00 PM",
     dateTime: "2026-06-21T15:00:00+05:30",
+    paymentLink: "https://rzp.io/rzp/day2june21",
+    community: "https://chat.whatsapp.com/FkvRQXy6x6AGZ82L83AY7l",
   },
   {
     id: "27-june",
@@ -30,6 +34,8 @@ const SLOTS = [
     day: "Saturday",
     time: "7:00 PM",
     dateTime: "2026-06-27T19:00:00+05:30",
+    paymentLink: "https://rzp.io/rzp/day3june27",
+    community: "https://chat.whatsapp.com/H28rLyxfhXp6ieRc0tlytB",
   },
   {
     id: "28-june",
@@ -37,6 +43,8 @@ const SLOTS = [
     day: "Sunday",
     time: "3:00 PM",
     dateTime: "2026-06-28T15:00:00+05:30",
+    paymentLink: "https://rzp.io/rzp/day4june28",
+    community: "https://chat.whatsapp.com/J3MK8J1bEHNJOdoFzYuv6s",
   },
 ];
 
@@ -609,7 +617,13 @@ export default function WebinarLandingPage() {
 
                 <button
                   type="button"
-                  onClick={() => handleJoin(slot)}
+                  onClick={() => {
+                    if (isFull || isBusy) return;
+                    // Hosted Razorpay payment link for this date. Configure each
+                    // link in the Razorpay dashboard to redirect to
+                    // /workshop/thankyou?slot=<id> after a successful payment.
+                    window.location.href = slot.paymentLink;
+                  }}
                   disabled={isFull || isBusy}
                   className={`mt-5 inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-black uppercase tracking-wide text-white shadow-lg transition ${
                     isFull

@@ -511,7 +511,7 @@ function OptionCard({
       }`}
     >
       <div
-        className={`mb-3 flex h-14 w-14 items-center justify-center overflow-hidden rounded-[20px] transition sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${
+        className={`mb-3 flex h-14 w-14 items-center justify-center overflow-hidden rounded-[20px] bg-white transition sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${
           active
             ? "text-cyan-500 shadow-lg shadow-cyan-400/25"
             : darkMode
@@ -523,8 +523,7 @@ function OptionCard({
           <img
             src={sources[iconAttempt]}
             alt=""
-            className="block h-full w-full object-cover transition duration-300 group-hover:scale-110"
-            style={{ mixBlendMode: darkMode ? "screen" : "multiply" }}
+            className="block h-full w-full object-contain transition duration-300 group-hover:scale-110"
             onError={() => setIconAttempt((n) => n + 1)}
           />
         ) : (
@@ -619,6 +618,7 @@ export default function ProductographyPage() {
   const [profile, setProfile] = useState<any>(null);
   const [showSignupPopup, setShowSignupPopup] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
+  const [resultModalOpen, setResultModalOpen] = useState(false);
   const [ratingGenerationId, setRatingGenerationId] = useState<string | undefined>();
   const [reviewedResult, setReviewedResult] = useState(false);
   const [downloadAfterReview, setDownloadAfterReview] = useState(false);
@@ -1156,12 +1156,12 @@ export default function ProductographyPage() {
           canvas.height,
           companyLogoImg,
           logoPosition as "top-right" | "bottom-right" | "top-left" | "bottom-left",
-          0.14,
+          0.07,
           1,
         );
       }
       if (afLogoImg) {
-        drawLogoInCorner(ctx, canvas.width, canvas.height, afLogoImg, "bottom-right", 0.10, 0.88);
+        drawLogoInCorner(ctx, canvas.width, canvas.height, afLogoImg, "bottom-right", 0.06, 0.88);
       }
 
       if (hasOverlayText(textOverlay)) {
@@ -1428,7 +1428,6 @@ export default function ProductographyPage() {
     );
     setActiveId(item.id);
     setRatingGenerationId(generationId);
-    setShowRatingModal(true);
   };
 
   const handleGenerate = async () => {
@@ -1456,10 +1455,16 @@ export default function ProductographyPage() {
     setLoading(true);
     cancelRef.current = false;
     try {
+      let anyResult = false;
       for (const item of readyItems) {
         if (cancelRef.current) break;
         await generateOne(item, authUser.id);
+        anyResult = true;
       }
+
+      // Show the finished result in a popup first (with Download / Share).
+      // Rating + congrats only fire later, when the user clicks Download.
+      if (anyResult && !cancelRef.current) setResultModalOpen(true);
 
       // Credit deduction is now handled server-side by n8n workflow
       // (per item, after Update Completed → Get/Compute/Deduct Credits)
@@ -2423,17 +2428,6 @@ export default function ProductographyPage() {
                       </div>
                     </div>
 
-                    <div>
-                      <h4 className="text-xl font-black">Final Custom Prompt</h4>
-                      <CustomTextBox
-                        label="Overall Direction"
-                        value={customInstruction}
-                        onChange={setCustomInstruction}
-                        placeholder="Example: Make it look like a premium brand campaign. Do not change logo or packaging. Keep product exact. Add soft reflection."
-                        darkMode={darkMode}
-                      />
-                    </div>
-
                     <div className={`overflow-hidden rounded-[2rem] border ${darkMode ? "border-white/10 bg-black/25" : "border-black/10 bg-white/90"}`}>
                       <div className="p-4 sm:p-6">
                         <div className="mb-5">
@@ -2576,6 +2570,65 @@ export default function ProductographyPage() {
         source="productography-ai"
         context="product shoot"
       />
+
+      {/* Result popup — shows the finished shoot first; Download triggers the
+          rating → congrats flow (same as the jewellery page). */}
+      {resultModalOpen && previewResult && (
+        <div className="fixed inset-0 z-[900] flex items-start justify-center overflow-y-auto bg-black/25 p-3 backdrop-blur-xl sm:p-6">
+          <div className="relative my-auto w-full max-w-lg overflow-hidden rounded-[1.5rem] border border-white/10 bg-white shadow-2xl dark:bg-slate-950 sm:rounded-[2rem]">
+            <button
+              type="button"
+              onClick={() => setResultModalOpen(false)}
+              aria-label="Close"
+              className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-xl leading-none text-white transition hover:bg-black/60"
+            >
+              ✕
+            </button>
+
+            <div className="flex items-center justify-center bg-gradient-to-br from-cyan-500/[0.08] via-black/[0.03] to-violet-500/[0.08] p-3 sm:p-5">
+              <img
+                src={previewResult}
+                alt="Generated product shoot"
+                className="mx-auto max-h-[62vh] w-auto rounded-2xl object-contain shadow-2xl shadow-cyan-400/20"
+              />
+            </div>
+
+            <div className="p-4 sm:p-6">
+              <h3 className="mb-4 text-center text-xl font-black sm:text-2xl">Your product shoot is ready ✨</h3>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={requestDownload}
+                  className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-5 py-3 font-black text-white shadow-lg shadow-emerald-500/20 transition hover:scale-105 active:scale-95"
+                >
+                  <Download className="h-5 w-5" /> Download HD
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNativeShare}
+                  className="flex items-center justify-center gap-2 rounded-2xl bg-blue-500 px-5 py-3 font-black text-white shadow-lg shadow-blue-500/20 transition hover:scale-105 active:scale-95"
+                >
+                  <Share2 className="h-5 w-5" /> Share Now
+                </button>
+              </div>
+              <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#25D366] px-5 py-3 font-black text-white shadow-lg shadow-green-500/20 transition hover:scale-105 active:scale-95"
+              >
+                Share on WhatsApp
+              </a>
+              <Link
+                href="/my-creations"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-black/10 bg-cyan-50/70 px-5 py-2.5 text-sm font-bold text-black/70 transition hover:border-cyan-300 hover:text-cyan-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/70 dark:hover:border-cyan-400/30 dark:hover:text-cyan-300"
+              >
+                🎨 <span className="font-black text-cyan-600">My Creations</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showRatingModal && (
         <RatingFeedbackModal

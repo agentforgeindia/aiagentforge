@@ -12,22 +12,22 @@ const SLOT_COMMUNITIES: Record<string, SlotInfo> = {
   "20-june": {
     date: "20 June 2026 (Saturday, 7:00 PM)",
     ordinal: "First",
-    community: "https://chat.whatsapp.com/REPLACE-20JUNE",
+    community: "https://chat.whatsapp.com/F4ZfEeVXEmv2NaTwe4aIbs",
   },
   "21-june": {
     date: "21 June 2026 (Sunday, 3:00 PM)",
     ordinal: "Second",
-    community: "https://chat.whatsapp.com/REPLACE-21JUNE",
+    community: "https://chat.whatsapp.com/FkvRQXy6x6AGZ82L83AY7l",
   },
   "27-june": {
     date: "27 June 2026 (Saturday, 7:00 PM)",
     ordinal: "Third",
-    community: "https://chat.whatsapp.com/REPLACE-27JUNE",
+    community: "https://chat.whatsapp.com/H28rLyxfhXp6ieRc0tlytB",
   },
   "28-june": {
     date: "28 June 2026 (Sunday, 3:00 PM)",
     ordinal: "Fourth",
-    community: "https://chat.whatsapp.com/REPLACE-28JUNE",
+    community: "https://chat.whatsapp.com/J3MK8J1bEHNJOdoFzYuv6s",
   },
 };
 
