@@ -1026,6 +1026,15 @@ const OUTPUT_ICONS: Record<string, string> = {
   Premium: UI("oq-premium"),
   "Ultra HD": UI("oq-ultra-hd"),
 };
+// "Single Model" usage icon adapts to the Step-1 gender/age:
+// male → keep the current male icon, female/boy/girl → Indian model face.
+function singleModelIcon(category: string, product: string): string {
+  const g = modelGroupsFor(category, product)[0];
+  if (g === "women") return "/model-faces/women-indian.png";
+  if (g === "boys") return "/model-faces/boys-indian.png";
+  if (g === "girls") return "/model-faces/girls-indian.png";
+  return UI("u-single");
+}
 
 function OptionCard({
   title,
@@ -4104,7 +4113,14 @@ export default function Home() {
                               }
                             }}
                             darkMode={darkMode}
-                            imgSrc={USAGE_ICONS[item]}
+                            imgSrc={
+                              item === "Single Model"
+                                ? singleModelIcon(
+                                    textileCategory,
+                                    customProduct.trim() || product,
+                                  )
+                                : USAGE_ICONS[item]
+                            }
                           />
                         ))}
                       </div>
@@ -4146,7 +4162,7 @@ export default function Home() {
                                   <div
                                     className={`mb-2 h-20 w-full overflow-hidden rounded-2xl bg-gradient-to-b from-slate-100/70 to-transparent dark:from-white/[0.06] sm:h-24 ${
                                       item.imgs.length === 4
-                                        ? "grid grid-cols-2 gap-0.5 p-1"
+                                        ? "grid grid-cols-2 grid-rows-2 gap-0.5 p-1"
                                         : "flex items-end justify-center gap-0.5"
                                     }`}
                                   >
@@ -4162,7 +4178,7 @@ export default function Home() {
                                             ? "h-full w-full"
                                             : item.imgs.length === 2
                                               ? "h-full w-1/2"
-                                              : "h-full w-full"
+                                              : "h-full min-h-0 w-full"
                                         }`}
                                       />
                                     ))}
