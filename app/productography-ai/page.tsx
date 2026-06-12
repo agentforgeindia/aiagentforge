@@ -260,6 +260,60 @@ const OUTPUT_ICONS: Record<string, string> = {
   "Ultra HD": UI("oq-ultra-hd"),
 };
 
+// Background-theme sub-selector (shared universal icons with jewellery /
+// textile) — opens under Luxury Studio / Outdoor Lifestyle shoot styles.
+const BG_THEME_ICONS: Record<string, string> = {
+  "Royal Palace": UI("bg-royal-palace"),
+  "Wedding Theme": UI("bg-wedding-theme"),
+  "Sea Face": UI("bg-sea-face"),
+  Forest: UI("bg-forest"),
+  Temple: UI("bg-temple"),
+  Forts: UI("bg-forts"),
+  "River Site": UI("bg-river-site"),
+  Waterfall: UI("bg-waterfall"),
+  Mountains: UI("bg-mountains"),
+  Garden: UI("bg-garden"),
+};
+const backgroundThemeOptions = [
+  "Royal Palace",
+  "Wedding Theme",
+  "Sea Face",
+  "Forest",
+  "Temple",
+  "Forts",
+  "River Site",
+  "Waterfall",
+  "Mountains",
+  "Garden",
+];
+
+// Studio-pose sub-selector (shared universal sp-* icons) — opens under the
+// Luxury Studio shoot style (how the model is posed in the studio shot).
+const STUDIO_POSE_ICONS: Record<string, string> = {
+  Auto: UI("sp-auto"),
+  "Standing Front": UI("sp-standing-front"),
+  "Three-Quarter Turn": UI("sp-three-quarter-turn"),
+  "Hand in Pocket": UI("sp-hand-in-pocket"),
+  "Looking Away": UI("sp-looking-away"),
+  "Seated Stool": UI("sp-seated-stool"),
+  "Leaning Pose": UI("sp-leaning-pose"),
+  "Walking Toward Camera": UI("sp-walking-toward-camera"),
+};
+const studioPoseOptions = [
+  "Auto",
+  "Standing Front",
+  "Three-Quarter Turn",
+  "Hand in Pocket",
+  "Looking Away",
+  "Seated Stool",
+  "Leaning Pose",
+  "Walking Toward Camera",
+];
+
+// Shoot styles that reveal each conditional sub-selector (jewellery parity).
+const SHOOT_STYLES_WITH_BG_THEME = ["Outdoor Lifestyle"];
+const SHOOT_STYLES_WITH_STUDIO_POSE = ["Luxury Studio"];
+
 // ── Gender/age-aware Model Look faces (shared with textile) ──
 const MODEL_ETHNICITIES: { key: string; label: string }[] = [
   { key: "indian", label: "Indian" },
@@ -588,6 +642,8 @@ export default function ProductographyPage() {
   const [pose, setPose] = useState("Auto");
   const [shootStyle, setShootStyle] = useState("Luxury Studio");
   const [background, setBackground] = useState("Plain White");
+  const [backgroundTheme, setBackgroundTheme] = useState("Royal Palace");
+  const [studioPose, setStudioPose] = useState("Auto");
   const [outputSize, setOutputSize] = useState("1080x1080");
   const [quality, setQuality] = useState("Premium");
 
@@ -712,6 +768,8 @@ export default function ProductographyPage() {
       setPose(s.pose || "Auto");
       setShootStyle(s.shootStyle || "Luxury Studio");
       setBackground(s.background || "Plain White");
+      setBackgroundTheme(s.backgroundTheme || "Royal Palace");
+      setStudioPose(s.studioPose || "Auto");
       setOutputSize(s.outputSize || "1080x1080");
       setQuality(s.quality || "Premium");
       setCustomCategory(s.customCategory || "");
@@ -741,7 +799,7 @@ export default function ProductographyPage() {
     localStorage.setItem(
       "productography_settings",
       JSON.stringify({
-        productCategory, modelUsage, modelGroup, modelLook, pose, shootStyle, background,
+        productCategory, modelUsage, modelGroup, modelLook, pose, shootStyle, background, backgroundTheme, studioPose,
         outputSize, quality, customCategory, customModelUsage, customModelLook,
         customPose, customShootStyle, customBackground, customOutputSize, customQuality, customInstruction,
         companyName, companyPhone, companyWebsite, companyAddress, companyLogoUrl,
@@ -750,7 +808,7 @@ export default function ProductographyPage() {
       }),
     );
   }, [
-    productCategory, modelUsage, modelGroup, modelLook, pose, shootStyle, background,
+    productCategory, modelUsage, modelGroup, modelLook, pose, shootStyle, background, backgroundTheme, studioPose,
     outputSize, quality, customCategory, customModelUsage, customModelLook,
     customPose, customShootStyle, customBackground, customOutputSize, customQuality, customInstruction,
     companyName, companyPhone, companyWebsite, companyAddress, companyLogoUrl,
@@ -1291,6 +1349,8 @@ export default function ProductographyPage() {
         pose: resolvedPose,
         shoot_style: resolvedShootStyle,
         background_style: resolvedBackground,
+        background_theme: !customShootStyle.trim() && SHOOT_STYLES_WITH_BG_THEME.includes(shootStyle) ? backgroundTheme : "",
+        studio_pose: !customShootStyle.trim() && SHOOT_STYLES_WITH_STUDIO_POSE.includes(shootStyle) && !modelLookDisabled ? studioPose : "",
         output_size: customOutputSize.trim() || outputSize,
         quality: resolvedQuality,
         output_quality: resolvedQuality,
@@ -2260,6 +2320,43 @@ export default function ProductographyPage() {
                       </div>
                       <CustomTextBox label="Custom Shoot Style" value={customShootStyle} onChange={setCustomShootStyle} placeholder="Example: premium cosmetic ad, soft shadows, luxury editorial lighting, no text..." darkMode={darkMode} />
                     </div>
+
+                    {!customShootStyle.trim() && SHOOT_STYLES_WITH_BG_THEME.includes(shootStyle) && (
+                      <div className="rounded-2xl border border-cyan-300/40 bg-cyan-400/5 p-4 dark:border-cyan-400/20">
+                        <h4 className="text-sm font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">Select Background Theme</h4>
+                        <p className={`mt-1 text-xs ${muted}`}>Premium outdoor backdrop — always upscale, never old or rundown.</p>
+                        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+                          {backgroundThemeOptions.map((item) => (
+                            <OptionCard
+                              key={item}
+                              option={{ title: item, icon: <ImageIcon />, iconFile: BG_THEME_ICONS[item] }}
+                              active={backgroundTheme === item}
+                              onClick={() => setBackgroundTheme(item)}
+                              darkMode={darkMode}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {!customShootStyle.trim() && SHOOT_STYLES_WITH_STUDIO_POSE.includes(shootStyle) && !modelLookDisabled && (
+                      <div className="rounded-2xl border border-cyan-300/40 bg-cyan-400/5 p-4 dark:border-cyan-400/20">
+                        <h4 className="text-sm font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">Select Studio Pose</h4>
+                        <p className={`mt-1 text-xs ${muted}`}>How the model is posed in the studio shot.</p>
+                        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+                          {studioPoseOptions.map((item) => (
+                            <OptionCard
+                              key={item}
+                              option={{ title: item, icon: <Camera />, iconFile: STUDIO_POSE_ICONS[item] }}
+                              active={studioPose === item}
+                              onClick={() => setStudioPose(item)}
+                              darkMode={darkMode}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <div>
                       <h4 className="text-xl font-black">Background</h4>
                       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
@@ -2353,6 +2450,12 @@ export default function ProductographyPage() {
                           <SummaryRow label="Model Look" value={modelLookDisabled ? "No model" : (customModelLook.trim() || modelLook)} />
                           <SummaryRow label="Pose" value={modelLookDisabled ? "—" : (customPose.trim() || pose)} />
                           <SummaryRow label="Shoot Style" value={customShootStyle.trim() || shootStyle} />
+                          {!customShootStyle.trim() && SHOOT_STYLES_WITH_BG_THEME.includes(shootStyle) && (
+                            <SummaryRow label="Background Theme" value={backgroundTheme} />
+                          )}
+                          {!customShootStyle.trim() && SHOOT_STYLES_WITH_STUDIO_POSE.includes(shootStyle) && !modelLookDisabled && (
+                            <SummaryRow label="Studio Pose" value={studioPose} />
+                          )}
                           <SummaryRow label="Background" value={customBackground.trim() || background} />
                           <SummaryRow label="Frame" value={`${customOutputSize.trim() || outputSize} / ${customQuality.trim() || quality}`} />
                           <SummaryRow label="Uploads" value={String(readyItems.length)} />
