@@ -1128,8 +1128,45 @@ function modelGroupsFor(category: string, product: string): string[] {
   }
   return ["women", "men"]; // home / decor / universal → adults
 }
-type ModelLookItem = { value: string; label: string; img: string };
-function buildModelLookList(category: string, product: string): ModelLookItem[] {
+type ModelLookItem = { value: string; label: string; imgs: string[] };
+const face = (g: string, e: string) => `/model-faces/${g}-${e}.png`;
+
+// Single / couple / family / none — driven by the Model-Scene Usage pick.
+function modelLookMode(usage: string): "single" | "couple" | "family" | "none" {
+  const u = (usage || "").toLowerCase();
+  if (u.includes("mannequin") || u.includes("no model")) return "none";
+  if (u.includes("couple")) return "couple";
+  if (u.includes("family")) return "family";
+  return "single";
+}
+
+function buildModelLookList(
+  category: string,
+  product: string,
+  usage: string,
+): ModelLookItem[] {
+  const mode = modelLookMode(usage);
+  if (mode === "none") return [];
+
+  if (mode === "couple") {
+    // Male + female of each ethnicity, merged in the card.
+    return MODEL_ETHNICITIES.map((e) => ({
+      value: `${e.label} Couple`,
+      label: `${e.label} Couple`,
+      imgs: [face("men", e.key), face("women", e.key)],
+    }));
+  }
+
+  if (mode === "family") {
+    // Father + mother + boy + girl of each ethnicity, clubbed in the card.
+    return MODEL_ETHNICITIES.map((e) => ({
+      value: `${e.label} Family`,
+      label: `${e.label} Family`,
+      imgs: [face("men", e.key), face("women", e.key), face("boys", e.key), face("girls", e.key)],
+    }));
+  }
+
+  // single
   const groups = modelGroupsFor(category, product);
   const multi = groups.length > 1;
   const out: ModelLookItem[] = [];
@@ -1139,7 +1176,7 @@ function buildModelLookList(category: string, product: string): ModelLookItem[] 
       out.push({
         value: `${e.label} ${noun}`,
         label: multi ? `${e.label} ${noun}` : e.label,
-        img: `/model-faces/${g}-${e.key}.png`,
+        imgs: [face(g, e.key)],
       });
     }
   }
@@ -1339,19 +1376,26 @@ export default function Home() {
   const dynamicProducts =
     productOptionsByCategory[textileCategory] ||
     productOptionsByCategory["Men's Wear"];
-  // Gender/age-aware Model Look list for the current category + product.
+  // Gender/age-aware Model Look list — also reacts to single/couple/family/
+  // mannequin from the Model-Scene Usage pick.
   const modelLookList = buildModelLookList(
     textileCategory,
     customProduct.trim() || product,
+    modelUsage,
   );
-  // Keep the selected model look valid when category/product changes.
+  const modelLookDisabled = modelLookMode(modelUsage) === "none";
+  // Keep the selected model look valid when category / product / usage changes.
   useEffect(() => {
-    const list = buildModelLookList(textileCategory, customProduct.trim() || product);
+    const list = buildModelLookList(textileCategory, customProduct.trim() || product, modelUsage);
+    if (list.length === 0) {
+      setModelType(/mannequin/i.test(modelUsage) ? "Mannequin" : "No Model");
+      return;
+    }
     setModelType((cur) =>
       list.some((m) => m.value === cur) ? cur : list[0]?.value || "Indian Man",
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [textileCategory, product, customProduct]);
+  }, [textileCategory, product, customProduct, modelUsage]);
   const dynamicModelUsageOptions = isHomeLikeCategory
     ? homeModelUsageOptions
     : apparelModelUsageOptions;
@@ -3924,53 +3968,78 @@ export default function Home() {
                         4. Model Look
                       </h4>
 
-                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
-                        {modelLookList.map((item) => {
-                          const isActive =
-                            !customModelType.trim() && modelType === item.value;
-                          return (
-                            <button
-                              key={item.value}
-                              type="button"
-                              onClick={() => {
-                                setModelType(item.value);
-                                setCustomModelType("");
-                              }}
-                              className={`group flex flex-col items-center rounded-[22px] border p-3 text-center transition-all duration-300 active:scale-[0.97] ${
-                                isActive
-                                  ? "scale-[1.02] border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/60"
-                                  : darkMode
-                                    ? "border-white/10 bg-white/[0.04] hover:-translate-y-0.5 hover:bg-white/[0.08]"
-                                    : "border-slate-200 bg-white/90 hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-lg hover:shadow-cyan-500/10"
-                              }`}
-                            >
-                              <div className="mb-2 h-20 w-20 overflow-hidden rounded-2xl bg-gradient-to-b from-slate-100/70 to-transparent dark:from-white/[0.06] sm:h-24 sm:w-24">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                  src={item.img}
-                                  alt={item.label}
-                                  loading="lazy"
-                                  className="h-full w-full object-contain transition duration-300 group-hover:scale-105"
-                                />
-                              </div>
-                              <p
-                                className={`text-[12px] font-black leading-4 sm:text-sm ${
-                                  isActive
-                                    ? "text-cyan-700 dark:text-cyan-200"
-                                    : "text-slate-700 dark:text-white/75"
-                                }`}
-                              >
-                                {item.label}
-                              </p>
-                            </button>
-                          );
-                        })}
-                      </div>
+                      {modelLookDisabled ? (
+                        <div className={`rounded-2xl border border-dashed p-5 text-center text-sm ${darkMode ? "border-white/15 bg-white/[0.03] text-white/55" : "border-black/15 bg-black/[0.02] text-slate-500"}`}>
+                          Model Look is not applicable for{" "}
+                          <span className="font-bold">{modelUsage}</span> — no
+                          human model is used here.
+                        </div>
+                      ) : (
+                        <>
+                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
+                            {modelLookList.map((item) => {
+                              const isActive =
+                                !customModelType.trim() && modelType === item.value;
+                              return (
+                                <button
+                                  key={item.value}
+                                  type="button"
+                                  onClick={() => {
+                                    setModelType(item.value);
+                                    setCustomModelType("");
+                                  }}
+                                  className={`group flex flex-col items-center rounded-[22px] border p-3 text-center transition-all duration-300 active:scale-[0.97] ${
+                                    isActive
+                                      ? "scale-[1.02] border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/60"
+                                      : darkMode
+                                        ? "border-white/10 bg-white/[0.04] hover:-translate-y-0.5 hover:bg-white/[0.08]"
+                                        : "border-slate-200 bg-white/90 hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-lg hover:shadow-cyan-500/10"
+                                  }`}
+                                >
+                                  <div
+                                    className={`mb-2 h-20 w-full overflow-hidden rounded-2xl bg-gradient-to-b from-slate-100/70 to-transparent dark:from-white/[0.06] sm:h-24 ${
+                                      item.imgs.length === 4
+                                        ? "grid grid-cols-2 gap-0.5 p-1"
+                                        : "flex items-end justify-center gap-0.5"
+                                    }`}
+                                  >
+                                    {item.imgs.map((src, i) => (
+                                      // eslint-disable-next-line @next/next/no-img-element
+                                      <img
+                                        key={i}
+                                        src={src}
+                                        alt={item.label}
+                                        loading="lazy"
+                                        className={`object-contain transition duration-300 group-hover:scale-105 ${
+                                          item.imgs.length === 1
+                                            ? "h-full w-full"
+                                            : item.imgs.length === 2
+                                              ? "h-full w-1/2"
+                                              : "h-full w-full"
+                                        }`}
+                                      />
+                                    ))}
+                                  </div>
+                                  <p
+                                    className={`text-[12px] font-black leading-4 sm:text-sm ${
+                                      isActive
+                                        ? "text-cyan-700 dark:text-cyan-200"
+                                        : "text-slate-700 dark:text-white/75"
+                                    }`}
+                                  >
+                                    {item.label}
+                                  </p>
+                                </button>
+                              );
+                            })}
+                          </div>
 
-                      {renderCustomInput(
-                        "Or type your own — e.g. 'Punjabi Male', 'Premium Indian Couple', 'Asian Female'",
-                        customModelType,
-                        setCustomModelType,
+                          {renderCustomInput(
+                            "Or type your own — e.g. 'Punjabi Male', 'Premium Indian Couple', 'Asian Family'",
+                            customModelType,
+                            setCustomModelType,
+                          )}
+                        </>
                       )}
                     </section>
                   </div>
