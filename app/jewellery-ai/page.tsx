@@ -211,22 +211,22 @@ const MODEL_USAGE_BY_JEWELLERY: Record<string, OptionItem[]> = {
 
 const POSE_OPTIONS: OptionItem[] = [
   // Auto + body poses
-  { label: "Auto Pose", icon: Wand2, hint: "Random AI pick", iconFile: "auto-pose" },
-  { label: "Front Pose", icon: UserRound, hint: "Upper body front shot", iconFile: "front-pose" },
-  { label: "Side Pose", icon: UserRound, hint: "45° model turn", iconFile: "side-pose" },
-  { label: "Half Body", icon: UserRound, hint: "Half model frame", iconFile: "half-body" },
-  { label: "Full Body", icon: UserRound, hint: "Full model frame", iconFile: "full-body" },
+  { label: "Auto Pose", icon: Wand2, hint: "Random AI pick", iconFile: "/jewellery-icon/jp-auto-pose.png" },
+  { label: "Front Pose", icon: UserRound, hint: "Upper body front shot", iconFile: "/jewellery-icon/jp-front-pose.png" },
+  { label: "Side Pose", icon: UserRound, hint: "45° model turn", iconFile: "/jewellery-icon/jp-side-pose.png" },
+  { label: "Half Body", icon: UserRound, hint: "Half model frame", iconFile: "/jewellery-icon/jp-half-body.png" },
+  { label: "Full Body", icon: UserRound, hint: "Full model frame", iconFile: "/jewellery-icon/jp-full-body.png" },
 
   // Hand poses (rings / bracelets) — AI must match gender to jewellery
-  { label: "Hand Pose", icon: Hand, hint: "Hand matched to jewellery (male/female)", iconFile: "hand-close-up" },
-  { label: "Wrist Detail", icon: ScanSearch, hint: "Wrist matched to jewellery (male/female)", iconFile: "wrist-close-up" },
-  { label: "Couple Hands", icon: Hand, hint: "Engagement feel", iconFile: "couple-hands" },
+  { label: "Hand Pose", icon: Hand, hint: "Hand matched to jewellery (male/female)", iconFile: "/jewellery-icon/jp-hand-pose.png" },
+  { label: "Wrist Detail", icon: ScanSearch, hint: "Wrist matched to jewellery (male/female)", iconFile: "/jewellery-icon/jp-wrist-detail.png" },
+  { label: "Couple Hands", icon: Hand, hint: "Engagement feel", iconFile: "/jewellery-icon/jp-couple-hands.png" },
 
   // Neck poses (necklace / mangalsutra)
-  { label: "Neck Close-up", icon: Gem, hint: "Female neck shot — necklace focus", iconFile: "neck-close-up" },
+  { label: "Neck Close-up", icon: Gem, hint: "Female neck shot — necklace focus", iconFile: "/jewellery-icon/jp-neck-closeup.png" },
 
   // Ear poses (earrings)
-  { label: "Ear Close-up", icon: UserRound, hint: "Side pose, earring visible", iconFile: "ear-close-up" },
+  { label: "Ear Close-up", icon: UserRound, hint: "Side pose, earring visible", iconFile: "/jewellery-icon/jp-ear-closeup.png" },
 ];
 
 // Model look options are now merged into SHOOT_STYLE_OPTIONS below.
@@ -255,18 +255,18 @@ const CAMERA_ANGLE_OPTIONS: OptionItem[] = [
 // SHOOT STYLE = only the scene / background / lighting (deduped).
 // Model ethnicity now lives in its own "Model Look" box (Step 3).
 const SHOOT_STYLE_OPTIONS: OptionItem[] = [
-  { label: "Luxury Studio", icon: Crown, hint: "Dark velvet premium studio", iconFile: "luxury-studio" },
-  { label: "White Background", icon: Square, hint: "Clean seamless white catalogue BG", iconFile: "white-catalogue" },
-  { label: "Bridal Editorial", icon: Sparkles, hint: "Bridal / festive rich styling", iconFile: "bridal-editorial" },
-  { label: "Luxury Editorial", icon: BadgeCheck, hint: "Fashion / cinematic editorial", iconFile: "luxury-editorial" },
-  { label: "Macro Detail", icon: ScanSearch, hint: "Diamond / kundan stone focus", iconFile: "macro-detail" },
-  { label: "Outdoor Premium", icon: ImageIcon, hint: "Premium outdoor backdrop — pick a theme" },
-  { label: "Studio Professional", icon: Camera, hint: "Pro studio shoot — pick a pose" },
+  { label: "Luxury Studio", icon: Crown, hint: "Dark velvet premium studio", iconFile: "/jewellery-icon/js-luxury-studio.png" },
+  { label: "White Background", icon: Square, hint: "Clean seamless white catalogue BG", iconFile: "/jewellery-icon/js-white-background.png" },
+  { label: "Bridal Editorial", icon: Sparkles, hint: "Bridal / festive rich styling", iconFile: "/jewellery-icon/js-bridal-editorial.png" },
+  { label: "Luxury Editorial", icon: BadgeCheck, hint: "Fashion / cinematic editorial", iconFile: "/jewellery-icon/js-luxury-editorial.png" },
+  { label: "Macro Detail", icon: ScanSearch, hint: "Diamond / kundan stone focus", iconFile: "/jewellery-icon/js-macro-detail.png" },
+  { label: "Outdoor Premium", icon: ImageIcon, hint: "Premium outdoor backdrop — pick a theme", iconFile: "/jewellery-icon/js-outdoor-premium.png" },
+  { label: "Studio Professional", icon: Camera, hint: "Pro studio shoot — pick a pose", iconFile: "/jewellery-icon/js-studio-professional.png" },
 ];
 
 // Model Look (textile-parity) — which kind of model wears the jewellery.
 const JEWEL_MODEL_LOOK_OPTIONS: OptionItem[] = [
-  { label: "No Model", icon: Package, hint: "Product-only, no human", iconFile: "no-model" },
+  { label: "No Model", icon: Package, hint: "Product-only, no human", iconFile: "/jewellery-icon/js-no-model.png" },
   { label: "Indian Model", icon: UserRound, hint: "Indian / South-Asian", iconFile: "/model-faces/women-indian.png" },
   { label: "Western Model", icon: UserRound, hint: "European / American look", iconFile: "/model-faces/women-western.png" },
   { label: "Asian Model", icon: UserRound, hint: "East-Asian look", iconFile: "/model-faces/women-asian.png" },
@@ -301,22 +301,60 @@ const JEWEL_STUDIO_POSE_OPTIONS = [
   "Walking Toward Camera",
 ];
 
+// Cropped jewellery PNG icons for the "More Jewellery Options" sub-grid.
+const MORE_JEWELLERY_ICONS: Record<string, string> = {
+  "Jewellery Set": "/jewellery-icon/jm-jewellery-set.png",
+  Payal: "/jewellery-icon/jm-payal.png",
+  Tikka: "/jewellery-icon/jm-tikka.png",
+  Mangalsutra: "/jewellery-icon/jm-mangalsutra.png",
+  Bangles: "/jewellery-icon/jm-bangles.png",
+  "Nose Pin": "/jewellery-icon/jm-nose-pin.png",
+  Pendant: "/jewellery-icon/jm-pendant.png",
+  Chain: "/jewellery-icon/jm-chain.png",
+  Anklet: "/jewellery-icon/jm-anklet.png",
+  Other: "/jewellery-icon/jm-other.png",
+};
+
+// Universal background-theme + studio-pose icons (shared with the textile agent).
+const JEWEL_BG_THEME_ICONS: Record<string, string> = {
+  "Royal Palace": "/ui-icons/bg-royal-palace.png",
+  "Wedding Theme": "/ui-icons/bg-wedding-theme.png",
+  "Sea Face": "/ui-icons/bg-sea-face.png",
+  Forest: "/ui-icons/bg-forest.png",
+  Temple: "/ui-icons/bg-temple.png",
+  Forts: "/ui-icons/bg-forts.png",
+  "River Site": "/ui-icons/bg-river-site.png",
+  Waterfall: "/ui-icons/bg-waterfall.png",
+  Mountains: "/ui-icons/bg-mountains.png",
+  Garden: "/ui-icons/bg-garden.png",
+};
+const JEWEL_STUDIO_POSE_ICONS: Record<string, string> = {
+  Auto: "/ui-icons/sp-auto.png",
+  "Standing Front": "/ui-icons/sp-standing-front.png",
+  "Three-Quarter Turn": "/ui-icons/sp-three-quarter-turn.png",
+  "Hand in Pocket": "/ui-icons/sp-hand-in-pocket.png",
+  "Looking Away": "/ui-icons/sp-looking-away.png",
+  "Seated Stool": "/ui-icons/sp-seated-stool.png",
+  "Leaning Pose": "/ui-icons/sp-leaning-pose.png",
+  "Walking Toward Camera": "/ui-icons/sp-walking-toward-camera.png",
+};
+
 // 10 props covering temple, diamond, bridal and luxury flat-lay use cases.
 // AI agent picks the appropriate styling based on the jewellery type + this choice.
 // IMPORTANT: when "No Accessories" is selected, the back-end agent must NOT add
 // any extra jewellery, tray contents, or decorative pieces beyond the model + the
 // uploaded jewellery itself. This is enforced via `style_directives` in the payload.
 const ACCESSORY_OPTIONS: OptionItem[] = [
-  { label: "No Accessories", icon: ShieldCheck, hint: "Strict — only uploaded jewellery, nothing extra", iconFile: "no-accessories" },
-  { label: "Flat Lay", icon: Square, hint: "Top-down spread", iconFile: "luxury-flat-ray" },
-  { label: "Velvet Box", icon: Package, hint: "Luxury display", iconFile: "velvet-box" },
-  { label: "Marble Surface", icon: Square, hint: "Premium base", iconFile: "marble-base" },
-  { label: "Silk Drape", icon: Sparkles, hint: "Rich backdrop", iconFile: "luxury-flat-ray" },
-  { label: "Rose Petals", icon: Sparkles, hint: "Romantic vibe", iconFile: "flowers" },
-  { label: "Marigold + Diya", icon: Sparkles, hint: "Temple jewellery", iconFile: "flowers" },
-  { label: "Diamond Sparkle Set", icon: Diamond, hint: "Crystals + mirror", iconFile: "macro-detail" },
-  { label: "Pearl String Decor", icon: Gem, hint: "Soft luxury", iconFile: "pearls" },
-  { label: "Wooden Antique Tray", icon: Package, hint: "Vintage style", iconFile: "luxury-flat-ray" },
+  { label: "No Accessories", icon: ShieldCheck, hint: "Strict — only uploaded jewellery, nothing extra", iconFile: "/jewellery-icon/ja-no-accessories.png" },
+  { label: "Flat Lay", icon: Square, hint: "Top-down spread", iconFile: "/jewellery-icon/ja-flat-lay.png" },
+  { label: "Velvet Box", icon: Package, hint: "Luxury display", iconFile: "/jewellery-icon/ja-velvet-box.png" },
+  { label: "Marble Surface", icon: Square, hint: "Premium base", iconFile: "/jewellery-icon/ja-marble-surface.png" },
+  { label: "Silk Drape", icon: Sparkles, hint: "Rich backdrop", iconFile: "/jewellery-icon/ja-silk-drape.png" },
+  { label: "Rose Petals", icon: Sparkles, hint: "Romantic vibe", iconFile: "/jewellery-icon/ja-rose-petals.png" },
+  { label: "Marigold + Diya", icon: Sparkles, hint: "Temple jewellery", iconFile: "/jewellery-icon/ja-marigold-diya.png" },
+  { label: "Diamond Sparkle Set", icon: Diamond, hint: "Crystals + mirror", iconFile: "/jewellery-icon/ja-diamond-sparkle.png" },
+  { label: "Pearl String Decor", icon: Gem, hint: "Soft luxury", iconFile: "/jewellery-icon/ja-pearl-string.png" },
+  { label: "Wooden Antique Tray", icon: Package, hint: "Vintage style", iconFile: "/jewellery-icon/ja-wooden-tray.png" },
 ];
 
 const FRAME_OUTPUT_OPTIONS: OptionItem[] = [
@@ -706,18 +744,13 @@ function OptionCard({
       )}
     >
       <div
-        className={clsx(
-          "mb-3 flex h-16 w-16 items-center justify-center rounded-[22px] transition sm:h-[76px] sm:w-[76px] sm:rounded-[26px]",
-          active
-            ? "bg-white/80 text-cyan-700 shadow-md shadow-cyan-400/20 dark:bg-white/[0.10] dark:text-cyan-200"
-            : "bg-[#eefaff] text-cyan-700 shadow-sm shadow-cyan-500/10 dark:bg-white/[0.07] dark:text-cyan-200",
-        )}
+        className="mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-[22px] bg-white text-cyan-700 transition sm:h-[76px] sm:w-[76px] sm:rounded-[26px]"
       >
         {iconSrc && !iconFailed ? (
           <img
             src={iconSrc}
             alt=""
-            className="h-14 w-14 object-contain drop-shadow-md transition duration-300 group-hover:scale-110 sm:h-16 sm:w-16"
+            className="block h-full w-full object-contain transition duration-300 group-hover:scale-105"
             onError={() => setIconFailed(true)}
           />
         ) : (
@@ -725,7 +758,6 @@ function OptionCard({
         )}
       </div>
       <p className={clsx("text-[12px] font-black leading-4 sm:text-sm", active ? "text-cyan-700 dark:text-cyan-200" : "text-slate-700 dark:text-white/75")}>{option.label}</p>
-      {option.hint && <p className="mt-1 text-[11px] leading-4 text-slate-500 dark:text-white/40">{option.hint}</p>}
     </button>
   );
 }
@@ -3293,8 +3325,8 @@ if (!response.ok) {
                                     : "border-slate-200 bg-white/90 hover:-translate-y-1 hover:border-cyan-300 hover:bg-white hover:shadow-lg dark:border-white/10 dark:bg-white/[0.045] dark:hover:bg-white/[0.08]",
                                 )}
                               >
-                                <div className="mb-2 flex h-14 w-14 items-center justify-center overflow-hidden rounded-[18px] sm:h-16 sm:w-16">
-                                  <JewelGlyphIcon name={jewelGlyphName(item)} />
+                                <div className="mb-2 flex h-14 w-14 items-center justify-center overflow-hidden rounded-[18px] bg-white sm:h-16 sm:w-16">
+                                  <img src={MORE_JEWELLERY_ICONS[item]} alt="" className="block h-full w-full object-contain transition duration-300 group-hover:scale-105" />
                                 </div>
                                 <p className={clsx("text-[12px] font-black leading-4 sm:text-sm", isActive ? "text-cyan-700 dark:text-cyan-200" : "text-slate-700 dark:text-white/75")}>{item}</p>
                               </button>
@@ -3336,7 +3368,7 @@ if (!response.ok) {
                                   "group flex min-h-[108px] flex-col items-center justify-center rounded-[20px] border p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[124px]",
                                   isActive ? "scale-[1.02] border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/60" : "border-slate-200 bg-white/90 hover:-translate-y-1 hover:border-cyan-300 hover:bg-white hover:shadow-lg dark:border-white/10 dark:bg-white/[0.045] dark:hover:bg-white/[0.08]",
                                 )}>
-                                <div className="mb-2 flex h-14 w-14 items-center justify-center overflow-hidden rounded-[18px] sm:h-16 sm:w-16"><JewelOptIcon name={jewelOptGlyphName(item)} /></div>
+                                <div className="mb-2 flex h-14 w-14 items-center justify-center overflow-hidden rounded-[18px] bg-white sm:h-16 sm:w-16"><img src={JEWEL_BG_THEME_ICONS[item]} alt="" className="block h-full w-full object-contain transition duration-300 group-hover:scale-105" /></div>
                                 <p className={clsx("text-[12px] font-black leading-4 sm:text-sm", isActive ? "text-cyan-700 dark:text-cyan-200" : "text-slate-700 dark:text-white/75")}>{item}</p>
                               </button>
                             );
@@ -3359,7 +3391,7 @@ if (!response.ok) {
                                   "group flex min-h-[108px] flex-col items-center justify-center rounded-[20px] border p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[124px]",
                                   isActive ? "scale-[1.02] border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/60" : "border-slate-200 bg-white/90 hover:-translate-y-1 hover:border-cyan-300 hover:bg-white hover:shadow-lg dark:border-white/10 dark:bg-white/[0.045] dark:hover:bg-white/[0.08]",
                                 )}>
-                                <div className="mb-2 flex h-14 w-14 items-center justify-center overflow-hidden rounded-[18px] sm:h-16 sm:w-16"><JewelOptIcon name={jewelOptGlyphName(item)} /></div>
+                                <div className="mb-2 flex h-14 w-14 items-center justify-center overflow-hidden rounded-[18px] bg-white sm:h-16 sm:w-16"><img src={JEWEL_STUDIO_POSE_ICONS[item]} alt="" className="block h-full w-full object-contain transition duration-300 group-hover:scale-105" /></div>
                                 <p className={clsx("text-[12px] font-black leading-4 sm:text-sm", isActive ? "text-cyan-700 dark:text-cyan-200" : "text-slate-700 dark:text-white/75")}>{item}</p>
                               </button>
                             );

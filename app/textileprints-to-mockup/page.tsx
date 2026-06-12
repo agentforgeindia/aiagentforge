@@ -1026,6 +1026,16 @@ const OUTPUT_ICONS: Record<string, string> = {
   Premium: UI("oq-premium"),
   "Ultra HD": UI("oq-ultra-hd"),
 };
+
+// Selection-recap row for the "complete detail" generate block (jewellery parity).
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl bg-white/60 px-3 py-2 text-sm dark:bg-white/[0.04]">
+      <span className="font-bold text-slate-500 dark:text-white/50">{label}</span>
+      <span className="truncate text-right font-black text-slate-800 dark:text-white/85">{value || "—"}</span>
+    </div>
+  );
+}
 // "Single Model" usage icon adapts to the Step-1 gender/age:
 // male → keep the current male icon, female/boy/girl → Indian model face.
 function singleModelIcon(category: string, product: string): string {
@@ -4475,6 +4485,29 @@ export default function Home() {
                       </div>
 
                     </section>
+
+                    <div className="rounded-2xl border border-cyan-300/40 bg-gradient-to-br from-cyan-400/10 via-blue-500/10 to-purple-500/10 p-4 sm:p-5">
+                      <p className="mb-3 text-xs font-black uppercase tracking-widest text-cyan-600">Your Selection</p>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <SummaryRow label="Product" value={customProduct.trim() || product} />
+                        <SummaryRow label="Model Usage" value={modelUsage} />
+                        <SummaryRow label="Model Look" value={modelLookDisabled ? "No model" : (customModelType.trim() || modelType)} />
+                        <SummaryRow label={isHomeLikeCategory ? "Scene" : "Pose"} value={customPose.trim() || pose} />
+                        {showFaceExpression && (
+                          <SummaryRow label="Face" value={customFaceExpression.trim() || faceExpression} />
+                        )}
+                        <SummaryRow label="Shoot Style" value={customShootStyle.trim() || shootStyle} />
+                        {!customShootStyle.trim() && (shootStyle === "Outdoor Premium" || shootStyle === "Luxury Editorial") && (
+                          <SummaryRow label="Background" value={outdoorBackground} />
+                        )}
+                        {!customShootStyle.trim() && shootStyle === "Studio Professional" && (
+                          <SummaryRow label="Studio Pose" value={studioPose} />
+                        )}
+                        <SummaryRow label="Accessories" value={accessories.length ? accessories.join(", ") : "None"} />
+                        <SummaryRow label="Frame" value={`${customOutputSize.trim() || outputSize} / ${customQuality.trim() || quality}`} />
+                        <SummaryRow label="Uploads" value={String(readyItems.length)} />
+                      </div>
+                    </div>
 
                     <div className="pt-2">
                       <button

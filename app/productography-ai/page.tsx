@@ -187,61 +187,148 @@ const productCategories: Option[] = [
   { title: "Custom Product", hint: "Write your own", icon: <Wand2 />, iconFile: "/Productography-icons/custom-look.svg" },
 ];
 
-const modelUsageOptions: Option[] = [
-  { title: "Without Model", hint: "Product-only premium shoot", icon: <Package />, iconFile: "/Productography-icons/no model.svg" },
-  { title: "Hand Model", hint: "Hand holding/using product", icon: <UserRound />, iconFile: "/Productography-icons/model holding product.svg" },
-  { title: "Boy Model", hint: "Male lifestyle model", icon: <UserRound />, iconFile: "/model-faces/men-indian.png" },
-  { title: "Girl Model", hint: "Female lifestyle model", icon: <UserRound />, iconFile: "/model-faces/women-indian.png" },
-  { title: "Kid Model", hint: "Kids product lifestyle", icon: <UserRound />, iconFile: "/model-faces/boys-indian.png" },
-  { title: "Couple / Family", hint: "Lifestyle family scene", icon: <UserRound />, iconFile: "/ui-icons/u-family.png" },
-];
-
-const modelLookOptions: Option[] = [
-  { title: "Indian", hint: "Indian market look", icon: <UserRound />, iconFile: "/model-faces/women-indian.png" },
-  { title: "European", hint: "Global premium look", icon: <UserRound />, iconFile: "/model-faces/women-western.png" },
-  { title: "Asian", hint: "East/South Asian look", icon: <UserRound />, iconFile: "/model-faces/women-asian.png" },
-  { title: "Arabic", hint: "Middle East premium", icon: <UserRound />, iconFile: "/model-faces/women-middle-eastern.png" },
-  { title: "African", hint: "African model look", icon: <UserRound />, iconFile: "/model-faces/women-african.png" },
-  { title: "Custom Look", hint: "Write exact look", icon: <Wand2 />, iconFile: "/Productography-icons/custom-look.svg" },
-];
-
 const shootStyleOptions: Option[] = [
-  { title: "Ecommerce White BG", hint: "Amazon/Flipkart style", icon: <ImageIcon />, iconFile: "/Productography-icons/white background.svg" },
-  { title: "Luxury Studio", hint: "Premium catalogue lighting", icon: <Camera />, iconFile: "/Productography-icons/photo studio setup.svg" },
-  { title: "Outdoor Lifestyle", hint: "Natural brand shoot", icon: <Camera />, iconFile: "/Productography-icons/outdoor premium.svg" },
-  { title: "Ad Creative", hint: "Poster/ad-ready image", icon: <Sparkles />, iconFile: "/Productography-icons/add_creative.svg" },
-  { title: "Cinematic Dark", hint: "Dramatic premium shadows", icon: <Palette />, iconFile: "/Productography-icons/luxury_black.svg" },
-  { title: "Instagram Viral", hint: "Trendy social post", icon: <Wand2 />, iconFile: "/Productography-icons/insta.svg" },
-  { title: "Festival Theme", hint: "Diwali/Eid/seasonal", icon: <Sparkles />, iconFile: "/Productography-icons/Festival.svg" },
-  { title: "Custom Shoot", hint: "Write exact direction", icon: <Wand2 />, iconFile: "/Productography-icons/custom-look.svg" },
+  { title: "Ecommerce White BG", hint: "Amazon/Flipkart style", icon: <ImageIcon />, iconFile: "/Productography-icons/pss-ecommerce-white.png" },
+  { title: "Luxury Studio", hint: "Premium catalogue lighting", icon: <Camera />, iconFile: "/Productography-icons/pss-luxury-studio.png" },
+  { title: "Outdoor Lifestyle", hint: "Natural brand shoot", icon: <Camera />, iconFile: "/Productography-icons/pss-outdoor-lifestyle.png" },
+  { title: "Ad Creative", hint: "Poster/ad-ready image", icon: <Sparkles />, iconFile: "/Productography-icons/pss-ad-creative.png" },
+  { title: "Cinematic Dark", hint: "Dramatic premium shadows", icon: <Palette />, iconFile: "/Productography-icons/pss-cinematic-dark.png" },
+  { title: "Instagram Viral", hint: "Trendy social post", icon: <Wand2 />, iconFile: "/Productography-icons/pss-instagram-viral.png" },
+  { title: "Festival Theme", hint: "Diwali/Eid/seasonal", icon: <Sparkles />, iconFile: "/Productography-icons/pss-festival.png" },
+  { title: "Custom Shoot", hint: "Write exact direction", icon: <Wand2 />, iconFile: "/Productography-icons/pss-custom.png" },
 ];
 
 const backgroundOptions: Option[] = [
-  { title: "Plain White", hint: "Clean ecommerce", icon: <ImageIcon />, iconFile: "/Productography-icons/white background.svg" },
-  { title: "Luxury Black", hint: "Premium contrast", icon: <Palette />, iconFile: "/Productography-icons/luxury_black.svg" },
-  { title: "Marble Surface", hint: "Beauty/jewellery vibe", icon: <Layers />, iconFile: "/Productography-icons/marble.svg" },
-  { title: "Wooden Table", hint: "Natural product setup", icon: <Layers />, iconFile: "/Productography-icons/wooden.svg" },
-  { title: "Cafe / Lifestyle", hint: "Daily usage scene", icon: <Camera />, iconFile: "/Productography-icons/lifestyle room view.svg" },
-  { title: "Nature Outdoor", hint: "Fresh outdoor feel", icon: <Camera />, iconFile: "/Productography-icons/outdoor premium.svg" },
-  { title: "Neon Studio", hint: "Modern Gen-Z style", icon: <Sparkles />, iconFile: "/Productography-icons/neon.svg" },
-  { title: "Custom BG", hint: "Write your own scene", icon: <Wand2 />, iconFile: "/Productography-icons/custom-look.svg" },
+  { title: "Plain White", hint: "Clean ecommerce", icon: <ImageIcon />, iconFile: "/Productography-icons/pbg-plain-white.png" },
+  { title: "Luxury Black", hint: "Premium contrast", icon: <Palette />, iconFile: "/Productography-icons/pbg-luxury-black.png" },
+  { title: "Marble Surface", hint: "Beauty/jewellery vibe", icon: <Layers />, iconFile: "/Productography-icons/pbg-marble.png" },
+  { title: "Wooden Table", hint: "Natural product setup", icon: <Layers />, iconFile: "/Productography-icons/pbg-wooden.png" },
+  { title: "Cafe / Lifestyle", hint: "Daily usage scene", icon: <Camera />, iconFile: "/Productography-icons/pbg-cafe.png" },
+  { title: "Nature Outdoor", hint: "Fresh outdoor feel", icon: <Camera />, iconFile: "/Productography-icons/pbg-nature.png" },
+  { title: "Neon Studio", hint: "Modern Gen-Z style", icon: <Sparkles />, iconFile: "/Productography-icons/pbg-neon.png" },
+  { title: "Custom BG", hint: "Write your own scene", icon: <Wand2 />, iconFile: "/Productography-icons/pbg-custom.png" },
 ];
 
-const angleOptions: Option[] = [
-  { title: "Front View", hint: "Safe default", icon: <Camera />, iconFile: "/Productography-icons/front view.svg" },
-  { title: "45 Degree", hint: "Premium angle", icon: <Camera />, iconFile: "/Productography-icons/camera45angle.svg" },
-  { title: "Top View", hint: "Flat lay", icon: <Camera />, iconFile: "/Productography-icons/top view.svg" },
-  { title: "Macro Close-up", hint: "Texture/detail shot", icon: <Camera />, iconFile: "/Productography-icons/close-up shot.svg" },
-  { title: "Hero Shot", hint: "Main ad image", icon: <Sparkles />, iconFile: "/Productography-icons/hero_shot.svg" },
-  { title: "Custom Angle", hint: "Write exact angle", icon: <Wand2 />, iconFile: "/Productography-icons/custom-look.svg" },
+
+// ============================================================
+// TEXTILE-PARITY HELPERS (Model Usage / Look, Shoot Style + Pose,
+// Background Theme, Studio Pose, Output & Quality). Icons shared
+// with the textile agent via /public/ui-icons + /public/model-faces.
+// ============================================================
+const UI = (f: string) => `/ui-icons/${f}.png`;
+
+const USAGE_ICONS: Record<string, string> = {
+  "No Model": "/Productography-icons/no model.svg",
+  "Single Model": UI("u-single"),
+  "Model Holding Product": "/Productography-icons/model holding product.svg",
+  "Couple With Product": UI("u-couple"),
+  "Family Lifestyle Scene": UI("u-family"),
+};
+const productModelUsageOptions: Option[] = [
+  { title: "No Model", hint: "Product-only premium shoot", icon: <Package />, iconFile: USAGE_ICONS["No Model"] },
+  { title: "Single Model", hint: "One model with the product", icon: <UserRound />, iconFile: USAGE_ICONS["Single Model"] },
+  { title: "Model Holding Product", hint: "Hand / in-use shot", icon: <UserRound />, iconFile: USAGE_ICONS["Model Holding Product"] },
+  { title: "Couple With Product", hint: "Lifestyle pair scene", icon: <UserRound />, iconFile: USAGE_ICONS["Couple With Product"] },
+  { title: "Family Lifestyle Scene", hint: "Family usage scene", icon: <UserRound />, iconFile: USAGE_ICONS["Family Lifestyle Scene"] },
 ];
 
-const FRAME_OUTPUT_OPTIONS: Option[] = [
-  { title: "1080x1080", hint: "Instagram / catalogue", icon: <ImageIcon />, iconFile: "/ui-icons/oq-square.png" },
-  { title: "1080x1920", hint: "Story / reel still", icon: <ImageIcon />, iconFile: "/ui-icons/oq-mobile.png" },
-  { title: "Premium", hint: "Fast + sharp", icon: <BadgeCheck />, iconFile: "/ui-icons/oq-premium.png" },
-  { title: "Ultra HD", hint: "Best detail", icon: <Sparkles />, iconFile: "/ui-icons/oq-ultra-hd.png" },
+const POSE_ICONS: Record<string, string> = {
+  "Front Face": UI("pose-front-face"),
+  "Side Pose": UI("pose-side"),
+  "Walking Pose": UI("pose-walking"),
+  "Sitting Pose": UI("pose-sitting"),
+  "Close-up Shot": UI("pose-closeup"),
+  "Half Body": UI("pose-half-body"),
+  "Full Body": UI("pose-full-body"),
+  Auto: UI("pose-auto"),
+};
+const productPoseOptions = [
+  "Auto",
+  "Front Face",
+  "Side Pose",
+  "Walking Pose",
+  "Sitting Pose",
+  "Close-up Shot",
+  "Half Body",
+  "Full Body",
 ];
+
+const OUTPUT_ICONS: Record<string, string> = {
+  "Square (1:1)": UI("oq-square"),
+  "Mobile (9:16)": UI("oq-mobile"),
+  Premium: UI("oq-premium"),
+  "Ultra HD": UI("oq-ultra-hd"),
+};
+
+// ── Gender/age-aware Model Look faces (shared with textile) ──
+const MODEL_ETHNICITIES: { key: string; label: string }[] = [
+  { key: "indian", label: "Indian" },
+  { key: "western", label: "Western" },
+  { key: "asian", label: "Asian" },
+  { key: "middle-eastern", label: "Middle Eastern" },
+  { key: "african", label: "African" },
+  { key: "latin-american", label: "Latin American" },
+];
+const MODEL_GROUP_NOUN: Record<string, string> = {
+  men: "Man",
+  women: "Woman",
+  boys: "Boy",
+  girls: "Girl",
+};
+type ModelLookItem = { value: string; label: string; imgs: string[] };
+const face = (g: string, e: string) => `/model-faces/${g}-${e}.png`;
+// Product shoots use adult models by default (no apparel category split).
+function modelGroupsFor(): string[] {
+  return ["women", "men"];
+}
+function modelLookMode(usage: string): "single" | "couple" | "family" | "none" {
+  const u = (usage || "").toLowerCase();
+  if (u.includes("mannequin") || u.includes("no model")) return "none";
+  if (u.includes("couple")) return "couple";
+  if (u.includes("family")) return "family";
+  return "single";
+}
+function buildModelLookList(usage: string): ModelLookItem[] {
+  const mode = modelLookMode(usage);
+  if (mode === "none") return [];
+  if (mode === "couple") {
+    return MODEL_ETHNICITIES.map((e) => ({
+      value: `${e.label} Couple`,
+      label: `${e.label} Couple`,
+      imgs: [face("men", e.key), face("women", e.key)],
+    }));
+  }
+  if (mode === "family") {
+    return MODEL_ETHNICITIES.map((e) => ({
+      value: `${e.label} Family`,
+      label: `${e.label} Family`,
+      imgs: [face("men", e.key), face("women", e.key), face("boys", e.key), face("girls", e.key)],
+    }));
+  }
+  const groups = modelGroupsFor();
+  const multi = groups.length > 1;
+  const out: ModelLookItem[] = [];
+  for (const g of groups) {
+    for (const e of MODEL_ETHNICITIES) {
+      const noun = MODEL_GROUP_NOUN[g];
+      out.push({
+        value: `${e.label} ${noun}`,
+        label: multi ? `${e.label} ${noun}` : e.label,
+        imgs: [face(g, e.key)],
+      });
+    }
+  }
+  return out;
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl bg-white/60 px-3 py-2 text-sm dark:bg-white/[0.04]">
+      <span className="font-bold text-slate-500 dark:text-white/50">{label}</span>
+      <span className="truncate text-right font-black text-slate-800 dark:text-white/85">{value || "—"}</span>
+    </div>
+  );
+}
 
 const facts = [
   {
@@ -330,6 +417,11 @@ function OptionCard({
   const sources: string[] = (() => {
     if (!option.iconFile) return [];
     const raw = option.iconFile;
+    // Full path with an explicit extension (e.g. /ui-icons/u-single.png,
+    // /model-faces/women-indian.png) → use as-is, no folder guessing.
+    if (raw.startsWith("/") && /\.(png|jpe?g|svg|webp|avif)$/i.test(raw)) {
+      return [raw];
+    }
     // If raw is /icons/foo.svg → also try /Productography-icons/foo.svg
     if (raw.startsWith("/icons/")) {
       const name = raw.replace("/icons/", "");
@@ -388,7 +480,6 @@ function OptionCard({
       >
         {option.title}
       </p>
-      {option.hint && <p className="mt-1 text-[10px] leading-3 opacity-50 sm:text-xs">{option.hint}</p>}
     </button>
   );
 }
@@ -422,59 +513,6 @@ function CustomTextBox({
             : "border-black/10 bg-white text-black placeholder:text-black/35"
         }`}
       />
-    </div>
-  );
-}
-
-// ============================================================
-// FrameQualityGrid — combines output size + quality in one block
-// (jewellery / textile parity)
-// ============================================================
-function FrameQualityGrid({
-  outputSize,
-  quality,
-  setOutputSize,
-  setQuality,
-  darkMode,
-}: {
-  outputSize: string;
-  quality: string;
-  setOutputSize: (v: string) => void;
-  setQuality: (v: string) => void;
-  darkMode: boolean;
-}) {
-  return (
-    <div
-      className={`rounded-[1.35rem] border p-4 sm:p-5 ${
-        darkMode ? "border-white/10 bg-black/25" : "border-black/10 bg-white/70"
-      }`}
-    >
-      <div className="mb-4">
-        <p className="text-xs font-black uppercase tracking-widest text-cyan-600">
-          Frame / Output Size + Quality
-        </p>
-        <p className={`mt-1 text-xs leading-5 ${darkMode ? "text-white/50" : "text-black/50"}`}>
-          Mobile, square, Premium and Ultra HD in one section.
-        </p>
-      </div>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
-        {FRAME_OUTPUT_OPTIONS.map((option) => {
-          const isQuality = option.title === "Premium" || option.title === "Ultra HD";
-          const active = isQuality ? quality === option.title : outputSize === option.title;
-          return (
-            <OptionCard
-              key={option.title}
-              option={option}
-              active={active}
-              darkMode={darkMode}
-              onClick={() => {
-                if (isQuality) setQuality(option.title);
-                else setOutputSize(option.title);
-              }}
-            />
-          );
-        })}
-      </div>
     </div>
   );
 }
@@ -538,21 +576,27 @@ export default function ProductographyPage() {
   const cancelRef = useRef(false);
 
   const [productCategory, setProductCategory] = useState("Cosmetics");
-  const [modelUsage, setModelUsage] = useState("Without Model");
-  const [modelLook, setModelLook] = useState("Indian");
+  const [modelUsage, setModelUsage] = useState("No Model");
+  const [modelLook, setModelLook] = useState("Indian Woman");
+  const [pose, setPose] = useState("Auto");
   const [shootStyle, setShootStyle] = useState("Luxury Studio");
   const [background, setBackground] = useState("Plain White");
-  const [cameraAngle, setCameraAngle] = useState("Front View");
   const [outputSize, setOutputSize] = useState("1080x1080");
   const [quality, setQuality] = useState("Premium");
 
   const [customCategory, setCustomCategory] = useState("");
   const [customModelUsage, setCustomModelUsage] = useState("");
   const [customModelLook, setCustomModelLook] = useState("");
+  const [customPose, setCustomPose] = useState("");
   const [customShootStyle, setCustomShootStyle] = useState("");
   const [customBackground, setCustomBackground] = useState("");
-  const [customCameraAngle, setCustomCameraAngle] = useState("");
+  const [customOutputSize, setCustomOutputSize] = useState("");
+  const [customQuality, setCustomQuality] = useState("");
   const [customInstruction, setCustomInstruction] = useState("");
+
+  // Gender/age-aware Model Look list (textile parity) — reacts to usage.
+  const modelLookList = buildModelLookList(customModelUsage.trim() || modelUsage);
+  const modelLookDisabled = modelLookMode(customModelUsage.trim() || modelUsage) === "none";
 
   // Brand details
   const [companyName, setCompanyName] = useState("");
@@ -652,19 +696,21 @@ export default function ProductographyPage() {
     try {
       const s = JSON.parse(saved);
       setProductCategory(s.productCategory || "Cosmetics");
-      setModelUsage(s.modelUsage || "Without Model");
-      setModelLook(s.modelLook || "Indian");
+      setModelUsage(s.modelUsage || "No Model");
+      setModelLook(s.modelLook || "Indian Woman");
+      setPose(s.pose || "Auto");
       setShootStyle(s.shootStyle || "Luxury Studio");
       setBackground(s.background || "Plain White");
-      setCameraAngle(s.cameraAngle || "Front View");
       setOutputSize(s.outputSize || "1080x1080");
       setQuality(s.quality || "Premium");
       setCustomCategory(s.customCategory || "");
       setCustomModelUsage(s.customModelUsage || "");
       setCustomModelLook(s.customModelLook || "");
+      setCustomPose(s.customPose || "");
       setCustomShootStyle(s.customShootStyle || "");
       setCustomBackground(s.customBackground || "");
-      setCustomCameraAngle(s.customCameraAngle || "");
+      setCustomOutputSize(s.customOutputSize || "");
+      setCustomQuality(s.customQuality || "");
       setCustomInstruction(s.customInstruction || "");
       setCompanyName(s.companyName || "");
       setCompanyPhone(s.companyPhone || "");
@@ -684,18 +730,18 @@ export default function ProductographyPage() {
     localStorage.setItem(
       "productography_settings",
       JSON.stringify({
-        productCategory, modelUsage, modelLook, shootStyle, background, cameraAngle,
+        productCategory, modelUsage, modelLook, pose, shootStyle, background,
         outputSize, quality, customCategory, customModelUsage, customModelLook,
-        customShootStyle, customBackground, customCameraAngle, customInstruction,
+        customPose, customShootStyle, customBackground, customOutputSize, customQuality, customInstruction,
         companyName, companyPhone, companyWebsite, companyAddress, companyLogoUrl,
         useCompanyName, useCompanyPhone, useCompanyWebsite, useCompanyAddress,
         useCompanyLogo, productTextEnabled,
       }),
     );
   }, [
-    productCategory, modelUsage, modelLook, shootStyle, background, cameraAngle,
+    productCategory, modelUsage, modelLook, pose, shootStyle, background,
     outputSize, quality, customCategory, customModelUsage, customModelLook,
-    customShootStyle, customBackground, customCameraAngle, customInstruction,
+    customPose, customShootStyle, customBackground, customOutputSize, customQuality, customInstruction,
     companyName, companyPhone, companyWebsite, companyAddress, companyLogoUrl,
     useCompanyName, useCompanyPhone, useCompanyWebsite, useCompanyAddress,
     useCompanyLogo, productTextEnabled,
@@ -1148,11 +1194,12 @@ export default function ProductographyPage() {
     const generationId = newId();
     const resolvedCategory = customCategory.trim() || productCategory;
     const resolvedModelUsage = customModelUsage.trim() || modelUsage;
-    const resolvedModelLook = customModelLook.trim() || modelLook;
+    const resolvedModelLook = modelLookDisabled ? "" : (customModelLook.trim() || modelLook);
     const resolvedShootStyle = customShootStyle.trim() || shootStyle;
     const resolvedBackground = customBackground.trim() || background;
-    const resolvedCameraAngle = customCameraAngle.trim() || cameraAngle;
-    const resolvedOutputSize = resolveProductOutputSize(outputSize);
+    const resolvedPose = modelLookDisabled ? "" : (customPose.trim() || pose);
+    const resolvedQuality = customQuality.trim() || quality;
+    const resolvedOutputSize = resolveProductOutputSize(customOutputSize.trim() || outputSize);
 
     setItems((prev) => prev.map((it) => (it.id === item.id ? { ...it, status: "generating" } : it)));
 
@@ -1180,7 +1227,7 @@ export default function ProductographyPage() {
       model_type: resolvedModelLook,
       shoot_style: resolvedShootStyle,
       output_size: resolvedOutputSize,
-      quality,
+      quality: resolvedQuality,
       article_number: item.productCode.trim() || null,
       custom_instruction: customInstruction,
       status: "pending",
@@ -1229,12 +1276,12 @@ export default function ProductographyPage() {
         model_usage: resolvedModelUsage,
         model_type: resolvedModelLook,
         model_look: resolvedModelLook,
+        pose: resolvedPose,
         shoot_style: resolvedShootStyle,
         background_style: resolvedBackground,
-        camera_angle: resolvedCameraAngle,
-        output_size: outputSize,
-        quality,
-        output_quality: quality,
+        output_size: customOutputSize.trim() || outputSize,
+        quality: resolvedQuality,
+        output_quality: resolvedQuality,
         required_credits: requiredCredits,
         credits_required: requiredCredits,
         // Text/branding is composited on the frontend (canvas) —
@@ -2100,16 +2147,52 @@ export default function ProductographyPage() {
                     <div>
                       <h4 className="text-xl font-black">Model / Usage</h4>
                       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-                        {modelUsageOptions.map((item) => <OptionCard key={item.title} option={item} active={modelUsage === item.title} onClick={() => setModelUsage(item.title)} darkMode={darkMode} />)}
+                        {productModelUsageOptions.map((item) => <OptionCard key={item.title} option={item} active={modelUsage === item.title} onClick={() => {
+                          setModelUsage(item.title);
+                          const list = buildModelLookList(item.title);
+                          if (list.length && !list.some((l) => l.value === modelLook)) setModelLook(list[0].value);
+                        }} darkMode={darkMode} />)}
                       </div>
                       <CustomTextBox label="Custom Model Usage" value={customModelUsage} onChange={setCustomModelUsage} placeholder="Example: only female hand holding perfume near face, no full face visible..." darkMode={darkMode} />
                     </div>
                     <div>
                       <h4 className="text-xl font-black">Model Look</h4>
-                      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-                        {modelLookOptions.map((item) => <OptionCard key={item.title} option={item} active={modelLook === item.title} onClick={() => setModelLook(item.title)} darkMode={darkMode} />)}
-                      </div>
-                      <CustomTextBox label="Custom Model Look" value={customModelLook} onChange={setCustomModelLook} placeholder="Example: Indian female model, premium skincare ad look, soft smile, clean makeup..." darkMode={darkMode} />
+                      {modelLookDisabled ? (
+                        <div className={`mt-4 rounded-2xl border border-dashed p-5 text-center text-sm ${darkMode ? "border-white/15 bg-white/[0.03] text-white/55" : "border-black/15 bg-black/[0.02] text-slate-500"}`}>
+                          Model Look is not applicable for <span className="font-bold">{customModelUsage.trim() || modelUsage}</span> — no human model is used here.
+                        </div>
+                      ) : (
+                        <>
+                          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+                            {modelLookList.map((item) => {
+                              const isActive = !customModelLook.trim() && modelLook === item.value;
+                              return (
+                                <button
+                                  key={item.value}
+                                  type="button"
+                                  onClick={() => { setModelLook(item.value); setCustomModelLook(""); }}
+                                  className={`group flex flex-col items-center rounded-[22px] border p-3 text-center transition-all duration-300 active:scale-[0.97] ${
+                                    isActive
+                                      ? "scale-[1.02] border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/60"
+                                      : darkMode
+                                        ? "border-white/10 bg-white/[0.04] hover:-translate-y-0.5 hover:bg-white/[0.08]"
+                                        : "border-slate-200 bg-white/90 hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-lg hover:shadow-cyan-500/10"
+                                  }`}
+                                >
+                                  <div className={`mb-2 h-20 w-full overflow-hidden rounded-2xl bg-gradient-to-b from-slate-100/70 to-transparent dark:from-white/[0.06] sm:h-24 ${item.imgs.length === 4 ? "grid grid-cols-2 grid-rows-2 gap-0.5 p-1" : "flex items-end justify-center gap-0.5"}`}>
+                                    {item.imgs.map((src, i) => (
+                                      // eslint-disable-next-line @next/next/no-img-element
+                                      <img key={i} src={src} alt={item.label} loading="lazy" className={`object-contain transition duration-300 group-hover:scale-105 ${item.imgs.length === 1 ? "h-full w-full" : item.imgs.length === 2 ? "h-full w-1/2" : "h-full min-h-0 w-full"}`} />
+                                    ))}
+                                  </div>
+                                  <p className={`text-[12px] font-black leading-4 sm:text-sm ${isActive ? "text-cyan-700 dark:text-cyan-200" : darkMode ? "text-white/75" : "text-slate-700"}`}>{item.label}</p>
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <CustomTextBox label="Custom Model Look" value={customModelLook} onChange={setCustomModelLook} placeholder="Example: Indian female model, premium skincare ad look, soft smile, clean makeup..." darkMode={darkMode} />
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
@@ -2130,26 +2213,64 @@ export default function ProductographyPage() {
                       </div>
                       <CustomTextBox label="Custom Background" value={customBackground} onChange={setCustomBackground} placeholder="Example: luxury marble bathroom counter with morning sunlight and soft reflection..." darkMode={darkMode} />
                     </div>
+                    {!modelLookDisabled && (
+                      <div>
+                        <h4 className="text-xl font-black">Pose</h4>
+                        <p className={`mt-1 text-sm ${muted}`}>How the model is posed with the product.</p>
+                        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+                          {productPoseOptions.map((item) => (
+                            <OptionCard
+                              key={item}
+                              option={{ title: item, icon: <Camera />, iconFile: POSE_ICONS[item] }}
+                              active={!customPose.trim() && pose === item}
+                              onClick={() => { setPose(item); setCustomPose(""); }}
+                              darkMode={darkMode}
+                            />
+                          ))}
+                        </div>
+                        <CustomTextBox label="Custom Pose" value={customPose} onChange={setCustomPose} placeholder="Example: model holding product near face, looking at camera, soft natural pose..." darkMode={darkMode} />
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {builderStep === 4 && (
                   <div className="space-y-7">
                     <div>
-                      <h4 className="text-xl font-black">Camera Angle</h4>
-                      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-                        {angleOptions.map((item) => <OptionCard key={item.title} option={item} active={cameraAngle === item.title} onClick={() => setCameraAngle(item.title)} darkMode={darkMode} />)}
+                      <h4 className="text-xl font-black">Output &amp; Quality</h4>
+                      <div className="mt-4 grid gap-5 lg:grid-cols-2">
+                        <div className="space-y-3">
+                          <p className="text-xs font-black uppercase tracking-widest text-slate-400">Select Size</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            {["Square (1:1)", "Mobile (9:16)"].map((item) => (
+                              <OptionCard
+                                key={item}
+                                option={{ title: item, icon: <ImageIcon />, iconFile: OUTPUT_ICONS[item] }}
+                                active={!customOutputSize.trim() && outputSize === (item.includes("1:1") ? "1080x1080" : "1080x1920")}
+                                onClick={() => { setOutputSize(item.includes("1:1") ? "1080x1080" : "1080x1920"); setCustomOutputSize(""); }}
+                                darkMode={darkMode}
+                              />
+                            ))}
+                          </div>
+                          <CustomTextBox label="Custom Size" value={customOutputSize} onChange={setCustomOutputSize} placeholder="Example: 4:5, 2048x2048" darkMode={darkMode} />
+                        </div>
+                        <div className="space-y-3">
+                          <p className="text-xs font-black uppercase tracking-widest text-slate-400">Select Quality</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            {["Premium", "Ultra HD"].map((item) => (
+                              <OptionCard
+                                key={item}
+                                option={{ title: item, icon: <Sparkles />, iconFile: OUTPUT_ICONS[item] }}
+                                active={!customQuality.trim() && quality === item}
+                                onClick={() => { setQuality(item); setCustomQuality(""); }}
+                                darkMode={darkMode}
+                              />
+                            ))}
+                          </div>
+                          <CustomTextBox label="Custom Quality" value={customQuality} onChange={setCustomQuality} placeholder="Example: 4K Cinematic" darkMode={darkMode} />
+                        </div>
                       </div>
-                      <CustomTextBox label="Custom Camera Angle" value={customCameraAngle} onChange={setCustomCameraAngle} placeholder="Example: 45 degree hero shot, product centered, slight reflection, shallow depth of field..." darkMode={darkMode} />
                     </div>
-
-                    <FrameQualityGrid
-                      outputSize={outputSize}
-                      quality={quality}
-                      setOutputSize={setOutputSize}
-                      setQuality={setQuality}
-                      darkMode={darkMode}
-                    />
 
                     <div>
                       <h4 className="text-xl font-black">Final Custom Prompt</h4>
@@ -2170,6 +2291,17 @@ export default function ProductographyPage() {
                           <p className={`mt-3 text-sm leading-relaxed ${muted}`}>
                             Required credits: <b>{totalCreditsNeeded}</b>. Output: still product image with logo overlay.
                           </p>
+                        </div>
+
+                        <div className="mb-5 grid gap-2 sm:grid-cols-2">
+                          <SummaryRow label="Product" value={customCategory.trim() || productCategory} />
+                          <SummaryRow label="Model Usage" value={customModelUsage.trim() || modelUsage} />
+                          <SummaryRow label="Model Look" value={modelLookDisabled ? "No model" : (customModelLook.trim() || modelLook)} />
+                          <SummaryRow label="Pose" value={modelLookDisabled ? "—" : (customPose.trim() || pose)} />
+                          <SummaryRow label="Shoot Style" value={customShootStyle.trim() || shootStyle} />
+                          <SummaryRow label="Background" value={customBackground.trim() || background} />
+                          <SummaryRow label="Frame" value={`${customOutputSize.trim() || outputSize} / ${customQuality.trim() || quality}`} />
+                          <SummaryRow label="Uploads" value={String(readyItems.length)} />
                         </div>
 
                         <button
