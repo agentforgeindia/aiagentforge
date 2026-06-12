@@ -235,8 +235,8 @@ const MODEL_LOOK_OPTIONS: OptionItem[] = [];
 
 const FACE_EXPRESSION_OPTIONS: OptionItem[] = [
   { label: "Soft Smile", icon: Sparkles, hint: "Warm face", iconFile: "soft-smile" },
-  { label: "Confident", icon: BadgeCheck, hint: "Premium vibe", iconFile: "confident" },
-  { label: "Serious", icon: UserRound, hint: "Editorial", iconFile: "serious" },
+  { label: "Confident", icon: BadgeCheck, hint: "Premium vibe", iconFile: "/ui-icons/fe-confident.png" },
+  { label: "Serious", icon: UserRound, hint: "Editorial", iconFile: "/ui-icons/fe-serious.png" },
   { label: "Royal", icon: Crown, hint: "Bridal aura", iconFile: "royal" },
   { label: "Natural", icon: ShieldCheck, hint: "Real feel", iconFile: "natural" },
 ];
@@ -267,12 +267,12 @@ const SHOOT_STYLE_OPTIONS: OptionItem[] = [
 // Model Look (textile-parity) — which kind of model wears the jewellery.
 const JEWEL_MODEL_LOOK_OPTIONS: OptionItem[] = [
   { label: "No Model", icon: Package, hint: "Product-only, no human", iconFile: "no-model" },
-  { label: "Indian Model", icon: UserRound, hint: "Indian / South-Asian", iconFile: "indian-model" },
-  { label: "Western Model", icon: UserRound, hint: "European / American look" },
-  { label: "Asian Model", icon: UserRound, hint: "East-Asian look" },
-  { label: "Middle Eastern Model", icon: UserRound, hint: "Middle-Eastern look" },
-  { label: "African Model", icon: UserRound, hint: "African look" },
-  { label: "European Model", icon: UserRound, hint: "European look" },
+  { label: "Indian Model", icon: UserRound, hint: "Indian / South-Asian", iconFile: "/model-faces/women-indian.png" },
+  { label: "Western Model", icon: UserRound, hint: "European / American look", iconFile: "/model-faces/women-western.png" },
+  { label: "Asian Model", icon: UserRound, hint: "East-Asian look", iconFile: "/model-faces/women-asian.png" },
+  { label: "Middle Eastern Model", icon: UserRound, hint: "Middle-Eastern look", iconFile: "/model-faces/women-middle-eastern.png" },
+  { label: "African Model", icon: UserRound, hint: "African look", iconFile: "/model-faces/women-african.png" },
+  { label: "European Model", icon: UserRound, hint: "European look", iconFile: "/model-faces/women-western.png" },
   { label: "Custom-Look", icon: Sparkles, hint: "Describe your own" },
 ];
 
@@ -320,10 +320,10 @@ const ACCESSORY_OPTIONS: OptionItem[] = [
 ];
 
 const FRAME_OUTPUT_OPTIONS: OptionItem[] = [
-  { label: "Square 1080x1080", icon: Square, hint: "Post / catalogue", iconFile: "square" },
-  { label: "Mobile 1080x1920", icon: Layers3, hint: "Story / Reel", iconFile: "mobile" },
-  { label: "Premium", icon: BadgeCheck, hint: "Clean output", iconFile: "premium" },
-  { label: "Ultra HD", icon: Sparkles, hint: "Sharper detail", iconFile: "ultra-hd" },
+  { label: "Square 1080x1080", icon: Square, hint: "Post / catalogue", iconFile: "/ui-icons/oq-square.png" },
+  { label: "Mobile 1080x1920", icon: Layers3, hint: "Story / Reel", iconFile: "/ui-icons/oq-mobile.png" },
+  { label: "Premium", icon: BadgeCheck, hint: "Clean output", iconFile: "/ui-icons/oq-premium.png" },
+  { label: "Ultra HD", icon: Sparkles, hint: "Sharper detail", iconFile: "/ui-icons/oq-ultra-hd.png" },
 ];
 
 const builderStepMeta = [
@@ -688,7 +688,11 @@ function OptionCard({
 }) {
   const Icon = option.icon;
   const [iconFailed, setIconFailed] = useState(false);
-  const iconSrc = option.iconFile ? `/jewellery-icon/${option.iconFile}.svg` : "";
+  const iconSrc = option.iconFile
+    ? option.iconFile.startsWith("/")
+      ? option.iconFile
+      : `/jewellery-icon/${option.iconFile}.svg`
+    : "";
 
   return (
     <button

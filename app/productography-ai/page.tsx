@@ -190,18 +190,18 @@ const productCategories: Option[] = [
 const modelUsageOptions: Option[] = [
   { title: "Without Model", hint: "Product-only premium shoot", icon: <Package />, iconFile: "/Productography-icons/no model.svg" },
   { title: "Hand Model", hint: "Hand holding/using product", icon: <UserRound />, iconFile: "/Productography-icons/model holding product.svg" },
-  { title: "Boy Model", hint: "Male lifestyle model", icon: <UserRound />, iconFile: "/Productography-icons/mens ware.svg" },
-  { title: "Girl Model", hint: "Female lifestyle model", icon: <UserRound />, iconFile: "/Productography-icons/female ware.svg" },
-  { title: "Kid Model", hint: "Kids product lifestyle", icon: <UserRound />, iconFile: "/Productography-icons/kids ware.svg" },
-  { title: "Couple / Family", hint: "Lifestyle family scene", icon: <UserRound />, iconFile: "/Productography-icons/family lifestyle scene.svg" },
+  { title: "Boy Model", hint: "Male lifestyle model", icon: <UserRound />, iconFile: "/model-faces/men-indian.png" },
+  { title: "Girl Model", hint: "Female lifestyle model", icon: <UserRound />, iconFile: "/model-faces/women-indian.png" },
+  { title: "Kid Model", hint: "Kids product lifestyle", icon: <UserRound />, iconFile: "/model-faces/boys-indian.png" },
+  { title: "Couple / Family", hint: "Lifestyle family scene", icon: <UserRound />, iconFile: "/ui-icons/u-family.png" },
 ];
 
 const modelLookOptions: Option[] = [
-  { title: "Indian", hint: "Indian market look", icon: <UserRound />, iconFile: "/Productography-icons/indian model.svg" },
-  { title: "European", hint: "Global premium look", icon: <UserRound />, iconFile: "/Productography-icons/european-model.svg" },
-  { title: "Asian", hint: "East/South Asian look", icon: <UserRound />, iconFile: "/Productography-icons/middle asian model.svg" },
-  { title: "Arabic", hint: "Middle East premium", icon: <UserRound />, iconFile: "/Productography-icons/middle eastern models.svg" },
-  { title: "African", hint: "African model look", icon: <UserRound />, iconFile: "/Productography-icons/african models.svg" },
+  { title: "Indian", hint: "Indian market look", icon: <UserRound />, iconFile: "/model-faces/women-indian.png" },
+  { title: "European", hint: "Global premium look", icon: <UserRound />, iconFile: "/model-faces/women-western.png" },
+  { title: "Asian", hint: "East/South Asian look", icon: <UserRound />, iconFile: "/model-faces/women-asian.png" },
+  { title: "Arabic", hint: "Middle East premium", icon: <UserRound />, iconFile: "/model-faces/women-middle-eastern.png" },
+  { title: "African", hint: "African model look", icon: <UserRound />, iconFile: "/model-faces/women-african.png" },
   { title: "Custom Look", hint: "Write exact look", icon: <Wand2 />, iconFile: "/Productography-icons/custom-look.svg" },
 ];
 
@@ -237,10 +237,10 @@ const angleOptions: Option[] = [
 ];
 
 const FRAME_OUTPUT_OPTIONS: Option[] = [
-  { title: "1080x1080", hint: "Instagram / catalogue", icon: <ImageIcon />, iconFile: "/Productography-icons/square.svg" },
-  { title: "1080x1920", hint: "Story / reel still", icon: <ImageIcon />, iconFile: "/Productography-icons/mobile.svg" },
-  { title: "Premium", hint: "Fast + sharp", icon: <BadgeCheck />, iconFile: "/Productography-icons/premium.svg" },
-  { title: "Ultra HD", hint: "Best detail", icon: <Sparkles />, iconFile: "/Productography-icons/ultra hd.svg" },
+  { title: "1080x1080", hint: "Instagram / catalogue", icon: <ImageIcon />, iconFile: "/ui-icons/oq-square.png" },
+  { title: "1080x1920", hint: "Story / reel still", icon: <ImageIcon />, iconFile: "/ui-icons/oq-mobile.png" },
+  { title: "Premium", hint: "Fast + sharp", icon: <BadgeCheck />, iconFile: "/ui-icons/oq-premium.png" },
+  { title: "Ultra HD", hint: "Best detail", icon: <Sparkles />, iconFile: "/ui-icons/oq-ultra-hd.png" },
 ];
 
 const facts = [
