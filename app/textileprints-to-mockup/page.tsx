@@ -1058,11 +1058,17 @@ function OptionCard({
     exactIconFileByTitle[title.toLowerCase()] ||
     iconFileByVisualIcon[finalIcon] ||
     "none";
+  const [pop, setPop] = useState(false);
+  const handleClick = () => {
+    setPop(true);
+    window.setTimeout(() => setPop(false), 380);
+    onClick();
+  };
 
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={handleClick}
       className={`group relative flex min-h-[116px] min-w-0 flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
         active
           ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
@@ -1076,7 +1082,7 @@ function OptionCard({
           active
             ? "shadow-lg shadow-cyan-400/25"
             : "shadow-sm"
-        } ${imgSrc ? "bg-white" : ""}`}
+        } ${imgSrc ? "bg-white" : ""} ${pop ? "af-pop" : ""}`}
       >
         {imgSrc ? (
           // eslint-disable-next-line @next/next/no-img-element
