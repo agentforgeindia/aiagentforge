@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 // LaunchOfferPopup is mounted globally in LayoutClient — no need to import here.
 import TrustBadges from "@/app/components/TrustBadges";
+import BookDemoButton from "@/app/components/BookDemoButton";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 
 // Below-the-fold social slider — heavy because it pulls in 4
@@ -290,6 +291,7 @@ export default function Home() {
               See Visuals
               <ChevronRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
             </Link>
+            <BookDemoButton className="inline-flex w-full max-w-xs items-center justify-center gap-2 rounded-full bg-gradient-to-r from-fuchsia-500 to-purple-600 px-7 py-3.5 text-sm font-black text-white shadow-xl shadow-purple-500/30 transition hover:scale-[1.03] sm:w-auto sm:px-9 sm:py-4 sm:text-base" />
           </div>
 
           {/* Sub-info banner */}

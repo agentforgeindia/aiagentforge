@@ -31,6 +31,7 @@ export const FEATURE_CATALOG: Feature[] = [
   { group: "Sales & CRM", href: "/admin/tasks",          label: "Tasks",             perm: "tasks.view" },
   { group: "Sales & CRM", href: "/admin/workshop-registrations", label: "Workshop Registrations", perm: "customers.view" },
   { group: "Sales & CRM", href: "/admin/workshop-certificates", label: "Workshop Certificates", perm: "customers.view" },
+  { group: "Sales & CRM", href: "/admin/demo-requests", label: "Demo Requests", perm: "leads.view" },
 
   // Marketing
   { group: "Marketing", href: "/admin/email",      label: "Email",      perm: "email.view" },
