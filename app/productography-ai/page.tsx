@@ -278,7 +278,13 @@ const MODEL_GROUP_NOUN: Record<string, string> = {
 type ModelLookItem = { value: string; label: string; imgs: string[] };
 const face = (g: string, e: string) => `/model-faces/${g}-${e}.png`;
 // Product shoots use adult models by default (no apparel category split).
-function modelGroupsFor(): string[] {
+// Gender/age group selector (textile parity — replaces textile's category
+// dimension). Female → women faces, Male → men faces, Kids → boys + girls.
+const MODEL_GROUP_OPTIONS = ["Female", "Male", "Kids"] as const;
+function modelGroupsFor(group: string): string[] {
+  if (group === "Male") return ["men"];
+  if (group === "Kids") return ["boys", "girls"];
+  if (group === "Female") return ["women"];
   return ["women", "men"];
 }
 function modelLookMode(usage: string): "single" | "couple" | "family" | "none" {
@@ -288,7 +294,7 @@ function modelLookMode(usage: string): "single" | "couple" | "family" | "none" {
   if (u.includes("family")) return "family";
   return "single";
 }
-function buildModelLookList(usage: string): ModelLookItem[] {
+function buildModelLookList(usage: string, group = "Female"): ModelLookItem[] {
   const mode = modelLookMode(usage);
   if (mode === "none") return [];
   if (mode === "couple") {
@@ -305,7 +311,7 @@ function buildModelLookList(usage: string): ModelLookItem[] {
       imgs: [face("men", e.key), face("women", e.key), face("boys", e.key), face("girls", e.key)],
     }));
   }
-  const groups = modelGroupsFor();
+  const groups = modelGroupsFor(group);
   const multi = groups.length > 1;
   const out: ModelLookItem[] = [];
   for (const g of groups) {
@@ -577,6 +583,7 @@ export default function ProductographyPage() {
 
   const [productCategory, setProductCategory] = useState("Cosmetics");
   const [modelUsage, setModelUsage] = useState("No Model");
+  const [modelGroup, setModelGroup] = useState("Female");
   const [modelLook, setModelLook] = useState("Indian Woman");
   const [pose, setPose] = useState("Auto");
   const [shootStyle, setShootStyle] = useState("Luxury Studio");
@@ -594,9 +601,12 @@ export default function ProductographyPage() {
   const [customQuality, setCustomQuality] = useState("");
   const [customInstruction, setCustomInstruction] = useState("");
 
-  // Gender/age-aware Model Look list (textile parity) — reacts to usage.
-  const modelLookList = buildModelLookList(customModelUsage.trim() || modelUsage);
-  const modelLookDisabled = modelLookMode(customModelUsage.trim() || modelUsage) === "none";
+  // Gender/age-aware Model Look list (textile parity) — reacts to usage + group.
+  const modelLookMode_ = modelLookMode(customModelUsage.trim() || modelUsage);
+  const modelLookList = buildModelLookList(customModelUsage.trim() || modelUsage, modelGroup);
+  const modelLookDisabled = modelLookMode_ === "none";
+  // Gender/age selector only matters for a single-person model scene.
+  const showModelGroup = modelLookMode_ === "single";
 
   // Brand details
   const [companyName, setCompanyName] = useState("");
@@ -640,8 +650,8 @@ export default function ProductographyPage() {
     : "border-black/10 bg-white/85 shadow-cyan-900/10";
   const muted = darkMode ? "text-white/55" : "text-black/55";
   const pageBg = darkMode
-    ? "bg-[#050b16] text-white"
-    : "bg-gradient-to-b from-[#f8fbff] via-white to-[#eefaff] text-black";
+    ? "bg-[#070b14] text-white"
+    : "bg-[#fff8e8] text-[#111827]";
 
   const isFreeAccount = useMemo(() => isFreeAccountFromProfile(profile), [profile]);
   const canBulk = useMemo(() => hasBulkAccess(profile?.plan), [profile]);
@@ -697,6 +707,7 @@ export default function ProductographyPage() {
       const s = JSON.parse(saved);
       setProductCategory(s.productCategory || "Cosmetics");
       setModelUsage(s.modelUsage || "No Model");
+      setModelGroup(s.modelGroup || "Female");
       setModelLook(s.modelLook || "Indian Woman");
       setPose(s.pose || "Auto");
       setShootStyle(s.shootStyle || "Luxury Studio");
@@ -730,7 +741,7 @@ export default function ProductographyPage() {
     localStorage.setItem(
       "productography_settings",
       JSON.stringify({
-        productCategory, modelUsage, modelLook, pose, shootStyle, background,
+        productCategory, modelUsage, modelGroup, modelLook, pose, shootStyle, background,
         outputSize, quality, customCategory, customModelUsage, customModelLook,
         customPose, customShootStyle, customBackground, customOutputSize, customQuality, customInstruction,
         companyName, companyPhone, companyWebsite, companyAddress, companyLogoUrl,
@@ -739,7 +750,7 @@ export default function ProductographyPage() {
       }),
     );
   }, [
-    productCategory, modelUsage, modelLook, pose, shootStyle, background,
+    productCategory, modelUsage, modelGroup, modelLook, pose, shootStyle, background,
     outputSize, quality, customCategory, customModelUsage, customModelLook,
     customPose, customShootStyle, customBackground, customOutputSize, customQuality, customInstruction,
     companyName, companyPhone, companyWebsite, companyAddress, companyLogoUrl,
@@ -1274,6 +1285,7 @@ export default function ProductographyPage() {
         product_category: resolvedCategory,
         product_type: resolvedCategory,
         model_usage: resolvedModelUsage,
+        model_group: modelLookDisabled ? "" : modelGroup,
         model_type: resolvedModelLook,
         model_look: resolvedModelLook,
         pose: resolvedPose,
@@ -1471,11 +1483,19 @@ export default function ProductographyPage() {
     : "#";
 
   return (
-    <main className={`min-h-screen overflow-hidden ${pageBg}`}>
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-28 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-400/20 blur-3xl" />
-        <div className="absolute bottom-20 right-0 h-80 w-80 rounded-full bg-purple-500/15 blur-3xl" />
-      </div>
+    <main className={`relative min-h-screen overflow-hidden ${pageBg}`}>
+      {/* Gradient Glow Layer — same as home screen */}
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee66,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf655,transparent_35%),radial-gradient(circle_at_bottom,#0ea5e955,transparent_30%),linear-gradient(to_bottom,transparent,rgba(0,0,0,0.08))]" />
+
+      {/* Grid Overlay — same as home screen */}
+      <div
+        className={`pointer-events-none fixed inset-0 ${darkMode ? "opacity-[0.05]" : "opacity-[0.10]"}`}
+        style={{
+          backgroundImage:
+            "linear-gradient(45deg, currentColor 1px, transparent 1px), linear-gradient(-45deg, currentColor 1px, transparent 1px)",
+          backgroundSize: "34px 34px",
+        }}
+      />
 
       {/* Floating Doodles — productography themed */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
@@ -2149,12 +2169,46 @@ export default function ProductographyPage() {
                       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                         {productModelUsageOptions.map((item) => <OptionCard key={item.title} option={item} active={modelUsage === item.title} onClick={() => {
                           setModelUsage(item.title);
-                          const list = buildModelLookList(item.title);
+                          const list = buildModelLookList(item.title, modelGroup);
                           if (list.length && !list.some((l) => l.value === modelLook)) setModelLook(list[0].value);
                         }} darkMode={darkMode} />)}
                       </div>
                       <CustomTextBox label="Custom Model Usage" value={customModelUsage} onChange={setCustomModelUsage} placeholder="Example: only female hand holding perfume near face, no full face visible..." darkMode={darkMode} />
                     </div>
+
+                    {showModelGroup && (
+                      <div>
+                        <h4 className="text-xl font-black">Model Gender / Age</h4>
+                        <p className={`mt-1 text-sm ${muted}`}>Pick who the model is — the looks below update to match.</p>
+                        <div className="mt-4 flex flex-wrap gap-3">
+                          {MODEL_GROUP_OPTIONS.map((g) => {
+                            const gActive = modelGroup === g;
+                            return (
+                              <button
+                                key={g}
+                                type="button"
+                                onClick={() => {
+                                  setModelGroup(g);
+                                  const list = buildModelLookList(customModelUsage.trim() || modelUsage, g);
+                                  if (list.length) setModelLook(list[0].value);
+                                  setCustomModelLook("");
+                                }}
+                                className={`rounded-2xl border px-6 py-3 text-sm font-black transition-all active:scale-[0.97] ${
+                                  gActive
+                                    ? "border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 text-cyan-700 ring-2 ring-cyan-300/60 dark:text-cyan-200"
+                                    : darkMode
+                                      ? "border-white/10 bg-white/[0.04] text-white/75 hover:bg-white/[0.08]"
+                                      : "border-slate-200 bg-white/90 text-slate-700 hover:border-cyan-300 hover:shadow-lg hover:shadow-cyan-500/10"
+                                }`}
+                              >
+                                {g}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
                     <div>
                       <h4 className="text-xl font-black">Model Look</h4>
                       {modelLookDisabled ? (
@@ -2213,6 +2267,11 @@ export default function ProductographyPage() {
                       </div>
                       <CustomTextBox label="Custom Background" value={customBackground} onChange={setCustomBackground} placeholder="Example: luxury marble bathroom counter with morning sunlight and soft reflection..." darkMode={darkMode} />
                     </div>
+                  </div>
+                )}
+
+                {builderStep === 4 && (
+                  <div className="space-y-7">
                     {!modelLookDisabled && (
                       <div>
                         <h4 className="text-xl font-black">Pose</h4>
@@ -2231,11 +2290,6 @@ export default function ProductographyPage() {
                         <CustomTextBox label="Custom Pose" value={customPose} onChange={setCustomPose} placeholder="Example: model holding product near face, looking at camera, soft natural pose..." darkMode={darkMode} />
                       </div>
                     )}
-                  </div>
-                )}
-
-                {builderStep === 4 && (
-                  <div className="space-y-7">
                     <div>
                       <h4 className="text-xl font-black">Output &amp; Quality</h4>
                       <div className="mt-4 grid gap-5 lg:grid-cols-2">

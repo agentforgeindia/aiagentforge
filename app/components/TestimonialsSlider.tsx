@@ -101,6 +101,11 @@ export default function TestimonialsSlider({
   const [formImagePreview, setFormImagePreview] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  // Relative timestamps are time-dependent, so they differ between the SSR
+  // render and client hydration ("26 min ago" vs "24 min ago"). Render them
+  // only after mount to avoid a hydration mismatch.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // Try to fetch approved testimonials from DB and MERGE with seed.
   // Order: real (newest first) → seed as filler → cap at top 8.
@@ -390,8 +395,8 @@ export default function TestimonialsSlider({
                       {t.source === "whatsapp" ? "via WhatsApp" : "via App"}
                     </p>
                   </div>
-                  <span className="text-[10px] font-bold text-emerald-700/60 dark:text-emerald-200/60">
-                    {relativeTime(t.createdAt)}
+                  <span suppressHydrationWarning className="text-[10px] font-bold text-emerald-700/60 dark:text-emerald-200/60">
+                    {mounted ? relativeTime(t.createdAt) : ""}
                   </span>
                 </div>
 
@@ -399,8 +404,8 @@ export default function TestimonialsSlider({
                 <div className="relative flex flex-1 flex-col gap-3 p-4">
                   <div className="relative inline-block rounded-2xl rounded-tl-md bg-emerald-50/60 px-4 py-3 text-black shadow-sm dark:bg-white/[0.06] dark:text-white">
                     <p className="text-sm leading-6 sm:text-[15px]">{t.message}</p>
-                    <span className="mt-1.5 flex items-center justify-end gap-1 text-[10px] font-bold text-emerald-600/70 dark:text-emerald-300/60">
-                      {relativeTime(t.createdAt)}
+                    <span suppressHydrationWarning className="mt-1.5 flex items-center justify-end gap-1 text-[10px] font-bold text-emerald-600/70 dark:text-emerald-300/60">
+                      {mounted ? relativeTime(t.createdAt) : ""}
                       <span className="inline-flex">
                         <span className="text-emerald-500">✓✓</span>
                       </span>

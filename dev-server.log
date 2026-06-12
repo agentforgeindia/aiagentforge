@@ -43,3 +43,99 @@ See more: https://nextjs.org/docs/app/guides/local-development
  GET /productography-ai 200 in 350ms (next.js: 255ms, application-code: 95ms)
  GET /jewellery-ai 200 in 1117ms (next.js: 5ms, application-code: 1111ms)
  GET /productography-ai 200 in 404ms (next.js: 4ms, application-code: 399ms)
+ GET /productography-ai 200 in 2.6s (next.js: 406ms, application-code: 2.1s)
+ GET /productography-ai 200 in 332ms (next.js: 9ms, application-code: 323ms)
+[browser] Uncaught Error: Hydration failed because the server rendered text didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <RedirectErrorBoundary router={{...}}>
+      <InnerLayoutRouter url="/productog..." tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+        <SegmentViewNode type="page" pagePath="productogr...">
+          <SegmentTrieNode>
+          <ClientPageRoot Component={function ProductographyPage} serverProvidedParams={{...}}>
+            <ProductographyPage params={Promise} searchParams={Promise}>
+              <main className="min-h-scre...">
+                <div>
+                <div>
+                <div className="relative z-10">
+                  <div>
+                  <section>
+                  <section>
+                  <TestimonialsSlider agentType="productogr..." darkMode={false} seed={[...]} heading="What early..." ...>
+                    <section className="mx-auto ma...">
+                      <div>
+                      <div ref={{current:null}} onMouseEnter={function onMouseEnter} onMouseLeave={function onMouseLeave} ...>
+                        <div className="flex gap-4...">
+                          <div style={{...}} className="group rela...">
+                            <div className="relative f...">
+                              <div>
+                              <div>
+                              <span className="text-[10px] font-bold text-emerald-700/60 dark:text-emerald-200/60">
++                               24 min ago
+-                               26 min ago
+                            ...
+                          ...
+                      ...
+                ...
+        ...
+      ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at span (<anonymous>)
+    at <unknown> (app/components/TestimonialsSlider.tsx:393:19)
+    at Array.map (<anonymous>)
+    at TestimonialsSlider (app/components/TestimonialsSlider.tsx:368:18)
+    at ProductographyPage (app/productography-ai/page.tsx:2448:9)
+  391 |                     </p>
+  392 |                   </div>
+> 393 |                   <span className="text-[10px] font-bold text-emerald-700/60 dark:text-em...
+      |                   ^
+  394 |                     {relativeTime(t.createdAt)}
+  395 |                   </span>
+  396 |                 </div>
+ GET /api/announcements 200 in 714ms (next.js: 155ms, application-code: 559ms)
+ GET /api/announcements 200 in 715ms (next.js: 295ms, application-code: 419ms)
+ GET /api/user-notifications 200 in 929ms (next.js: 307ms, application-code: 622ms)
+ GET /api/user-notifications 200 in 936ms (next.js: 268ms, application-code: 668ms)
+✓ Compiled in 2.7s
+ GET /productography-ai 200 in 870ms (next.js: 305ms, application-code: 565ms)
+ GET /productography-ai 200 in 402ms (next.js: 16ms, application-code: 386ms)
+ GET /productography-ai 200 in 532ms (next.js: 146ms, application-code: 386ms)
+ GET /jewellery-ai 200 in 337ms (next.js: 230ms, application-code: 107ms)
+✓ Compiled in 2.2s
+ GET /jewellery-ai 200 in 980ms (next.js: 293ms, application-code: 687ms)
+ GET /jewellery-ai 200 in 286ms (next.js: 92ms, application-code: 194ms)
+ GET /jewellery-ai 200 in 106ms (next.js: 7ms, application-code: 99ms)
+✓ Compiled in 1251ms
+ GET /jewellery-ai 200 in 648ms (next.js: 207ms, application-code: 441ms)
+ GET /jewellery-ai 200 in 316ms (next.js: 69ms, application-code: 247ms)
+ GET /jewellery-ai 200 in 98ms (next.js: 12ms, application-code: 86ms)
+ GET /textileprints-to-mockup 200 in 310ms (next.js: 187ms, application-code: 123ms)
+ GET / 200 in 70ms (next.js: 16ms, application-code: 54ms)
+ GET /api/stats 200 in 536ms (next.js: 192ms, application-code: 343ms)
+ GET /api/stats 200 in 450ms (next.js: 6ms, application-code: 444ms)
+ GET /productography-ai 200 in 3.0s (next.js: 1274ms, application-code: 1772ms)
+ GET /api/stats 200 in 348ms (next.js: 9ms, application-code: 339ms)
+ GET /jewellery-ai 200 in 96ms (next.js: 6ms, application-code: 90ms)
+✓ Compiled in 1335ms
+ GET /jewellery-ai 200 in 320ms (next.js: 196ms, application-code: 124ms)
+✓ Compiled in 1246ms
+ GET /jewellery-ai 200 in 356ms (next.js: 187ms, application-code: 169ms)
+✓ Compiled in 1966ms
+ GET /jewellery-ai 200 in 342ms (next.js: 186ms, application-code: 156ms)
+ GET /productography-ai 200 in 1884ms (next.js: 208ms, application-code: 1676ms)
+ GET /jewellery-ai 200 in 1316ms (next.js: 5ms, application-code: 1311ms)
+ GET /productography-ai 200 in 84ms (next.js: 6ms, application-code: 78ms)
+✓ Compiled in 1815ms
+ GET /productography-ai 200 in 380ms (next.js: 247ms, application-code: 133ms)
+ GET /productography-ai 200 in 1314ms (next.js: 7ms, application-code: 1306ms)

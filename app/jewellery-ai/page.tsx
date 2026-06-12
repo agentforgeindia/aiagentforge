@@ -2511,7 +2511,20 @@ if (!response.ok) {
 };
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,#06b6d433,transparent_34%),radial-gradient(circle_at_top_right,#fde04766,transparent_34%),linear-gradient(to_bottom,#f8fbff,#ffffff)] pb-28 text-slate-950 dark:bg-[radial-gradient(circle_at_top_left,#00d4ff22,transparent_34%),radial-gradient(circle_at_top_right,#7c3cff22,transparent_34%),linear-gradient(to_bottom,#020617,#0f172a)] dark:text-white sm:pb-0">
+    <main className="relative min-h-screen overflow-x-hidden bg-[#fff8e8] pb-28 text-[#111827] dark:bg-[#070b14] dark:text-white sm:pb-0">
+      {/* Gradient Glow Layer — same as home screen */}
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee66,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf655,transparent_35%),radial-gradient(circle_at_bottom,#0ea5e955,transparent_30%),linear-gradient(to_bottom,transparent,rgba(0,0,0,0.08))]" />
+
+      {/* Grid Overlay — same as home screen */}
+      <div
+        className="pointer-events-none fixed inset-0 opacity-[0.10] dark:opacity-[0.05]"
+        style={{
+          backgroundImage:
+            "linear-gradient(45deg, currentColor 1px, transparent 1px), linear-gradient(-45deg, currentColor 1px, transparent 1px)",
+          backgroundSize: "34px 34px",
+        }}
+      />
+
       {isGenerating && (
         <JewelleryLoadingModal
           fact={jewelleryLoadingFacts[loadingFactIndex]}
