@@ -215,7 +215,7 @@ export default function AboutPage() {
           </div>
 
           {/* =============================
-              CHAPTER 02 — Why AgentForge Exists (Bhavin)
+              CHAPTER 02 — Why AgentForge Exists (Mr. Bhavin)
               ============================= */}
           <div className="relative mt-12">
             <div className="mb-4 flex items-center gap-3">
@@ -237,9 +237,9 @@ export default function AboutPage() {
               </p>
               <p className="mt-3 text-base leading-7 text-black/75 dark:text-white/80">
                 One day,{" "}
-                <span className="font-black text-black dark:text-white">Mr. Bhavin</span> — a textile
-                industry professional we knew through family — shared a frustration that stayed in
-                our mind.
+                <span className="font-black text-black dark:text-white">Mr. Bhavin</span> — one of
+                Mumbai&apos;s top textile industrialists, whom we know through family — shared a
+                frustration that stayed in our mind.
               </p>
               <p className="mt-3 text-base leading-7 text-black/75 dark:text-white/80">
                 A client was constantly asking for{" "}
@@ -275,7 +275,7 @@ export default function AboutPage() {
                 ))}
               </div>
 
-              {/* Bhavin's quote */}
+              {/* Mr. Bhavin's quote */}
               <div className="mt-6 rounded-2xl border-l-4 border-fuchsia-500 bg-white/90 p-5 shadow-md backdrop-blur dark:bg-white/[0.06]">
                 <Quote className="h-6 w-6 text-fuchsia-500" />
                 <p className="mt-2 text-base italic leading-7 text-black/80 dark:text-white/85 sm:text-lg">
@@ -284,7 +284,7 @@ export default function AboutPage() {
                   without stitching, without shoots, without depending on so many people."
                 </p>
                 <p className="mt-3 text-xs font-black uppercase tracking-wider text-fuchsia-600">
-                  — Mr. Bhavin, textile industry
+                  — Mr. Bhavin, one of Mumbai&apos;s top textile industrialists
                 </p>
               </div>
 
