@@ -318,6 +318,33 @@ export default function RootLayout({
           </Script>
         )}
 
+        {/* Meta (Facebook) Pixel — base code. Fires automatic PageView on
+            every route (via AnalyticsRouteTracker). Conversion events such
+            as "Lead" / "Purchase" are fired from page code (e.g. the
+            workshop thank-you page). Set NEXT_PUBLIC_META_PIXEL_ID in
+            .env.local to override the default pixel ID. */}
+        <Script id="meta-pixel" strategy="afterInteractive">
+          {`
+            !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+            n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+            document,'script','https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '${process.env.NEXT_PUBLIC_META_PIXEL_ID || "1136318385188354"}');
+            fbq('track', 'PageView');
+          `}
+        </Script>
+        <noscript>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            height="1"
+            width="1"
+            style={{ display: "none" }}
+            alt=""
+            src={`https://www.facebook.com/tr?id=${process.env.NEXT_PUBLIC_META_PIXEL_ID || "1136318385188354"}&ev=PageView&noscript=1`}
+          />
+        </noscript>
+
         <div className="fixed inset-0 -z-50 bg-[#fff8e8] dark:bg-[#070b14]" />
 
         <div className="fixed inset-0 -z-30 bg-[radial-gradient(circle_at_top_left,#22d3ee55,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf644,transparent_35%),radial-gradient(circle_at_bottom,#0ea5e944,transparent_30%),linear-gradient(to_bottom,transparent,rgba(0,0,0,0.08))]" />

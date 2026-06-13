@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 // Shared Thank-You UI for the workshop. The day is resolved from EITHER the
 // path segment (/workshop/thankyou/21-june — preferred, survives Razorpay's
 // own appended query params) OR the legacy ?slot= query param.
@@ -60,6 +62,23 @@ export default function ThankYouContent({ slot }: { slot?: string | null }) {
   const slotInfo = resolveSlot(slot);
   const COMMUNITY_LINK = slotInfo?.community ?? DEFAULT_COMMUNITY;
   const ordinal = slotInfo?.ordinal ?? "First";
+
+  // Meta Pixel conversion — counts ONE Lead per workshop registration when
+  // the thank-you page loads (this is the Razorpay post-payment redirect).
+  useEffect(() => {
+    try {
+      (window as { fbq?: (...a: unknown[]) => void }).fbq?.("track", "Lead", {
+        value: 99,
+        currency: "INR",
+        content_name: "TextilePrints to Mockup AI Workshop",
+        content_category: slotInfo ? slotInfo.date : "workshop",
+      });
+    } catch {
+      /* pixel not loaded — no-op */
+    }
+    // run once per thank-you view
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <main className="workshop-thankyou-page relative isolate flex min-h-[100dvh] items-center justify-center overflow-hidden bg-[#fff8e8] px-4 py-8 text-[#111827] sm:py-14">
