@@ -12,3 +12,13 @@
 See more: https://nextjs.org/docs/app/guides/local-development
 
 ○ Compiling /workshop/thankyou/[slot] ...
+ GET /workshop/thankyou/21-june 200 in 33.1s (next.js: 32.2s, application-code: 851ms)
+ GET /workshop/thankyou/21-june 200 in 140ms (next.js: 19ms, application-code: 121ms)
+ GET /workshop/thankyou/28-june 200 in 112ms (next.js: 5ms, application-code: 107ms)
+ GET /workshop/thankyou/day2 200 in 109ms (next.js: 6ms, application-code: 103ms)
+ GET /workshop/thankyou?slot=21-june 200 in 164ms (next.js: 42ms, application-code: 121ms)
+ GET /workshop/thankyou/20-june 200 in 130ms (next.js: 19ms, application-code: 110ms)
+ GET /workshop/thankyou/21-june 200 in 111ms (next.js: 10ms, application-code: 101ms)
+ GET /workshop/thankyou/27-june 200 in 133ms (next.js: 5ms, application-code: 127ms)
+ GET /workshop/thankyou/28-june 200 in 115ms (next.js: 14ms, application-code: 101ms)
+ GET /workshop/thankyou/day2 200 in 121ms (next.js: 7ms, application-code: 114ms)
