@@ -1144,10 +1144,16 @@ const newId = () =>
 
 const extractDesignNumberFromName = (fileName: string) => {
   const cleanName = fileName.replace(/\.[^/.]+$/, "");
+  // Ignore auto-generated camera / chat filenames — they carry dates, not
+  // a real article number (e.g. "WhatsApp Image 2026-04-20 at 2.43 PM").
+  if (/whatsapp|screenshot|img[-_ ]?\d|image[-_ ]?\d{3}/i.test(cleanName)) return "";
   const match = cleanName.match(
     /(?:design|article|art|code|pattern|pat|d|a)?[-_\s]*([A-Z0-9]{2,}[-_][A-Z0-9]{2,}|[A-Z]{1,4}\d{2,}|\d{3,})/i,
   );
-  return match?.[1]?.toUpperCase().replace(/_/g, "-") || "";
+  let val = match?.[1]?.toUpperCase().replace(/_/g, "-") || "";
+  // Reject date / year-like tokens (e.g. 2026-04, 2026-04-20, 20260420).
+  if (/^(19|20)\d{2}(-\d{1,2}){0,2}$/.test(val) || /^\d{6,8}$/.test(val)) val = "";
+  return val;
 };
 
 const extractDesignNumberFromText = (text: string): string => {
@@ -2443,9 +2449,13 @@ export default function Home() {
           prev.map((it) => (it.id === id ? { ...it, url, status: "ocr" } : it)),
         );
 
-        let detected = extractDesignNumberFromName(file.name);
+        // The article/design number is printed ON the design image (e.g.
+        // "X1-2368-A" in a corner box), so OCR the image FIRST. Only fall
+        // back to the filename if OCR finds nothing (filenames are often
+        // WhatsApp/camera names with dates, not the real article number).
+        let detected = await runOcrOnFile(file);
         if (!detected) {
-          detected = await runOcrOnFile(file);
+          detected = extractDesignNumberFromName(file.name);
         }
 
         setItems((prev) =>
