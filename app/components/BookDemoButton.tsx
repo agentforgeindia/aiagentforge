@@ -7,7 +7,8 @@
 // Goes to /api/demo-request → support task + demo_requests row.
 // ============================================================
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Sparkles, Upload, X, CheckCircle2 } from "lucide-react";
 
 // Only the live agents.
@@ -46,6 +47,11 @@ export default function BookDemoButton({
   const [error, setError] = useState("");
   const designRef = useRef<HTMLInputElement | null>(null);
   const logoRef = useRef<HTMLInputElement | null>(null);
+  // Portal target — the modal must render at <body> level, otherwise the
+  // navbar's backdrop-blur creates a containing block that traps/clips the
+  // fixed overlay inside the nav bar.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const reset = () => {
     setAgent(""); setOutputDesc(""); setSize(SIZES[0]); setQuality(QUALITIES[1]); setDevice("Mobile");
@@ -101,9 +107,9 @@ export default function BookDemoButton({
         {label}
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-[1000] flex items-start justify-center overflow-y-auto bg-slate-500/20 p-3 backdrop-blur-lg sm:p-6">
-          <div className="relative my-auto w-full max-w-lg rounded-[1.6rem] border border-white/40 bg-white/95 shadow-2xl dark:border-white/10 dark:bg-slate-950/95">
+      {open && mounted && createPortal(
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center overflow-y-auto bg-slate-500/20 p-3 backdrop-blur-lg sm:p-4">
+          <div className="relative my-auto flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-[1.6rem] border border-white/40 bg-white/95 shadow-2xl dark:border-white/10 dark:bg-slate-950/95">
             <button
               type="button"
               onClick={close}
@@ -129,7 +135,7 @@ export default function BookDemoButton({
                 </button>
               </div>
             ) : (
-              <div className="max-h-[88vh] overflow-y-auto p-5 sm:p-6">
+              <div className="flex-1 overflow-y-auto p-5 sm:p-6">
                 <h3 className="text-lg font-black sm:text-xl">Book a Customize Demo</h3>
                 <p className="mt-1 text-xs text-slate-500 dark:text-white/55">
                   Upload your design and we&apos;ll create a free custom demo for you.
@@ -257,7 +263,8 @@ export default function BookDemoButton({
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
