@@ -761,6 +761,7 @@ function RoyalIcon({ name }: { name: string }) {
 
 function optionGlyph(title: string): string {
   const k = title.toLowerCase().trim();
+  if (k === "1 seater") return "sofa1";
   if (k === "2 seater") return "sofa2";
   if (k === "3 seater") return "sofa3";
   if (k === "5 seater") return "sofa5";
