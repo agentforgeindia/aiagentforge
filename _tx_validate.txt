@@ -1,0 +1,46 @@
+// === INPUT VALIDATION v3 ===
+let input = $json.body || $json;
+if (typeof input === "string") input = JSON.parse(input);
+if (typeof input?.body === "string") input = JSON.parse(input.body);
+if (input?.body && typeof input.body === "object") input = input.body;
+
+const errors = [];
+const designUrl = String(input.design_url || input.image_url || input.input_image_url || '').trim();
+if (!designUrl) errors.push('design_url is required');
+else if (!/^https?:\/\//i.test(designUrl)) errors.push('design_url must be an http(s) URL');
+
+const generationId = String(input.generation_id || input.id || '').trim();
+if (!generationId) errors.push('generation_id is required');
+
+const userId = String(input.user_id || '').trim();
+if (!userId) errors.push('user_id is required');
+
+const qualityRaw = String(input.quality || 'Catalogue Ready').trim();
+const validQualities = ['Draft Preview', 'Catalogue Ready', 'Ultra Realistic', 'Premium', 'Ultra HD'];
+let quality = qualityRaw;
+if (!validQualities.includes(quality)) {
+  const norm = quality.toLowerCase().replace(/[_-]/g, ' ').trim();
+  if (norm.includes('draft')) quality = 'Draft Preview';
+  else if (norm.includes('ultra')) quality = 'Ultra Realistic';
+  else quality = 'Catalogue Ready';
+}
+
+let creditCost = 15;
+if (quality === 'Ultra Realistic' || quality === 'Ultra HD') creditCost = 20;
+else if (quality === 'Catalogue Ready' || quality === 'Premium') creditCost = 17;
+
+if (errors.length) {
+  return [{ json: { validation_failed: true, validation_errors: errors, ...input } }];
+}
+
+return [{
+  json: {
+    validation_failed: false,
+    generation_id: generationId,
+    user_id: userId,
+    design_url: designUrl,
+    quality,
+    credit_cost: creditCost,
+    raw_input: input
+  }
+}];
