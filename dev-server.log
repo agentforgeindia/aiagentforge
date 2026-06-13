@@ -31,3 +31,20 @@ See more: https://nextjs.org/docs/app/guides/local-development
  GET /workshop/thankyou 200 in 73ms (next.js: 5ms, application-code: 68ms)
  GET /workshop/thankyou/21-june 200 in 940ms (next.js: 258ms, application-code: 682ms)
  GET /workshop/thankyou/21-june 200 in 170ms (next.js: 18ms, application-code: 152ms)
+✓ Compiled in 1279ms
+ GET /workshop/thankyou 200 in 302ms (next.js: 135ms, application-code: 167ms)
+○ Compiling /my-creations ...
+ GET /my-creations 200 in 5.8s (next.js: 5.4s, application-code: 466ms)
+ GET /textileprints-to-mockup 200 in 261ms (next.js: 30ms, application-code: 231ms)
+ GET /my-creations 200 in 131ms (next.js: 4ms, application-code: 127ms)
+ GET /workshop/thankyou 200 in 232ms (next.js: 89ms, application-code: 144ms)
+ GET /workshop/thankyou 200 in 225ms (next.js: 89ms, application-code: 136ms)
+ GET /textileprints-to-mockup 200 in 679ms (next.js: 133ms, application-code: 547ms)
+ GET /workshop/thankyou 200 in 264ms (next.js: 163ms, application-code: 101ms)
+ GET /textileprints-to-mockup 200 in 566ms (next.js: 106ms, application-code: 460ms)
+○ Compiling /about ...
+ GET /about 200 in 4.1s (next.js: 3.9s, application-code: 209ms)
+✓ Compiled in 7.5s
+ GET / 200 in 2.2s (next.js: 542ms, application-code: 1705ms)
+ GET /workshop/thankyou/21-june 200 in 1008ms (next.js: 249ms, application-code: 759ms)
+ GET / 200 in 405ms (next.js: 5ms, application-code: 401ms)
