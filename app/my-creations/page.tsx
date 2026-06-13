@@ -252,7 +252,7 @@ export default function MyCreationsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <img src={selectedImage} alt="AI-generated catalogue visual created with AgentForge AI — preview" className="w-full aspect-[3/4] object-cover object-top rounded-3xl" />
+            <img src={selectedImage} alt="AI-generated catalogue visual created with AgentForge AI — preview" className="mx-auto max-h-[90vh] w-auto max-w-full object-contain rounded-3xl" />
           </div>
         </div>
       )}

@@ -1384,7 +1384,7 @@ const faceExpressionOptions = [
 ];
 
 // Sub-options that appear only for specific products / shoot styles.
-const sofaSeaterOptions = ["2 Seater", "3 Seater", "5 Seater", "7 Seater"];
+const sofaSeaterOptions = ["1 Seater", "2 Seater", "3 Seater", "5 Seater", "7 Seater"];
 const towelTypeOptions = ["Baby Towel", "Kids Towel", "Boy", "Girl"];
 const outdoorBackgroundOptions = [
   "Royal Palace",
