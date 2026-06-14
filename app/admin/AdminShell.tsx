@@ -24,7 +24,6 @@ import NotificationsBell from "./NotificationsBell";
 import CommandPalette from "./CommandPalette";
 import AttendanceTimer from "./AttendanceTimer";
 import ModuleTip from "./ModuleTip";
-import MorningMotivation from "./MorningMotivation";
 
 export type Crumb = { label: string; href?: string };
 
@@ -308,7 +307,6 @@ export default function AdminShell({
         </div>
       </div>
 
-      <MorningMotivation />
       <div className="relative mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
         <AdminDoodles type={doodleType ?? "general"} />
         <div className="relative z-10">
