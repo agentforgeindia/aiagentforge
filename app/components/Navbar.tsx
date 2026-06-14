@@ -450,7 +450,7 @@ export default function Navbar() {
           />
 
           <div
-            className={`fixed left-0 right-0 top-[72px] z-40 mx-5 max-h-[calc(100vh-92px)] overflow-y-auto rounded-3xl border p-4 shadow-2xl lg:hidden ${
+            className={`fixed left-0 right-0 top-[72px] z-40 mx-5 max-h-[calc(100dvh-88px)] overflow-y-auto overscroll-contain rounded-3xl border p-4 pb-8 shadow-2xl lg:hidden ${
               darkMode ? "border-white/10 bg-[#0b1220]/98" : "border-black/10 bg-white/98"
             }`}
           >
