@@ -439,22 +439,44 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu — backdrop + scrollable panel with collapsible accordions */}
+      {/* Mobile menu — full-screen drawer (own header + scrollable body) */}
       {showMobileMenu && (
-        <>
-          {/* Backdrop — taps close the menu, also prevents scroll bleeding */}
-          <div
-            className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm lg:hidden"
-            onClick={() => setShowMobileMenu(false)}
-            aria-hidden="true"
-          />
+        <div
+          className="fixed inset-0 z-[60] flex flex-col lg:hidden"
+          style={{ height: "100dvh" }}
+        >
+          <div className={`flex h-full flex-col ${darkMode ? "bg-[#0b1220]" : "bg-white"}`}>
+            {/* Drawer header — logo + close (replaces the blurred nav bar) */}
+            <div
+              className={`flex h-16 shrink-0 items-center justify-between border-b px-5 ${
+                darkMode ? "border-white/10" : "border-black/10"
+              }`}
+            >
+              <Link
+                href="/"
+                onClick={() => setShowMobileMenu(false)}
+                className="flex items-center gap-2"
+              >
+                <Image src="/af-logo.png" alt="AgentForge" width={36} height={36} className="h-9 w-9 rounded-xl" />
+                <span className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 bg-clip-text text-lg font-black text-transparent">
+                  AgentForge
+                </span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setShowMobileMenu(false)}
+                aria-label="Close menu"
+                className={`flex h-10 w-10 items-center justify-center rounded-full text-xl transition ${
+                  darkMode ? "bg-white/10 text-white hover:bg-white/15" : "bg-black/5 text-black hover:bg-black/10"
+                }`}
+              >
+                ✕
+              </button>
+            </div>
 
-          <div
-            className={`fixed left-0 right-0 top-[72px] z-40 mx-5 max-h-[calc(100dvh-88px)] overflow-y-auto overscroll-contain rounded-3xl border p-4 pb-8 shadow-2xl lg:hidden ${
-              darkMode ? "border-white/10 bg-[#0b1220]/98" : "border-black/10 bg-white/98"
-            }`}
-          >
-            <div className="grid gap-1 text-sm font-semibold">
+            {/* Scrollable body — everything (incl. Logout) is reachable */}
+            <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-10">
+              <div className="grid gap-1 text-sm font-semibold">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
@@ -610,8 +632,9 @@ export default function Navbar() {
                 )}
               </div>
             </div>
+            </div>
           </div>
-        </>
+        </div>
       )}
     </header>
   );
