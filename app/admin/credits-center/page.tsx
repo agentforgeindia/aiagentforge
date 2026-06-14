@@ -74,6 +74,54 @@ export default function CreditsCenterPage() {
   const [adjSaving, setAdjSaving] = useState(false);
   const [adjMsg, setAdjMsg] = useState<string | null>(null);
 
+  // Grant plan + bonus (by email) state — for workshop buyers / offers.
+  const [grantEmail, setGrantEmail] = useState("");
+  const [grantPlan, setGrantPlan] = useState(""); // "" = no plan change
+  const [grantBonus, setGrantBonus] = useState("");
+  const [grantValidity, setGrantValidity] = useState("365");
+  const [grantNote, setGrantNote] = useState("");
+  const [grantSaving, setGrantSaving] = useState(false);
+  const [grantMsg, setGrantMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  async function handleGrant(e: React.FormEvent) {
+    e.preventDefault();
+    if (!grantEmail.trim() || (!grantPlan && !grantBonus.trim())) {
+      setGrantMsg({ ok: false, text: "Enter an email and a plan and/or bonus credits." });
+      return;
+    }
+    setGrantSaving(true);
+    setGrantMsg(null);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const jwt = sess.session?.access_token;
+      const res = await fetch("/api/admin/grant-access", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
+        body: JSON.stringify({
+          email: grantEmail.trim(),
+          plan: grantPlan,
+          bonus_credits: grantBonus.trim() ? parseInt(grantBonus) : 0,
+          validity_days: grantValidity.trim() ? parseInt(grantValidity) : 365,
+          note: grantNote.trim(),
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setGrantMsg({
+          ok: true,
+          text: `✓ ${json.user?.email ?? grantEmail} — plan: ${json.plan ?? "unchanged"}${json.added_credits ? `, +${json.added_credits} credits` : ""}${typeof json.new_balance === "number" ? ` (balance: ${json.new_balance.toLocaleString("en-IN")})` : ""}`,
+        });
+        setGrantEmail(""); setGrantPlan(""); setGrantBonus(""); setGrantNote("");
+        setRefreshKey((k) => k + 1);
+      } else {
+        setGrantMsg({ ok: false, text: json.error ?? "Failed." });
+      }
+    } catch {
+      setGrantMsg({ ok: false, text: "Network error." });
+    }
+    setGrantSaving(false);
+  }
+
   useEffect(() => {
     if (!canView) return;
     setLoading(true);
@@ -147,6 +195,74 @@ export default function CreditsCenterPage() {
         <p className="p-6 text-center text-sm text-rose-600">{data?.error ?? "No data"}</p>
       ) : (
         <div className="space-y-4">
+          {/* Grant plan + custom bonus by email — workshop buyers / offers */}
+          {canAdjust && (
+            <section className="rounded-2xl border border-cyan-300/50 bg-cyan-50/50 p-4 dark:border-cyan-400/20 dark:bg-cyan-400/5">
+              <h3 className="text-sm font-black text-cyan-700 dark:text-cyan-300">
+                🎁 Grant Plan + Custom Bonus (by Email)
+              </h3>
+              <p className={`mt-1 text-xs ${adminMutedCls}`}>
+                Manually give plan access + bonus credits to a workshop buyer or accepted offer. The user must have signed up (account exists) first.
+              </p>
+              <form onSubmit={handleGrant} className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-6">
+                <input
+                  value={grantEmail}
+                  onChange={(e) => setGrantEmail(e.target.value)}
+                  type="email"
+                  placeholder="user@email.com"
+                  className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm outline-none focus:border-cyan-400 dark:border-white/10 dark:bg-white/[0.05] dark:text-white sm:col-span-2 lg:col-span-2"
+                />
+                <select
+                  value={grantPlan}
+                  onChange={(e) => setGrantPlan(e.target.value)}
+                  aria-label="Plan"
+                  className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm outline-none focus:border-cyan-400 dark:border-white/10 dark:bg-white/[0.05] dark:text-white"
+                >
+                  <option value="">No plan change</option>
+                  <option value="Starter">Starter</option>
+                  <option value="Pro Creator">Pro Creator</option>
+                  <option value="Empire">Empire</option>
+                  <option value="Founder">Founder</option>
+                </select>
+                <input
+                  value={grantBonus}
+                  onChange={(e) => setGrantBonus(e.target.value)}
+                  type="number"
+                  min="0"
+                  placeholder="Bonus credits"
+                  className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm outline-none focus:border-cyan-400 dark:border-white/10 dark:bg-white/[0.05] dark:text-white"
+                />
+                <input
+                  value={grantValidity}
+                  onChange={(e) => setGrantValidity(e.target.value)}
+                  type="number"
+                  min="0"
+                  placeholder="Validity days (365, 0=lifetime)"
+                  title="Plan validity in days (365 default, 0 = lifetime)"
+                  className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm outline-none focus:border-cyan-400 dark:border-white/10 dark:bg-white/[0.05] dark:text-white"
+                />
+                <button
+                  type="submit"
+                  disabled={grantSaving}
+                  className="rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2 text-sm font-black text-white shadow-md transition hover:brightness-110 disabled:opacity-50"
+                >
+                  {grantSaving ? "Granting…" : "Grant Access"}
+                </button>
+                <input
+                  value={grantNote}
+                  onChange={(e) => setGrantNote(e.target.value)}
+                  placeholder="Note (optional) — e.g. Workshop Day-2 offer"
+                  className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm outline-none focus:border-cyan-400 dark:border-white/10 dark:bg-white/[0.05] dark:text-white sm:col-span-2 lg:col-span-6"
+                />
+              </form>
+              {grantMsg && (
+                <p className={`mt-2 text-xs font-semibold ${grantMsg.ok ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600"}`}>
+                  {grantMsg.text}
+                </p>
+              )}
+            </section>
+          )}
+
           {/* Hero */}
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
