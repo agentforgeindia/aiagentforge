@@ -924,6 +924,7 @@ const PRODUCT_ICONS_BY_CATEGORY: Record<string, Record<string, string>> = {
     "Palazzo Suit": UI("pl-palazzo-suit"),
     Scarf: UI("pl-scarf"),
     Stole: UI("pl-stole"),
+    "Sudan Wear": UI("cat-sudan"),
     Other: UI("pl-other"),
   },
   "Kids Wear": {
@@ -1220,6 +1221,7 @@ const productOptionsByCategory: Record<TextileCategory, string[]> = {
     "Palazzo Suit",
     "Scarf",
     "Stole",
+    "Sudan Wear",
     "Other",
   ],
   "Kids Wear": [
@@ -1393,6 +1395,33 @@ const faceExpressionOptions = [
 // Sub-options that appear only for specific products / shoot styles.
 const sofaSeaterOptions = ["1 Seater", "2 Seater", "3 Seater", "5 Seater", "7 Seater"];
 const towelTypeOptions = ["Baby Towel", "Kids Towel", "Boy", "Girl"];
+
+// Sudan Wear — nested garment sub-types (shown when the "Sudan Wear"
+// product card is picked inside Ladies Wear). Same engine, different
+// garment rules: each sub-type carries its own drape hint for n8n.
+const sudanGarmentOptions = [
+  "Toub",
+  "Jalabiya",
+  "Abaya",
+  "Bridal Look",
+  "Sudanese Pant Set",
+];
+const SUDAN_GARMENT_ICONS: Record<string, string> = {
+  Toub: UI("pls-toub"),
+  Jalabiya: UI("pls-jalabiya"),
+  Abaya: UI("pls-abaya"),
+  "Bridal Look": UI("pls-bridal"),
+  "Sudanese Pant Set": UI("pls-pant-set"),
+};
+// Folded into custom_instruction so the n8n prompt builder gets correct
+// drape rules even before its GARMENT_GUIDE table is updated.
+const SUDAN_GARMENT_HINTS: Record<string, string> = {
+  Toub: "Sudanese Toub — ONE complete full-length printed dress/kaftan made ENTIRELY from the uploaded fabric, with the SAME printed fabric continuing up and over the head as an attached drape covering the hair (face open) and falling over the shoulders. Opaque, substantial dress fabric — it is NOT a plain dress with a thin see-through dupatta/chunri. The print covers the entire dress AND the head-drape as one continuous cloth. Modest, floor-length, elegant; model may hold the drape softly at the chest. Preserve the print exactly — same colours, motifs and pattern scale.",
+  Jalabiya: "Sudanese Jalabiya — loose flowing ankle-length gown with a lightly embroidered round neckline. The uploaded print is the full jalabiya fabric. Preserve the print exactly.",
+  Abaya: "Sudanese Abaya — full-length flowing modest robe with an elegant straight drape. The uploaded print covers the whole abaya. Preserve the print exactly.",
+  "Bridal Look": "Sudanese bridal look — luxurious toub/jalabiya in the uploaded print with gold jewellery, subtle henna and warm wedding tones, regal posture. Preserve the print exactly.",
+  "Sudanese Pant Set": "Sudanese pant set — embellished 3-piece in the uploaded print: a loose batwing cape-style top, full harem/dhoti pants gathered at the ankles (two trouser legs, NOT a skirt or wrap), and a matching head-scarf leaving the face open. The print flows as one continuous fabric across top, pants and scarf. Full-body, sandals visible. Preserve the print exactly.",
+};
 const outdoorBackgroundOptions = [
   "Royal Palace",
   "Wedding Theme",
@@ -1524,6 +1553,7 @@ export default function Home() {
   // Product-specific sub-selectors (open conditionally below the product grid).
   const [sofaSeater, setSofaSeater] = useState("3 Seater");
   const [towelType, setTowelType] = useState("Baby Towel");
+  const [sudanGarment, setSudanGarment] = useState("Toub");
   const [otherProductDesc, setOtherProductDesc] = useState("");
   // Shoot-style sub-selectors.
   const [outdoorBackground, setOutdoorBackground] = useState("Royal Palace");
@@ -2555,6 +2585,8 @@ export default function Home() {
       !customProduct.trim() && product === "Sofa Cover" ? sofaSeater : "";
     const resolvedTowelType =
       !customProduct.trim() && product === "Towel" ? towelType : "";
+    const resolvedSudanGarment =
+      !customProduct.trim() && product === "Sudan Wear" ? sudanGarment : "";
     const resolvedOtherDesc = isOtherProduct ? otherProductDesc.trim() : "";
     const resolvedOutdoorBackground =
       !customShootStyle.trim() &&
@@ -2573,6 +2605,9 @@ export default function Home() {
     const extraPromptHints = [
       resolvedSofaSeater ? `Sofa size: ${resolvedSofaSeater}` : "",
       resolvedTowelType ? `Towel type: ${resolvedTowelType}` : "",
+      resolvedSudanGarment
+        ? `Sudanese garment: ${resolvedSudanGarment}. ${SUDAN_GARMENT_HINTS[resolvedSudanGarment] || ""}`
+        : "",
       isOtherProduct
         ? resolvedOtherDesc
           ? `Custom product (auto-detect + hint): ${resolvedOtherDesc}`
@@ -2626,7 +2661,7 @@ export default function Home() {
       textile_category: textileCategory,
       model_usage: modelUsage,
       model_type: resolvedModelType,
-      product_type: resolvedProduct,
+      product_type: resolvedSudanGarment || resolvedProduct,
       shoot_style: resolvedShootStyle,
       accessories: resolvedAccessories,
       output_size: resolvedOutputSize,
@@ -2695,7 +2730,7 @@ export default function Home() {
         textile_category: textileCategory,
         model_usage: modelUsage,
         model_type: resolvedModelType,
-        product_type: resolvedProduct,
+        product_type: resolvedSudanGarment || resolvedProduct,
         shoot_style: resolvedShootStyle,
         accessories: resolvedAccessories,
         output_size: resolvedOutputSize,
@@ -4052,6 +4087,27 @@ export default function Home() {
                         "Or type your own — e.g. 'Men\\'s Blazer', 'Jacquard Curtain', 'Hotel Bedsheet'",
                         customProduct,
                         setCustomProduct,
+                      )}
+
+                      {/* Sudan Wear → garment sub-type selector */}
+                      {!customProduct.trim() && product === "Sudan Wear" && (
+                        <div className="mt-5">
+                          <p className="mb-3 text-xs font-black uppercase tracking-widest text-cyan-600">
+                            Select Sudan Garment
+                          </p>
+                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-5">
+                            {sudanGarmentOptions.map((item) => (
+                              <OptionCard
+                                key={item}
+                                title={item}
+                                active={sudanGarment === item}
+                                onClick={() => setSudanGarment(item)}
+                                darkMode={darkMode}
+                                imgSrc={SUDAN_GARMENT_ICONS[item]}
+                              />
+                            ))}
+                          </div>
+                        </div>
                       )}
 
                       {/* Sofa Cover → seater size selector */}
