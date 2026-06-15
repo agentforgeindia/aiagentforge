@@ -7,7 +7,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Megaphone, RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  Eye,
+  Megaphone,
+  RefreshCw,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
 import AdminShell, {
   adminCardCls,
   adminInputCls,
@@ -23,6 +30,14 @@ type Ann = {
   link: string | null;
   is_active: boolean;
   created_at: string;
+};
+
+type SeenSummary = { seen_count: number; paid_count: number };
+type SeenRow = {
+  email: string | null;
+  seen_at: string;
+  is_paid: boolean;
+  is_lead: boolean;
 };
 
 export default function AdminAnnouncementsPage() {
@@ -44,6 +59,28 @@ export default function AdminAnnouncementsPage() {
   const [link, setLink] = useState("");
   const [posting, setPosting] = useState(false);
 
+  // Per-announcement seen tracking.
+  const [summary, setSummary] = useState<Record<string, SeenSummary>>({});
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<Record<string, SeenRow[]>>({});
+  const [loadingDetailId, setLoadingDetailId] = useState<string | null>(null);
+
+  const toggleExpand = async (id: string) => {
+    if (expandedId === id) {
+      setExpandedId(null);
+      return;
+    }
+    setExpandedId(id);
+    if (!detail[id]) {
+      setLoadingDetailId(id);
+      const { data } = await supabase.rpc("announcement_seen_detail", {
+        p_announcement_id: id,
+      });
+      setDetail((d) => ({ ...d, [id]: (data as SeenRow[]) ?? [] }));
+      setLoadingDetailId(null);
+    }
+  };
+
   const token = useMemo(
     () => async () => {
       const { data } = await supabase.auth.getSession();
@@ -63,6 +100,23 @@ export default function AdminAnnouncementsPage() {
       if (json.ok) setRows(json.announcements as Ann[]);
       if (json.welcomeStats) setWelcomeStats(json.welcomeStats);
       setLoadingRows(false);
+
+      // Per-announcement seen counts (admin-only RPC).
+      const { data: sum } = await supabase.rpc("announcement_seen_summary");
+      if (Array.isArray(sum)) {
+        const map: Record<string, SeenSummary> = {};
+        for (const r of sum as Array<{
+          announcement_id: string;
+          seen_count: number;
+          paid_count: number;
+        }>) {
+          map[r.announcement_id] = {
+            seen_count: Number(r.seen_count) || 0,
+            paid_count: Number(r.paid_count) || 0,
+          };
+        }
+        setSummary(map);
+      }
     })();
   }, [canView, refreshKey, token]);
 
@@ -214,31 +268,103 @@ export default function AdminAnnouncementsPage() {
           </p>
         ) : (
           <ul className="divide-y divide-slate-200 dark:divide-slate-800">
-            {rows.map((a) => (
-              <li
-                key={a.id}
-                className="flex items-start gap-4 px-4 py-3"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold">{a.title}</p>
-                  {a.body && (
-                    <p className={`mt-0.5 text-xs ${adminMutedCls}`}>{a.body}</p>
+            {rows.map((a) => {
+              const s = summary[a.id];
+              const seen = s?.seen_count ?? 0;
+              const paid = s?.paid_count ?? 0;
+              const isOpen = expandedId === a.id;
+              const list = detail[a.id];
+              return (
+                <li key={a.id} className="px-4 py-3">
+                  <div className="flex items-start gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold">{a.title}</p>
+                      {a.body && (
+                        <p className={`mt-0.5 text-xs ${adminMutedCls}`}>{a.body}</p>
+                      )}
+                      <p className={`mt-1 text-[11px] ${adminMutedCls}`}>
+                        {new Date(a.created_at).toLocaleString("en-IN")}
+                        {a.link ? ` · ${a.link}` : ""}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => toggleExpand(a.id)}
+                      className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                      title="See who opened this"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      {seen} seen
+                      {paid > 0 && (
+                        <span className="text-emerald-600 dark:text-emerald-400">
+                          · {paid} paid
+                        </span>
+                      )}
+                      <ChevronDown
+                        className={`h-3.5 w-3.5 transition ${isOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => remove(a.id)}
+                      className="shrink-0 rounded-lg p-2 text-rose-500 hover:bg-rose-500/10"
+                      aria-label="Delete"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {isOpen && (
+                    <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50/60 p-2 dark:border-slate-800 dark:bg-white/[0.02]">
+                      {loadingDetailId === a.id ? (
+                        <p className={`p-3 text-center text-xs ${adminMutedCls}`}>
+                          Loading…
+                        </p>
+                      ) : !list || list.length === 0 ? (
+                        <p className={`p-3 text-center text-xs ${adminMutedCls}`}>
+                          No one has opened this yet.
+                        </p>
+                      ) : (
+                        <ul className="divide-y divide-slate-200 dark:divide-slate-800">
+                          {list.map((r, i) => (
+                            <li
+                              key={i}
+                              className="flex items-center justify-between gap-3 px-2 py-1.5"
+                            >
+                              <span className="min-w-0 flex-1 truncate text-xs font-medium">
+                                {r.email || "—"}
+                              </span>
+                              <div className="flex shrink-0 items-center gap-1.5">
+                                {r.is_paid ? (
+                                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                                    Paid
+                                  </span>
+                                ) : (
+                                  <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-white/10 dark:text-slate-300">
+                                    Free
+                                  </span>
+                                )}
+                                {r.is_lead && (
+                                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
+                                    Lead
+                                  </span>
+                                )}
+                                <span className={`text-[10px] ${adminMutedCls}`}>
+                                  {new Date(r.seen_at).toLocaleDateString("en-IN", {
+                                    day: "2-digit",
+                                    month: "short",
+                                  })}
+                                </span>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                   )}
-                  <p className={`mt-1 text-[11px] ${adminMutedCls}`}>
-                    {new Date(a.created_at).toLocaleString("en-IN")}
-                    {a.link ? ` · ${a.link}` : ""}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => remove(a.id)}
-                  className="rounded-lg p-2 text-rose-500 hover:bg-rose-500/10"
-                  aria-label="Delete"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

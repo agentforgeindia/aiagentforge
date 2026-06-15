@@ -97,9 +97,16 @@ export default function NotificationsBell() {
     };
   }, []);
 
-  // When dropdown opens, fetch the list fresh.
+  // When the dropdown opens, fetch the list AND treat "opening" as
+  // seen — mark everything read so the badge clears. Only NEW
+  // notifications arriving afterwards light the bell up again.
   useEffect(() => {
-    if (open) loadList();
+    if (!open) return;
+    (async () => {
+      await loadList();
+      await supabase.rpc("mark_all_notifications_read");
+      setUnread(0);
+    })();
   }, [open]);
 
   // Close on outside click + Escape.

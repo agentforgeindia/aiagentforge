@@ -106,6 +106,16 @@ export default function NotificationBell() {
           prev.map((i) => (i.kind === "user" ? { ...i, is_read: true } : i)),
         );
       }
+      // Record a server-side "seen" for broadcast announcements so the
+      // admin can see who opened each one (and if they are paid/free/lead).
+      const broadcastIds = items
+        .filter((i) => i.kind === "broadcast")
+        .map((i) => i.id);
+      if (broadcastIds.length) {
+        supabase
+          .rpc("record_announcement_seen", { p_ids: broadcastIds })
+          .then(() => {}, () => {});
+      }
     }
   };
 
