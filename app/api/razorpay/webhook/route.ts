@@ -10,6 +10,40 @@ const PLAN_CONFIG: Record<string, { amount: number; credits: number }> = {
   Empire: { amount: 39999, credits: 36000 },
 };
 
+// Workshop slot ids seeded in sql/workshop.sql.
+const WORKSHOP_SLOTS = new Set(["20-june", "21-june", "27-june", "28-june"]);
+
+// Hosted Razorpay Payment Pages name themselves "... Day 01..04" and carry
+// no app notes. Map the Day number to a slot date. EDIT this if your Day
+// numbering is not chronological.
+const DAY_TO_SLOT: Record<string, string> = {
+  "1": "20-june",
+  "2": "21-june",
+  "3": "27-june",
+  "4": "28-june",
+};
+
+// True for both in-app workshop checkout (notes.type='workshop') and hosted
+// Payment Page workshop payments (detected by the title/description).
+function looksLikeWorkshop(payment: any): boolean {
+  const notes = payment?.notes || {};
+  if (notes.type === "workshop") return true;
+  const blob = `${payment?.description ?? ""} ${notes.title ?? ""} ${notes.description ?? ""}`;
+  return /workshop/i.test(blob);
+}
+
+// Returns a valid workshop_slots slot_id, or 'unassigned' as a safe fallback
+// (that row is seeded by sql/workshop-payment-page-capture.sql, so the FK and
+// the admin list always accept it — the paid customer is never dropped).
+function resolveWorkshopSlot(payment: any): string {
+  const notes = payment?.notes || {};
+  if (notes.slot && WORKSHOP_SLOTS.has(String(notes.slot))) return String(notes.slot);
+  const blob = `${payment?.description ?? ""} ${notes.title ?? ""} ${notes.slot ?? ""}`;
+  const m = blob.match(/day\s*0?(\d)/i);
+  if (m && DAY_TO_SLOT[m[1]]) return DAY_TO_SLOT[m[1]];
+  return "unassigned";
+}
+
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -72,20 +106,25 @@ export async function POST(request: Request) {
     const userId = payment?.notes?.userId;
     const planName = payment?.notes?.planName;
 
-    // ── Workshop seat payments (separate flow from credit plans) ──
-    // Backup path: if the client-side verify call was missed, the
-    // webhook still records the seat. register_workshop_seat is
-    // idempotent on razorpay_order_id, so a double-fire is a no-op.
-    if (payment?.notes?.type === "workshop" && payment?.notes?.slot) {
+    // ── Workshop seat payments ──────────────────────────────────
+    // Records the seat for BOTH the in-app checkout (which tags the
+    // order with notes.type='workshop' + slot) AND hosted Razorpay
+    // Payment Pages (links that carry no app notes), detected by the
+    // payment title/description. register_workshop_seat is idempotent
+    // on razorpay_order_id, so a verify + webhook double-fire is a
+    // no-op. An undeterminable slot falls back to 'unassigned' so a
+    // paying customer is NEVER dropped and always shows in the admin.
+    if (looksLikeWorkshop(payment)) {
       const supabaseAdmin = getSupabaseAdmin();
+      const slot = resolveWorkshopSlot(payment);
       const { error: wkErr } = await supabaseAdmin.rpc(
         "register_workshop_seat",
         {
-          p_slot_id: payment.notes.slot,
+          p_slot_id: slot,
           p_order_id: razorpayOrderId,
           p_payment_id: razorpayPaymentId,
           p_amount: payment?.amount ? Number(payment.amount) / 100 : 99,
-          p_name: null,
+          p_name: payment?.notes?.name ?? null,
           p_email: payment?.email ?? null,
           p_phone: payment?.contact ?? null,
         },
@@ -97,7 +136,7 @@ export async function POST(request: Request) {
           { status: 500 },
         );
       }
-      return NextResponse.json({ success: true, workshop: true });
+      return NextResponse.json({ success: true, workshop: true, slot });
     }
 
     if (!razorpayPaymentId || !razorpayOrderId || !userId || !planName) {
