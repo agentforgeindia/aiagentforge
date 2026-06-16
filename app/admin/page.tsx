@@ -50,7 +50,7 @@ import {
   Wallet,
   Zap,
 } from "lucide-react";
-import AdminShell, { adminCardCls, adminMutedCls } from "./AdminShell";
+import AdminShell, { adminMutedCls } from "./AdminShell";
 import { useAdminPermissions } from "./AdminPermissions";
 
 type Tile = {
@@ -67,6 +67,22 @@ const GROUP_ORDER = [
   "Command", "Sales & CRM", "Marketing", "Influencers", "Finance",
   "AI", "Support", "People & Hiring", "Content", "System",
 ];
+
+// Brand-themed accent gradient per section (cyan/blue/purple family,
+// matching the frontend) — gives every tab its own colour identity.
+const GROUP_ACCENT: Record<string, string> = {
+  "Command":         "from-cyan-500 to-blue-600",
+  "Sales & CRM":     "from-blue-500 to-indigo-600",
+  "Marketing":       "from-fuchsia-500 to-pink-600",
+  "Influencers":     "from-rose-500 to-pink-600",
+  "Finance":         "from-emerald-500 to-teal-600",
+  "AI":              "from-violet-500 to-purple-600",
+  "Support":         "from-sky-500 to-cyan-600",
+  "People & Hiring": "from-amber-500 to-orange-600",
+  "Content":         "from-teal-500 to-cyan-600",
+  "System":          "from-slate-500 to-slate-700",
+};
+const accentFor = (g: string) => GROUP_ACCENT[g] ?? "from-cyan-500 to-blue-600";
 
 const TILES: Tile[] = [
   // ── Command ──────────────────────────────────────────────────
@@ -207,7 +223,8 @@ export default function AdminHomePage() {
           <nav className="sticky top-14 z-20 -mx-4 mb-1 flex flex-wrap gap-1.5 border-b border-slate-200 bg-[#f7f8fb]/90 px-4 py-2.5 backdrop-blur dark:border-slate-800 dark:bg-[#0b0d12]/90 sm:-mx-6 sm:px-6">
             {grouped.map((section) => (
               <a key={section.group} href={`#sec-${section.group.replace(/\s+/g, "-")}`}
-                className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-bold text-slate-600 transition hover:border-indigo-400 hover:text-indigo-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-indigo-500">
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-bold text-slate-600 transition hover:-translate-y-0.5 hover:border-cyan-400 hover:text-cyan-700 hover:shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-cyan-500 dark:hover:text-cyan-300">
+                <span className={`h-2 w-2 rounded-full bg-gradient-to-br ${accentFor(section.group)}`} />
                 {section.group}
               </a>
             ))}
@@ -215,8 +232,9 @@ export default function AdminHomePage() {
 
           {grouped.map((section) => (
             <section key={section.group} id={`sec-${section.group.replace(/\s+/g, "-")}`} className="scroll-mt-28">
-              <div className="mb-2.5 flex items-center gap-3">
-                <h2 className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
+              <div className="mb-2.5 flex items-center gap-2.5">
+                <span className={`h-4 w-1.5 rounded-full bg-gradient-to-b ${accentFor(section.group)}`} />
+                <h2 className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-600 dark:text-slate-300">
                   {section.group}
                 </h2>
                 <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-400 dark:bg-slate-800">
@@ -226,18 +244,24 @@ export default function AdminHomePage() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {section.tiles.map((t) => (
-                  <Link key={t.href} href={t.href}>
-                    <div className={`${adminCardCls} group flex items-start justify-between gap-3 p-4 transition hover:border-slate-300 dark:hover:border-slate-700`}>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                            {t.icon}
-                          </span>
-                          <h3 className="text-sm font-bold">{t.label}</h3>
+                  <Link key={t.href} href={t.href} className="group block">
+                    <div className="relative h-full overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_10px_24px_-14px_rgba(0,0,0,0.18)] transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300 hover:shadow-[0_10px_34px_-10px_rgba(34,211,238,0.38)] dark:border-slate-800 dark:bg-[#11141a] dark:hover:border-cyan-500/40">
+                      {/* brand gradient wash on hover */}
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-cyan-400/[0.07] via-blue-500/[0.05] to-purple-500/[0.07] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                      {/* top sheen — subtle 3D highlight */}
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent dark:via-white/10" />
+                      <div className="relative flex items-start gap-3">
+                        <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${accentFor(section.group)} text-white shadow-lg shadow-cyan-500/20 ring-1 ring-white/25 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3`}>
+                          {t.icon}
+                        </span>
+                        <div className="min-w-0">
+                          <h3 className="text-sm font-black tracking-tight transition-colors group-hover:text-cyan-700 dark:group-hover:text-cyan-300">
+                            {t.label}
+                          </h3>
+                          <p className={`mt-1 text-xs leading-5 ${adminMutedCls}`}>
+                            {t.description}
+                          </p>
                         </div>
-                        <p className={`mt-1.5 text-xs leading-5 ${adminMutedCls}`}>
-                          {t.description}
-                        </p>
                       </div>
                     </div>
                   </Link>
