@@ -23,15 +23,6 @@ const DAY_TO_SLOT: Record<string, string> = {
   "4": "28-june",
 };
 
-// True for both in-app workshop checkout (notes.type='workshop') and hosted
-// Payment Page workshop payments (detected by the title/description).
-function looksLikeWorkshop(payment: any): boolean {
-  const notes = payment?.notes || {};
-  if (notes.type === "workshop") return true;
-  const blob = `${payment?.description ?? ""} ${notes.title ?? ""} ${notes.description ?? ""}`;
-  return /workshop/i.test(blob);
-}
-
 // Returns a valid workshop_slots slot_id, or 'unassigned' as a safe fallback
 // (that row is seeded by sql/workshop-payment-page-capture.sql, so the FK and
 // the admin list always accept it — the paid customer is never dropped).
@@ -93,10 +84,13 @@ export async function POST(request: Request) {
 
     const event = JSON.parse(rawBody);
 
-    if (event?.event !== "payment.captured") {
+    // payment.captured covers checkout / Payment Pages / links; QR-code
+    // payments also fire qr_code.credited (with the same payment entity).
+    const evtName = event?.event;
+    if (evtName !== "payment.captured" && evtName !== "qr_code.credited") {
       return NextResponse.json({
         success: true,
-        ignored: event?.event || "unknown_event",
+        ignored: evtName || "unknown_event",
       });
     }
 
@@ -106,22 +100,29 @@ export async function POST(request: Request) {
     const userId = payment?.notes?.userId;
     const planName = payment?.notes?.planName;
 
-    // ── Workshop seat payments ──────────────────────────────────
-    // Records the seat for BOTH the in-app checkout (which tags the
-    // order with notes.type='workshop' + slot) AND hosted Razorpay
-    // Payment Pages (links that carry no app notes), detected by the
-    // payment title/description. register_workshop_seat is idempotent
-    // on razorpay_order_id, so a verify + webhook double-fire is a
-    // no-op. An undeterminable slot falls back to 'unassigned' so a
-    // paying customer is NEVER dropped and always shows in the admin.
-    if (looksLikeWorkshop(payment)) {
+    // ── External payments (workshop links / Payment Pages / QR codes /
+    // WhatsApp-shared links) ────────────────────────────────────────
+    // Anything that is NOT a valid in-app credit-plan purchase is an
+    // external workshop/QR/link payment that bypassed the app checkout.
+    // Record it into workshop_registrations so the paid customer ALWAYS
+    // shows in the admin — never silently dropped. Idempotency uses the
+    // order id when present, else the payment id (QR-code payments often
+    // have no order). The slot is resolved from the page title, falling
+    // back to 'unassigned' (admin can set the correct date manually).
+    const isCreditPlan = Boolean(
+      userId && planName && PLAN_CONFIG[planName as string],
+    );
+    if (!isCreditPlan) {
+      if (!razorpayPaymentId) {
+        return NextResponse.json({ error: "No payment id." }, { status: 400 });
+      }
       const supabaseAdmin = getSupabaseAdmin();
       const slot = resolveWorkshopSlot(payment);
       const { error: wkErr } = await supabaseAdmin.rpc(
         "register_workshop_seat",
         {
           p_slot_id: slot,
-          p_order_id: razorpayOrderId,
+          p_order_id: razorpayOrderId || razorpayPaymentId,
           p_payment_id: razorpayPaymentId,
           p_amount: payment?.amount ? Number(payment.amount) / 100 : 99,
           p_name: payment?.notes?.name ?? null,
@@ -132,28 +133,14 @@ export async function POST(request: Request) {
       if (wkErr) {
         console.error("[razorpay-webhook] register_workshop_seat failed:", wkErr);
         return NextResponse.json(
-          { error: wkErr.message || "Could not record seat." },
+          { error: wkErr.message || "Could not record payment." },
           { status: 500 },
         );
       }
-      return NextResponse.json({ success: true, workshop: true, slot });
-    }
-
-    if (!razorpayPaymentId || !razorpayOrderId || !userId || !planName) {
-      return NextResponse.json(
-        { error: "Webhook missing required payment notes." },
-        { status: 400 },
-      );
+      return NextResponse.json({ success: true, recorded: true, slot });
     }
 
     const plan = PLAN_CONFIG[planName];
-
-    if (!plan) {
-      return NextResponse.json(
-        { error: "Invalid webhook plan." },
-        { status: 400 },
-      );
-    }
 
     const supabaseAdmin = getSupabaseAdmin();
 
