@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   BadgeCheck,
   BarChart3,
+  PieChart,
   BookOpen,
   Bot,
   Briefcase,
@@ -75,6 +76,7 @@ const TILES: Tile[] = [
   { group: "Command", href: "/admin/role-access",    label: "Role Access",    description: "Founder view — see exactly which features each role can access.", icon: <ShieldQuestion className="h-4 w-4" />, perm: "*" },
 
   // ── Sales & CRM ──────────────────────────────────────────────
+  { group: "Sales & CRM", href: "/admin/crm",            label: "CRM Dashboard",  description: "Pipeline, win rate, won-value trend and team performance.", icon: <PieChart className="h-4 w-4" />,        perm: "leads.view" },
   { group: "Sales & CRM", href: "/admin/customers",      label: "Customers",      description: "Signed-up users, plans, balances, notes.",                icon: <Users className="h-4 w-4" />,          perm: "customers.view" },
   { group: "Sales & CRM", href: "/admin/leads",          label: "Leads",          description: "Inbound prospects from ads and outreach.",                icon: <UserPlus className="h-4 w-4" />,        perm: "leads.view" },
   { group: "Sales & CRM", href: "/admin/sales",          label: "Sales Command",  description: "Calling queue, hot leads, followups, missed leads.",     icon: <Phone className="h-4 w-4" />,           perm: "leads.view" },
