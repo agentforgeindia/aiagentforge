@@ -1,6 +1,6 @@
 ﻿"use client";
 
-// /admin/ai-operations â€” AI generation volume, failures, credits consumed.
+// /admin/ai-operations — AI generation volume, failures, credits consumed.
 
 import { useEffect, useState } from "react";
 import { RefreshCw, ShieldCheck, Zap, AlertTriangle, CheckCircle, Clock } from "lucide-react";
@@ -102,7 +102,7 @@ export default function AiOperationsPage() {
       }
     >
       {loading ? (
-        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
       ) : !data || data.error ? (
         <p className="p-6 text-center text-sm text-rose-600">{data?.error ?? "No data"}</p>
       ) : (
@@ -242,7 +242,7 @@ export default function AiOperationsPage() {
             {/* Sparkline */}
             <div className={`${adminCardCls} p-4`}>
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                Daily Generations Â· Last 30 Days
+                Daily Generations · Last 30 Days
               </p>
               <DailyChart points={data.daily} />
             </div>
@@ -251,7 +251,7 @@ export default function AiOperationsPage() {
             <div className={`${adminCardCls} overflow-hidden`}>
               <div className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                  Recent Failed Jobs Â· Last 7 Days
+                  Recent Failed Jobs · Last 7 Days
                 </p>
               </div>
               {data.recent_fails.length === 0 ? (
@@ -265,7 +265,7 @@ export default function AiOperationsPage() {
                           {AGENT_LABELS[f.agent_slug] ?? f.agent_slug}
                         </p>
                         <p className={`text-[11px] ${adminMutedCls}`}>
-                          {f.user_id.slice(0, 8)}â€¦
+                          {f.user_id.slice(0, 8)}…
                         </p>
                       </div>
                       <p className={`text-[11px] ${adminMutedCls}`}>
@@ -329,7 +329,7 @@ function StatCard({
 function Loading() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">
-      Checking accessâ€¦
+      Checking access…
     </main>
   );
 }

@@ -1,16 +1,16 @@
 ﻿"use client";
 
 // ============================================================
-// /admin/dashboard â€” Founder War Room.
+// /admin/dashboard — Founder War Room.
 // ============================================================
 // One-trip read of public.dashboard_metrics() into a single JSON
 // blob. Page renders six panels:
-//   â€¢ Hero stats        â€” revenue today/yesterday/week/month + counts
-//   â€¢ 30-day revenue    â€” minimal SVG sparkline
-//   â€¢ Pipeline + tasks  â€” open leads, hot leads, open tasks, overdue
-//   â€¢ Subscriptions     â€” active / expiring 7d / expired
-//   â€¢ Plan + sources    â€” distribution lists
-//   â€¢ Alerts            â€” what needs attention right now
+//   • Hero stats        — revenue today/yesterday/week/month + counts
+//   • 30-day revenue    — minimal SVG sparkline
+//   • Pipeline + tasks  — open leads, hot leads, open tasks, overdue
+//   • Subscriptions     — active / expiring 7d / expired
+//   • Plan + sources    — distribution lists
+//   • Alerts            — what needs attention right now
 // ============================================================
 
 import Link from "next/link";
@@ -107,7 +107,7 @@ export default function AdminDashboardPage() {
   if (pLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">
-        Checking accessâ€¦
+        Checking access…
       </main>
     );
   }
@@ -155,7 +155,7 @@ export default function AdminDashboardPage() {
       }
     >
       {loadingData ? (
-        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
       ) : error ? (
         <div className={`${adminCardCls} p-6 text-center`}>
           <p className="text-sm font-bold text-rose-600">{error}</p>
@@ -211,7 +211,7 @@ export default function AdminDashboardPage() {
             </section>
           )}
 
-          {/* Hero â€” Revenue + Today's signal */}
+          {/* Hero — Revenue + Today's signal */}
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <BigStat
               label="Revenue today"
@@ -246,7 +246,7 @@ export default function AdminDashboardPage() {
             <div className="flex items-end justify-between gap-3">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                  Daily revenue Â· last 30 days
+                  Daily revenue · last 30 days
                 </p>
                 <p className="mt-0.5 text-xl font-bold tabular-nums">
                   ₹{data.revenue.lifetime.toLocaleString("en-IN")}{" "}
@@ -411,9 +411,9 @@ export default function AdminDashboardPage() {
   );
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ────────────────────────────────────────────────────────────
 // Presentational atoms
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ────────────────────────────────────────────────────────────
 
 function BigStat({
   label,
@@ -460,7 +460,7 @@ function BigStat({
               {delta}
             </span>
           )}
-          {delta && sub && " Â· "}
+          {delta && sub && " · "}
           {sub}
         </p>
       )}

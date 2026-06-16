@@ -1,6 +1,6 @@
 ﻿"use client";
 
-// /admin/affiliates â€” Affiliate / Partner management.
+// /admin/affiliates — Affiliate / Partner management.
 
 import { useEffect, useState } from "react";
 import { RefreshCw, ShieldCheck, Plus, X, Users, IndianRupee, Gift, Copy, Check } from "lucide-react";
@@ -92,7 +92,7 @@ export default function AffiliatesPage() {
     setRefreshKey((k) => k + 1);
   }
 
-  // Manually record a referral sale â†’ commission auto-computed.
+  // Manually record a referral sale → commission auto-computed.
   async function addReferral(aff: Affiliate) {
     const email = prompt("Referred customer's email/name:");
     if (!email) return;
@@ -124,7 +124,7 @@ export default function AffiliatesPage() {
       }
     >
       {loading ? (
-        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
       ) : !data ? (
         <p className="p-6 text-center text-sm text-rose-600">No data</p>
       ) : (
@@ -149,7 +149,7 @@ export default function AffiliatesPage() {
                 <input className={adminInputCls} placeholder="Email *" type="email" value={fEmail} onChange={(e) => setFEmail(e.target.value)} required />
                 <input className={adminInputCls} placeholder="Phone" value={fPhone} onChange={(e) => setFPhone(e.target.value)} />
                 <input className={adminInputCls} placeholder="Commission %" type="number" value={fPct} onChange={(e) => setFPct(e.target.value)} />
-                <button type="submit" disabled={fSaving} className={`${adminPrimaryBtnCls} lg:col-span-4 justify-center`}>{fSaving ? "Savingâ€¦" : "Create Partner + Referral Link"}</button>
+                <button type="submit" disabled={fSaving} className={`${adminPrimaryBtnCls} lg:col-span-4 justify-center`}>{fSaving ? "Saving…" : "Create Partner + Referral Link"}</button>
               </form>
             </section>
           )}
@@ -237,7 +237,7 @@ function Stat({ label, value, sub, icon, tone }: { label: string; value: string 
   );
 }
 
-function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking accessâ€¦</main>; }
+function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking access…</main>; }
 function Denied()  {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] px-6 dark:bg-[#0b0d12]">

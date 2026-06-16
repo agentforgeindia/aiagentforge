@@ -1,6 +1,6 @@
 ﻿"use client";
 
-// /admin/settings â€” Company info, plans, credits, notifications config.
+// /admin/settings — Company info, plans, credits, notifications config.
 
 import { useEffect, useState } from "react";
 import { RefreshCw, ShieldCheck, Save } from "lucide-react";
@@ -127,7 +127,7 @@ export default function SystemSettingsPage() {
           {canManage && hasChanges && (
             <button type="button" onClick={saveAll} disabled={saving} className={adminPrimaryBtnCls}>
               <Save className="h-3.5 w-3.5" />
-              {saving ? "Savingâ€¦" : "Save All"}
+              {saving ? "Saving…" : "Save All"}
             </button>
           )}
           {saved && <span className="flex items-center text-xs font-bold text-emerald-600 dark:text-emerald-300">Saved!</span>}
@@ -139,7 +139,7 @@ export default function SystemSettingsPage() {
       }
     >
       {loading ? (
-        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading settingsâ€¦</p>
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading settings…</p>
       ) : (
         <div className="space-y-6">
           {SETTING_GROUPS.map((group) => (
@@ -156,7 +156,7 @@ export default function SystemSettingsPage() {
                   return (
                     <div key={s.key}>
                       <label className={`block text-[10px] font-bold uppercase tracking-[0.16em] ${adminMutedCls} ${isChanged ? "text-indigo-600 dark:text-indigo-300" : ""}`}>
-                        {s.label} {isChanged && "â€¢"}
+                        {s.label} {isChanged && "•"}
                       </label>
                       {s.type === "boolean" ? (
                         <select
@@ -196,7 +196,7 @@ export default function SystemSettingsPage() {
 }
 
 function Loading() {
-  return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking accessâ€¦</main>;
+  return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking access…</main>;
 }
 function Denied() {
   return (

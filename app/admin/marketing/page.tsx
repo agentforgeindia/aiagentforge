@@ -1,6 +1,6 @@
 ﻿"use client";
 
-// /admin/marketing â€” Lead sources, campaign performance, email campaigns.
+// /admin/marketing — Lead sources, campaign performance, email campaigns.
 
 import { useEffect, useState } from "react";
 import { RefreshCw, ShieldCheck, TrendingUp, Users, Mail, Target } from "lucide-react";

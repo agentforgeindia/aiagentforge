@@ -1,6 +1,6 @@
 ﻿"use client";
 
-// /admin/caller-reports â€” Daily caller reporting + supervisor view.
+// /admin/caller-reports — Daily caller reporting + supervisor view.
 
 import { useEffect, useState } from "react";
 import { RefreshCw, ShieldCheck, Save, Phone, Flame, CheckCircle } from "lucide-react";
@@ -97,7 +97,7 @@ export default function CallerReportsPage() {
     <AdminShell
       breadcrumbs={[{ label: "Caller Reports" }]}
       title="Daily Caller Reports"
-      subtitle="Log your daily numbers Â· supervisors see team totals"
+      subtitle="Log your daily numbers · supervisors see team totals"
       email={email}
       actions={
         <div className="flex items-center gap-2">
@@ -110,7 +110,7 @@ export default function CallerReportsPage() {
         {/* My report form */}
         <section className={`${adminCardCls} p-4`}>
           <div className="mb-3 flex items-center justify-between">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">My Report â€” {new Date(date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">My Report — {new Date(date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}</p>
             {saved && <span className="text-xs font-bold text-emerald-600 dark:text-emerald-300">Saved!</span>}
           </div>
           <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -123,7 +123,7 @@ export default function CallerReportsPage() {
           </div>
           <textarea className={`${adminInputCls} mt-3`} rows={2} placeholder="Remarks (optional)" value={remarks} onChange={(e) => setRemarks(e.target.value)} />
           <button type="button" onClick={saveReport} disabled={saving} className={`${adminPrimaryBtnCls} mt-3`}>
-            <Save className="h-3.5 w-3.5" />{saving ? "Savingâ€¦" : "Save My Report"}
+            <Save className="h-3.5 w-3.5" />{saving ? "Saving…" : "Save My Report"}
           </button>
         </section>
 
@@ -131,13 +131,13 @@ export default function CallerReportsPage() {
         {isSupervisor && (
           <>
             {loading ? (
-              <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading teamâ€¦</p>
+              <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading team…</p>
             ) : summary && (
               <>
                 {/* 7-day conversion funnel */}
                 {funnel && (
                   <section className={`${adminCardCls} p-4`}>
-                    <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Conversion Funnel Â· Last 7 Days</p>
+                    <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Conversion Funnel · Last 7 Days</p>
                     <div className="flex items-end gap-2">
                       {[
                         { label: "Calls",      val: funnel.calls,      color: "bg-slate-400" },
@@ -160,7 +160,7 @@ export default function CallerReportsPage() {
                     </div>
                     {funnel.calls > 0 && (
                       <p className={`mt-3 text-[11px] ${adminMutedCls}`}>
-                        Conversion: {funnel.calls} calls â†’ {funnel.demos} demos ({Math.round((funnel.demos / funnel.calls) * 100)}%) â†’ {funnel.paid} paid ({funnel.demos > 0 ? Math.round((funnel.paid / funnel.demos) * 100) : 0}% of demos)
+                        Conversion: {funnel.calls} calls → {funnel.demos} demos ({Math.round((funnel.demos / funnel.calls) * 100)}%) → {funnel.paid} paid ({funnel.demos > 0 ? Math.round((funnel.paid / funnel.demos) * 100) : 0}% of demos)
                       </p>
                     )}
                   </section>
@@ -202,7 +202,7 @@ export default function CallerReportsPage() {
                             <td className="px-4 py-2.5 tabular-nums text-xs">{r.interested}</td>
                             <td className="px-4 py-2.5 tabular-nums text-xs font-bold text-rose-600 dark:text-rose-300">{r.hot_leads}</td>
                             <td className="px-4 py-2.5 tabular-nums text-xs font-bold text-emerald-600 dark:text-emerald-300">{r.paid}</td>
-                            <td className={`max-w-xs px-4 py-2.5 text-[11px] ${adminMutedCls}`}>{r.remarks ?? "â€”"}</td>
+                            <td className={`max-w-xs px-4 py-2.5 text-[11px] ${adminMutedCls}`}>{r.remarks ?? "—"}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -228,6 +228,6 @@ function Stat({ label, value, icon, tone }: { label: string; value: number; icon
   );
 }
 
-function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking accessâ€¦</main>; }
+function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking access…</main>; }
 
 

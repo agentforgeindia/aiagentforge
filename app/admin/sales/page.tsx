@@ -1,6 +1,6 @@
 ﻿"use client";
 
-// /admin/sales â€” Sales Command Center: calling queue, followups, hot leads.
+// /admin/sales — Sales Command Center: calling queue, followups, hot leads.
 
 import { useEffect, useState } from "react";
 import { RefreshCw, ShieldCheck, Phone, Flame, AlertCircle, Clock, CheckCircle, MessageSquare } from "lucide-react";
@@ -49,9 +49,9 @@ function scoreColor(score: number): string {
 
 function scoreLabel(score: number): string {
   if (score >= 75) return "ðŸ”¥ Hot";
-  if (score >= 50) return "âš¡ Warm";
-  if (score >= 25) return "â„ï¸ Cold";
-  return "ðŸ’€ Dead";
+  if (score >= 50) return "⚡ Warm";
+  if (score >= 25) return "❄️ Cold";
+  return "💀 Dead";
 }
 
 export default function SalesCommandPage() {
@@ -82,7 +82,7 @@ export default function SalesCommandPage() {
       const [hot, followups, missed, fresh] = await Promise.all([
         // Hot leads (score >= 60, not converted/lost)
         supabase.from("leads").select("*").gte("score", 60).not("status", "in", '("converted","lost")').order("score", { ascending: false }).limit(20),
-        // Today's followups â€” tasks due today linked to leads
+        // Today's followups — tasks due today linked to leads
         supabase.from("leads").select("*").eq("status", "contacted").gte("created_at", weekAgo).order("score", { ascending: false }).limit(20),
         // New leads not yet contacted (older than 6h)
         supabase.from("leads").select("*").eq("status", "new").lt("created_at", new Date(Date.now() - 6 * 3600000).toISOString()).order("created_at", { ascending: false }).limit(20),
@@ -145,7 +145,7 @@ export default function SalesCommandPage() {
       }
     >
       {loading ? (
-        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
       ) : (
         <div className="space-y-4">
           {/* Stats strip */}
@@ -165,8 +165,8 @@ export default function SalesCommandPage() {
 
           {/* Two columns: Hot + Missed */}
           <section className="grid gap-4 lg:grid-cols-2">
-            <LeadQueue title="ðŸ”¥ Hot Leads â€” Call Now" leads={hotLeads} onCall={openCallModal} showScore />
-            <LeadQueue title="ðŸš¨ Missed â€” Not Contacted 6h+" leads={missedLeads} onCall={openCallModal} tone="rose" />
+            <LeadQueue title="ðŸ”¥ Hot Leads — Call Now" leads={hotLeads} onCall={openCallModal} showScore />
+            <LeadQueue title="ðŸš¨ Missed — Not Contacted 6h+" leads={missedLeads} onCall={openCallModal} tone="rose" />
           </section>
 
           <section className="grid gap-4 lg:grid-cols-2">
@@ -213,7 +213,7 @@ export default function SalesCommandPage() {
               <button type="button" onClick={() => setCalling(null)} className={`${adminSecondaryBtnCls} flex-1 justify-center`}>Cancel</button>
               <button type="button" onClick={saveCallLog} disabled={savingCall || !callNote.trim()} className={`${adminPrimaryBtnCls} flex-1 justify-center`}>
                 <CheckCircle className="h-3.5 w-3.5" />
-                {savingCall ? "Savingâ€¦" : "Save Call"}
+                {savingCall ? "Saving…" : "Save Call"}
               </button>
             </div>
           </div>
@@ -263,7 +263,7 @@ function LeadQueue({ title, leads, onCall, showScore, tone }: {
   );
 }
 
-function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking accessâ€¦</main>; }
+function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking access…</main>; }
 function Denied()  {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] px-6 dark:bg-[#0b0d12]">

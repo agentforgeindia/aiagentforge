@@ -1,6 +1,6 @@
 ﻿"use client";
 
-// /admin/deals â€” Deals pipeline: formal deal tracking.
+// /admin/deals — Deals pipeline: formal deal tracking.
 
 import { useEffect, useState } from "react";
 import { RefreshCw, ShieldCheck, Plus, DollarSign, TrendingUp, X } from "lucide-react";
@@ -31,7 +31,7 @@ const STAGES = [
   { value: "qualification", label: "Qualification", color: "bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300",              bar: "bg-sky-400" },
   { value: "proposal",      label: "Proposal",      color: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",          bar: "bg-blue-500" },
   { value: "negotiation",   label: "Negotiation",   color: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",      bar: "bg-amber-500" },
-  { value: "closed_won",    label: "Closed Won âœ“",  color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300", bar: "bg-emerald-500" },
+  { value: "closed_won",    label: "Closed Won ✓",  color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300", bar: "bg-emerald-500" },
   { value: "closed_lost",   label: "Closed Lost",   color: "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300",          bar: "bg-rose-400" },
 ];
 
@@ -106,7 +106,7 @@ export default function DealsPage() {
       doodleType="leads"
       breadcrumbs={[{ label: "Deals" }]}
       title="Deals Pipeline"
-      subtitle="Formal deal tracking â€” proposals, negotiations, closures"
+      subtitle="Formal deal tracking — proposals, negotiations, closures"
       email={email}
       actions={
         <div className="flex gap-2">
@@ -151,7 +151,7 @@ export default function DealsPage() {
             <input className={adminInputCls} placeholder="Assigned to" value={fAssigned} onChange={(e) => setFAssigned(e.target.value)} />
             <input className={adminInputCls} type="date" value={fClose} onChange={(e) => setFClose(e.target.value)} />
             <textarea className={`${adminInputCls} sm:col-span-2 lg:col-span-3`} placeholder="Notes" rows={2} value={fNotes} onChange={(e) => setFNotes(e.target.value)} />
-            <button type="submit" disabled={fSaving} className={`${adminPrimaryBtnCls} lg:col-span-3 justify-center`}>{fSaving ? "Savingâ€¦" : "Create Deal"}</button>
+            <button type="submit" disabled={fSaving} className={`${adminPrimaryBtnCls} lg:col-span-3 justify-center`}>{fSaving ? "Saving…" : "Create Deal"}</button>
           </form>
         </section>
       )}
@@ -168,7 +168,7 @@ export default function DealsPage() {
 
       {/* Deals table */}
       {loading ? (
-        <p className={`py-8 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
+        <p className={`py-8 text-center text-sm ${adminMutedCls}`}>Loading…</p>
       ) : filtered.length === 0 ? (
         <div className={`${adminCardCls} p-12 text-center`}>
           <p className={`text-sm ${adminMutedCls}`}>No deals yet. Create your first deal!</p>
@@ -190,9 +190,9 @@ export default function DealsPage() {
                   <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                     <td className="px-4 py-2.5">
                       <p className="text-xs font-bold">{d.title}</p>
-                      {d.contact_name && <p className={`text-[11px] ${adminMutedCls}`}>{d.contact_name} {d.contact_phone && `Â· ${d.contact_phone}`}</p>}
+                      {d.contact_name && <p className={`text-[11px] ${adminMutedCls}`}>{d.contact_name} {d.contact_phone && `· ${d.contact_phone}`}</p>}
                     </td>
-                    <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{d.company ?? "â€”"}</td>
+                    <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{d.company ?? "—"}</td>
                     <td className="px-4 py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-300 tabular-nums">₹{d.value_inr.toLocaleString("en-IN")}</td>
                     <td className="px-4 py-2.5">
                       {canManage ? (
@@ -211,8 +211,8 @@ export default function DealsPage() {
                         <span className={`text-[11px] ${adminMutedCls}`}>{d.probability}%</span>
                       </div>
                     </td>
-                    <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{d.assigned_to ?? "â€”"}</td>
-                    <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{d.close_date ? new Date(d.close_date).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "â€”"}</td>
+                    <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{d.assigned_to ?? "—"}</td>
+                    <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{d.close_date ? new Date(d.close_date).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}</td>
                     <td className="px-4 py-2.5" />
                   </tr>
                 );
@@ -225,7 +225,7 @@ export default function DealsPage() {
   );
 }
 
-function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking accessâ€¦</main>; }
+function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking access…</main>; }
 function Denied()  {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] px-6 dark:bg-[#0b0d12]">

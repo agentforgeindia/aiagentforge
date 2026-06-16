@@ -1,14 +1,14 @@
 ﻿"use client";
 
 // ============================================================
-// /admin/ai-costs â€” AI generation cost monitoring.
+// /admin/ai-costs — AI generation cost monitoring.
 // ============================================================
 // Founder/admin/accounts can see:
-//   â€¢ Spend today / week / month / lifetime (USD + INR)
-//   â€¢ Per-agent breakdown with failure rate
-//   â€¢ Top 10 customers (cost vs revenue â†’ margin)
-//   â€¢ Daily spend trend last 30 days
-//   â€¢ Editable cost catalogue (per-agent USD cost) + USDâ†”INR rate
+//   • Spend today / week / month / lifetime (USD + INR)
+//   • Per-agent breakdown with failure rate
+//   • Top 10 customers (cost vs revenue → margin)
+//   • Daily spend trend last 30 days
+//   • Editable cost catalogue (per-agent USD cost) + USD↔INR rate
 // ============================================================
 
 import Link from "next/link";
@@ -130,7 +130,7 @@ export default function AdminAiCostsPage() {
   if (pLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">
-        Checking accessâ€¦
+        Checking access…
       </main>
     );
   }
@@ -154,7 +154,7 @@ export default function AdminAiCostsPage() {
       title="AI generation costs"
       subtitle={
         data
-          ? `Today ₹${data.spend_inr.today.toLocaleString("en-IN")} Â· Month ₹${data.spend_inr.month.toLocaleString("en-IN")}`
+          ? `Today ₹${data.spend_inr.today.toLocaleString("en-IN")} · Month ₹${data.spend_inr.month.toLocaleString("en-IN")}`
           : undefined
       }
       email={email}
@@ -170,7 +170,7 @@ export default function AdminAiCostsPage() {
       }
     >
       {loading ? (
-        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
       ) : !data ? (
         <p className={`p-6 text-center text-sm ${adminMutedCls}`}>
           No metrics returned.
@@ -179,7 +179,7 @@ export default function AdminAiCostsPage() {
         <div className="space-y-4">
           {data.note && (
             <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-700/40 dark:bg-amber-500/10 dark:text-amber-200">
-              âš ï¸ {data.note}
+              ⚠️ {data.note}
             </div>
           )}
 
@@ -194,7 +194,7 @@ export default function AdminAiCostsPage() {
           {/* Daily spend */}
           <section className={`${adminCardCls} p-4`}>
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-              Daily spend Â· last 30 days
+              Daily spend · last 30 days
             </p>
             <Sparkbars points={data.daily} />
             <p className={`mt-3 text-[11px] ${adminMutedCls}`}>
@@ -245,7 +245,7 @@ export default function AdminAiCostsPage() {
             )}
           </section>
 
-          {/* Top customers â€” margin analysis */}
+          {/* Top customers — margin analysis */}
           <section className={`${adminCardCls} p-4`}>
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
               Top 10 customers by generation volume
@@ -273,7 +273,7 @@ export default function AdminAiCostsPage() {
                           href={`/admin/customers/${c.user_id}`}
                           className="font-bold hover:text-indigo-600 dark:hover:text-indigo-300"
                         >
-                          {c.full_name?.trim() || c.email || "â€”"}
+                          {c.full_name?.trim() || c.email || "—"}
                         </Link>
                       </td>
                       <td className="text-right tabular-nums">
@@ -306,7 +306,7 @@ export default function AdminAiCostsPage() {
           {data.failure.length > 0 && (
             <section className={`${adminCardCls} p-4`}>
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                Failure rate Â· last 30 days
+                Failure rate · last 30 days
               </p>
               <ul className="mt-3 space-y-2">
                 {data.failure.map((f) => (
@@ -376,7 +376,7 @@ export default function AdminAiCostsPage() {
                   className={adminPrimaryBtnCls}
                 >
                   <Save className="h-3.5 w-3.5" />
-                  {savingCatalogue ? "Savingâ€¦" : "Save"}
+                  {savingCatalogue ? "Saving…" : "Save"}
                 </button>
               )}
             </div>

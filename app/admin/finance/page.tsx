@@ -1,6 +1,6 @@
 ﻿"use client";
 
-// /admin/finance â€” Revenue, expenses, and net profit.
+// /admin/finance — Revenue, expenses, and net profit.
 
 import { useEffect, useState } from "react";
 import { RefreshCw, ShieldCheck, TrendingUp, Minus, DollarSign, Plus, Trash2, Bot } from "lucide-react";
@@ -171,7 +171,7 @@ export default function FinancePage() {
               title="Pull Meta Ads, OpenAI and FAL costs into expenses"
             >
               <Bot className={`h-3.5 w-3.5 ${syncing ? "animate-pulse" : ""}`} />
-              {syncing ? "Syncingâ€¦" : "Sync Costs"}
+              {syncing ? "Syncing…" : "Sync Costs"}
             </button>
           )}
           <button
@@ -186,7 +186,7 @@ export default function FinancePage() {
       }
     >
       {loading ? (
-        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
       ) : !data || data.error ? (
         <p className="p-6 text-center text-sm text-rose-600">{data?.error ?? "No data"}</p>
       ) : (
@@ -219,7 +219,7 @@ export default function FinancePage() {
                 <input className={adminInputCls} type="date" value={fDate} onChange={(e) => setFDate(e.target.value)} />
                 <input className={adminInputCls} placeholder="Notes (optional)" value={fNotes} onChange={(e) => setFNotes(e.target.value)} />
                 <button type="submit" disabled={fSaving} className={adminPrimaryBtnCls}>
-                  {fSaving ? "Savingâ€¦" : "Save"}
+                  {fSaving ? "Saving…" : "Save"}
                 </button>
               </form>
             </section>
@@ -289,7 +289,7 @@ export default function FinancePage() {
             {/* Monthly revenue vs expense */}
             <div className={`${adminCardCls} p-4`}>
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                Revenue vs Expenses Â· Last 6 Months
+                Revenue vs Expenses · Last 6 Months
               </p>
               <div className="mt-4 space-y-3">
                 {data.monthly.map((m) => {
@@ -401,7 +401,7 @@ export default function FinancePage() {
                       <td className="px-4 py-2.5 tabular-nums text-xs font-bold text-rose-600 dark:text-rose-300">
                         ₹{ex.amount_inr.toLocaleString("en-IN")}
                       </td>
-                      <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{ex.notes ?? "â€”"}</td>
+                      <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{ex.notes ?? "—"}</td>
                       <td className="px-4 py-2.5">
                         {canEdit && (
                           <button
@@ -450,7 +450,7 @@ function StatCard({
 function Loading() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">
-      Checking accessâ€¦
+      Checking access…
     </main>
   );
 }

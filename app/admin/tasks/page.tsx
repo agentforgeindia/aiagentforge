@@ -1,16 +1,16 @@
 ﻿"use client";
 
 // ============================================================
-// /admin/tasks â€” work item tracker for the team.
+// /admin/tasks — work item tracker for the team.
 // ============================================================
 // Each task has a title, type, priority, status, due date,
 // optional assignee, and optional link to a lead or customer.
 //
 // View modes:
-//   â€¢ Open      â€” anything not completed or cancelled
-//   â€¢ Mine      â€” open + assigned to me
-//   â€¢ Overdue   â€” open + due_at < now
-//   â€¢ Done      â€” completed
+//   • Open      — anything not completed or cancelled
+//   • Mine      — open + assigned to me
+//   • Overdue   — open + due_at < now
+//   • Done      — completed
 // ============================================================
 
 import { useEffect, useMemo, useState } from "react";
@@ -236,7 +236,7 @@ export default function AdminTasksPage() {
   if (pLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">
-        Checking accessâ€¦
+        Checking access…
       </main>
     );
   }
@@ -259,7 +259,7 @@ export default function AdminTasksPage() {
       doodleType="tasks"
       breadcrumbs={[{ label: "Tasks" }]}
       title="Tasks"
-      subtitle={`${stats.open} open Â· ${stats.overdue} overdue Â· ${stats.mine} mine`}
+      subtitle={`${stats.open} open · ${stats.overdue} overdue · ${stats.mine} mine`}
       email={email}
       actions={
         <>
@@ -413,7 +413,7 @@ export default function AdminTasksPage() {
               disabled={saving}
               className={adminPrimaryBtnCls}
             >
-              {saving ? "Savingâ€¦" : "Save task"}
+              {saving ? "Saving…" : "Save task"}
             </button>
           </div>
         </section>
@@ -472,11 +472,11 @@ export default function AdminTasksPage() {
       {/* List */}
       <div className={`${adminCardCls} mt-4`}>
         {loadingRows ? (
-          <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
+          <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
         ) : filtered.length === 0 ? (
           <p className={`p-8 text-center text-sm ${adminMutedCls}`}>
             {tasks.length === 0
-              ? "No tasks yet. Click â€œNew taskâ€ to add one."
+              ? "No tasks yet. Click “New task” to add one."
               : "Nothing matches the current view."}
           </p>
         ) : (

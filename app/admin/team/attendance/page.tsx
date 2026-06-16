@@ -1,6 +1,6 @@
 ﻿"use client";
 
-// /admin/team/attendance â€” Full attendance dashboard for founder.
+// /admin/team/attendance — Full attendance dashboard for founder.
 
 import { useEffect, useState } from "react";
 import { RefreshCw, ShieldCheck, Users, Clock, Calendar, CheckCircle } from "lucide-react";
@@ -40,7 +40,7 @@ type Overview = {
 };
 
 function formatMins(mins: number): string {
-  if (!mins) return "â€”";
+  if (!mins) return "—";
   const h = Math.floor(mins / 60);
   const m = mins % 60;
   if (h > 0) return `${h}h ${m}m`;
@@ -116,7 +116,7 @@ export default function AttendancePage() {
       }
     >
       {loading ? (
-        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
       ) : !data ? (
         <p className="p-6 text-center text-sm text-rose-600">No data</p>
       ) : (
@@ -187,7 +187,7 @@ export default function AttendancePage() {
           <section className={`${adminCardCls} overflow-hidden`}>
             <div className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                Logs â€” {new Date(selectedDate).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
+                Logs — {new Date(selectedDate).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
               </p>
             </div>
             {data.today.length === 0 ? (
@@ -226,7 +226,7 @@ export default function AttendancePage() {
                       </td>
                       <td className="px-4 py-3 text-xs font-bold">
                         {log.duration_mins ? formatMins(log.duration_mins) : (
-                          log.check_out ? "â€”" : (
+                          log.check_out ? "—" : (
                             <span className="text-emerald-600 dark:text-emerald-300">
                               {timeSince(log.check_in)}
                             </span>
@@ -234,7 +234,7 @@ export default function AttendancePage() {
                         )}
                       </td>
                       <td className={`max-w-xs px-4 py-3 text-xs ${adminMutedCls}`}>
-                        {log.work_notes ?? "â€”"}
+                        {log.work_notes ?? "—"}
                       </td>
                     </tr>
                   ))}
@@ -248,7 +248,7 @@ export default function AttendancePage() {
             <div className="border-b border-slate-200 px-4 py-3 dark:border-slate-800">
               <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                 <Calendar className="h-3.5 w-3.5" />
-                Monthly Summary â€” {new Date(selectedDate).toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+                Monthly Summary — {new Date(selectedDate).toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
               </p>
             </div>
             {data.monthly.length === 0 ? (
@@ -289,7 +289,7 @@ export default function AttendancePage() {
 }
 
 function Loading() {
-  return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking accessâ€¦</main>;
+  return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking access…</main>;
 }
 function Denied() {
   return (

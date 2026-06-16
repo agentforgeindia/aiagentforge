@@ -1,6 +1,6 @@
 ﻿"use client";
 
-// /admin/hr â€” HR Module: employees, salary, leaves.
+// /admin/hr — HR Module: employees, salary, leaves.
 
 import { useEffect, useState } from "react";
 import { RefreshCw, ShieldCheck, Users, DollarSign, Calendar, Plus, X, Check } from "lucide-react";
@@ -128,7 +128,7 @@ export default function HRPage() {
         ))}
       </div>
 
-      {loading ? <p className={`py-8 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p> : (
+      {loading ? <p className={`py-8 text-center text-sm ${adminMutedCls}`}>Loading…</p> : (
         <>
           {/* Employees Tab */}
           {tab === "Employees" && (
@@ -147,7 +147,7 @@ export default function HRPage() {
                     <input className={adminInputCls} placeholder="Joining date" type="date" value={fJoin} onChange={(e) => setFJoin(e.target.value)} />
                     <input className={adminInputCls} placeholder="Base salary (₹)" type="number" value={fSalary} onChange={(e) => setFSalary(e.target.value)} />
                     <input className={adminInputCls} placeholder="Phone" value={fPhone} onChange={(e) => setFPhone(e.target.value)} />
-                    <button type="submit" disabled={fSaving} className={`${adminPrimaryBtnCls} sm:col-span-2 justify-center`}>{fSaving ? "Savingâ€¦" : "Add Employee"}</button>
+                    <button type="submit" disabled={fSaving} className={`${adminPrimaryBtnCls} sm:col-span-2 justify-center`}>{fSaving ? "Saving…" : "Add Employee"}</button>
                   </form>
                 </section>
               )}
@@ -168,8 +168,8 @@ export default function HRPage() {
                           <p className={`text-[11px] ${adminMutedCls}`}>{emp.email}</p>
                         </td>
                         <td className={`px-4 py-2.5 text-xs capitalize ${adminMutedCls}`}>{emp.role}</td>
-                        <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{emp.department ?? "â€”"}</td>
-                        <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{emp.joining_date ? new Date(emp.joining_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" }) : "â€”"}</td>
+                        <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{emp.department ?? "—"}</td>
+                        <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{emp.joining_date ? new Date(emp.joining_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" }) : "—"}</td>
                         <td className="px-4 py-2.5 text-xs font-bold tabular-nums">₹{emp.base_salary.toLocaleString("en-IN")}</td>
                         <td className="px-4 py-2.5">
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${emp.status === "active" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800"}`}>
@@ -201,12 +201,12 @@ export default function HRPage() {
                     const emp = employees.find((e) => e.id === l.employee_id);
                     return (
                       <tr key={l.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                        <td className="px-4 py-2.5 text-xs font-medium">{emp?.full_name ?? "â€”"}</td>
+                        <td className="px-4 py-2.5 text-xs font-medium">{emp?.full_name ?? "—"}</td>
                         <td className="px-4 py-2.5"><span className="rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-bold text-sky-700 dark:bg-sky-500/10 dark:text-sky-300 capitalize">{l.leave_type}</span></td>
                         <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{new Date(l.from_date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</td>
                         <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{new Date(l.to_date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</td>
                         <td className="px-4 py-2.5 text-xs font-bold tabular-nums">{l.days}d</td>
-                        <td className={`max-w-xs px-4 py-2.5 text-xs ${adminMutedCls}`}>{l.reason ?? "â€”"}</td>
+                        <td className={`max-w-xs px-4 py-2.5 text-xs ${adminMutedCls}`}>{l.reason ?? "—"}</td>
                         <td className="px-4 py-2.5">
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${l.status === "approved" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : l.status === "rejected" ? "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300" : "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"}`}>
                             {l.status}
@@ -245,7 +245,7 @@ export default function HRPage() {
                     const emp = employees.find((e) => e.id === s.employee_id);
                     return (
                       <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                        <td className="px-4 py-2.5 text-xs font-medium">{emp?.full_name ?? "â€”"}</td>
+                        <td className="px-4 py-2.5 text-xs font-medium">{emp?.full_name ?? "—"}</td>
                         <td className={`px-4 py-2.5 text-xs ${adminMutedCls}`}>{new Date(s.month).toLocaleDateString("en-IN", { month: "short", year: "2-digit" })}</td>
                         <td className="px-4 py-2.5 text-xs tabular-nums">₹{s.base_salary.toLocaleString("en-IN")}</td>
                         <td className="px-4 py-2.5 text-xs tabular-nums text-emerald-600 dark:text-emerald-300">₹{s.incentive.toLocaleString("en-IN")}</td>
@@ -275,7 +275,7 @@ export default function HRPage() {
   );
 }
 
-function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking accessâ€¦</main>; }
+function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking access…</main>; }
 function Denied()  {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] px-6 dark:bg-[#0b0d12]">

@@ -1,7 +1,7 @@
 ﻿"use client";
 
 // ============================================================
-// /admin/team â€” founder/admin view of every admin user, with
+// /admin/team — founder/admin view of every admin user, with
 // add / change role / deactivate controls.
 // ============================================================
 
@@ -171,7 +171,7 @@ export default function AdminTeamPage() {
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">
-        Checking accessâ€¦
+        Checking access…
       </main>
     );
   }
@@ -289,7 +289,7 @@ export default function AdminTeamPage() {
               disabled={saving}
               className={adminPrimaryBtnCls}
             >
-              {saving ? "Addingâ€¦" : "Add member"}
+              {saving ? "Adding…" : "Add member"}
             </button>
           </div>
         </section>
@@ -298,7 +298,7 @@ export default function AdminTeamPage() {
       {/* Members list */}
       <div className={`${adminCardCls}`}>
         {loadingData ? (
-          <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
+          <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
         ) : members.length === 0 ? (
           <p className={`p-8 text-center text-sm ${adminMutedCls}`}>
             No team members yet.
@@ -334,7 +334,7 @@ export default function AdminTeamPage() {
                     </p>
                     <p className={`text-[11px] ${adminMutedCls}`}>
                       Last login:{" "}
-                      {m.last_login_at ? formatDateTime(m.last_login_at) : "â€”"}
+                      {m.last_login_at ? formatDateTime(m.last_login_at) : "—"}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -384,8 +384,8 @@ export default function AdminTeamPage() {
                 {r.description}
               </p>
               <p className="mt-2 text-[11px] font-mono leading-5 text-slate-500 dark:text-slate-400">
-                {r.permissions.slice(0, 6).join(" Â· ")}
-                {r.permissions.length > 6 && ` â€¦ +${r.permissions.length - 6}`}
+                {r.permissions.slice(0, 6).join(" · ")}
+                {r.permissions.length > 6 && ` … +${r.permissions.length - 6}`}
               </p>
             </li>
           ))}

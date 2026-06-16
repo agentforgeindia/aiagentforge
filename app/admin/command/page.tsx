@@ -1,6 +1,6 @@
 ﻿"use client";
 
-// /admin/command â€” Founder Command Center (founder only).
+// /admin/command — Founder Command Center (founder only).
 // Live numbers, monthly goals/targets, cash-in-bank, team productivity.
 
 import { useEffect, useState } from "react";
@@ -60,12 +60,12 @@ export default function CommandCenterPage() {
     setSaving(true);
     const month = new Date().toISOString().slice(0, 8) + "01";
     const { data: sess } = await supabase.auth.getSession();
-    // Cash in bank â†’ system_settings
+    // Cash in bank → system_settings
     await supabase.from("system_settings").upsert({
       key: "finance.cash_in_bank", value: Number(cash) || 0,
       updated_by: sess.session?.user?.id, updated_at: new Date().toISOString(),
     }, { onConflict: "key" });
-    // Goals â†’ founder_goals
+    // Goals → founder_goals
     await supabase.from("founder_goals").upsert({
       month,
       revenue_target: Number(revT) || 0,
@@ -93,12 +93,12 @@ export default function CommandCenterPage() {
       }
     >
       {loading ? (
-        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
       ) : !data || data.error ? (
         <p className="p-6 text-center text-sm text-rose-600">{data?.error ?? "No data"}</p>
       ) : (
         <div className="space-y-4">
-          {/* Live numbers â€” dark hero */}
+          {/* Live numbers — dark hero */}
           <section className="rounded-xl bg-gradient-to-br from-slate-900 to-[#0e1117] p-5">
             <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] text-indigo-300">Live Numbers</p>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
@@ -130,7 +130,7 @@ export default function CommandCenterPage() {
               <Field label="Generations Target"    value={genT}  onChange={setGenT} />
             </div>
             <button type="button" onClick={saveTargets} disabled={saving} className={`${adminPrimaryBtnCls} mt-3`}>
-              <Save className="h-3.5 w-3.5" />{saving ? "Savingâ€¦" : "Save Targets"}
+              <Save className="h-3.5 w-3.5" />{saving ? "Saving…" : "Save Targets"}
             </button>
           </section>
 
@@ -210,7 +210,7 @@ function Field({ label, value, onChange }: { label: string; value: string; onCha
   );
 }
 
-function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking accessâ€¦</main>; }
+function Loading() { return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking access…</main>; }
 function Denied()  {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] px-6 dark:bg-[#0b0d12]">

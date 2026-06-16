@@ -1,6 +1,6 @@
 ﻿"use client";
 
-// /admin/support-center â€” Customer support tickets.
+// /admin/support-center — Customer support tickets.
 
 import { useEffect, useState } from "react";
 import { RefreshCw, ShieldCheck, Ticket, AlertTriangle, CheckCircle, Clock, Plus, X } from "lucide-react";
@@ -139,7 +139,7 @@ export default function SupportCenterPage() {
     <AdminShell
       breadcrumbs={[{ label: "Support" }]}
       title="Support Center"
-      subtitle="Customer tickets â€” billing, generation, refunds"
+      subtitle="Customer tickets — billing, generation, refunds"
       email={email}
       actions={
         <div className="flex gap-2">
@@ -157,7 +157,7 @@ export default function SupportCenterPage() {
       }
     >
       {loading ? (
-        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loadingâ€¦</p>
+        <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading…</p>
       ) : !data || data.error ? (
         <p className="p-6 text-center text-sm text-rose-600">{data?.error ?? "No data"}</p>
       ) : (
@@ -181,7 +181,7 @@ export default function SupportCenterPage() {
                 </select>
                 <textarea className={`${adminInputCls} lg:col-span-3`} placeholder="Description" rows={3} value={fDesc} onChange={(e) => setFDesc(e.target.value)} />
                 <button type="submit" disabled={fSaving} className={`${adminPrimaryBtnCls} lg:col-span-3 justify-center`}>
-                  {fSaving ? "Creatingâ€¦" : "Create Ticket"}
+                  {fSaving ? "Creating…" : "Create Ticket"}
                 </button>
               </form>
             </section>
@@ -218,7 +218,7 @@ export default function SupportCenterPage() {
           <section className={`${adminCardCls} overflow-hidden`}>
             <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
-                Tickets {filtered.length > 0 && `Â· ${filtered.length}`}
+                Tickets {filtered.length > 0 && `· ${filtered.length}`}
               </p>
               <div className="flex gap-1">
                 {["open", "in_progress", "all"].map((s) => (
@@ -253,8 +253,8 @@ export default function SupportCenterPage() {
                       <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                         <td className={`px-3 py-2.5 text-xs ${adminMutedCls}`}>#{t.ticket_number}</td>
                         <td className="px-3 py-2.5">
-                          <p className="text-xs font-medium">{t.user_name ?? "â€”"}</p>
-                          <p className={`text-[11px] ${adminMutedCls}`}>{t.user_email ?? "â€”"}</p>
+                          <p className="text-xs font-medium">{t.user_name ?? "—"}</p>
+                          <p className={`text-[11px] ${adminMutedCls}`}>{t.user_email ?? "—"}</p>
                         </td>
                         <td className="px-3 py-2.5">
                           <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${cat?.color ?? ""}`}>
@@ -311,7 +311,7 @@ function StatCard({ label, value, icon, tone }: {
 }
 
 function Loading() {
-  return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking accessâ€¦</main>;
+  return <main className="flex min-h-screen items-center justify-center bg-[#f7f8fb] text-sm text-slate-500 dark:bg-[#0b0d12] dark:text-slate-400">Checking access…</main>;
 }
 function Denied() {
   return (
