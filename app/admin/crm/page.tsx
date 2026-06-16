@@ -33,8 +33,18 @@ type OwnerRow = {
   value: number;
   won_value: number;
   win_rate: number;
+  stages: Record<string, number>;
 };
 type Month = { key: string; label: string; won_value: number; won_count: number };
+
+const STAGE_ORDER = [
+  "prospecting",
+  "qualification",
+  "proposal",
+  "negotiation",
+  "closed_won",
+  "closed_lost",
+];
 
 const STAGE_META: Record<string, { label: string; color: string }> = {
   prospecting: { label: "Prospecting", color: "#3b82f6" },
@@ -337,6 +347,49 @@ export default function AdminCrmDashboard() {
               </div>
             )}
           </section>
+
+          {/* Pipeline by agent — stacked bars */}
+          {byOwner.length > 0 && (
+            <section className={`${adminCardCls} p-4`}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                  Sales pipeline · by agent
+                </p>
+                <ul className="flex flex-wrap gap-x-3 gap-y-1">
+                  {STAGE_ORDER.map((st) => (
+                    <li key={st} className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
+                      <span className="h-2 w-2 rounded-sm" style={{ background: STAGE_META[st].color }} />
+                      {STAGE_META[st].label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-3 space-y-2">
+                {byOwner.map((o) => (
+                  <div key={o.owner} className="flex items-center gap-2">
+                    <span className="w-24 shrink-0 truncate text-xs font-medium sm:w-32" title={o.owner}>
+                      {o.owner}
+                    </span>
+                    <div className="flex h-4 flex-1 items-stretch overflow-hidden rounded bg-slate-100 dark:bg-white/5">
+                      {STAGE_ORDER.map((st) => {
+                        const cnt = o.stages?.[st] || 0;
+                        if (!cnt) return null;
+                        return (
+                          <div
+                            key={st}
+                            className="shrink-0"
+                            style={{ width: `${(cnt / maxOwnerDeals) * 100}%`, background: STAGE_META[st].color }}
+                            title={`${STAGE_META[st].label}: ${cnt}`}
+                          />
+                        );
+                      })}
+                    </div>
+                    <span className="w-8 shrink-0 text-right text-xs font-bold tabular-nums">{o.deals}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       )}
     </AdminShell>

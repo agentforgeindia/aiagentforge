@@ -39,6 +39,7 @@ import AdminShell, {
   adminSecondaryBtnCls,
 } from "../AdminShell";
 import { useAdminPermissions } from "../AdminPermissions";
+import { GradientStat } from "../StatCards";
 
 type Metrics = {
   revenue: {
@@ -166,26 +167,23 @@ export default function AdminDashboardPage() {
         </p>
       ) : (
         <div className="space-y-4">
-          {/* Founder Scoreboard */}
-          <section className="rounded-xl border border-indigo-200 bg-gradient-to-r from-slate-900 to-slate-800 p-4 dark:border-indigo-900 dark:from-slate-900 dark:to-[#0e1117]">
-            <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] text-indigo-300">
+          {/* Today's Scoreboard — gradient KPI cards */}
+          <section>
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
               Today's Scoreboard
             </p>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-              {[
-                { label: "Revenue",          val: `₹${data.revenue.today.toLocaleString("en-IN")}`,        color: "text-emerald-400" },
-                { label: "New Leads",        val: data.counts.open_leads,                                  color: "text-sky-400" },
-                { label: "New Signups",      val: data.counts.signups_today,                                color: "text-blue-400" },
-                { label: "Paid Customers",   val: data.counts.new_payers_today,                             color: "text-indigo-400" },
-                { label: "Credits Used",     val: data.credits.used_today.toLocaleString("en-IN"),          color: "text-purple-400" },
-                { label: "AI Generations",   val: data.ai?.gens_today ?? 0,                                 color: "text-violet-400" },
-                { label: "Net Profit",       val: `₹${(data.finance?.net_profit_month ?? 0).toLocaleString("en-IN")}`, color: (data.finance?.net_profit_month ?? 0) >= 0 ? "text-emerald-400" : "text-rose-400" },
-              ].map((s) => (
-                <div key={s.label} className="text-center">
-                  <p className={`text-lg font-bold tabular-nums sm:text-xl ${s.color}`}>{s.val}</p>
-                  <p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-400">{s.label}</p>
-                </div>
-              ))}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+              <GradientStat label="Revenue" value={`₹${data.revenue.today.toLocaleString("en-IN")}`} gradient="bg-gradient-to-br from-emerald-500 to-teal-600" />
+              <GradientStat label="New Leads" value={data.counts.open_leads} gradient="bg-gradient-to-br from-sky-500 to-blue-600" />
+              <GradientStat label="New Signups" value={data.counts.signups_today} gradient="bg-gradient-to-br from-blue-500 to-indigo-600" />
+              <GradientStat label="Paid Customers" value={data.counts.new_payers_today} gradient="bg-gradient-to-br from-violet-500 to-purple-600" />
+              <GradientStat label="Credits Used" value={data.credits.used_today.toLocaleString("en-IN")} gradient="bg-gradient-to-br from-purple-500 to-fuchsia-600" />
+              <GradientStat label="AI Generations" value={data.ai?.gens_today ?? 0} gradient="bg-gradient-to-br from-fuchsia-500 to-pink-600" />
+              <GradientStat
+                label="Net Profit"
+                value={`₹${(data.finance?.net_profit_month ?? 0).toLocaleString("en-IN")}`}
+                gradient={(data.finance?.net_profit_month ?? 0) >= 0 ? "bg-gradient-to-br from-emerald-500 to-green-600" : "bg-gradient-to-br from-rose-500 to-red-600"}
+              />
             </div>
           </section>
 

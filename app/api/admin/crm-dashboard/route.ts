@@ -107,6 +107,8 @@ export async function GET(req: Request) {
       const l = rows.filter((d) => d.stage === "closed_lost");
       const o = rows.filter(isOpen);
       const closed = w.length + l.length;
+      const stages: Record<string, number> = {};
+      for (const st of STAGES) stages[st] = rows.filter((d) => d.stage === st).length;
       return {
         owner,
         deals: rows.length,
@@ -116,6 +118,7 @@ export async function GET(req: Request) {
         value: sum(rows),
         won_value: sum(w),
         win_rate: closed ? (w.length / closed) * 100 : 0,
+        stages,
       };
     })
     .sort((a, b) => b.won_value - a.won_value);
