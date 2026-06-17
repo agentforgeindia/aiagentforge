@@ -13,6 +13,7 @@ import {
   type AgentCategory,
   type YouTubeVideo,
 } from "@/lib/youtube";
+import ExpandableGrid from "./ExpandableGrid";
 
 const SITE = "https://www.aiagentforge.in";
 const CHANNEL_ID = "UCtA6G7quYS8CGnB6YxfGBng";
@@ -362,7 +363,7 @@ export default async function TutorialsPage({
             </p>
           </div>
         ) : (
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <ExpandableGrid initial={9}>
             {renderList.map(({ agent, video }) => {
               const meta = AGENT_DISPLAY[agent];
               return (
@@ -431,7 +432,7 @@ export default async function TutorialsPage({
                 </article>
               );
             })}
-          </div>
+          </ExpandableGrid>
         )}
 
         {/* ───────── Bottom CTA ───────── */}

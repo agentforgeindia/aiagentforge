@@ -179,7 +179,7 @@ const KEYWORDS: Record<Exclude<AgentCategory, "other">, RegExp> = {
   textile:
     /\b(textile|saree|sari|kurti|kurta|lehenga|sherwani|fabric|cloth(es|ing)?|fashion|kidswear|kid'?s\s*wear|shirt|t-shirt|tshirt|blouse|curtain|home\s*textile|drape|bed\s*sheet|men'?s\s*wear|women'?s\s*wear|knitwear)\b/i,
   productography:
-    /\b(productography|product\s*(shot|photo|photography|mockup|presentation|catalogue|catalog)|packshot|skincare|cosmetic|gadget|electronic|fmcg|d2c)\b/i,
+    /\b(productography|product\s*(shot|photo|photography|mockup|presentation|catalogue|catalog)|packshot|skincare|cosmetic|gadget|electronic|fmcg|d2c|watch|smartwatch|footwear|shoe|sneaker|sunglass(es)?|eyewear|headphone|earphone|bottle|perfume|mug)\b/i,
 };
 
 export function categorizeVideo(
@@ -189,8 +189,16 @@ export function categorizeVideo(
   // Manual override always wins.
   if (overrides && overrides[video.id]) return overrides[video.id];
 
-  const text = `${video.title} ${video.description}`;
+  // 1. The TITLE is the most reliable signal — match it first so a
+  //    boilerplate description (which often mentions "fashion" for
+  //    every video) can't drag a Watch/Product tutorial into textile.
+  const title = video.title;
+  if (KEYWORDS.jewellery.test(title)) return "jewellery";
+  if (KEYWORDS.textile.test(title)) return "textile";
+  if (KEYWORDS.productography.test(title)) return "productography";
 
+  // 2. Fall back to title + description.
+  const text = `${video.title} ${video.description}`;
   if (KEYWORDS.jewellery.test(text)) return "jewellery";
   if (KEYWORDS.textile.test(text)) return "textile";
   if (KEYWORDS.productography.test(text)) return "productography";
