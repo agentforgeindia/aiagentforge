@@ -53,6 +53,69 @@ export async function fetchChannelVideos(
   }
 }
 
+// ────────────────────────────────────────────────────────────
+// Full fetch via the YouTube Data API v3 (ALL videos, paginated).
+// ────────────────────────────────────────────────────────────
+// The RSS feed above only ever returns the latest 15 uploads — a
+// hard YouTube limit, so older tutorials silently drop off. When a
+// YOUTUBE_API_KEY is set we instead page through the channel's
+// "uploads" playlist and return every video. Falls back to RSS
+// (latest 15) when no key is configured.
+//
+// Setup: enable "YouTube Data API v3" in Google Cloud, create an
+// API key, set YOUTUBE_API_KEY in the environment.
+// ────────────────────────────────────────────────────────────
+export async function fetchAllChannelVideos(
+  channelId: string,
+): Promise<YouTubeVideo[]> {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  // A channel's uploads playlist id is the channel id with the
+  // leading "UC" swapped for "UU".
+  if (!apiKey || !channelId.startsWith("UC")) {
+    return fetchChannelVideos(channelId);
+  }
+  const uploadsId = "UU" + channelId.slice(2);
+  const out: YouTubeVideo[] = [];
+  let pageToken = "";
+
+  try {
+    // Safety cap: 20 pages × 50 = up to 1000 videos.
+    for (let i = 0; i < 20; i++) {
+      const url =
+        `https://www.googleapis.com/youtube/v3/playlistItems` +
+        `?part=snippet&maxResults=50&playlistId=${encodeURIComponent(uploadsId)}` +
+        (pageToken ? `&pageToken=${pageToken}` : "") +
+        `&key=${apiKey}`;
+      const res = await fetch(url, { next: { revalidate: CACHE_SECONDS } });
+      if (!res.ok) break;
+      const data = await res.json();
+      for (const item of data.items ?? []) {
+        const s = item?.snippet ?? {};
+        const id = s?.resourceId?.videoId;
+        if (!id) continue;
+        out.push({
+          id,
+          title: s.title ?? "",
+          description: s.description ?? "",
+          publishedAt: s.publishedAt ?? "",
+          url: `https://www.youtube.com/watch?v=${id}`,
+        });
+      }
+      pageToken = data?.nextPageToken ?? "";
+      if (!pageToken) break;
+    }
+  } catch {
+    // Network / quota error → fall back to whatever RSS gives.
+    if (out.length === 0) return fetchChannelVideos(channelId);
+  }
+
+  if (out.length === 0) return fetchChannelVideos(channelId);
+  return out.sort(
+    (a, b) =>
+      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
+  );
+}
+
 function parseChannelXml(xml: string): YouTubeVideo[] {
   const entries = xml.split(/<entry>/).slice(1); // first chunk is channel meta
   const videos: YouTubeVideo[] = [];

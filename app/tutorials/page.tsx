@@ -8,7 +8,7 @@ import Link from "next/link";
 import HeroSlider from "./HeroSlider";
 
 import {
-  fetchChannelVideos,
+  fetchAllChannelVideos,
   groupVideosByAgent,
   type AgentCategory,
   type YouTubeVideo,
@@ -108,7 +108,7 @@ export default async function TutorialsPage({
     : "all";
 
   // Fetch + group + drop hidden / marketing videos.
-  const all = await fetchChannelVideos(CHANNEL_ID);
+  const all = await fetchAllChannelVideos(CHANNEL_ID);
   const visible = all.filter((v) => !HIDDEN_VIDEO_IDS.has(v.id));
   const grouped = groupVideosByAgent(visible, VIDEO_OVERRIDES);
 
