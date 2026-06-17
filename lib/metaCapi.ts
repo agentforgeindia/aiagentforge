@@ -99,6 +99,12 @@ export async function sendMetaEvent(e: MetaEvent): Promise<void> {
     if (e.clientIp) user_data.client_ip_address = e.clientIp;
     if (e.userAgent) user_data.client_user_agent = e.userAgent;
 
+    // Meta requires at least one real identifier. Skip junk (e.g. test
+    // leads with dummy phone/email) so they don't pile up as failures.
+    if (!user_data.em && !user_data.ph && !user_data.fbc && !user_data.fbp && !user_data.client_ip_address) {
+      return;
+    }
+
     const custom_data: Record<string, unknown> = {};
     if (typeof e.value === "number") custom_data.value = e.value;
     if (e.currency) custom_data.currency = e.currency;
