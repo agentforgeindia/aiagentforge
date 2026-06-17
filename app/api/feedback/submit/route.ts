@@ -73,6 +73,33 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Failed to save feedback." }, { status: 500 });
   }
 
+  // Written feedback also becomes a PENDING testimonial — once the admin
+  // approves it, it shows in the on-page reviews slider. Best-effort: a
+  // failure here must not block the credit reward.
+  if (hasFeedback) {
+    try {
+      // Prefer the profile name, fall back to the email's local part.
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("id", user.id)
+        .maybeSingle();
+      const name =
+        (typeof prof?.name === "string" && prof.name.trim()) ||
+        user.email?.split("@")[0] ||
+        "AgentForge User";
+      await supabase.from("testimonials").insert({
+        name,
+        message: feedback!.trim(),
+        rating,
+        status: "pending",
+        source: agent || "textile",
+      });
+    } catch (e) {
+      console.error("[feedback/submit] testimonial insert skipped:", e);
+    }
+  }
+
   // Add credits atomically
   const { data: profileData, error: profileError } = await supabase
     .from("profiles")
