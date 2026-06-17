@@ -11,6 +11,7 @@ import {
   BadgeCheck,
   BarChart3,
   PieChart,
+  Radio,
   BookOpen,
   Bot,
   Briefcase,
@@ -125,6 +126,7 @@ const TILES: Tile[] = [
   { group: "Marketing", href: "/admin/email",          label: "Email",          description: "Templates, automation queue, test sends.",                icon: <Mail className="h-4 w-4" />,            perm: "email.view" },
   { group: "Marketing", href: "/admin/marketing",      label: "Marketing",      description: "Meta leads, Google leads, campaign performance.",        icon: <Megaphone className="h-4 w-4" />,       perm: "marketing.view" },
   { group: "Marketing", href: "/admin/analytics",      label: "Analytics",      description: "Meta Ads, Google Analytics, Clarity — all in one.",      icon: <BarChart3 className="h-4 w-4" />,       perm: "marketing.view" },
+  { group: "Marketing", href: "/admin/meta-capi",      label: "Meta CAPI",      description: "Conversions API events sent to Meta — Purchase, Lead, status.", icon: <Radio className="h-4 w-4" />,          perm: "marketing.view" },
   { group: "Marketing", href: "/admin/affiliates",     label: "Affiliates",     description: "Referral partners, commissions, payouts.",                icon: <Handshake className="h-4 w-4" />,       perm: "affiliates.view" },
 
   // ── Finance ──────────────────────────────────────────────────

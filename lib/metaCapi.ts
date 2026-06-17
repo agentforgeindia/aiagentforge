@@ -13,6 +13,38 @@
 // ============================================================
 
 import crypto from "crypto";
+import { createClient } from "@supabase/supabase-js";
+
+// Log every CAPI event to meta_capi_events so the admin can see what was
+// sent to Meta. Best-effort — never blocks the send.
+async function logCapiEvent(
+  e: MetaEvent,
+  ok: boolean,
+  statusCode: number | null,
+  error: string | null,
+) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return;
+  try {
+    const db = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    await db.from("meta_capi_events").insert({
+      event_name: e.eventName,
+      email: e.email ?? null,
+      phone: e.phone ?? null,
+      value: typeof e.value === "number" ? e.value : null,
+      currency: e.currency ?? null,
+      event_id: e.eventId ?? null,
+      ok,
+      status_code: statusCode,
+      error,
+    });
+  } catch {
+    /* logging must not block */
+  }
+}
 
 const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || "";
 const CAPI_TOKEN = process.env.META_CAPI_TOKEN || "";
@@ -93,11 +125,14 @@ export async function sendMetaEvent(e: MetaEvent): Promise<void> {
         cache: "no-store",
       },
     );
+    let error: string | null = null;
     if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      console.error("[meta-capi] event rejected:", res.status, text.slice(0, 300));
+      error = (await res.text().catch(() => "")).slice(0, 500);
+      console.error("[meta-capi] event rejected:", res.status, error);
     }
+    await logCapiEvent(e, res.ok, res.status, error);
   } catch (err) {
     console.error("[meta-capi] send failed:", err);
+    await logCapiEvent(e, false, null, String(err).slice(0, 500));
   }
 }
