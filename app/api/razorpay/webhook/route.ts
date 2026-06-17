@@ -164,6 +164,22 @@ export async function POST(request: Request) {
       // fall back to the webhook's slim entity if the fetch fails.
       const full = (await fetchFullPayment(razorpayPaymentId)) || payment;
       const slot = resolveWorkshopSlot(full);
+      // DEBUG: when a payment can't be auto-slotted, dump the full payment
+      // payload to Error Logs so we can see exactly which field carries the
+      // workshop day / page reference, then fix routing for good.
+      if (slot === "unassigned") {
+        try {
+          await supabaseAdmin.rpc("log_error", {
+            p_category: "payment",
+            p_source: "workshop-slot-debug",
+            p_message: `Workshop payment not auto-slotted (${razorpayPaymentId})`,
+            p_details: { payment: full },
+            p_user_id: null,
+          });
+        } catch {
+          /* logging must not block */
+        }
+      }
       const { error: wkErr } = await supabaseAdmin.rpc(
         "register_workshop_seat",
         {
