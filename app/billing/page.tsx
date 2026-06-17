@@ -412,7 +412,11 @@ export default function BillingPage() {
 
           await refreshBilling();
           setPayingPlan(null);
-          router.push("/payment-success");
+          // Pass the REAL amount/plan so the Purchase event reports the
+          // actual value (not a fixed default → Meta "same price" warning).
+          router.push(
+            `/payment-success?amount=${plan.amount}&plan=${encodeURIComponent(plan.name)}&payment_id=${response.razorpay_payment_id ?? ""}`,
+          );
         },
         modal: {
           ondismiss: () => {

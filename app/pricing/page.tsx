@@ -238,7 +238,9 @@ export default function PricingPage() {
             throw new Error(verifyData?.error || "Payment verification failed.");
           }
          setLoadingPlan(null);
-router.push("/payment-success");
+router.push(
+  `/payment-success?amount=${plan.amount}&plan=${encodeURIComponent(plan.name)}&payment_id=${response.razorpay_payment_id ?? ""}`,
+);
         },
         modal: {
           ondismiss: function () {
