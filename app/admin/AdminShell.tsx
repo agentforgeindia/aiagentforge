@@ -16,10 +16,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ChevronDown, ChevronRight, Clock, LogOut, Plus, Search, Sun, Moon, User } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Clock, LogOut, Menu, Plus, Search, Sun, Moon, User, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAdminPermissions } from "./AdminPermissions";
 import { useTheme } from "@/app/components/ThemeProvider";
+import Sidebar from "./Sidebar";
 import NotificationsBell from "./NotificationsBell";
 import CommandPalette from "./CommandPalette";
 import AttendanceTimer from "./AttendanceTimer";
@@ -150,6 +151,7 @@ export default function AdminShell({
   const { role, has, email: ctxEmail } = useAdminPermissions();
   const { darkMode, toggleTheme } = useTheme();
   const effectiveEmail = email ?? ctxEmail ?? null;
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const goBack = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -164,11 +166,70 @@ export default function AdminShell({
   };
 
   return (
-    <main className="min-h-screen bg-[#f7f8fb] text-slate-900 dark:bg-[#0b0d12] dark:text-slate-100">
-      {/* Top bar */}
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-[#0b0d12]/85">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-          <Link href="/admin" className="flex min-w-0 items-center gap-2">
+    <div className="min-h-screen bg-[#f7f8fb] text-slate-900 dark:bg-[#0b0d12] dark:text-slate-100">
+      {/* Persistent left sidebar (desktop) */}
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col bg-[#0b1120] lg:flex dark:bg-[#070b14]">
+        <Link
+          href="/admin"
+          className="flex h-14 shrink-0 items-center gap-2 border-b border-white/5 px-4"
+        >
+          <Image
+            src="/af-logo.png"
+            alt="AgentForge"
+            width={28}
+            height={28}
+            className="h-8 w-8 rounded-md bg-white object-contain p-0.5"
+          />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold tracking-tight text-white">
+              AgentForge
+            </p>
+            <p className="-mt-0.5 text-[9px] font-bold uppercase tracking-[0.2em] text-cyan-400/80">
+              Admin Console
+            </p>
+          </div>
+        </Link>
+        <Sidebar />
+      </aside>
+
+      {/* Mobile drawer */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setSidebarOpen(false)}
+          />
+          <aside className="absolute inset-y-0 left-0 flex w-64 flex-col bg-[#0b1120]">
+            <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/5 px-4">
+              <span className="text-sm font-bold text-white">AgentForge</span>
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(false)}
+                className="text-slate-400 hover:text-white"
+                aria-label="Close menu"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <Sidebar onNavigate={() => setSidebarOpen(false)} />
+          </aside>
+        </div>
+      )}
+
+      {/* Main column */}
+      <div className="lg:pl-60">
+        {/* Top bar */}
+        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-[#0b0d12]/85">
+          <div className="flex h-14 items-center justify-between gap-3 px-4 sm:px-6">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-600 lg:hidden dark:border-slate-700 dark:text-slate-300"
+              aria-label="Open menu"
+            >
+              <Menu className="h-4 w-4" />
+            </button>
+            <Link href="/admin" className="flex min-w-0 items-center gap-2 lg:hidden">
             <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-700">
               <Image
                 src="/af-logo.png"
@@ -314,10 +375,11 @@ export default function AdminShell({
           {children}
         </div>
       </div>
+      </div>
 
       {/* Global Cmd+K palette — single instance, listens at document level. */}
       <CommandPalette />
-    </main>
+    </div>
   );
 }
 
