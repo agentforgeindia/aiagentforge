@@ -16,6 +16,10 @@ import crypto from "crypto";
 
 const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || "";
 const CAPI_TOKEN = process.env.META_CAPI_TOKEN || "";
+// Optional: set to the code from Events Manager → Test events to make
+// events show up there in real time. Remove once verified so events
+// count as live.
+const TEST_CODE = process.env.META_CAPI_TEST_CODE || "";
 const GRAPH = "https://graph.facebook.com/v21.0";
 
 function sha256(value?: string | null): string | undefined {
@@ -77,12 +81,15 @@ export async function sendMetaEvent(e: MetaEvent): Promise<void> {
     if (e.eventSourceUrl) event.event_source_url = e.eventSourceUrl;
     if (Object.keys(custom_data).length) event.custom_data = custom_data;
 
+    const payload: Record<string, unknown> = { data: [event] };
+    if (TEST_CODE) payload.test_event_code = TEST_CODE;
+
     const res = await fetch(
       `${GRAPH}/${PIXEL_ID}/events?access_token=${encodeURIComponent(CAPI_TOKEN)}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: [event] }),
+        body: JSON.stringify(payload),
         cache: "no-store",
       },
     );
