@@ -23,16 +23,58 @@ const DAY_TO_SLOT: Record<string, string> = {
   "4": "28-june",
 };
 
+// Hosted Razorpay Payment Page id → workshop day. This is the most
+// reliable signal: the page id shows up in the (full) payment payload,
+// so routing no longer depends on per-payment notes propagating.
+const PAGE_TO_SLOT: Record<string, string> = {
+  pl_SrCcaEEG4lDJ4U: "20-june", // Day 01
+  pl_T0jBVjq7V3m6YC: "21-june", // Day 02
+  pl_T0jF2ojwXv8fB8: "27-june", // Day 03
+  pl_T0jC2JKtO63npD: "28-june", // Day 04
+};
+
 // Returns a valid workshop_slots slot_id, or 'unassigned' as a safe fallback
 // (that row is seeded by sql/workshop-payment-page-capture.sql, so the FK and
 // the admin list always accept it — the paid customer is never dropped).
 function resolveWorkshopSlot(payment: any): string {
+  // 1. Payment Page id anywhere in the payload (most reliable).
+  let raw = "";
+  try {
+    raw = JSON.stringify(payment || {});
+  } catch {
+    raw = "";
+  }
+  for (const [pid, slot] of Object.entries(PAGE_TO_SLOT)) {
+    if (raw.includes(pid)) return slot;
+  }
+  // 2. Explicit slot note (when notes do propagate).
   const notes = payment?.notes || {};
   if (notes.slot && WORKSHOP_SLOTS.has(String(notes.slot))) return String(notes.slot);
+  // 3. "Day 0N" in the page title / description.
   const blob = `${payment?.description ?? ""} ${notes.title ?? ""} ${notes.slot ?? ""}`;
   const m = blob.match(/day\s*0?(\d)/i);
   if (m && DAY_TO_SLOT[m[1]]) return DAY_TO_SLOT[m[1]];
   return "unassigned";
+}
+
+// Fetch the FULL payment from Razorpay. The webhook payload often carries
+// a slimmed-down payment entity (missing notes / page references); the
+// full fetch returns them, which is what slot resolution needs.
+async function fetchFullPayment(paymentId: string): Promise<any | null> {
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  if (!keyId || !keySecret || !paymentId) return null;
+  try {
+    const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
+    const res = await fetch(
+      `https://api.razorpay.com/v1/payments/${paymentId}?expand[]=invoice`,
+      { headers: { Authorization: `Basic ${auth}` }, cache: "no-store" },
+    );
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
 }
 
 function getSupabaseAdmin() {
@@ -117,17 +159,20 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "No payment id." }, { status: 400 });
       }
       const supabaseAdmin = getSupabaseAdmin();
-      const slot = resolveWorkshopSlot(payment);
+      // Use the FULL payment (notes + page reference) for slot routing;
+      // fall back to the webhook's slim entity if the fetch fails.
+      const full = (await fetchFullPayment(razorpayPaymentId)) || payment;
+      const slot = resolveWorkshopSlot(full);
       const { error: wkErr } = await supabaseAdmin.rpc(
         "register_workshop_seat",
         {
           p_slot_id: slot,
           p_order_id: razorpayOrderId || razorpayPaymentId,
           p_payment_id: razorpayPaymentId,
-          p_amount: payment?.amount ? Number(payment.amount) / 100 : 99,
-          p_name: payment?.notes?.name ?? null,
-          p_email: payment?.email ?? null,
-          p_phone: payment?.contact ?? null,
+          p_amount: full?.amount ? Number(full.amount) / 100 : 99,
+          p_name: full?.notes?.name ?? null,
+          p_email: full?.email ?? payment?.email ?? null,
+          p_phone: full?.contact ?? payment?.contact ?? null,
         },
       );
       if (wkErr) {
