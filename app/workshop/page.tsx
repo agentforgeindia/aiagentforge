@@ -43,7 +43,7 @@ const SLOTS = [
     day: "Sunday",
     time: "3:00 PM",
     dateTime: "2026-06-28T15:00:00+05:30",
-    paymentLink: "https://rzp.io/rzp/Ny5B2FIx",
+    paymentLink: "https://rzp.io/rzp/Ny5B2Flx",
     community: "https://chat.whatsapp.com/J3MK8J1bEHNJOdoFzYuv6s",
   },
 ];
