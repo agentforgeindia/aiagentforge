@@ -177,7 +177,7 @@ const KEYWORDS: Record<Exclude<AgentCategory, "other">, RegExp> = {
   jewellery:
     /\b(jewell?er(y|ies)|necklace|earring|ring|bracelet|pendant|mangalsutra|bangle|kada|payal|tikka|kundan|polki|diamond|gold(?!en hour)|silver|bridal\s*set|nose\s*pin)\b/i,
   textile:
-    /\b(textile|saree|sari|kurti|kurta|lehenga|sherwani|fabric|cloth(es|ing)?|fashion|kidswear|kid'?s\s*wear|shirt|t-shirt|tshirt|blouse|curtain|home\s*textile|drape|bed\s*sheet|men'?s\s*wear|women'?s\s*wear|knitwear)\b/i,
+    /\b(textile|saree|sari|kurti|kurta|lehenga|sherwani|fabric|cloth(es|ing)?|fashion|kidswear|kid'?s\s*wear|shirt|t-shirt|tshirt|blouse|curtain|home\s*textile|drape|bed\s*sheet|men'?s\s*wear|women'?s\s*wear|knitwear|dress|gown|frock|outfit|apparel|garment|suit|salwar|dupatta|anarkali|ethnic\s*wear|designer\s*wear|nightwear|loungewear|dress\s*material|print\s*to\s*mockup)\b/i,
   productography:
     /\b(productography|product\s*(shot|photo|photography|mockup|presentation|catalogue|catalog)|packshot|skincare|cosmetic|gadget|electronic|fmcg|d2c|watch|smartwatch|footwear|shoe|sneaker|sunglass(es)?|eyewear|headphone|earphone|bottle|perfume|mug)\b/i,
 };
