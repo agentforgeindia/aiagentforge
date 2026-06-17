@@ -43,7 +43,9 @@ async function ga4AccessToken(): Promise<string | null> {
   const email = process.env.GA4_SA_EMAIL?.trim();
   let key = process.env.GA4_SA_PRIVATE_KEY?.trim();
   if (!email || !key) { ga4LastError = "missing email/key"; return null; }
-  key = key.replace(/\\n/g, "\n");
+  // Strip accidental surrounding quotes, then turn escaped \n into real
+  // newlines — both are common causes of "DECODER routines::unsupported".
+  key = key.replace(/^["']|["']$/g, "").replace(/\\n/g, "\n").trim();
   try {
     const now = Math.floor(Date.now() / 1000);
     const header = { alg: "RS256", typ: "JWT" };
