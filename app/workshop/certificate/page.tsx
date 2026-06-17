@@ -98,9 +98,51 @@ export default function CertificatePage() {
   const [fontReady, setFontReady] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
+  // Backend verification — must confirm the email is a paid registrant
+  // for the chosen date before the certificate can be downloaded.
+  const [verifying, setVerifying] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [verifyError, setVerifyError] = useState("");
+
   const formattedDate = formatDate(dateValue);
   const canDownload =
-    name.trim().length > 0 && isValidEmail(email) && formattedDate.length > 0;
+    verified && name.trim().length > 0 && formattedDate.length > 0;
+
+  // Changing the email or date invalidates a previous verification.
+  useEffect(() => {
+    setVerified(false);
+    setVerifyError("");
+  }, [email, dateValue]);
+
+  const verifyRegistration = async () => {
+    setVerifyError("");
+    if (!isValidEmail(email)) {
+      setVerifyError("Enter a valid email.");
+      return;
+    }
+    setVerifying(true);
+    try {
+      const res = await fetch("/api/workshop/verify-certificate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), date: dateValue }),
+      });
+      const data = await res.json();
+      if (data?.verified) {
+        setVerified(true);
+        // Use the registered name on record if the field is still empty.
+        if (data.name && !name.trim()) setName(String(data.name));
+      } else {
+        setVerified(false);
+        setVerifyError(data?.error || "Could not verify this registration.");
+      }
+    } catch {
+      setVerified(false);
+      setVerifyError("Could not verify right now. Try again.");
+    } finally {
+      setVerifying(false);
+    }
+  };
 
   // Unlock dates based on today, and select the latest unlocked one.
   useEffect(() => {
@@ -316,6 +358,36 @@ export default function CertificatePage() {
           </div>
         </div>
 
+        {/* Verify registration — required before download */}
+        <div className="mx-auto mt-6 max-w-md text-center">
+          <button
+            type="button"
+            onClick={verifyRegistration}
+            disabled={verifying || verified}
+            className={`inline-flex w-full items-center justify-center rounded-2xl px-8 py-3.5 text-sm font-black uppercase tracking-[0.12em] transition ${
+              verified
+                ? "cursor-default bg-emerald-100 text-emerald-700"
+                : "bg-slate-900 text-white hover:scale-[1.02] active:scale-95"
+            } ${verifying ? "opacity-70" : ""}`}
+          >
+            {verifying
+              ? "Verifying…"
+              : verified
+                ? "✓ Registration verified"
+                : "Verify my registration"}
+          </button>
+          {verifyError && (
+            <p className="mt-3 rounded-xl bg-rose-50 px-4 py-2.5 text-xs font-bold text-rose-700">
+              {verifyError}
+            </p>
+          )}
+          {!verified && !verifyError && (
+            <p className="mt-3 text-xs font-semibold text-slate-500">
+              Enter the email you registered / paid with, pick your date, then verify.
+            </p>
+          )}
+        </div>
+
         {/* Preview */}
         <div className="mx-auto max-w-4xl overflow-hidden rounded-[2rem] border border-white/60 bg-white p-3 shadow-2xl shadow-cyan-100/60">
           <canvas ref={canvasRef} className="h-auto w-full rounded-[1.5rem]" />
@@ -337,7 +409,9 @@ export default function CertificatePage() {
               ? "Generating…"
               : canDownload
                 ? "Download Certificate (PDF) →"
-                : "Enter name & email to download"}
+                : verified
+                  ? "Enter your name to download"
+                  : "Verify your registration first"}
           </button>
           <p className="mt-4 text-xs font-semibold text-slate-500">
             Your certificate is for the AgentForge AI Workshop.
