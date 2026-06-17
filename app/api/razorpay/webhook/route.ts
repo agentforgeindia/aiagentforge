@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
+import { sendMetaEvent } from "@/lib/metaCapi";
 
 export const runtime = "nodejs";
 
@@ -182,6 +183,17 @@ export async function POST(request: Request) {
           { status: 500 },
         );
       }
+      // Meta Conversions API — tell Meta this paid conversion happened so
+      // it can optimise ads for buyers (no-op until META_CAPI_TOKEN is set).
+      await sendMetaEvent({
+        eventName: "Purchase",
+        email: full?.email ?? payment?.email,
+        phone: full?.contact ?? payment?.contact,
+        value: full?.amount ? Number(full.amount) / 100 : 99,
+        currency: "INR",
+        eventId: razorpayPaymentId,
+        actionSource: "website",
+      });
       return NextResponse.json({ success: true, recorded: true, slot });
     }
 
@@ -248,6 +260,17 @@ export async function POST(request: Request) {
     } catch (e) {
       console.error("[razorpay-webhook] record_referral_earning failed:", e);
     }
+
+    // Meta Conversions API — plan purchase (no-op until token is set).
+    await sendMetaEvent({
+      eventName: "Purchase",
+      email: payment?.email,
+      phone: payment?.contact,
+      value: plan.amount,
+      currency: "INR",
+      eventId: razorpayPaymentId,
+      actionSource: "website",
+    });
 
     return NextResponse.json({
       success: true,

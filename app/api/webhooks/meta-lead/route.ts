@@ -27,6 +27,7 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
+import { sendMetaEvent } from "@/lib/metaCapi";
 
 export const runtime = "nodejs";
 
@@ -240,6 +241,16 @@ export async function POST(request: Request) {
         continue;
       }
       inserted++;
+      // Meta Conversions API — mirror this CRM lead back as a "Lead"
+      // event so Meta's qualified-leads optimisation sees the funnel
+      // (no-op until META_CAPI_TOKEN is set).
+      await sendMetaEvent({
+        eventName: "Lead",
+        email,
+        phone,
+        eventId: leadgenId,
+        actionSource: "system_generated",
+      });
     }
   }
 
