@@ -617,7 +617,14 @@ export default function WebinarLandingPage() {
 
                 <button
                   type="button"
-                  onClick={() => handleJoin(slot)}
+                  onClick={() => {
+                    if (isFull || isBusy) return;
+                    // Hosted Razorpay Payment Page for this date — user fills
+                    // their details on Razorpay's page. Configure each link in
+                    // the Razorpay dashboard to redirect to
+                    // /workshop/thankyou?slot=<id> after a successful payment.
+                    window.location.href = slot.paymentLink;
+                  }}
                   disabled={isFull || isBusy}
                   className={`mt-5 inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-black uppercase tracking-wide text-white shadow-lg transition ${
                     isFull
