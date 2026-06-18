@@ -48,12 +48,15 @@ function resolveWorkshopSlot(payment: any): string {
   for (const [pid, slot] of Object.entries(PAGE_TO_SLOT)) {
     if (raw.includes(pid)) return slot;
   }
-  // 2. Explicit slot note (when notes do propagate).
-  const notes = payment?.notes || {};
-  if (notes.slot && WORKSHOP_SLOTS.has(String(notes.slot))) return String(notes.slot);
-  // 3. "Day 0N" in the page title / description.
-  const blob = `${payment?.description ?? ""} ${notes.title ?? ""} ${notes.slot ?? ""}`;
-  const m = blob.match(/day\s*0?(\d)/i);
+  // 2. An explicit slot value anywhere in the payload (a propagated note,
+  //    invoice field, etc.) — "20-june" / "21-june" / ...
+  for (const s of WORKSHOP_SLOTS) {
+    if (raw.includes(s)) return s;
+  }
+  // 3. The page title "… Day 0N" ANYWHERE in the full payload — for hosted
+  //    Payment Pages this rides in the invoice line-item / description even
+  //    when payment.notes is empty. Scan the whole stringified payload.
+  const m = raw.match(/day\s*0?([1-4])(?!\d)/i);
   if (m && DAY_TO_SLOT[m[1]]) return DAY_TO_SLOT[m[1]];
   return "unassigned";
 }
