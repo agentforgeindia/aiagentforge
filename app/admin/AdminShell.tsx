@@ -16,10 +16,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ChevronDown, ChevronRight, Clock, LogOut, Menu, Plus, Search, Sun, Moon, User, X } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Clock, LogOut, Menu, Plus, Search, User, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAdminPermissions } from "./AdminPermissions";
-import { useTheme } from "@/app/components/ThemeProvider";
 import Sidebar from "./Sidebar";
 import NotificationsBell from "./NotificationsBell";
 import CommandPalette from "./CommandPalette";
@@ -149,9 +148,19 @@ export default function AdminShell({
 }) {
   const router = useRouter();
   const { role, has, email: ctxEmail } = useAdminPermissions();
-  const { darkMode, toggleTheme } = useTheme();
   const effectiveEmail = email ?? ctxEmail ?? null;
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Admin console is always light. Force-remove any dark theme the rest of
+  // the site may have set, and restore it when leaving the admin section.
+  useEffect(() => {
+    const root = document.documentElement;
+    const hadDark = root.classList.contains("dark");
+    root.classList.remove("dark");
+    return () => {
+      if (hadDark) root.classList.add("dark");
+    };
+  }, []);
 
   const goBack = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -283,15 +292,6 @@ export default function AdminShell({
                 <span className="hidden sm:inline">New lead</span>
               </Link>
             )}
-            {/* Theme toggle */}
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-              aria-label="Toggle theme"
-            >
-              {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
             {/* My Profile link */}
             <Link
               href="/admin/my-profile"

@@ -93,6 +93,52 @@ insert into public.admin_roles (id, label, description, permissions) values
     ARRAY[
       'customers.view','customers.edit_notes',
       'leads.view','leads.add','leads.edit','leads.assign','leads.export'
+    ]),
+  ('head_dept', 'Head of Departments', 'Senior head — oversees every department + team, no founder-only system controls.',
+    ARRAY[
+      'dashboard.view',
+      'customers.view','customers.edit_notes',
+      'leads.view','leads.add','leads.edit','leads.assign','leads.export',
+      'tasks.view','email.view','marketing.view','affiliates.view',
+      'invoices.view_all','invoices.download','subscriptions.view',
+      'credits.view','finance.view',
+      'agents.view','ai_ops.view','ai_costs.view',
+      'support.view','approvals.view',
+      'team.view','incentives.view','hr.view','kb.view',
+      'content.view','testimonials.manage','audit.view'
+    ]),
+  ('manager', 'Manager', 'Department manager — operations + reports, no billing/system/team-role edits.',
+    ARRAY[
+      'dashboard.view',
+      'customers.view','customers.edit_notes',
+      'leads.view','leads.add','leads.edit','leads.assign',
+      'tasks.view','marketing.view',
+      'support.view','approvals.view','incentives.view','kb.view','ai_ops.view'
+    ]),
+  ('team_lead', 'Team Leader', 'Leads a team — its leads, customers and tasks. No billing.',
+    ARRAY[
+      'dashboard.view','customers.view',
+      'leads.view','leads.add','leads.edit','leads.assign',
+      'tasks.view','support.view','kb.view','incentives.view'
+    ]),
+  ('sales_head', 'Sales Head', 'Owns the full sales pipeline and team targets.',
+    ARRAY[
+      'dashboard.view','customers.view','customers.edit_notes',
+      'leads.view','leads.add','leads.edit','leads.delete','leads.assign','leads.export',
+      'tasks.view','incentives.view','kb.view','support.view'
+    ]),
+  ('support_head', 'Support Head', 'Owns customer support — tickets, refunds, approvals.',
+    ARRAY[
+      'dashboard.view','support.view','approvals.view',
+      'customers.view','customers.edit_notes','kb.view'
+    ]),
+  ('marketing_head', 'Marketing Head', 'Owns marketing — campaigns, email, analytics, affiliates.',
+    ARRAY[
+      'dashboard.view','marketing.view','email.view','affiliates.view','kb.view'
+    ]),
+  ('hr_head', 'HR Head', 'Owns people ops — HR, hiring, attendance, knowledge base.',
+    ARRAY[
+      'dashboard.view','hr.view','team.view','kb.view'
     ])
 on conflict (id) do update
   set label = excluded.label,

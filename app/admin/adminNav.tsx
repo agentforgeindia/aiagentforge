@@ -106,9 +106,9 @@ export const TILES: Tile[] = [
   { group: "Sales & CRM", href: "/admin/leads",          label: "Leads",          description: "Inbound prospects from ads and outreach.",                icon: <UserPlus className="h-4 w-4" />,        perm: "leads.view" },
   { group: "Sales & CRM", href: "/admin/sales",          label: "Sales Command",  description: "Calling queue, hot leads, followups, missed leads.",     icon: <Phone className="h-4 w-4" />,           perm: "leads.view" },
   { group: "Sales & CRM", href: "/admin/caller-reports", label: "Caller Reports", description: "Daily calling numbers — calls, demos, hot leads, paid.",  icon: <PhoneCall className="h-4 w-4" />,       perm: "leads.view" },
-  { group: "Sales & CRM", href: "/admin/caller-gpt",     label: "Caller GPT",     description: "Live AI calling assistant — instant objection replies.", icon: <Sparkles className="h-4 w-4" />,        perm: "leads.view" },
+  { group: "Sales & CRM", href: "/admin/caller-gpt",     label: "Caller GPT",     description: "Live AI calling assistant — instant objection replies.", icon: <Sparkles className="h-4 w-4" />,        perm: "any" },
   { group: "Sales & CRM", href: "/admin/sales-room",     label: "Sales War Room", description: "Team ranks, sales, incentives, kudos, achievers, targets.", icon: <Trophy className="h-4 w-4" />,         perm: "leads.view" },
-  { group: "Sales & CRM", href: "/admin/templates",      label: "Templates & Links", description: "WhatsApp templates + all page/social links, copy-ready.", icon: <MessageCircle className="h-4 w-4" />,   perm: "leads.view" },
+  { group: "Sales & CRM", href: "/admin/templates",      label: "Templates & Links", description: "WhatsApp templates + all page/social links, copy-ready.", icon: <MessageCircle className="h-4 w-4" />,   perm: "any" },
   { group: "Sales & CRM", href: "/admin/deals",          label: "Deals",          description: "Formal deal pipeline — proposals, negotiations, closures.", icon: <Briefcase className="h-4 w-4" />,       perm: "leads.view" },
   { group: "Sales & CRM", href: "/admin/tasks",          label: "Tasks",          description: "Follow-ups, demos, payment reminders.",                   icon: <CheckSquare className="h-4 w-4" />,     perm: "tasks.view" },
   { group: "Sales & CRM", href: "/admin/demo-requests",  label: "Demo Requests",  description: "Customize-demo bookings from the website — build, send, push to leads.", icon: <Sparkles className="h-4 w-4" />,        perm: "leads.view" },
@@ -133,7 +133,7 @@ export const TILES: Tile[] = [
   { group: "AI", href: "/admin/ai-operations",  label: "AI Operations",  description: "Generations, failures, credits consumed, performance.",  icon: <Zap className="h-4 w-4" />,             perm: "ai_ops.view" },
   { group: "AI", href: "/admin/generation-log", label: "Generation Log", description: "Every generation — agent, user, status, cost to company.", icon: <ScrollText className="h-4 w-4" />,      perm: "ai_ops.view" },
   { group: "AI", href: "/admin/ai-costs",       label: "AI Costs",       description: "API spend per agent, top consumers, margin analysis.",   icon: <Coins className="h-4 w-4" />,           perm: "ai_costs.view" },
-  { group: "AI", href: "/admin/ai-assistant",   label: "AI Assistant",   description: "Meeting summaries, sales coaching, WhatsApp reply drafts.", icon: <Sparkles className="h-4 w-4" />,        perm: "dashboard.view" },
+  { group: "AI", href: "/admin/ai-assistant",   label: "AI Assistant",   description: "Meeting summaries, sales coaching, WhatsApp reply drafts.", icon: <Sparkles className="h-4 w-4" />,        perm: "any" },
   { group: "AI", href: "/admin/team-assistant", label: "Team Assistant", description: "Universal helper — ask anything, training, draft replies. No internal financials.", icon: <Bot className="h-4 w-4" />, perm: "leads.view" },
 
   // ── Support ──

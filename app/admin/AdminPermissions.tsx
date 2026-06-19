@@ -47,6 +47,8 @@ export type AdminPermissionsState = {
 const PermissionsCtx = createContext<AdminPermissionsState | null>(null);
 
 function matchesPermission(perm: string, owned: string[]): boolean {
+  // "any" = open to every admin regardless of role (e.g. shared AI tools).
+  if (perm === "any") return true;
   if (!owned || owned.length === 0) return false;
   if (owned.includes("*")) return true;
   if (owned.includes(perm)) return true;
