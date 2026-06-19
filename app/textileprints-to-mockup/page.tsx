@@ -1660,6 +1660,21 @@ export default function Home() {
     }
   }, [showResult]);
 
+  // Ask for a rating when the result viewer is closed (not only on
+  // download) so the post-generation review reliably appears. The
+  // "already reviewed" / "never ask" guards are checked before showing.
+  const resultModalWasOpen = useRef(false);
+  useEffect(() => {
+    if (resultModalWasOpen.current && !resultModalOpen) {
+      const skip =
+        reviewedResult ||
+        (typeof window !== "undefined" &&
+          localStorage.getItem("textile_rating_never_ask") === "1");
+      if (!skip) setShowRatingModal(true);
+    }
+    resultModalWasOpen.current = resultModalOpen;
+  }, [resultModalOpen, reviewedResult]);
+
   useEffect(() => {
     if (!loading) {
       setFactIndex(0);
@@ -2427,6 +2442,14 @@ export default function Home() {
       stepTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 100);
 
+    // Clear the previous run so a new design can be generated without a
+    // manual page refresh: drop finished/failed items, close the result
+    // viewer, reset focus, and re-arm the post-generation rating prompt.
+    setItems((prev) => prev.filter((it) => it.status !== "done" && it.status !== "failed"));
+    setActiveId(null);
+    setResultModalOpen(false);
+    setReviewedResult(false);
+
     const planText = String(
       profile?.plan ||
         profile?.package ||
@@ -2869,6 +2892,21 @@ export default function Home() {
       ),
     );
     setActiveId(item.id);
+
+    // Drop a notification in the user's bell so they have a record of
+    // the finished mockup (best-effort — never block on it).
+    try {
+      await supabase.rpc("add_user_notification", {
+        p_user_id: userId,
+        p_title: "✅ Your textile mockup is ready!",
+        p_body: item.designNumber
+          ? `Design ${item.designNumber} — tap to view & download.`
+          : "Tap to view & download your new mockup.",
+        p_link: "/textileprints-to-mockup",
+      });
+    } catch {
+      /* notification is best-effort */
+    }
 
     // Rating is asked AFTER the user downloads — not now. We only
     // remember which generation the rating will be tied to.
