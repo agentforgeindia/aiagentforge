@@ -1217,6 +1217,33 @@ export default function JewelleryAIPage() {
     setGeneratedOutputUrl("");
   }, []);
 
+  // Post-generation flow (mirrors the textile agent):
+  //  • result ready → notify the user (bell) with a My Creations link
+  //  • result viewer closed → ask for a rating, then clear the uploaded
+  //    design + output so a NEW design can be uploaded without a refresh.
+  const jwPrevResultOpen = useRef(false);
+  useEffect(() => {
+    if (!jwPrevResultOpen.current && resultModalOpen && authUser?.id) {
+      supabase
+        .rpc("add_user_notification", {
+          p_user_id: authUser.id,
+          p_title: "✅ Your jewellery mockup is ready!",
+          p_body: "View it anytime in My Creations.",
+          p_link: "/my-creations",
+        })
+        .then(() => {}, () => {});
+      if (typeof window !== "undefined")
+        window.dispatchEvent(new Event("af-notifications-refresh"));
+    }
+    if (jwPrevResultOpen.current && !resultModalOpen) {
+      if (!reviewedResult) setShowRatingModal(true);
+      setUploads([]);
+      setGeneratedOutputUrl("");
+      setBuilderStep(1);
+    }
+    jwPrevResultOpen.current = resultModalOpen;
+  }, [resultModalOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     try {
       const savedSettings = window.localStorage.getItem(JEWELLERY_SETTINGS_KEY);
