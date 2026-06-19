@@ -42,11 +42,16 @@ const SLOT_ALIASES: Record<string, string> = {
   "28june": "28-june",
 };
 
-export function resolveSlot(raw: string | null | undefined): SlotInfo | null {
+// Canonical slot id (e.g. "20-june") from a path segment or alias.
+export function resolveSlotId(raw: string | null | undefined): string | null {
   if (!raw) return null;
   const key = String(raw).toLowerCase().trim();
-  const id = SLOT_COMMUNITIES[key] ? key : SLOT_ALIASES[key];
-  return id && SLOT_COMMUNITIES[id] ? SLOT_COMMUNITIES[id] : null;
+  return SLOT_COMMUNITIES[key] ? key : (SLOT_ALIASES[key] ?? null);
+}
+
+export function resolveSlot(raw: string | null | undefined): SlotInfo | null {
+  const id = resolveSlotId(raw);
+  return id ? SLOT_COMMUNITIES[id] : null;
 }
 
 // If the slot can't be resolved we fall back to the Day-1 community.
@@ -77,6 +82,26 @@ export default function ThankYouContent({ slot }: { slot?: string | null }) {
       /* pixel not loaded — no-op */
     }
     // run once per thank-you view
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-assign the registration to the correct day. Hosted Razorpay Payment
+  // Pages don't carry the day in the payment, so the webhook records the seat
+  // as "unassigned"; this redirect (one page per day) finally pins it. The
+  // server re-checks the payment with Razorpay, so this is safe to call
+  // client-side. Best-effort: a failure just leaves it for a manual fix.
+  useEffect(() => {
+    const slotId = resolveSlotId(slot);
+    if (!slotId) return;
+    const paymentId = new URLSearchParams(window.location.search).get(
+      "razorpay_payment_id",
+    );
+    if (!paymentId) return;
+    fetch("/api/workshop/assign-slot", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ payment_id: paymentId, slot: slotId }),
+    }).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
