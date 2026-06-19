@@ -1666,11 +1666,17 @@ export default function Home() {
   const resultModalWasOpen = useRef(false);
   useEffect(() => {
     if (resultModalWasOpen.current && !resultModalOpen) {
+      // Ask for the rating on close (unless already done / opted out).
       const skip =
         reviewedResult ||
         (typeof window !== "undefined" &&
           localStorage.getItem("textile_rating_never_ask") === "1");
       if (!skip) setShowRatingModal(true);
+      // Clear the finished run so the agent page is fresh for a NEW
+      // design — the uploaded design is removed, no page refresh needed.
+      setItems([]);
+      setActiveId(null);
+      setBuilderStep(1);
     }
     resultModalWasOpen.current = resultModalOpen;
   }, [resultModalOpen, reviewedResult]);
@@ -2898,12 +2904,16 @@ export default function Home() {
     try {
       await supabase.rpc("add_user_notification", {
         p_user_id: userId,
-        p_title: "✅ Your textile mockup is ready!",
+        p_title: "✅ Your mockup is ready!",
         p_body: item.designNumber
-          ? `Design ${item.designNumber} — tap to view & download.`
-          : "Tap to view & download your new mockup.",
-        p_link: "/textileprints-to-mockup",
+          ? `Design ${item.designNumber} — view it anytime in My Creations.`
+          : "Your new mockup is saved — view it anytime in My Creations.",
+        p_link: "/my-creations",
       });
+      // Tell the navbar bell to refresh now so the user sees it instantly
+      // (the bell otherwise only loads on page mount).
+      if (typeof window !== "undefined")
+        window.dispatchEvent(new Event("af-notifications-refresh"));
     } catch {
       /* notification is best-effort */
     }

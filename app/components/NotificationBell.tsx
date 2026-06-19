@@ -73,6 +73,12 @@ export default function NotificationBell() {
   useEffect(() => {
     setLastSeen(Number(localStorage.getItem(SEEN_KEY) || 0));
     load();
+    // Refresh instantly when something (e.g. a finished generation)
+    // adds a notification on the same page.
+    const onRefresh = () => load();
+    window.addEventListener("af-notifications-refresh", onRefresh);
+    return () =>
+      window.removeEventListener("af-notifications-refresh", onRefresh);
   }, []);
 
   useEffect(() => {

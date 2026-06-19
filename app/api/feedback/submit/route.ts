@@ -92,7 +92,11 @@ export async function POST(req: Request) {
         name,
         message: feedback!.trim(),
         rating,
-        status: "pending",
+        // Show in the on-page reviews slider immediately for 4-5★ (the
+        // slider filters by agent_type + status="approved"). 1-3★ wait
+        // for admin review so the public slider stays positive.
+        status: rating >= 4 ? "approved" : "pending",
+        agent_type: agent || "textile",
         source: agent || "textile",
       });
     } catch (e) {
