@@ -10,9 +10,13 @@ create table if not exists public.announcements (
   title       text not null,
   body        text,
   link        text,
+  image_url   text,
   is_active   boolean not null default true,
   created_at  timestamptz not null default now()
 );
+
+-- Add the image column to an already-created table (safe to re-run).
+alter table public.announcements add column if not exists image_url text;
 
 create index if not exists announcements_active_idx
   on public.announcements (is_active, created_at desc);

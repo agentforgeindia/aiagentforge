@@ -10,6 +10,7 @@ type Item = {
   title: string;
   body?: string | null;
   link?: string | null;
+  image_url?: string | null;
   created_at: string;
   kind: "broadcast" | "user";
   is_read?: boolean;
@@ -172,6 +173,15 @@ export default function NotificationBell() {
                   <p className="text-sm font-bold">{a.title}</p>
                   {a.body && (
                     <p className={`mt-1 text-xs leading-5 ${muted}`}>{a.body}</p>
+                  )}
+                  {a.image_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={a.image_url}
+                      alt=""
+                      loading="lazy"
+                      className="mt-2 max-h-44 w-full rounded-lg object-cover"
+                    />
                   )}
                   <div className="mt-1.5 flex items-center justify-between">
                     <span className={`text-[10px] ${muted}`}>

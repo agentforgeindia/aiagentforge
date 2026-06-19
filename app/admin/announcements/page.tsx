@@ -10,6 +10,7 @@ import { supabase } from "@/lib/supabase";
 import {
   ChevronDown,
   Eye,
+  Image as ImageIcon,
   Megaphone,
   RefreshCw,
   ShieldCheck,
@@ -28,6 +29,7 @@ type Ann = {
   title: string;
   body: string | null;
   link: string | null;
+  image_url: string | null;
   is_active: boolean;
   created_at: string;
 };
@@ -57,6 +59,8 @@ export default function AdminAnnouncementsPage() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [link, setLink] = useState("");
+  const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
 
   // Per-announcement seen tracking.
@@ -124,13 +128,18 @@ export default function AdminAnnouncementsPage() {
     if (!title.trim()) return;
     setPosting(true);
     try {
+      // FormData so the image rides along; the browser sets the
+      // multipart boundary — do NOT set Content-Type manually.
+      const fd = new FormData();
+      fd.append("title", title);
+      fd.append("body", body);
+      fd.append("link", link);
+      if (image) fd.append("image", image);
+
       const res = await fetch("/api/admin/announcements", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${await token()}`,
-        },
-        body: JSON.stringify({ title, body, link }),
+        headers: { Authorization: `Bearer ${await token()}` },
+        body: fd,
       });
       const json = await res.json();
       if (!res.ok) {
@@ -140,6 +149,8 @@ export default function AdminAnnouncementsPage() {
       setTitle("");
       setBody("");
       setLink("");
+      setImage(null);
+      setImagePreview(null);
       setRefreshKey((k) => k + 1);
     } finally {
       setPosting(false);
@@ -245,6 +256,49 @@ export default function AdminAnnouncementsPage() {
           placeholder="Link (optional) — e.g. /pricing"
           className={adminInputCls}
         />
+        {/* Image (optional) — rides along with the notification */}
+        <div>
+          {imagePreview ? (
+            <div className="relative inline-block">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imagePreview}
+                alt="preview"
+                className="h-32 w-auto rounded-lg border border-slate-200 object-cover dark:border-slate-700"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setImage(null);
+                  setImagePreview(null);
+                }}
+                className="absolute -right-2 -top-2 rounded-full bg-rose-600 p-1 text-white shadow"
+                aria-label="Remove image"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">
+              <ImageIcon className="h-4 w-4" />
+              Add image (optional) — max 5 MB
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] || null;
+                  if (f && f.size > 5 * 1024 * 1024) {
+                    alert("Image must be under 5 MB.");
+                    return;
+                  }
+                  setImage(f);
+                  setImagePreview(f ? URL.createObjectURL(f) : null);
+                }}
+              />
+            </label>
+          )}
+        </div>
         <div className="flex justify-end">
           <button
             type="button"
@@ -277,6 +331,14 @@ export default function AdminAnnouncementsPage() {
               return (
                 <li key={a.id} className="px-4 py-3">
                   <div className="flex items-start gap-3">
+                    {a.image_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={a.image_url}
+                        alt=""
+                        className="h-12 w-12 shrink-0 rounded-lg border border-slate-200 object-cover dark:border-slate-700"
+                      />
+                    )}
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-bold">{a.title}</p>
                       {a.body && (

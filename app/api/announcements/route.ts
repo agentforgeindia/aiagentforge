@@ -21,7 +21,7 @@ export async function GET() {
     const db = svc();
     const { data, error } = await db
       .from("announcements")
-      .select("id, title, body, link, created_at")
+      .select("id, title, body, link, image_url, created_at")
       .eq("is_active", true)
       .order("created_at", { ascending: false })
       .limit(20);
