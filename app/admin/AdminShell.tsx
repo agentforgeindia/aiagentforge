@@ -258,7 +258,7 @@ export default function AdminShell({
             </div>
           </Link>
 
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2">
             {/* Attendance Timer */}
             {effectiveEmail && <AttendanceTimer email={effectiveEmail} />}
             {/* Search hint — clicking dispatches Cmd+K. */}
