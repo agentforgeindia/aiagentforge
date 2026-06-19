@@ -88,10 +88,18 @@ export async function POST(req: Request) {
         (typeof prof?.name === "string" && prof.name.trim()) ||
         user.email?.split("@")[0] ||
         "AgentForge User";
+      // The uploader's own profile photo (Google/OAuth avatar) so the
+      // review card shows their picture instead of just initials.
+      const meta = (user as any)?.user_metadata ?? {};
+      const avatarUrl =
+        (typeof meta.avatar_url === "string" && meta.avatar_url) ||
+        (typeof meta.picture === "string" && meta.picture) ||
+        null;
       await supabase.from("testimonials").insert({
         name,
         message: feedback!.trim(),
         rating,
+        avatar_url: avatarUrl,
         // Show in the on-page reviews slider immediately for 4-5★ (the
         // slider filters by agent_type + status="approved"). 1-3★ wait
         // for admin review so the public slider stays positive.

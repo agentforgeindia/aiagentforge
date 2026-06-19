@@ -8,6 +8,9 @@
 
 alter table public.testimonials enable row level security;
 
+-- Uploader's profile photo (auth avatar) shown on the review card.
+alter table public.testimonials add column if not exists avatar_url text;
+
 -- Anyone (logged-in or anon) may submit a PENDING review.
 drop policy if exists "testimonials public submit" on public.testimonials;
 create policy "testimonials public submit"

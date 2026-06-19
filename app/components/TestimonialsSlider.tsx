@@ -24,6 +24,7 @@ export type Testimonial = {
   message: string;
   rating: number; // 1-5
   imageUrl?: string;
+  avatarUrl?: string; // uploader's profile photo (auth avatar)
   createdAt: string; // ISO
   source?: "whatsapp" | "email" | "in-app" | string;
 };
@@ -115,7 +116,7 @@ export default function TestimonialsSlider({
       try {
         const { data, error } = await supabase
           .from("testimonials")
-          .select("id, name, city, message, rating, image_url, created_at, source")
+          .select("id, name, city, message, rating, image_url, avatar_url, created_at, source")
           .eq("agent_type", agentType)
           .eq("status", "approved")
           .order("created_at", { ascending: false })
@@ -129,6 +130,7 @@ export default function TestimonialsSlider({
           message: row.message,
           rating: row.rating ?? 5,
           imageUrl: row.image_url || undefined,
+          avatarUrl: row.avatar_url || undefined,
           createdAt: row.created_at,
           source: row.source || "in-app",
         }));
@@ -381,7 +383,17 @@ export default function TestimonialsSlider({
                 {/* WhatsApp-style header */}
                 <div className="relative flex items-center gap-3 border-b border-emerald-100/60 bg-gradient-to-r from-emerald-50 to-emerald-100/80 p-4 dark:border-emerald-400/15 dark:from-emerald-500/10 dark:to-emerald-500/5">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 text-sm font-black text-white shadow-md">
-                    {initial}
+                    {t.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={t.avatarUrl}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      initial
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1">
