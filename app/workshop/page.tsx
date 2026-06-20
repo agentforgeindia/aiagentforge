@@ -43,8 +43,7 @@ const SLOTS = [
     day: "Saturday",
     time: "7:00 PM",
     dateTime: "2026-07-04T19:00:00+05:30",
-    // TODO: replace with the real 4 July Razorpay payment-page link.
-    paymentLink: "",
+    paymentLink: "https://rzp.io/rzp/4july2026",
     community: "https://chat.whatsapp.com/F4ZfEeVXEmv2NaTwe4aIbs",
   },
 ];
