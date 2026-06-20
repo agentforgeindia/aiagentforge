@@ -44,7 +44,7 @@ const SLOTS = [
     time: "7:00 PM",
     dateTime: "2026-07-04T19:00:00+05:30",
     paymentLink: "https://rzp.io/rzp/4july2026",
-    community: "https://chat.whatsapp.com/F4ZfEeVXEmv2NaTwe4aIbs",
+    community: "https://chat.whatsapp.com/IZ164dIxs462nOgWvGglAh",
   },
 ];
 
