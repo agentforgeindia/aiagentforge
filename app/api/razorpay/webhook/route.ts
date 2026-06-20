@@ -12,7 +12,7 @@ const PLAN_CONFIG: Record<string, { amount: number; credits: number }> = {
 };
 
 // Workshop slot ids seeded in sql/workshop.sql.
-const WORKSHOP_SLOTS = new Set(["20-june", "21-june", "27-june", "28-june"]);
+const WORKSHOP_SLOTS = new Set(["20-june", "21-june", "27-june", "28-june", "4-july"]);
 
 // Hosted Razorpay Payment Pages name themselves "... Day 01..04" and carry
 // no app notes. Map the Day number to a slot date. EDIT this if your Day
@@ -22,6 +22,7 @@ const DAY_TO_SLOT: Record<string, string> = {
   "2": "21-june",
   "3": "27-june",
   "4": "28-june",
+  "5": "4-july",
 };
 
 // Hosted Razorpay Payment Page id → workshop day. This is the most

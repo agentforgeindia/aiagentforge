@@ -14,6 +14,7 @@ const DATE_TO_SLOT: Record<string, string> = {
   "2026-06-21": "21-june",
   "2026-06-27": "27-june",
   "2026-06-28": "28-june",
+  "2026-07-04": "4-july",
 };
 
 function svc() {

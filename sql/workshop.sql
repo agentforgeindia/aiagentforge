@@ -35,7 +35,8 @@ insert into public.workshop_slots (slot_id, label, max_seats) values
   ('20-june', '20 June 2026 (Saturday, 7:00 PM)', 100),
   ('21-june', '21 June 2026 (Sunday, 3:00 PM)',   100),
   ('27-june', '27 June 2026 (Saturday, 7:00 PM)', 100),
-  ('28-june', '28 June 2026 (Sunday, 3:00 PM)',   100)
+  ('28-june', '28 June 2026 (Sunday, 3:00 PM)',   100),
+  ('4-july',  '4 July 2026 (Saturday, 7:00 PM)',  100)
 on conflict (slot_id) do update
   set label = excluded.label;
 

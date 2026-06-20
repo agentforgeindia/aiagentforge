@@ -11,15 +11,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 // the slot_id rows in sql/workshop.sql.
 const SLOTS = [
   {
-    id: "20-june",
-    date: "20 June 2026",
-    day: "Saturday",
-    time: "7:00 PM",
-    dateTime: "2026-06-20T19:00:00+05:30",
-    paymentLink: "https://rzp.io/rzp/QAjgXm7y",
-    community: "https://chat.whatsapp.com/F4ZfEeVXEmv2NaTwe4aIbs",
-  },
-  {
     id: "21-june",
     date: "21 June 2026",
     day: "Sunday",
@@ -45,6 +36,16 @@ const SLOTS = [
     dateTime: "2026-06-28T15:00:00+05:30",
     paymentLink: "https://rzp.io/rzp/Ny5B2Flx",
     community: "https://chat.whatsapp.com/J3MK8J1bEHNJOdoFzYuv6s",
+  },
+  {
+    id: "4-july",
+    date: "4 July 2026",
+    day: "Saturday",
+    time: "7:00 PM",
+    dateTime: "2026-07-04T19:00:00+05:30",
+    // TODO: replace with the real 4 July Razorpay payment-page link.
+    paymentLink: "",
+    community: "https://chat.whatsapp.com/F4ZfEeVXEmv2NaTwe4aIbs",
   },
 ];
 
@@ -623,6 +624,10 @@ export default function WebinarLandingPage() {
                     // their details on Razorpay's page. Configure each link in
                     // the Razorpay dashboard to redirect to
                     // /workshop/thankyou?slot=<id> after a successful payment.
+                    if (!slot.paymentLink) {
+                      alert("Is slot ki registration jaldi shuru hogi. Thodi der me try karein.");
+                      return;
+                    }
                     window.location.href = slot.paymentLink;
                   }}
                   disabled={isFull || isBusy}

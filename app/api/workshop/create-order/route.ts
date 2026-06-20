@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 const WORKSHOP_PRICE = 99; // rupees
 
-const VALID_SLOTS = new Set(["20-june", "21-june", "27-june", "28-june"]);
+const VALID_SLOTS = new Set(["20-june", "21-june", "27-june", "28-june", "4-july"]);
 
 function svc() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

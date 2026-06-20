@@ -28,6 +28,11 @@ export const SLOT_COMMUNITIES: Record<string, SlotInfo> = {
     ordinal: "Fourth",
     community: "https://chat.whatsapp.com/J3MK8J1bEHNJOdoFzYuv6s",
   },
+  "4-july": {
+    date: "4 July 2026 · Saturday · 7:00 PM",
+    ordinal: "Fifth",
+    community: "https://chat.whatsapp.com/F4ZfEeVXEmv2NaTwe4aIbs",
+  },
 };
 
 // Accept a few friendly aliases so the redirect URL is forgiving.
@@ -36,10 +41,12 @@ const SLOT_ALIASES: Record<string, string> = {
   day2: "21-june",
   day3: "27-june",
   day4: "28-june",
+  day5: "4-july",
   "20june": "20-june",
   "21june": "21-june",
   "27june": "27-june",
   "28june": "28-june",
+  "4july": "4-july",
 };
 
 // Canonical slot id (e.g. "20-june") from a path segment or alias.
