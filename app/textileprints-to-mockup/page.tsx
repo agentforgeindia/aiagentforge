@@ -4489,67 +4489,92 @@ export default function Home() {
                                 : "Choose a studio pose — or upload your own scene to place the product into it."}
                             </p>
 
-                            {/* Upload Your Scene — replaces the old "Auto" option.
-                                When a scene is uploaded the product is composited
-                                INTO it (overrides pose & background). */}
-                            <div className="mt-3">
-                              {referenceSceneUrl ? (
-                                <div className="relative inline-block">
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
-                                    src={referenceSceneUrl}
-                                    alt="Your scene"
-                                    className="h-40 w-auto rounded-2xl border border-cyan-400/30 object-cover"
-                                  />
+                            {/* Grid: "Upload Your Scene" card (replaces the old
+                                "Auto") rendered like a pose card, then the poses. */}
+                            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+                              <label
+                                className={`group relative flex min-h-[116px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
+                                  referenceSceneUrl
+                                    ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
+                                    : darkMode
+                                      ? "bg-white/[0.045] hover:-translate-y-1 hover:bg-white/[0.08]"
+                                      : "bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10"
+                                } ${sceneUploading ? "pointer-events-none opacity-60" : ""}`}
+                              >
+                                <div
+                                  className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${
+                                    referenceSceneUrl ? "shadow-lg shadow-cyan-400/25" : "shadow-sm"
+                                  }`}
+                                >
+                                  {referenceSceneUrl ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
+                                      src={referenceSceneUrl}
+                                      alt=""
+                                      className="block h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <span className="text-3xl" aria-hidden="true">
+                                      📷
+                                    </span>
+                                  )}
+                                </div>
+                                <p
+                                  className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${
+                                    referenceSceneUrl
+                                      ? "text-[#0077b6]"
+                                      : darkMode
+                                        ? "text-white/70"
+                                        : "text-black/70"
+                                  }`}
+                                >
+                                  {sceneUploading
+                                    ? "Uploading…"
+                                    : referenceSceneUrl
+                                      ? "Scene Ready ✓"
+                                      : "Upload Your Scene"}
+                                </p>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  disabled={sceneUploading}
+                                  onChange={async (e) => {
+                                    const f = e.target.files?.[0];
+                                    if (!f) return;
+                                    if (!f.type.startsWith("image/")) {
+                                      alert("Please upload an image file.");
+                                      e.target.value = "";
+                                      return;
+                                    }
+                                    setSceneUploading(true);
+                                    try {
+                                      const url = await uploadFile(f);
+                                      setReferenceSceneUrl(url);
+                                    } catch {
+                                      alert("Scene upload failed. Please try again.");
+                                    } finally {
+                                      setSceneUploading(false);
+                                      e.target.value = "";
+                                    }
+                                  }}
+                                />
+                                {referenceSceneUrl && (
                                   <button
                                     type="button"
-                                    onClick={() => setReferenceSceneUrl("")}
-                                    className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-rose-600 text-xs font-black text-white shadow"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setReferenceSceneUrl("");
+                                    }}
+                                    className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow"
                                     aria-label="Remove scene"
                                   >
                                     ✕
                                   </button>
-                                </div>
-                              ) : (
-                                <label
-                                  className={`inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-dashed px-5 py-4 text-sm font-bold transition ${
-                                    darkMode
-                                      ? "border-white/15 text-white/80 hover:bg-white/5"
-                                      : "border-cyan-400/40 text-cyan-700 hover:bg-cyan-50"
-                                  } ${sceneUploading ? "pointer-events-none opacity-60" : ""}`}
-                                >
-                                  {sceneUploading ? "Uploading…" : "📷 Upload Your Scene"}
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    disabled={sceneUploading}
-                                    onChange={async (e) => {
-                                      const f = e.target.files?.[0];
-                                      if (!f) return;
-                                      if (!f.type.startsWith("image/")) {
-                                        alert("Please upload an image file.");
-                                        e.target.value = "";
-                                        return;
-                                      }
-                                      setSceneUploading(true);
-                                      try {
-                                        const url = await uploadFile(f);
-                                        setReferenceSceneUrl(url);
-                                      } catch {
-                                        alert("Scene upload failed. Please try again.");
-                                      } finally {
-                                        setSceneUploading(false);
-                                        e.target.value = "";
-                                      }
-                                    }}
-                                  />
-                                </label>
-                              )}
-                            </div>
+                                )}
+                              </label>
 
-                            {/* Studio poses ("Auto" replaced by Upload Your Scene above). */}
-                            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                               {studioPoseOptions
                                 .filter((p) => p !== "Auto")
                                 .map((item) => (
