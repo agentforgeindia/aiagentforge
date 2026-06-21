@@ -1558,6 +1558,10 @@ export default function Home() {
   // Shoot-style sub-selectors.
   const [outdoorBackground, setOutdoorBackground] = useState("Royal Palace");
   const [studioPose, setStudioPose] = useState("Auto");
+  // User-uploaded reference scene — when set, the product is composited
+  // INTO this photo (e.g. a styled Pinterest room) instead of a preset BG.
+  const [referenceSceneUrl, setReferenceSceneUrl] = useState("");
+  const [sceneUploading, setSceneUploading] = useState(false);
 
   const [showPromptBox, setShowPromptBox] = useState(false);
   const [showTextBox, setShowTextBox] = useState(false);
@@ -1677,6 +1681,7 @@ export default function Home() {
       setItems([]);
       setActiveId(null);
       setBuilderStep(1);
+      setReferenceSceneUrl("");
     }
     resultModalWasOpen.current = resultModalOpen;
   }, [resultModalOpen, reviewedResult]);
@@ -2714,6 +2719,9 @@ export default function Home() {
         `Category: ${textileCategory}`,
         `Model usage / interaction: ${modelUsage}`,
         ...extraPromptHints,
+        referenceSceneUrl
+          ? "REFERENCE SCENE PROVIDED (see reference_scene_url): Place the product naturally INTO this uploaded scene, replacing the existing furnishing/product in that photo. Match the scene's lighting, perspective, shadows, depth and overall style so it looks real. Keep the rest of the scene unchanged."
+          : "",
         showFaceExpression
           ? `Model face expression: ${resolvedFaceExpression}`
           : "No face expression needed because no human face/model is selected.",
@@ -2755,6 +2763,8 @@ export default function Home() {
         generation_id: generationId,
         // user_id deliberately omitted — server stamps it from JWT.
         design_url: item.url,
+        // Optional: user's own scene to composite the product into.
+        reference_scene_url: referenceSceneUrl || "",
 
         textile_category: textileCategory,
         model_usage: modelUsage,
@@ -4493,6 +4503,75 @@ export default function Home() {
                             </div>
                           </div>
                         )}
+                    </section>
+
+                    {/* Upload Your Own Scene — composite the product INTO the
+                        user's own styled photo (e.g. a Pinterest room). When
+                        set, this overrides the chosen background/shoot style. */}
+                    <section>
+                      <h4 className="mb-2 text-base font-black uppercase tracking-widest text-cyan-600 sm:text-lg">
+                        Upload Your Own Scene{" "}
+                        <span className="text-xs font-bold text-cyan-500">(optional)</span>
+                      </h4>
+                      <p className={`mb-3 text-xs ${muted}`}>
+                        Apni styled photo upload karo (jaise Pinterest ka room ya
+                        table setting) — AI tumhare product ko usi scene me daal
+                        dega, original furnishing hata ke (lighting & perspective
+                        match karke). Ye upar chuna background override karega.
+                      </p>
+                      {referenceSceneUrl ? (
+                        <div className="relative inline-block">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={referenceSceneUrl}
+                            alt="Your scene"
+                            className="h-40 w-auto rounded-2xl border border-cyan-400/30 object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setReferenceSceneUrl("")}
+                            className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-rose-600 text-xs font-black text-white shadow"
+                            aria-label="Remove scene"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <label
+                          className={`inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-dashed px-5 py-4 text-sm font-bold transition ${
+                            darkMode
+                              ? "border-white/15 text-white/80 hover:bg-white/5"
+                              : "border-cyan-400/40 text-cyan-700 hover:bg-cyan-50"
+                          } ${sceneUploading ? "pointer-events-none opacity-60" : ""}`}
+                        >
+                          {sceneUploading ? "Uploading…" : "📷 Upload Your Scene"}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={sceneUploading}
+                            onChange={async (e) => {
+                              const f = e.target.files?.[0];
+                              if (!f) return;
+                              if (!f.type.startsWith("image/")) {
+                                alert("Please upload an image file.");
+                                e.target.value = "";
+                                return;
+                              }
+                              setSceneUploading(true);
+                              try {
+                                const url = await uploadFile(f);
+                                setReferenceSceneUrl(url);
+                              } catch {
+                                alert("Scene upload failed. Please try again.");
+                              } finally {
+                                setSceneUploading(false);
+                                e.target.value = "";
+                              }
+                            }}
+                          />
+                        </label>
+                      )}
                     </section>
                   </div>
                 )}
