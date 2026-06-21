@@ -4485,94 +4485,89 @@ export default function Home() {
                             </p>
                             <p className={`mt-1 text-xs ${muted}`}>
                               {isHomeLikeCategory
-                                ? "Choose the studio camera angle / pose for the shot."
-                                : "Choose how the model is posed in the studio shot."}
+                                ? "Choose a studio angle / pose — or upload your own scene to place the product into it."
+                                : "Choose a studio pose — or upload your own scene to place the product into it."}
                             </p>
+
+                            {/* Upload Your Scene — replaces the old "Auto" option.
+                                When a scene is uploaded the product is composited
+                                INTO it (overrides pose & background). */}
+                            <div className="mt-3">
+                              {referenceSceneUrl ? (
+                                <div className="relative inline-block">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={referenceSceneUrl}
+                                    alt="Your scene"
+                                    className="h-40 w-auto rounded-2xl border border-cyan-400/30 object-cover"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => setReferenceSceneUrl("")}
+                                    className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-rose-600 text-xs font-black text-white shadow"
+                                    aria-label="Remove scene"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              ) : (
+                                <label
+                                  className={`inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-dashed px-5 py-4 text-sm font-bold transition ${
+                                    darkMode
+                                      ? "border-white/15 text-white/80 hover:bg-white/5"
+                                      : "border-cyan-400/40 text-cyan-700 hover:bg-cyan-50"
+                                  } ${sceneUploading ? "pointer-events-none opacity-60" : ""}`}
+                                >
+                                  {sceneUploading ? "Uploading…" : "📷 Upload Your Scene"}
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    disabled={sceneUploading}
+                                    onChange={async (e) => {
+                                      const f = e.target.files?.[0];
+                                      if (!f) return;
+                                      if (!f.type.startsWith("image/")) {
+                                        alert("Please upload an image file.");
+                                        e.target.value = "";
+                                        return;
+                                      }
+                                      setSceneUploading(true);
+                                      try {
+                                        const url = await uploadFile(f);
+                                        setReferenceSceneUrl(url);
+                                      } catch {
+                                        alert("Scene upload failed. Please try again.");
+                                      } finally {
+                                        setSceneUploading(false);
+                                        e.target.value = "";
+                                      }
+                                    }}
+                                  />
+                                </label>
+                              )}
+                            </div>
+
+                            {/* Studio poses ("Auto" replaced by Upload Your Scene above). */}
                             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-                              {studioPoseOptions.map((item) => (
-                                <OptionCard
-                                  key={item}
-                                  title={item}
-                                  active={studioPose === item}
-                                  onClick={() => setStudioPose(item)}
-                                  darkMode={darkMode}
-                                  useGlyph
-                                  imgSrc={STUDIO_POSE_ICONS[item]}
-                                />
-                              ))}
+                              {studioPoseOptions
+                                .filter((p) => p !== "Auto")
+                                .map((item) => (
+                                  <OptionCard
+                                    key={item}
+                                    title={item}
+                                    active={studioPose === item}
+                                    onClick={() => setStudioPose(item)}
+                                    darkMode={darkMode}
+                                    useGlyph
+                                    imgSrc={STUDIO_POSE_ICONS[item]}
+                                  />
+                                ))}
                             </div>
                           </div>
                         )}
                     </section>
 
-                    {/* Upload Your Own Scene — composite the product INTO the
-                        user's own styled photo (e.g. a Pinterest room). When
-                        set, this overrides the chosen background/shoot style. */}
-                    <section>
-                      <h4 className="mb-2 text-base font-black uppercase tracking-widest text-cyan-600 sm:text-lg">
-                        Upload Your Own Scene{" "}
-                        <span className="text-xs font-bold text-cyan-500">(optional)</span>
-                      </h4>
-                      <p className={`mb-3 text-xs ${muted}`}>
-                        Apni styled photo upload karo (jaise Pinterest ka room ya
-                        table setting) — AI tumhare product ko usi scene me daal
-                        dega, original furnishing hata ke (lighting & perspective
-                        match karke). Ye upar chuna background override karega.
-                      </p>
-                      {referenceSceneUrl ? (
-                        <div className="relative inline-block">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={referenceSceneUrl}
-                            alt="Your scene"
-                            className="h-40 w-auto rounded-2xl border border-cyan-400/30 object-cover"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setReferenceSceneUrl("")}
-                            className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-rose-600 text-xs font-black text-white shadow"
-                            aria-label="Remove scene"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ) : (
-                        <label
-                          className={`inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-dashed px-5 py-4 text-sm font-bold transition ${
-                            darkMode
-                              ? "border-white/15 text-white/80 hover:bg-white/5"
-                              : "border-cyan-400/40 text-cyan-700 hover:bg-cyan-50"
-                          } ${sceneUploading ? "pointer-events-none opacity-60" : ""}`}
-                        >
-                          {sceneUploading ? "Uploading…" : "📷 Upload Your Scene"}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            disabled={sceneUploading}
-                            onChange={async (e) => {
-                              const f = e.target.files?.[0];
-                              if (!f) return;
-                              if (!f.type.startsWith("image/")) {
-                                alert("Please upload an image file.");
-                                e.target.value = "";
-                                return;
-                              }
-                              setSceneUploading(true);
-                              try {
-                                const url = await uploadFile(f);
-                                setReferenceSceneUrl(url);
-                              } catch {
-                                alert("Scene upload failed. Please try again.");
-                              } finally {
-                                setSceneUploading(false);
-                                e.target.value = "";
-                              }
-                            }}
-                          />
-                        </label>
-                      )}
-                    </section>
                   </div>
                 )}
 
