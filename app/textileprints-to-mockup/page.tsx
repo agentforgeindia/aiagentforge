@@ -4317,7 +4317,7 @@ export default function Home() {
                                   // eslint-disable-next-line @next/next/no-img-element
                                   <img src={modelPhotoUrl} alt="" className="block h-full w-full object-cover" />
                                 ) : (
-                                  <span className="text-3xl" aria-hidden="true">🤳</span>
+                                  <UploadCloud className="h-9 w-9 text-cyan-500" aria-hidden="true" />
                                 )}
                               </div>
                               <p
