@@ -1313,7 +1313,8 @@ const face = (g: string, e: string) => `/model-faces/${g}-${e}.png`;
 // Single / couple / family / none — driven by the Model-Scene Usage pick.
 function modelLookMode(usage: string): "single" | "couple" | "family" | "none" {
   const u = (usage || "").toLowerCase();
-  if (u.includes("mannequin") || u.includes("no model")) return "none";
+  if (u.includes("mannequin") || u.includes("no model") || u.includes("upload"))
+    return "none";
   if (u.includes("couple")) return "couple";
   if (u.includes("family")) return "family";
   return "single";
@@ -1629,7 +1630,8 @@ export default function Home() {
   const dynamicPoseOptions = isHomeLikeCategory
     ? homeSceneOptions
     : apparelPoseOptions;
-  const showFaceExpression = !/no model|flat lay|mannequin/i.test(modelUsage);
+  const showFaceExpression =
+    !/no model|flat lay|mannequin|upload your model/i.test(modelUsage);
   const builderStepMeta = [
     { id: 1, title: "Product", sub: "Category + product" },
     { id: 2, title: "Model", sub: "Usage + look" },
@@ -4423,12 +4425,12 @@ export default function Home() {
                             className="mt-0.5 h-4 w-4 shrink-0 accent-cyan-600"
                           />
                           <span>
-                            Ye meri apni photo hai (ya mujhe iski permission hai) aur
-                            main ise sirf is textile preview ke liye use kar raha/rahi
-                            hoon. AgentForge ise generate ke baad delete kar dega.
+                            This is my own photo (or I have permission to use it),
+                            and I will use it only for this textile preview.
+                            AgentForge will delete it after the result is generated.
                             {isFreePlan && (
                               <span className="font-bold">
-                                {" "}Free plan: {TRYON_FREE_LIMIT} try-on tak.
+                                {" "}Free plan: up to {TRYON_FREE_LIMIT} try-ons.
                               </span>
                             )}
                           </span>
@@ -4443,9 +4445,18 @@ export default function Home() {
 
                       {modelLookDisabled ? (
                         <div className={`rounded-2xl border border-dashed p-5 text-center text-sm ${darkMode ? "border-white/15 bg-white/[0.03] text-white/55" : "border-black/15 bg-black/[0.02] text-slate-500"}`}>
-                          Model Look is not applicable for{" "}
-                          <span className="font-bold">{modelUsage}</span> — no
-                          human model is used here.
+                          {modelUsage === "Upload Your Model" ? (
+                            <>
+                              Using your uploaded photo — the model, face and pose
+                              come from your photo.
+                            </>
+                          ) : (
+                            <>
+                              Model Look is not applicable for{" "}
+                              <span className="font-bold">{modelUsage}</span> — no
+                              human model is used here.
+                            </>
+                          )}
                         </div>
                       ) : (
                         <>
@@ -4520,6 +4531,7 @@ export default function Home() {
 
                 {builderStep === 3 && (
                   <div className="space-y-6">
+                    {modelUsage !== "Upload Your Model" && (
                     <section>
                       <p className="mb-4 text-base font-black uppercase tracking-widest text-cyan-600 sm:text-lg">
                         5. {isHomeLikeCategory ? "Scene / View" : "Pose"}
@@ -4549,6 +4561,7 @@ export default function Home() {
                         setCustomPose,
                       )}
                     </section>
+                    )}
 
                     {showFaceExpression && (
                       <section>
