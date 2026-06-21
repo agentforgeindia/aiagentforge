@@ -1313,8 +1313,7 @@ const face = (g: string, e: string) => `/model-faces/${g}-${e}.png`;
 // Single / couple / family / none — driven by the Model-Scene Usage pick.
 function modelLookMode(usage: string): "single" | "couple" | "family" | "none" {
   const u = (usage || "").toLowerCase();
-  if (u.includes("mannequin") || u.includes("no model") || u.includes("upload"))
-    return "none";
+  if (u.includes("mannequin") || u.includes("no model")) return "none";
   if (u.includes("couple")) return "couple";
   if (u.includes("family")) return "family";
   return "single";
@@ -1630,8 +1629,7 @@ export default function Home() {
   const dynamicPoseOptions = isHomeLikeCategory
     ? homeSceneOptions
     : apparelPoseOptions;
-  const showFaceExpression =
-    !/no model|flat lay|mannequin|upload your model/i.test(modelUsage);
+  const showFaceExpression = !/no model|flat lay|mannequin/i.test(modelUsage);
   const builderStepMeta = [
     { id: 1, title: "Product", sub: "Category + product" },
     { id: 2, title: "Model", sub: "Usage + look" },
@@ -2713,7 +2711,7 @@ export default function Home() {
       company_website_position: companyWebsitePosition,
       company_address_position: companyAddressPosition,
       textile_category: textileCategory,
-      model_usage: modelUsage,
+      model_usage: modelUsage === "Upload Your Model" ? "Single Model" : modelUsage,
       model_type: resolvedModelType,
       product_type: resolvedSudanGarment || resolvedProduct,
       shoot_style: resolvedShootStyle,
@@ -2737,7 +2735,7 @@ export default function Home() {
       custom_instruction: [
         customInstruction,
         `Category: ${textileCategory}`,
-        `Model usage / interaction: ${modelUsage}`,
+        `Model usage / interaction: ${modelUsage === "Upload Your Model" ? "Single Model" : modelUsage}`,
         ...extraPromptHints,
         referenceSceneUrl
           ? "REFERENCE SCENE PROVIDED (see reference_scene_url): Place the product naturally INTO this uploaded scene, replacing the existing furnishing/product in that photo. Match the scene's lighting, perspective, shadows, depth and overall style so it looks real. Keep the rest of the scene unchanged."
@@ -2792,7 +2790,7 @@ export default function Home() {
         model_photo_url: modelPhotoUrl || "",
 
         textile_category: textileCategory,
-        model_usage: modelUsage,
+        model_usage: modelUsage === "Upload Your Model" ? "Single Model" : modelUsage,
         model_type: resolvedModelType,
         product_type: resolvedSudanGarment || resolvedProduct,
         shoot_style: resolvedShootStyle,
@@ -4531,7 +4529,6 @@ export default function Home() {
 
                 {builderStep === 3 && (
                   <div className="space-y-6">
-                    {modelUsage !== "Upload Your Model" && (
                     <section>
                       <p className="mb-4 text-base font-black uppercase tracking-widest text-cyan-600 sm:text-lg">
                         5. {isHomeLikeCategory ? "Scene / View" : "Pose"}
@@ -4561,7 +4558,6 @@ export default function Home() {
                         setCustomPose,
                       )}
                     </section>
-                    )}
 
                     {showFaceExpression && (
                       <section>
