@@ -1264,7 +1264,7 @@ const productOptionsByCategory: Record<TextileCategory, string[]> = {
 
 const apparelModelUsageOptions = [
   "Single Model",
-  "Couple Model",
+  "Upload Your Model",
   "Family Scene",
   "Mannequin",
 ];
@@ -1562,6 +1562,22 @@ export default function Home() {
   // INTO this photo (e.g. a styled Pinterest room) instead of a preset BG.
   const [referenceSceneUrl, setReferenceSceneUrl] = useState("");
   const [sceneUploading, setSceneUploading] = useState(false);
+  // Virtual try-on — user uploads their own photo, the garment is rendered
+  // on THAT person. Consent is mandatory; free plans are capped to 3 uses.
+  const [modelPhotoUrl, setModelPhotoUrl] = useState("");
+  const [modelPhotoUploading, setModelPhotoUploading] = useState(false);
+  const [tryOnConsent, setTryOnConsent] = useState(false);
+  const TRYON_FREE_LIMIT = 3;
+  const TRYON_USED_KEY = "af_textile_tryon_used";
+  const tryOnPlanText = String(
+    profile?.plan ??
+      profile?.package ??
+      profile?.current_plan ??
+      profile?.subscription_plan ??
+      profile?.plan_name ??
+      "",
+  ).toLowerCase();
+  const isFreePlan = !tryOnPlanText || tryOnPlanText.includes("free");
 
   const [showPromptBox, setShowPromptBox] = useState(false);
   const [showTextBox, setShowTextBox] = useState(false);
@@ -1682,6 +1698,8 @@ export default function Home() {
       setActiveId(null);
       setBuilderStep(1);
       setReferenceSceneUrl("");
+      setModelPhotoUrl("");
+      setTryOnConsent(false);
     }
     resultModalWasOpen.current = resultModalOpen;
   }, [resultModalOpen, reviewedResult]);
@@ -2722,6 +2740,9 @@ export default function Home() {
         referenceSceneUrl
           ? "REFERENCE SCENE PROVIDED (see reference_scene_url): Place the product naturally INTO this uploaded scene, replacing the existing furnishing/product in that photo. Match the scene's lighting, perspective, shadows, depth and overall style so it looks real. Keep the rest of the scene unchanged."
           : "",
+        modelPhotoUrl
+          ? "VIRTUAL TRY-ON (see model_photo_url): Render this garment on the EXACT person in the uploaded model photo. Preserve their face, identity, body shape and skin tone exactly — do not change the face. Keep them fully clothed, realistic and tasteful. Absolutely no nudity, no sexualisation and no inappropriate content."
+          : "",
         showFaceExpression
           ? `Model face expression: ${resolvedFaceExpression}`
           : "No face expression needed because no human face/model is selected.",
@@ -2765,6 +2786,8 @@ export default function Home() {
         design_url: item.url,
         // Optional: user's own scene to composite the product into.
         reference_scene_url: referenceSceneUrl || "",
+        // Optional: user's own photo for a virtual try-on (garment on them).
+        model_photo_url: modelPhotoUrl || "",
 
         textile_category: textileCategory,
         model_usage: modelUsage,
@@ -3007,6 +3030,35 @@ export default function Home() {
     if (!userId) {
       setShowSignupPopup(true);
       return;
+    }
+
+    // Virtual try-on safeguards: photo + consent required; free plans capped.
+    if (modelUsage === "Upload Your Model") {
+      if (!modelPhotoUrl) {
+        alert("Apni photo upload karein — Model step me 'Upload Your Model' card.");
+        setBuilderStep(2);
+        return;
+      }
+      if (!tryOnConsent) {
+        alert("Please tick the consent checkbox to generate with your own photo.");
+        return;
+      }
+      if (isFreePlan) {
+        const used = Number(
+          (typeof window !== "undefined" && localStorage.getItem(TRYON_USED_KEY)) || 0,
+        );
+        if (used >= TRYON_FREE_LIMIT) {
+          alert(
+            `Free plan me Virtual Try-On sirf ${TRYON_FREE_LIMIT} baar use ho sakta hai. Unlimited ke liye apna plan upgrade karein.`,
+          );
+          return;
+        }
+        try {
+          localStorage.setItem(TRYON_USED_KEY, String(used + queue.length));
+        } catch {
+          /* soft limit only */
+        }
+      }
     }
 
     if (!hasSavedPhoneNumber(profile)) {
@@ -4242,29 +4294,146 @@ export default function Home() {
                       </h4>
 
                       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
-                        {dynamicModelUsageOptions.map((item) => (
-                          <OptionCard
-                            key={item}
-                            title={item}
-                            active={modelUsage === item}
-                            onClick={() => {
-                              setModelUsage(item);
-                              if (/no model|flat lay|mannequin/i.test(item)) {
-                                setCustomFaceExpression("");
+                        {dynamicModelUsageOptions.map((item) =>
+                          item === "Upload Your Model" ? (
+                            <label
+                              key={item}
+                              className={`group relative flex min-h-[116px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
+                                modelUsage === item
+                                  ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
+                                  : darkMode
+                                    ? "bg-white/[0.045] hover:-translate-y-1 hover:bg-white/[0.08]"
+                                    : "bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10"
+                              } ${modelPhotoUploading ? "pointer-events-none opacity-60" : ""}`}
+                            >
+                              <div
+                                className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${
+                                  modelPhotoUrl ? "shadow-lg shadow-cyan-400/25" : "shadow-sm"
+                                }`}
+                              >
+                                {modelPhotoUrl ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img src={modelPhotoUrl} alt="" className="block h-full w-full object-cover" />
+                                ) : (
+                                  <span className="text-3xl" aria-hidden="true">🤳</span>
+                                )}
+                              </div>
+                              <p
+                                className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${
+                                  modelUsage === item ? "text-[#0077b6]" : darkMode ? "text-white/70" : "text-black/70"
+                                }`}
+                              >
+                                {modelPhotoUploading
+                                  ? "Uploading…"
+                                  : modelPhotoUrl
+                                    ? "Your Photo ✓"
+                                    : "Upload Your Model"}
+                              </p>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                disabled={modelPhotoUploading}
+                                onChange={async (e) => {
+                                  const f = e.target.files?.[0];
+                                  if (!f) return;
+                                  if (!f.type.startsWith("image/")) {
+                                    alert("Please upload a photo (image file).");
+                                    e.target.value = "";
+                                    return;
+                                  }
+                                  if (isFreePlan) {
+                                    const used = Number(
+                                      (typeof window !== "undefined" &&
+                                        localStorage.getItem(TRYON_USED_KEY)) || 0,
+                                    );
+                                    if (used >= TRYON_FREE_LIMIT) {
+                                      alert(
+                                        `Free plan me Virtual Try-On sirf ${TRYON_FREE_LIMIT} baar use ho sakta hai. Unlimited ke liye apna plan upgrade karein.`,
+                                      );
+                                      e.target.value = "";
+                                      return;
+                                    }
+                                  }
+                                  setModelPhotoUploading(true);
+                                  try {
+                                    const url = await uploadFile(f);
+                                    setModelPhotoUrl(url);
+                                    setModelUsage("Upload Your Model");
+                                    setCustomFaceExpression("");
+                                  } catch {
+                                    alert("Photo upload failed. Please try again.");
+                                  } finally {
+                                    setModelPhotoUploading(false);
+                                    e.target.value = "";
+                                  }
+                                }}
+                              />
+                              {modelPhotoUrl && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setModelPhotoUrl("");
+                                    setTryOnConsent(false);
+                                    if (modelUsage === "Upload Your Model")
+                                      setModelUsage("Single Model");
+                                  }}
+                                  className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow"
+                                  aria-label="Remove photo"
+                                >
+                                  ✕
+                                </button>
+                              )}
+                            </label>
+                          ) : (
+                            <OptionCard
+                              key={item}
+                              title={item}
+                              active={modelUsage === item}
+                              onClick={() => {
+                                setModelUsage(item);
+                                if (/no model|flat lay|mannequin/i.test(item)) {
+                                  setCustomFaceExpression("");
+                                }
+                              }}
+                              darkMode={darkMode}
+                              imgSrc={
+                                item === "Single Model"
+                                  ? singleModelIcon(
+                                      textileCategory,
+                                      customProduct.trim() || product,
+                                    )
+                                  : USAGE_ICONS[item]
                               }
-                            }}
-                            darkMode={darkMode}
-                            imgSrc={
-                              item === "Single Model"
-                                ? singleModelIcon(
-                                    textileCategory,
-                                    customProduct.trim() || product,
-                                  )
-                                : USAGE_ICONS[item]
-                            }
-                          />
-                        ))}
+                            />
+                          ),
+                        )}
                       </div>
+
+                      {/* Try-on consent — mandatory before generating with a
+                          user-uploaded photo (misuse / privacy safeguard). */}
+                      {modelUsage === "Upload Your Model" && modelPhotoUrl && (
+                        <label className={`mt-3 flex cursor-pointer items-start gap-2 rounded-2xl border p-3 text-xs ${darkMode ? "border-white/15 bg-white/[0.03] text-white/75" : "border-cyan-400/30 bg-cyan-50/60 text-slate-600"}`}>
+                          <input
+                            type="checkbox"
+                            checked={tryOnConsent}
+                            onChange={(e) => setTryOnConsent(e.target.checked)}
+                            className="mt-0.5 h-4 w-4 shrink-0 accent-cyan-600"
+                          />
+                          <span>
+                            Ye meri apni photo hai (ya mujhe iski permission hai) aur
+                            main ise sirf is textile preview ke liye use kar raha/rahi
+                            hoon. AgentForge ise generate ke baad delete kar dega.
+                            {isFreePlan && (
+                              <span className="font-bold">
+                                {" "}Free plan: {TRYON_FREE_LIMIT} try-on tak.
+                              </span>
+                            )}
+                          </span>
+                        </label>
+                      )}
                     </section>
 
                     <section>
