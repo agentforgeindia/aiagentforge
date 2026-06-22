@@ -46,6 +46,7 @@ import {
   UserCog,
   Users,
   UserPlus,
+  Video,
   Wallet,
   Zap,
 } from "lucide-react";
@@ -112,6 +113,7 @@ export const TILES: Tile[] = [
   { group: "Sales & CRM", href: "/admin/deals",          label: "Deals",          description: "Formal deal pipeline — proposals, negotiations, closures.", icon: <Briefcase className="h-4 w-4" />,       perm: "leads.view" },
   { group: "Sales & CRM", href: "/admin/tasks",          label: "Tasks",          description: "Follow-ups, demos, payment reminders.",                   icon: <CheckSquare className="h-4 w-4" />,     perm: "tasks.view" },
   { group: "Sales & CRM", href: "/admin/demo-requests",  label: "Demo Requests",  description: "Customize-demo bookings from the website — build, send, push to leads.", icon: <Sparkles className="h-4 w-4" />,        perm: "leads.view" },
+  { group: "Sales & CRM", href: "/admin/meetings",       label: "Meetings",       description: "Schedule Zoom meetings + see all bookings (admin + self-booked).", icon: <Video className="h-4 w-4" />,           perm: "leads.view" },
   { group: "Sales & CRM", href: "/admin/workshop-registrations", label: "Workshop Registrations", description: "Paid attendees from Razorpay — email, phone, amount, payment id.", icon: <Receipt className="h-4 w-4" />, perm: "customers.view" },
   { group: "Sales & CRM", href: "/admin/workshop-certificates", label: "Workshop Certificates", description: "Who downloaded a workshop certificate — name, email, date.", icon: <ScrollText className="h-4 w-4" />, perm: "customers.view" },
 
