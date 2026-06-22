@@ -13,7 +13,7 @@ import { createClient } from "@supabase/supabase-js";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const VALID_SLOTS = new Set(["20-june", "21-june", "27-june", "28-june", "4-july"]);
+const VALID_SLOTS = new Set(["20-june", "21-june", "27-june", "28-june", "1-july", "5-july", "4-july"]);
 
 function svc() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

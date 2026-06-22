@@ -11,15 +11,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 // the slot_id rows in sql/workshop.sql.
 const SLOTS = [
   {
-    id: "21-june",
-    date: "21 June 2026",
-    day: "Sunday",
-    time: "3:00 PM",
-    dateTime: "2026-06-21T15:00:00+05:30",
-    paymentLink: "https://rzp.io/rzp/hvlTIKA",
-    community: "https://chat.whatsapp.com/FkvRQXy6x6AGZ82L83AY7l",
-  },
-  {
     id: "27-june",
     date: "27 June 2026",
     day: "Saturday",
@@ -38,11 +29,21 @@ const SLOTS = [
     community: "https://chat.whatsapp.com/J3MK8J1bEHNJOdoFzYuv6s",
   },
   {
-    id: "4-july",
-    date: "4 July 2026",
-    day: "Saturday",
-    time: "7:00 PM",
-    dateTime: "2026-07-04T19:00:00+05:30",
+    id: "1-july",
+    date: "1 July 2026",
+    day: "Wednesday",
+    time: "12:00 PM",
+    dateTime: "2026-07-01T12:00:00+05:30",
+    // TODO: add the real 1 July Razorpay payment-page link.
+    paymentLink: "",
+    community: "https://chat.whatsapp.com/IZ164dIxs462nOgWvGglAh",
+  },
+  {
+    id: "5-july",
+    date: "5 July 2026",
+    day: "Sunday",
+    time: "3:00 PM",
+    dateTime: "2026-07-05T15:00:00+05:30",
     paymentLink: "https://rzp.io/rzp/4july2026",
     community: "https://chat.whatsapp.com/IZ164dIxs462nOgWvGglAh",
   },
@@ -146,6 +147,40 @@ export default function WebinarLandingPage() {
 
   const [seats, setSeats] = useState<Record<string, SeatInfo>>({});
   const [busySlot, setBusySlot] = useState<string | null>(null);
+
+  // Preference survey — when should the next workshop be?
+  const [surveyDay, setSurveyDay] = useState("");
+  const [surveyTime, setSurveyTime] = useState("");
+  const [surveyName, setSurveyName] = useState("");
+  const [surveyPhone, setSurveyPhone] = useState("");
+  const [surveySubmitting, setSurveySubmitting] = useState(false);
+  const [surveyDone, setSurveyDone] = useState(false);
+
+  const submitSurvey = async () => {
+    if (!surveyDay || !surveyTime) {
+      alert("Kripya din aur time dono chunein.");
+      return;
+    }
+    setSurveySubmitting(true);
+    try {
+      const res = await fetch("/api/workshop/survey", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          preferred_day: surveyDay,
+          preferred_time: surveyTime,
+          name: surveyName,
+          phone: surveyPhone,
+        }),
+      });
+      if (res.ok) setSurveyDone(true);
+      else alert("Kuch galat hua, dobara try karein.");
+    } catch {
+      alert("Network error. Dobara try karein.");
+    } finally {
+      setSurveySubmitting(false);
+    }
+  };
 
   // Background radio — plays while the visitor is on the page.
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -662,6 +697,97 @@ export default function WebinarLandingPage() {
           </a>{" "}
           se agree karte hain.
         </p>
+      </section>
+
+      {/* Preference survey — when should the next workshop be? */}
+      <section className="mx-auto max-w-3xl px-4 py-10 md:px-8">
+        <div className={`rounded-[2rem] border p-6 sm:p-8 ${cardClass}`}>
+          <div className="text-center">
+            <p className="text-sm font-black uppercase tracking-[0.22em] text-violet-500">
+              Help us pick the next batch
+            </p>
+            <h2 className="mt-2 text-2xl font-black sm:text-3xl">
+              Aapke hisaab se workshop kab honi chahiye?
+            </h2>
+            <p className={`mt-2 text-sm ${mutedText}`}>
+              Apni pasand batao — agla batch hum isi hisaab se rakhenge.
+            </p>
+          </div>
+
+          {surveyDone ? (
+            <div className="mt-6 rounded-2xl bg-emerald-500/10 p-6 text-center">
+              <p className="text-lg font-black text-emerald-600">Shukriya! 🎉</p>
+              <p className={`mt-1 text-sm ${mutedText}`}>Aapki pasand record ho gayi.</p>
+            </div>
+          ) : (
+            <div className="mt-6 space-y-5">
+              <div>
+                <p className="mb-2 text-sm font-black">Konsa din?</p>
+                <div className="flex flex-wrap gap-2">
+                  {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setSurveyDay(d)}
+                      className={`rounded-full border px-4 py-2 text-sm font-bold transition ${
+                        surveyDay === d
+                          ? "border-violet-500 bg-violet-500 text-white"
+                          : isDark
+                            ? "border-white/15 text-white/80 hover:bg-white/5"
+                            : "border-slate-200 text-slate-700 hover:bg-violet-50"
+                      }`}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="mb-2 text-sm font-black">Konsa time?</p>
+                <div className="flex flex-wrap gap-2">
+                  {["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM"].map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setSurveyTime(t)}
+                      className={`rounded-full border px-4 py-2 text-sm font-bold transition ${
+                        surveyTime === t
+                          ? "border-cyan-500 bg-cyan-500 text-white"
+                          : isDark
+                            ? "border-white/15 text-white/80 hover:bg-white/5"
+                            : "border-slate-200 text-slate-700 hover:bg-cyan-50"
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input
+                  value={surveyName}
+                  onChange={(e) => setSurveyName(e.target.value)}
+                  placeholder="Naam (optional)"
+                  className={`rounded-xl border px-4 py-3 text-sm ${isDark ? "border-white/10 bg-black/30 text-white placeholder:text-white/35" : "border-black/10 bg-white text-black placeholder:text-black/40"}`}
+                />
+                <input
+                  value={surveyPhone}
+                  onChange={(e) => setSurveyPhone(e.target.value)}
+                  placeholder="WhatsApp number (optional)"
+                  className={`rounded-xl border px-4 py-3 text-sm ${isDark ? "border-white/10 bg-black/30 text-white placeholder:text-white/35" : "border-black/10 bg-white text-black placeholder:text-black/40"}`}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={submitSurvey}
+                disabled={surveySubmitting}
+                className="w-full rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-violet-700 px-6 py-3.5 text-sm font-black uppercase tracking-wide text-white shadow-lg disabled:opacity-60"
+              >
+                {surveySubmitting ? "Bhej rahe hain…" : "Submit My Preference"}
+              </button>
+            </div>
+          )}
+        </div>
       </section>
 
       <SectionWrap eyebrow="AI Mockup Gallery" title="See What You Can Create">
