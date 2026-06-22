@@ -10,7 +10,6 @@ import { supabase } from "@/lib/supabase";
 import { BadgeCheck } from "lucide-react";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 import NotificationBell from "./NotificationBell";
-import BookDemoButton from "./BookDemoButton";
 
 const agents = [
   { title: "TextilePrints to Mockup AI", desc: "Textile design → fashion mockup", link: "/textileprints-to-mockup", isNew: true },
@@ -273,10 +272,12 @@ export default function Navbar() {
         {/* Right side */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Highlighted Book Demo CTA — visible on every page */}
-          <BookDemoButton
-            label="Book Demo"
+          <Link
+            href="/book-meeting"
             className="hidden h-10 items-center gap-1.5 rounded-full bg-gradient-to-r from-fuchsia-500 to-purple-600 px-4 text-sm font-black text-white shadow-lg shadow-purple-500/30 transition hover:scale-[1.03] hover:brightness-110 md:inline-flex"
-          />
+          >
+            Book a Meeting
+          </Link>
 
           {/* Notification bell — updates for users */}
           {isLoggedIn && <NotificationBell />}
@@ -490,10 +491,12 @@ export default function Navbar() {
               ))}
 
               {/* Highlighted Book Demo CTA (mobile) */}
-              <BookDemoButton
-                label="Book a Customize Demo"
+              <Link
+                href="/book-meeting"
                 className="mt-1 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-fuchsia-500 to-purple-600 px-4 py-3 text-center text-sm font-black text-white shadow-lg shadow-purple-500/30"
-              />
+              >
+                Book a Meeting
+              </Link>
 
               {/* Careers accordion */}
               <div className={`mt-1 border-t pt-1 ${darkMode ? "border-white/10" : "border-black/10"}`}>

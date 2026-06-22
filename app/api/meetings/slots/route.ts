@@ -43,16 +43,18 @@ export async function GET(req: Request) {
     );
     const now = Date.now();
 
-    const slots = daySlots()
-      .map((time) => {
-        const iso = slotIso(date, time);
-        const ms = new Date(iso).getTime();
-        return { time, iso, label: slotLabel(time), ms };
-      })
-      .filter((s) => s.ms > now + 60_000 && !takenMs.has(s.ms))
-      .map(({ time, iso, label }) => ({ time, iso, label }));
+    // Return ALL slots with availability flags so the UI can show
+    // "seats" (1 seat per slot) — available, booked, or past.
+    const slots = daySlots().map((time) => {
+      const iso = slotIso(date, time);
+      const ms = new Date(iso).getTime();
+      const past = ms <= now + 60_000;
+      const taken = takenMs.has(ms);
+      return { time, iso, label: slotLabel(time), available: !past && !taken, taken, past };
+    });
+    const available = slots.filter((s) => s.available).length;
 
-    return NextResponse.json({ ok: true, slots, closed: false });
+    return NextResponse.json({ ok: true, slots, available, total: slots.length, closed: false });
   } catch {
     return NextResponse.json({ ok: true, slots: [], closed: false });
   }
