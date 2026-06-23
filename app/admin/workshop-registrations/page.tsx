@@ -50,6 +50,26 @@ const CALL_STATUSES = [
   "No Answer",
 ];
 
+// WhatsApp community group per slot.
+const SLOT_COMMUNITY: Record<string, string> = {
+  "20-june": "https://chat.whatsapp.com/F4ZfEeVXEmv2NaTwe4aIbs",
+  "21-june": "https://chat.whatsapp.com/FkvRQXy6x6AGZ82L83AY7l",
+  "27-june": "https://chat.whatsapp.com/H28rLyxfhXp6ieRc0tlytB",
+  "28-june": "https://chat.whatsapp.com/J3MK8J1bEHNJOdoFzYuv6s",
+  "1-july": "https://chat.whatsapp.com/ISdvRNftrmZE0Ofab1950h",
+  "5-july": "https://chat.whatsapp.com/IZ164dIxs462nOgWvGglAh",
+};
+
+// wa.me deep link to message a registrant their slot's community link.
+function communityWaLink(phone: string, slotId: string, name: string | null): string {
+  const link = SLOT_COMMUNITY[slotId];
+  if (!link || !phone) return "";
+  const clean = String(phone).replace(/\D/g, "").replace(/^0+/, "");
+  const num = clean.length === 10 ? "91" + clean : clean;
+  const msg = `Hi ${name || "there"}! Your AgentForge Workshop registration is confirmed ✅\n\nJoin the workshop community group here:\n${link}\n\nSee you there! 🚀`;
+  return `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
+}
+
 // A slot's date has passed → the workshop is completed.
 function slotIsPast(label: string): boolean {
   const m = (label || "").match(/(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/);
@@ -358,6 +378,17 @@ export default function AdminWorkshopRegistrationsPage() {
                       className="hidden shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-blue-500 sm:inline-block"
                     >
                       Call
+                    </a>
+                  )}
+                  {r.phone && SLOT_COMMUNITY[r.slot_id] && (
+                    <a
+                      href={communityWaLink(r.phone, r.slot_id, r.name)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 rounded-lg bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-500"
+                      title="Send the community join link on WhatsApp"
+                    >
+                      Community
                     </a>
                   )}
                   <div className="flex items-center gap-1 text-right font-bold text-emerald-600">
