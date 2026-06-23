@@ -3,6 +3,7 @@
 // pings the admin notification bell.
 
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createZoomMeeting, zoomConfigured } from "@/lib/zoom";
 import { isValidSlotTime, isWorkingDay, slotIso } from "@/lib/meetingSlots";
@@ -23,7 +24,10 @@ const TYPES = new Set(["Demo", "Sales Call", "Consultation", "Workshop", "Other"
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { date, time, name, email, phone, meeting_type, notes } = body as Record<string, any>;
+    const {
+      date, time, name, email, phone, meeting_type, notes,
+      razorpay_payment_id, razorpay_order_id, razorpay_signature,
+    } = body as Record<string, any>;
 
     if (!name || !String(name).trim())
       return NextResponse.json({ error: "Please enter your name." }, { status: 400 });
@@ -56,6 +60,17 @@ export async function POST(req: Request) {
     if (clash)
       return NextResponse.json({ error: "Sorry, that slot was just taken. Please pick another." }, { status: 409 });
 
+    // ₹99 paid — verify the Razorpay payment signature before booking.
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !keySecret)
+      return NextResponse.json({ error: "Payment is required to book a meeting." }, { status: 402 });
+    const expected = crypto
+      .createHmac("sha256", keySecret)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest("hex");
+    if (expected !== razorpay_signature)
+      return NextResponse.json({ error: "Payment verification failed." }, { status: 400 });
+
     const type = TYPES.has(meeting_type) ? meeting_type : "Demo";
     const topic = `AgentForge ${type} — ${String(name).trim()}`;
 
@@ -83,6 +98,9 @@ export async function POST(req: Request) {
       join_url: zoom.join_url,
       start_url: zoom.start_url,
       zoom_password: zoom.password,
+      amount: 99,
+      razorpay_payment_id: String(razorpay_payment_id),
+      razorpay_order_id: String(razorpay_order_id),
       status: "scheduled",
       source: "public",
       notes: notes ? String(notes).slice(0, 1000) : null,

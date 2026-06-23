@@ -32,6 +32,18 @@ function istToday() {
   return { y: ist.getFullYear(), m: ist.getMonth(), d: ist.getDate() };
 }
 
+function loadRazorpay(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined") return resolve(false);
+    if ((window as any).Razorpay) return resolve(true);
+    const s = document.createElement("script");
+    s.src = "https://checkout.razorpay.com/v1/checkout.js";
+    s.onload = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.body.appendChild(s);
+  });
+}
+
 export default function BookMeetingPage() {
   const today = useMemo(istToday, []);
   const [cursor, setCursor] = useState({ y: today.y, m: today.m });
@@ -98,19 +110,58 @@ export default function BookMeetingPage() {
     }
     setBooking(true);
     try {
-      const res = await fetch("/api/meetings/book", {
+      // 1. Create a ₹99 order.
+      const oRes = await fetch("/api/meetings/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: selected, time: picked.time, name, email, phone, meeting_type: type, notes }),
+        body: JSON.stringify({ date: selected, time: picked.time }),
       });
-      const j = await res.json();
-      if (!res.ok) {
-        alert(j.error || "Booking failed. Please try another slot.");
-        fetch(`/api/meetings/slots?date=${selected}`).then((r) => r.json()).then((d) => { setSlots(d.slots || []); setAvail(d.available || 0); });
-        setPicked(null);
+      const o = await oRes.json();
+      if (!oRes.ok || !o.order_id) {
+        alert(o.error || "Could not start payment. Please try again.");
         return;
       }
-      setDone({ join_url: j.join_url, start_time: j.start_time });
+      // 2. Load Razorpay checkout.
+      const ok = await loadRazorpay();
+      if (!ok) {
+        alert("Payment could not load. Check your internet and try again.");
+        return;
+      }
+      // 3. Open checkout → on success, verify + book.
+      const rzp = new (window as any).Razorpay({
+        key: o.key_id,
+        order_id: o.order_id,
+        amount: o.amount * 100,
+        currency: "INR",
+        name: "AgentForge Meeting",
+        description: `${type} · ${picked.label}`,
+        image: "/af-logo.png",
+        prefill: { name, email, contact: phone },
+        theme: { color: "#0ea5e9" },
+        handler: async (resp: any) => {
+          const bRes = await fetch("/api/meetings/book", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              date: selected, time: picked.time, name, email, phone, meeting_type: type, notes,
+              razorpay_payment_id: resp.razorpay_payment_id,
+              razorpay_order_id: resp.razorpay_order_id,
+              razorpay_signature: resp.razorpay_signature,
+            }),
+          });
+          const j = await bRes.json();
+          if (!bRes.ok) {
+            alert(j.error || "Payment done but booking failed — contact support with your payment id.");
+            fetch(`/api/meetings/slots?date=${selected}`).then((r) => r.json()).then((d) => { setSlots(d.slots || []); setAvail(d.available || 0); });
+            return;
+          }
+          setDone({ join_url: j.join_url, start_time: j.start_time });
+        },
+        modal: { ondismiss: () => setBooking(false) },
+      });
+      rzp.open();
+    } catch {
+      alert("Something went wrong. Please try again.");
     } finally {
       setBooking(false);
     }
@@ -171,7 +222,7 @@ export default function BookMeetingPage() {
             </span>
           </h1>
           <p className="mt-3 text-sm font-semibold text-slate-600">
-            Mon–Sat · 11:00 AM – 7:00 PM IST · 30-minute slots · live on Zoom
+            Mon–Sat · 11:00 AM – 7:00 PM IST · 30-minute slots · live on Zoom · ₹99
           </p>
         </div>
 
@@ -302,7 +353,7 @@ export default function BookMeetingPage() {
                 <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="What would you like to discuss? (optional)" rows={2} className="mt-3 w-full resize-none rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm focus:border-cyan-500 focus:outline-none" />
                 <button type="button" onClick={book} disabled={booking}
                   className="mt-4 w-full rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-violet-700 px-6 py-4 text-sm font-black uppercase tracking-wide text-white shadow-xl shadow-violet-500/25 transition hover:scale-[1.01] active:scale-95 disabled:opacity-60">
-                  {booking ? "Booking…" : "Confirm & Book Meeting →"}
+                  {booking ? "Processing…" : "Pay ₹99 & Book Meeting →"}
                 </button>
               </div>
             )}

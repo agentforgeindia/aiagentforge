@@ -34,7 +34,7 @@ export async function GET(req: Request) {
   const { data: registrations, error } = await db
     .from("workshop_registrations")
     .select(
-      "id, slot_id, name, email, phone, amount, status, razorpay_order_id, razorpay_payment_id, created_at, call_status, call_notes",
+      "id, slot_id, name, email, phone, amount, status, razorpay_order_id, razorpay_payment_id, created_at, call_status, call_notes, promoted",
     )
     .order("created_at", { ascending: false })
     .limit(5000);
@@ -74,5 +74,41 @@ export async function PATCH(req: Request) {
 
   const { error } = await db.from("workshop_registrations").update(patch).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
+}
+
+// POST — promote a registration into the leads (CRM) pipeline.
+export async function POST(req: Request) {
+  if (!(await isAdmin(req.headers.get("authorization"))))
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const { id } = await req.json().catch(() => ({}));
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+  const { data: reg } = await db
+    .from("workshop_registrations")
+    .select("name, email, phone, slot_id, call_status, call_notes, promoted")
+    .eq("id", id)
+    .maybeSingle();
+  if (!reg) return NextResponse.json({ error: "Registration not found." }, { status: 404 });
+  if (reg.promoted) return NextResponse.json({ ok: true, already: true });
+
+  const name =
+    (reg.name && String(reg.name).trim()) ||
+    (reg.email ? String(reg.email).split("@")[0] : "Workshop Lead");
+
+  const { error: leadErr } = await db.from("leads").insert({
+    name,
+    email: reg.email || null,
+    phone: reg.phone || null,
+    source: "event",
+    source_detail: `Workshop attendee — ${reg.slot_id}`,
+    status: "qualified",
+    notes: reg.call_notes || (reg.call_status ? `Call status: ${reg.call_status}` : null),
+    tags: ["workshop"],
+  });
+  if (leadErr) return NextResponse.json({ error: leadErr.message }, { status: 500 });
+
+  await db.from("workshop_registrations").update({ promoted: true }).eq("id", id);
   return NextResponse.json({ ok: true });
 }

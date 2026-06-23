@@ -30,6 +30,7 @@ type RegRow = {
   created_at: string;
   call_status: string | null;
   call_notes: string | null;
+  promoted: boolean | null;
 };
 
 type SlotRow = {
@@ -117,6 +118,20 @@ export default function AdminWorkshopRegistrationsPage() {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ id, ...patch }),
     }).catch(() => {});
+  };
+
+  const [promotedIds, setPromotedIds] = useState<Set<string>>(new Set());
+  const promoteLead = async (id: string) => {
+    if (!confirm("Promote this attendee to a CRM lead?")) return;
+    const { data: session } = await supabase.auth.getSession();
+    const token = session.session?.access_token ?? "";
+    const res = await fetch("/api/admin/workshop-registrations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ id }),
+    });
+    if (res.ok) setPromotedIds((p) => new Set(p).add(id));
+    else alert("Could not promote to lead. Please try again.");
   };
 
   useEffect(() => {
@@ -422,6 +437,19 @@ export default function AdminWorkshopRegistrationsPage() {
                       placeholder="Call notes — what did they say? (purchased / demo pending …)"
                       className={`${adminInputCls} flex-1`}
                     />
+                    {r.promoted || promotedIds.has(r.id) ? (
+                      <span className="shrink-0 rounded-lg bg-emerald-100 px-3 py-2 text-center text-[11px] font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                        ✓ Lead
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => promoteLead(r.id)}
+                        className="shrink-0 rounded-lg bg-violet-600 px-3 py-2 text-[11px] font-bold text-white hover:bg-violet-500"
+                      >
+                        Promote to Lead
+                      </button>
+                    )}
                   </div>
                 )}
               </li>
