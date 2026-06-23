@@ -34,9 +34,8 @@ const SLOTS = [
     day: "Wednesday",
     time: "12:00 PM",
     dateTime: "2026-07-01T12:00:00+05:30",
-    // TODO: add the real 1 July Razorpay payment-page link.
-    paymentLink: "",
-    community: "https://chat.whatsapp.com/IZ164dIxs462nOgWvGglAh",
+    paymentLink: "https://rzp.io/rzp/workshop1-july",
+    community: "https://chat.whatsapp.com/ISdvRNftrmZE0Ofab1950h",
   },
   {
     id: "5-july",
@@ -44,7 +43,7 @@ const SLOTS = [
     day: "Sunday",
     time: "3:00 PM",
     dateTime: "2026-07-05T15:00:00+05:30",
-    paymentLink: "https://rzp.io/rzp/4july2026",
+    paymentLink: "https://rzp.io/rzp/workshop5-july",
     community: "https://chat.whatsapp.com/IZ164dIxs462nOgWvGglAh",
   },
 ];

@@ -36,7 +36,7 @@ export const SLOT_COMMUNITIES: Record<string, SlotInfo> = {
   "1-july": {
     date: "1 July 2026 · Wednesday · 12:00 PM",
     ordinal: "Special",
-    community: "https://chat.whatsapp.com/IZ164dIxs462nOgWvGglAh",
+    community: "https://chat.whatsapp.com/ISdvRNftrmZE0Ofab1950h",
   },
   "5-july": {
     date: "5 July 2026 · Sunday · 3:00 PM",

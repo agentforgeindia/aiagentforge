@@ -33,7 +33,8 @@ const PAGE_TO_SLOT: Record<string, string> = {
   pl_T0jBVjq7V3m6YC: "21-june", // Day 02
   pl_T0jF2ojwXv8fB8: "27-june", // Day 03
   pl_T0jC2JKtO63npD: "28-june", // Day 04
-  pl_T3vtDx51OXwQZv: "5-july",  // (page titled 04 July, now used for 5 July slot)
+  pl_T3vtDx51OXwQZv: "5-july",  // workshop5-july page
+  pl_T4gvADKw9grX1q: "1-july",  // workshop1-july page
 };
 
 // Returns a valid workshop_slots slot_id, or 'unassigned' as a safe fallback
