@@ -28,6 +28,8 @@ type RegRow = {
   razorpay_order_id: string | null;
   razorpay_payment_id: string | null;
   created_at: string;
+  call_status: string | null;
+  call_notes: string | null;
 };
 
 type SlotRow = {
@@ -36,6 +38,25 @@ type SlotRow = {
   seats_filled: number;
   max_seats: number;
 };
+
+const CALL_STATUSES = [
+  "New",
+  "Connected",
+  "Interested",
+  "Demo Pending",
+  "Purchased",
+  "Callback",
+  "Not Interested",
+  "No Answer",
+];
+
+// A slot's date has passed → the workshop is completed.
+function slotIsPast(label: string): boolean {
+  const m = (label || "").match(/(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/);
+  if (!m) return false; // e.g. "Unassigned …" → treat as upcoming
+  const d = new Date(`${m[1]} ${m[2]} ${m[3]} 23:59:59`);
+  return !isNaN(d.getTime()) && d.getTime() < Date.now();
+}
 
 function formatDateTime(iso: string): string {
   if (!iso) return "";
@@ -65,6 +86,18 @@ export default function AdminWorkshopRegistrationsPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [search, setSearch] = useState("");
   const [slotFilter, setSlotFilter] = useState("all");
+  const [tab, setTab] = useState<"upcoming" | "completed">("upcoming");
+  const [callEdits, setCallEdits] = useState<Record<string, { call_status: string; call_notes: string }>>({});
+
+  const saveCall = async (id: string, patch: { call_status?: string; call_notes?: string }) => {
+    const { data: session } = await supabase.auth.getSession();
+    const token = session.session?.access_token ?? "";
+    await fetch("/api/admin/workshop-registrations", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ id, ...patch }),
+    }).catch(() => {});
+  };
 
   useEffect(() => {
     if (!canView) return;
@@ -77,8 +110,14 @@ export default function AdminWorkshopRegistrationsPage() {
       });
       const json = await res.json();
       if (json.ok) {
-        setRows(json.registrations as RegRow[]);
+        const regs = json.registrations as RegRow[];
+        setRows(regs);
         setSlots((json.slots ?? []) as SlotRow[]);
+        const map: Record<string, { call_status: string; call_notes: string }> = {};
+        regs.forEach((r) => {
+          map[r.id] = { call_status: r.call_status || "New", call_notes: r.call_notes || "" };
+        });
+        setCallEdits(map);
       }
       setLoadingRows(false);
     })();
@@ -90,9 +129,17 @@ export default function AdminWorkshopRegistrationsPage() {
     return map;
   }, [slots]);
 
+  const completedSlotIds = useMemo(() => {
+    const s = new Set<string>();
+    slots.forEach((sl) => { if (slotIsPast(sl.label)) s.add(sl.slot_id); });
+    return s;
+  }, [slots]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
+      const completed = completedSlotIds.has(r.slot_id);
+      if (tab === "completed" ? !completed : completed) return false;
       if (slotFilter !== "all" && r.slot_id !== slotFilter) return false;
       if (q) {
         const hay =
@@ -101,7 +148,17 @@ export default function AdminWorkshopRegistrationsPage() {
       }
       return true;
     });
-  }, [rows, search, slotFilter]);
+  }, [rows, search, slotFilter, tab, completedSlotIds]);
+
+  // Calling tally for the completed tab.
+  const callTally = useMemo(() => {
+    const m: Record<string, number> = {};
+    filtered.forEach((r) => {
+      const s = callEdits[r.id]?.call_status || r.call_status || "New";
+      m[s] = (m[s] || 0) + 1;
+    });
+    return m;
+  }, [filtered, callEdits]);
 
   const stats = useMemo(() => {
     const total = filtered.length;
@@ -154,7 +211,8 @@ export default function AdminWorkshopRegistrationsPage() {
             onClick={() => {
               const headers = [
                 "paid_at", "slot", "name", "email", "phone",
-                "amount", "razorpay_payment_id", "razorpay_order_id",
+                "amount", "call_status", "call_notes",
+                "razorpay_payment_id", "razorpay_order_id",
               ];
               const csvRows = filtered.map((r) => [
                 r.created_at,
@@ -163,6 +221,8 @@ export default function AdminWorkshopRegistrationsPage() {
                 r.email,
                 r.phone,
                 r.amount,
+                callEdits[r.id]?.call_status ?? r.call_status ?? "",
+                callEdits[r.id]?.call_notes ?? r.call_notes ?? "",
                 r.razorpay_payment_id,
                 r.razorpay_order_id,
               ]);
@@ -195,6 +255,35 @@ export default function AdminWorkshopRegistrationsPage() {
                 </span>
               </p>
             </div>
+          ))}
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="mb-4 flex items-center gap-2">
+        {(["upcoming", "completed"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
+            className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
+              tab === t
+                ? "bg-slate-900 text-white dark:bg-indigo-600"
+                : "border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
+            }`}
+          >
+            {t === "upcoming" ? "Upcoming" : "Completed · Calling"}
+          </button>
+        ))}
+      </div>
+
+      {/* Calling tally — completed tab */}
+      {tab === "completed" && Object.keys(callTally).length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {CALL_STATUSES.filter((s) => callTally[s]).map((s) => (
+            <span key={s} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700 dark:bg-white/10 dark:text-slate-300">
+              {s}: {callTally[s]}
+            </span>
           ))}
         </div>
       )}
@@ -240,32 +329,70 @@ export default function AdminWorkshopRegistrationsPage() {
             {filtered.map((r) => (
               <li
                 key={r.id}
-                className="flex items-center gap-4 px-4 py-3 transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                className="px-4 py-3 transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
               >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10">
-                  <Ticket className="h-4 w-4" />
+                <div className="flex items-center gap-4">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10">
+                    <Ticket className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold">
+                      {r.email || r.name || "—"}
+                    </p>
+                    <p className={`truncate text-xs ${adminMutedCls}`}>
+                      {r.phone || "no phone"}
+                      {r.razorpay_payment_id ? ` · ${r.razorpay_payment_id}` : ""}
+                    </p>
+                  </div>
+                  <div className="hidden text-center sm:block">
+                    <p className="text-xs font-bold">
+                      {slotLabel[r.slot_id] ?? r.slot_id}
+                    </p>
+                    <p className={`text-[11px] ${adminMutedCls}`}>
+                      {formatDateTime(r.created_at)}
+                    </p>
+                  </div>
+                  {r.phone && (
+                    <a
+                      href={`tel:${r.phone}`}
+                      className="hidden shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-blue-500 sm:inline-block"
+                    >
+                      Call
+                    </a>
+                  )}
+                  <div className="flex items-center gap-1 text-right font-bold text-emerald-600">
+                    <IndianRupee className="h-3.5 w-3.5" />
+                    {Number(r.amount) || 0}
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold">
-                    {r.email || r.name || "—"}
-                  </p>
-                  <p className={`truncate text-xs ${adminMutedCls}`}>
-                    {r.phone || "no phone"}
-                    {r.razorpay_payment_id ? ` · ${r.razorpay_payment_id}` : ""}
-                  </p>
-                </div>
-                <div className="hidden text-center sm:block">
-                  <p className="text-xs font-bold">
-                    {slotLabel[r.slot_id] ?? r.slot_id}
-                  </p>
-                  <p className={`text-[11px] ${adminMutedCls}`}>
-                    {formatDateTime(r.created_at)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1 text-right font-bold text-emerald-600">
-                  <IndianRupee className="h-3.5 w-3.5" />
-                  {Number(r.amount) || 0}
-                </div>
+
+                {tab === "completed" && (
+                  <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <select
+                      value={callEdits[r.id]?.call_status || "New"}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setCallEdits((p) => ({ ...p, [r.id]: { call_status: v, call_notes: p[r.id]?.call_notes || "" } }));
+                        saveCall(r.id, { call_status: v });
+                      }}
+                      className={`${adminInputCls} sm:max-w-[170px]`}
+                    >
+                      {CALL_STATUSES.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                    <input
+                      value={callEdits[r.id]?.call_notes || ""}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setCallEdits((p) => ({ ...p, [r.id]: { call_status: p[r.id]?.call_status || "New", call_notes: v } }));
+                      }}
+                      onBlur={() => saveCall(r.id, { call_notes: callEdits[r.id]?.call_notes || "" })}
+                      placeholder="Call notes — what did they say? (purchased / demo pending …)"
+                      className={`${adminInputCls} flex-1`}
+                    />
+                  </div>
+                )}
               </li>
             ))}
           </ul>

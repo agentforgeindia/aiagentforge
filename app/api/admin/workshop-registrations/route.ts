@@ -34,7 +34,7 @@ export async function GET(req: Request) {
   const { data: registrations, error } = await db
     .from("workshop_registrations")
     .select(
-      "id, slot_id, name, email, phone, amount, status, razorpay_order_id, razorpay_payment_id, created_at",
+      "id, slot_id, name, email, phone, amount, status, razorpay_order_id, razorpay_payment_id, created_at, call_status, call_notes",
     )
     .order("created_at", { ascending: false })
     .limit(5000);
@@ -55,4 +55,24 @@ export async function GET(req: Request) {
     registrations: registrations ?? [],
     slots,
   });
+}
+
+// PATCH — update a registration's calling disposition + notes.
+export async function PATCH(req: Request) {
+  if (!(await isAdmin(req.headers.get("authorization"))))
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const body = await req.json().catch(() => ({}));
+  const { id, call_status, call_notes } = body as Record<string, any>;
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+  const patch: Record<string, any> = {};
+  if (call_status !== undefined) patch.call_status = call_status || null;
+  if (call_notes !== undefined) patch.call_notes = call_notes || null;
+  if (!Object.keys(patch).length)
+    return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
+
+  const { error } = await db.from("workshop_registrations").update(patch).eq("id", id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
 }
