@@ -33,6 +33,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid or closed date (Sundays closed)." }, { status: 400 });
     if (!isValidSlotTime(String(time)))
       return NextResponse.json({ error: "Invalid time slot." }, { status: 400 });
+    // Only hourly slots are bookable (:30 slots are kept reserved).
+    if (String(time).endsWith(":30"))
+      return NextResponse.json({ error: "Please pick an hourly slot." }, { status: 400 });
 
     const iso = slotIso(date, time);
     if (new Date(iso).getTime() <= Date.now())

@@ -49,7 +49,10 @@ export async function GET(req: Request) {
       const iso = slotIso(date, time);
       const ms = new Date(iso).getTime();
       const past = ms <= now + 60_000;
-      const taken = takenMs.has(ms);
+      // Only top-of-the-hour slots are bookable; :30 slots always show
+      // as "Booked" (kept reserved on the front end).
+      const half = time.endsWith(":30");
+      const taken = takenMs.has(ms) || half;
       return { time, iso, label: slotLabel(time), available: !past && !taken, taken, past };
     });
     const available = slots.filter((s) => s.available).length;
