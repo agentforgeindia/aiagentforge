@@ -157,7 +157,7 @@ export default function WebinarLandingPage() {
 
   const submitSurvey = async () => {
     if (!surveyDay || !surveyTime) {
-      alert("Kripya din aur time dono chunein.");
+      alert("Please select both a day and a time.");
       return;
     }
     setSurveySubmitting(true);
@@ -173,9 +173,9 @@ export default function WebinarLandingPage() {
         }),
       });
       if (res.ok) setSurveyDone(true);
-      else alert("Kuch galat hua, dobara try karein.");
+      else alert("Something went wrong. Please try again.");
     } catch {
-      alert("Network error. Dobara try karein.");
+      alert("Network error. Please try again.");
     } finally {
       setSurveySubmitting(false);
     }
@@ -706,22 +706,22 @@ export default function WebinarLandingPage() {
               Help us pick the next batch
             </p>
             <h2 className="mt-2 text-2xl font-black sm:text-3xl">
-              Aapke hisaab se workshop kab honi chahiye?
+              When should the next workshop be?
             </h2>
             <p className={`mt-2 text-sm ${mutedText}`}>
-              Apni pasand batao — agla batch hum isi hisaab se rakhenge.
+              Tell us your preference — we&apos;ll plan the next batch around it.
             </p>
           </div>
 
           {surveyDone ? (
             <div className="mt-6 rounded-2xl bg-emerald-500/10 p-6 text-center">
-              <p className="text-lg font-black text-emerald-600">Shukriya! 🎉</p>
-              <p className={`mt-1 text-sm ${mutedText}`}>Aapki pasand record ho gayi.</p>
+              <p className="text-lg font-black text-emerald-600">Thank you! 🎉</p>
+              <p className={`mt-1 text-sm ${mutedText}`}>Your preference has been recorded.</p>
             </div>
           ) : (
             <div className="mt-6 space-y-5">
               <div>
-                <p className="mb-2 text-sm font-black">Konsa din?</p>
+                <p className="mb-2 text-sm font-black">Which day?</p>
                 <div className="flex flex-wrap gap-2">
                   {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((d) => (
                     <button
@@ -742,7 +742,7 @@ export default function WebinarLandingPage() {
                 </div>
               </div>
               <div>
-                <p className="mb-2 text-sm font-black">Konsa time?</p>
+                <p className="mb-2 text-sm font-black">What time?</p>
                 <div className="flex flex-wrap gap-2">
                   {["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM"].map((t) => (
                     <button
@@ -766,7 +766,7 @@ export default function WebinarLandingPage() {
                 <input
                   value={surveyName}
                   onChange={(e) => setSurveyName(e.target.value)}
-                  placeholder="Naam (optional)"
+                  placeholder="Name (optional)"
                   className={`rounded-xl border px-4 py-3 text-sm ${isDark ? "border-white/10 bg-black/30 text-white placeholder:text-white/35" : "border-black/10 bg-white text-black placeholder:text-black/40"}`}
                 />
                 <input
@@ -782,7 +782,7 @@ export default function WebinarLandingPage() {
                 disabled={surveySubmitting}
                 className="w-full rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-violet-700 px-6 py-3.5 text-sm font-black uppercase tracking-wide text-white shadow-lg disabled:opacity-60"
               >
-                {surveySubmitting ? "Bhej rahe hain…" : "Submit My Preference"}
+                {surveySubmitting ? "Submitting…" : "Submit My Preference"}
               </button>
             </div>
           )}
