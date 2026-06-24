@@ -21,10 +21,10 @@ import { isAgentForgeHostedUrl } from "@/lib/uploadValidation";
 
 // ── Credit costs (single source of truth) ────────────────────
 export const SCENE_CREDIT_COST = {
-  sample: 2, // "Use your scene" (standalone editor)
-  upload: 3, // "Upload your image" (standalone editor)
-  inline: 0, // analyze inside the mockup flow — scene already paid via main generation
-  change: 4, // each equipment / element change (~₹3.3 cost via Gemini)
+  sample: 1, // "Use your scene"
+  upload: 1, // "Upload your image" / bring a scene in
+  inline: 1, // analyze inside the mockup flow
+  change: 5, // each equipment / element change
 } as const;
 
 export type SceneSource = "sample" | "upload" | "inline";
@@ -41,7 +41,7 @@ const GEMINI_IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL?.trim() || "gemini-2.5
 
 // Keep edits surgical: the product must never change.
 const PRESERVE_RULE =
-  "CRITICAL: keep the main bed, bedspread, quilt and the printed fabric pattern EXACTLY the same — same colours, same print, same position. Only change what is asked. Keep camera angle, perspective, lighting direction and the rest of the room consistent and photorealistic.";
+  "CRITICAL — this is a LOCALIZED edit, not a re-generation. Change ONLY the one item asked for. Keep every other pixel identical: the bedspread / quilt and its EXACT printed fabric pattern (colours, motifs, borders), the pillows and cushion covers and their prints, the bed, headboard, framing, camera angle, perspective, depth and lighting must stay byte-for-byte the same. Do NOT redraw, restyle, recolour or regenerate the bedding, pillows or the rest of the room. The result must look like the original photo with only that single element swapped.";
 
 const DETECT_INSTRUCTION =
   "You are an interior-design assistant. Look at the room photo and list the décor / furnishing elements a user could realistically swap or restyle — for example: table lamp, curtains, wall art / photo frames, indoor plant, rug, wall colour, bedside table, and lamp lighting (on/off). " +

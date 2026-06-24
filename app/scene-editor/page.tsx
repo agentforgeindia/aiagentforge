@@ -20,7 +20,7 @@ const SAMPLE_SCENES = [
   { label: "Classic bedroom", path: "/scene-samples/bedroom-3.jpg" },
 ];
 
-const COST = { sample: 2, upload: 3, change: 4 } as const;
+const COST = { sample: 1, upload: 1, change: 5 } as const;
 
 type Element = { id: string; name: string; options: string[] };
 type WorkImg = { url?: string; b64?: string };

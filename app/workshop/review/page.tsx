@@ -7,7 +7,6 @@
 // ============================================================
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
 
 const FEEDBACK_OPTIONS = [
   "Content was practical & useful",
@@ -19,10 +18,6 @@ const FEEDBACK_OPTIONS = [
   "Well organized",
   "Would recommend to others",
 ];
-
-function rid() {
-  return Math.random().toString(36).slice(2, 8);
-}
 
 export default function WorkshopReviewPage() {
   const [rating, setRating] = useState(0);
@@ -51,14 +46,13 @@ export default function WorkshopReviewPage() {
     setError("");
     kind === "logo" ? setUploadingLogo(true) : setUploadingPhoto(true);
     try {
-      const safe = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
-      const path = `workshop-reviews/${kind}/${Date.now()}-${rid()}-${safe}`;
-      const { error: upErr } = await supabase.storage
-        .from("testimonial-screenshots")
-        .upload(path, file, { cacheControl: "3600", upsert: false });
-      if (upErr) throw upErr;
-      const url = supabase.storage.from("testimonial-screenshots").getPublicUrl(path).data.publicUrl;
-      kind === "logo" ? setLogoUrl(url) : setPhotoUrl(url);
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("kind", kind);
+      const res = await fetch("/api/workshop/review/upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok || !json.url) throw new Error(json.error || "upload failed");
+      kind === "logo" ? setLogoUrl(json.url) : setPhotoUrl(json.url);
     } catch {
       setError("Upload failed. Please try again.");
     } finally {

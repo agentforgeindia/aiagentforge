@@ -2019,7 +2019,12 @@ export default function Home() {
         (details.website?.trim() ? 1 : 0) +
         (details.address?.trim() ? 1 : 0);
 
-    return baseCredits + extraCredits;
+    // Bring-your-own add-ons: uploaded scene (+2) and uploaded model (+2).
+    const sceneCredits = referenceSceneUrl ? 2 : 0;
+    const modelUploadCredits =
+      modelUsage === "Upload Your Model" && modelPhotoUrl ? 2 : 0;
+
+    return baseCredits + extraCredits + sceneCredits + modelUploadCredits;
   };
 
   const requiredCredits = getRequiredCredits(
@@ -4906,6 +4911,22 @@ export default function Home() {
                         <SummaryRow label="Accessories" value={accessories.length ? accessories.join(", ") : "None"} />
                         <SummaryRow label="Frame" value={`${customOutputSize.trim() || outputSize} / ${customQuality.trim() || quality}`} />
                         <SummaryRow label="Uploads" value={String(readyItems.length)} />
+                        {referenceSceneUrl && (
+                          <SummaryRow label="Upload Your Scene" value="+2 credits" />
+                        )}
+                        {modelUsage === "Upload Your Model" && modelPhotoUrl && (
+                          <SummaryRow label="Upload Your Model" value="+2 credits" />
+                        )}
+                      </div>
+
+                      {/* Credit total — per mockup + grand total */}
+                      <div className="mt-3 flex items-center justify-between border-t border-cyan-300/30 pt-3">
+                        <span className="text-xs font-black uppercase tracking-widest text-cyan-600">
+                          Credits {readyItems.length > 1 ? `(${requiredCredits} × ${readyItems.length})` : "per mockup"}
+                        </span>
+                        <span className="text-base font-black text-cyan-600">
+                          {totalCreditsNeeded} credits
+                        </span>
                       </div>
                     </div>
 
