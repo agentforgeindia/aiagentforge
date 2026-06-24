@@ -283,45 +283,71 @@ export default function CertificatePage() {
   const openShare = (url: string) =>
     window.open(url, "_blank", "noopener,noreferrer,width=620,height=560");
 
+  // Build the rendered certificate as an image File (for native sharing).
+  const buildCertFile = async (): Promise<File | null> => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const blob: Blob | null = await new Promise((res) =>
+      canvas.toBlob((b) => res(b), "image/jpeg", 0.95),
+    );
+    if (!blob) return null;
+    const safe = (name.trim() || "Workshop").replace(/\s+/g, "-");
+    return new File([blob], `AgentForge-Certificate-${safe}.jpg`, { type: "image/jpeg" });
+  };
+
+  // Desktop fallback: download the certificate so the user can attach it.
+  const downloadCertImage = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/jpeg", 0.95);
+    a.download = "AgentForge-Certificate.jpg";
+    a.click();
+  };
+
+  // Share WITH the certificate image. Mobile/supported → OS share sheet with
+  // the image attached (so it actually reaches WhatsApp/IG/etc). Desktop →
+  // download the certificate + open the platform and tell the user to attach
+  // it (web share intents like wa.me cannot carry an image file).
+  const shareWithCert = async (platformUrl: string) => {
+    const msg = shareMessage();
+    const file = await buildCertFile();
+    if (file && typeof navigator !== "undefined" && (navigator as any).canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], text: msg, url: workshopUrl() });
+      } catch {
+        /* user dismissed the share sheet */
+      }
+      return;
+    }
+    // Desktop fallback — give them the image + open the platform.
+    downloadCertImage();
+    alert(
+      "Aapka certificate download ho gaya hai 📥\nShare window khulne par usse attach kar dein.",
+    );
+    if (platformUrl) openShare(platformUrl);
+  };
+
   const shareWhatsApp = () =>
-    openShare(`https://wa.me/?text=${encodeURIComponent(shareMessage())}`);
+    shareWithCert(`https://wa.me/?text=${encodeURIComponent(shareMessage())}`);
 
   const shareFacebook = () =>
-    openShare(
+    shareWithCert(
       `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
         workshopUrl(),
       )}&quote=${encodeURIComponent(shareMessage())}`,
     );
 
   const shareLinkedIn = () =>
-    openShare(
+    shareWithCert(
       `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
         workshopUrl(),
       )}`,
     );
 
-  // Instagram has no web "share a link" intent. On mobile use the native
-  // share sheet (which lists Instagram); otherwise copy the caption + link
-  // and open Instagram so the user can paste it into a post/story.
-  const shareInstagram = async () => {
-    const msg = shareMessage();
-    if (typeof navigator !== "undefined" && navigator.share) {
-      try {
-        await navigator.share({ text: msg, url: workshopUrl() });
-        return;
-      } catch {
-        /* user dismissed — fall through to copy */
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(msg);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    } catch {
-      /* ignore */
-    }
-    openShare("https://www.instagram.com/");
-  };
+  // Instagram has no web "share a link" intent — native sheet (with image)
+  // on mobile, else download the cert + open Instagram.
+  const shareInstagram = () => shareWithCert("https://www.instagram.com/");
 
   const copyLink = async () => {
     try {
@@ -333,35 +359,24 @@ export default function CertificatePage() {
     }
   };
 
-  // Primary "Share Now" — uses the OS share sheet and attaches the actual
-  // certificate image (+ caption + workshop link) where supported (mobile).
-  // Falls back to copying the caption on desktop browsers.
+  // Primary "Share Now" — OS share sheet with the certificate image attached.
+  // Desktop fallback: download the certificate + copy the caption.
   const shareNow = async () => {
-    const canvas = canvasRef.current;
     const msg = shareMessage();
-    try {
-      if (canvas && typeof navigator !== "undefined" && (navigator as any).canShare) {
-        const blob: Blob | null = await new Promise((res) =>
-          canvas.toBlob((b) => res(b), "image/jpeg", 0.95),
-        );
-        if (blob) {
-          const file = new File([blob], "AgentForge-Certificate.jpg", {
-            type: "image/jpeg",
-          });
-          if ((navigator as any).canShare({ files: [file] })) {
-            await navigator.share({ files: [file], text: msg, url: workshopUrl() });
-            return;
-          }
-        }
+    const file = await buildCertFile();
+    if (file && typeof navigator !== "undefined" && (navigator as any).canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], text: msg, url: workshopUrl() });
+      } catch {
+        /* user dismissed */
       }
-      if (typeof navigator !== "undefined" && navigator.share) {
-        await navigator.share({ text: msg, url: workshopUrl() });
-        return;
-      }
-    } catch {
-      /* user dismissed or unsupported — fall through to copy */
+      return;
     }
+    downloadCertImage();
     await copyLink();
+    alert(
+      "Certificate download ho gaya 📥 aur caption copy ho gaya — apni post/status mein paste + attach kar dein.",
+    );
   };
 
   return (
@@ -398,6 +413,19 @@ export default function CertificatePage() {
       `}</style>
 
       <section className="cert-page relative z-10 mx-auto max-w-5xl">
+        {/* Review CTA — attendees here loved the workshop; ask for a review. */}
+        <a
+          href="/workshop/review"
+          className="mx-auto mb-6 flex max-w-3xl items-center justify-between gap-3 rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 to-fuchsia-50 px-5 py-3.5 shadow-sm transition hover:shadow-md"
+        >
+          <span className="text-sm font-bold text-violet-800">
+            ⭐ Loved the workshop? Leave a quick review &amp; help other businesses.
+          </span>
+          <span className="shrink-0 rounded-xl bg-violet-600 px-4 py-2 text-xs font-black uppercase tracking-wide text-white">
+            Write a review →
+          </span>
+        </a>
+
         <div className="mb-8 text-center">
           <div className="mb-4 inline-flex rounded-full bg-cyan-50 px-6 py-3 text-xs font-black uppercase tracking-[0.24em] text-cyan-700">
             🎉 Congratulations

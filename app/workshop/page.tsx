@@ -4,6 +4,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import WorkshopReviews from "./WorkshopReviews";
 
 
 // Workshop slots. Seat tracking + ₹99 payment handled by our own
@@ -993,7 +994,7 @@ export default function WebinarLandingPage() {
   <CenterCTA />
 </SectionWrap>
 
-
+      <WorkshopReviews />
 
       <section className="mx-auto max-w-7xl px-4 py-14 text-center md:px-8">
         <div className="rounded-[2.5rem] bg-gradient-to-r from-cyan-500 via-blue-600 to-violet-700 p-8 text-white shadow-2xl shadow-violet-300/30 md:p-12">

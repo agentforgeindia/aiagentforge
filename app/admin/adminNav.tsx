@@ -117,6 +117,7 @@ export const TILES: Tile[] = [
   { group: "Sales & CRM", href: "/admin/workshop-registrations", label: "Workshop Registrations", description: "Paid attendees from Razorpay — email, phone, amount, payment id.", icon: <Receipt className="h-4 w-4" />, perm: "customers.view" },
   { group: "Sales & CRM", href: "/admin/workshop-certificates", label: "Workshop Certificates", description: "Who downloaded a workshop certificate — name, email, date.", icon: <ScrollText className="h-4 w-4" />, perm: "customers.view" },
   { group: "Sales & CRM", href: "/admin/workshop-survey", label: "Workshop Survey", description: "Preferred day & time for the next workshop batch — tallies + responses.", icon: <BarChart3 className="h-4 w-4" />, perm: "customers.view" },
+  { group: "Sales & CRM", href: "/admin/workshop-reviews", label: "Workshop Reviews", description: "Attendee reviews & ratings — approve to show on the workshop page.", icon: <Star className="h-4 w-4" />, perm: "customers.view" },
 
   // ── Marketing ──
   { group: "Marketing", href: "/admin/email",          label: "Email",          description: "Templates, automation queue, test sends.",                icon: <Mail className="h-4 w-4" />,            perm: "email.view" },
