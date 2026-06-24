@@ -45,6 +45,15 @@ async function rzp(path) {
 if (DEBUG) {
   console.log("KEY_ID:", (env.RAZORPAY_KEY_ID || "(missing)").slice(0, 14) + "…",
     "| SECRET len:", (env.RAZORPAY_KEY_SECRET || "").length);
+
+  // Probe: can Razorpay give us a page's payments (page → payments)?
+  const testPage = "pl_T0jF2ojwXv8fB8"; // 27-june page
+  console.log("\n=== PROBE payment-pages API (page", testPage, ") ===");
+  for (const p of [`/payment_pages/${testPage}`, `/payment_pages/${testPage}/payments`]) {
+    const res = await rzp(p);
+    console.log(p, "→", res ? JSON.stringify(res).slice(0, 600) : "null");
+  }
+  console.log("=== end probe ===\n");
 }
 
 // Gather payment + order + invoice for one registration.
