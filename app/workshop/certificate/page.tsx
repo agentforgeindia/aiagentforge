@@ -6,6 +6,8 @@
 // download is logged to the backend (name, email, date).
 
 import { useEffect, useRef, useState } from "react";
+import { FaWhatsapp, FaInstagram, FaFacebookF, FaLinkedinIn, FaShareAlt } from "react-icons/fa";
+import { FiLink, FiCheck } from "react-icons/fi";
 
 // ?v bump karo jab bhi template image replace karo — taaki browser
 // purani cached image na dikhaye.
@@ -86,6 +88,21 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
+// The public workshop landing page — appended to every share so anyone who
+// sees the certificate can click through and join the next workshop.
+function workshopUrl(): string {
+  if (typeof window === "undefined") return "/workshop";
+  return `${window.location.origin}/workshop`;
+}
+// Caption used across every share channel.
+function shareMessage(): string {
+  return (
+    "🎉 I just earned my certificate for the TextilePrints → Mockup AI Workshop by AgentForge!\n\n" +
+    "Want to learn AI for textile design too? Join the workshop here 👇\n" +
+    workshopUrl()
+  );
+}
+
 export default function CertificatePage() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -97,6 +114,7 @@ export default function CertificatePage() {
   const [imgReady, setImgReady] = useState(false);
   const [fontReady, setFontReady] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Backend verification — must confirm the email is a paid registrant
   // for the chosen date before the certificate can be downloaded.
@@ -261,6 +279,91 @@ export default function CertificatePage() {
     }
   };
 
+  // ── Share ────────────────────────────────────────────────────────────
+  const openShare = (url: string) =>
+    window.open(url, "_blank", "noopener,noreferrer,width=620,height=560");
+
+  const shareWhatsApp = () =>
+    openShare(`https://wa.me/?text=${encodeURIComponent(shareMessage())}`);
+
+  const shareFacebook = () =>
+    openShare(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+        workshopUrl(),
+      )}&quote=${encodeURIComponent(shareMessage())}`,
+    );
+
+  const shareLinkedIn = () =>
+    openShare(
+      `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+        workshopUrl(),
+      )}`,
+    );
+
+  // Instagram has no web "share a link" intent. On mobile use the native
+  // share sheet (which lists Instagram); otherwise copy the caption + link
+  // and open Instagram so the user can paste it into a post/story.
+  const shareInstagram = async () => {
+    const msg = shareMessage();
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ text: msg, url: workshopUrl() });
+        return;
+      } catch {
+        /* user dismissed — fall through to copy */
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(msg);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      /* ignore */
+    }
+    openShare("https://www.instagram.com/");
+  };
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareMessage());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  // Primary "Share Now" — uses the OS share sheet and attaches the actual
+  // certificate image (+ caption + workshop link) where supported (mobile).
+  // Falls back to copying the caption on desktop browsers.
+  const shareNow = async () => {
+    const canvas = canvasRef.current;
+    const msg = shareMessage();
+    try {
+      if (canvas && typeof navigator !== "undefined" && (navigator as any).canShare) {
+        const blob: Blob | null = await new Promise((res) =>
+          canvas.toBlob((b) => res(b), "image/jpeg", 0.95),
+        );
+        if (blob) {
+          const file = new File([blob], "AgentForge-Certificate.jpg", {
+            type: "image/jpeg",
+          });
+          if ((navigator as any).canShare({ files: [file] })) {
+            await navigator.share({ files: [file], text: msg, url: workshopUrl() });
+            return;
+          }
+        }
+      }
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share({ text: msg, url: workshopUrl() });
+        return;
+      }
+    } catch {
+      /* user dismissed or unsupported — fall through to copy */
+    }
+    await copyLink();
+  };
+
   return (
     <main className="relative isolate min-h-screen overflow-hidden px-4 py-10 text-slate-950">
       {/* Background + doodles */}
@@ -417,6 +520,85 @@ export default function CertificatePage() {
             Your certificate is for the AgentForge AI Workshop.
           </p>
         </div>
+
+        {/* Share — appears once the certificate can be claimed. Every share
+            carries the workshop link so viewers can join the next batch. */}
+        {canDownload && (
+          <div className="mx-auto mt-8 max-w-2xl rounded-[2rem] border border-white/60 bg-white/80 p-6 text-center shadow-xl backdrop-blur-xl">
+            <h2 className="text-lg font-black tracking-tight text-slate-800 sm:text-xl">
+              Share your achievement 🎉
+            </h2>
+            <p className="mx-auto mt-2 max-w-md text-xs font-medium leading-5 text-slate-500">
+              Show off your certificate — your friends can tap the workshop link
+              and join the next batch.
+            </p>
+
+            <button
+              type="button"
+              onClick={shareNow}
+              className="mt-5 inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-500 px-8 py-3.5 text-sm font-black uppercase tracking-[0.12em] text-white shadow-xl transition hover:scale-[1.03] active:scale-95"
+            >
+              <FaShareAlt className="h-4 w-4" />
+              Share Now
+            </button>
+
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={shareWhatsApp}
+                aria-label="Share on WhatsApp"
+                title="WhatsApp"
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition hover:scale-110 active:scale-95"
+              >
+                <FaWhatsapp className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={shareInstagram}
+                aria-label="Share on Instagram"
+                title="Instagram"
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-[#feda75] via-[#d62976] to-[#4f5bd5] text-white shadow-lg transition hover:scale-110 active:scale-95"
+              >
+                <FaInstagram className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={shareFacebook}
+                aria-label="Share on Facebook"
+                title="Facebook"
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1877F2] text-white shadow-lg transition hover:scale-110 active:scale-95"
+              >
+                <FaFacebookF className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={shareLinkedIn}
+                aria-label="Share on LinkedIn"
+                title="LinkedIn"
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0A66C2] text-white shadow-lg transition hover:scale-110 active:scale-95"
+              >
+                <FaLinkedinIn className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={copyLink}
+                aria-label="Copy workshop link"
+                title="Copy link"
+                className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg transition hover:scale-110 active:scale-95 ${
+                  copied ? "bg-emerald-500" : "bg-slate-700"
+                }`}
+              >
+                {copied ? <FiCheck className="h-5 w-5" /> : <FiLink className="h-5 w-5" />}
+              </button>
+            </div>
+
+            {copied && (
+              <p className="mt-3 text-xs font-bold text-emerald-600">
+                Link copied — paste it anywhere!
+              </p>
+            )}
+          </div>
+        )}
       </section>
     </main>
   );
