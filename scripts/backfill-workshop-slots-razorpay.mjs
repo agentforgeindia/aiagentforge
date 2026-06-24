@@ -11,6 +11,21 @@ const VALID = new Set(["20-june", "21-june", "27-june", "28-june", "1-july", "5-
 const APPLY = process.argv.includes("--apply");
 const DEBUG = process.argv.includes("--debug");
 
+// Manual payment_id → slot map (built from the Razorpay dashboard's per-page
+// transaction lists, since the API doesn't expose the page on a payment).
+// Add more here as needed.
+const PAY_TO_SLOT = {
+  pay_T5PC2E7xug7ln7: "1-july",  // prabhjot.kaur233
+  pay_T5N9ZULji05e4b: "1-july",  // aayushirastogi297
+  pay_T5N2K2pi15uppQ: "1-july",  // ritvee.shah
+  pay_T56WdhDtRHtFG1: "1-july",  // soham1am
+  pay_T5OwbIvlinFkXn: "27-june", // siminoushu777
+  pay_T5Ovsl2dtdBv3G: "27-june", // amalgamentersprisers
+  pay_T5H6ewWS7JZHs5: "27-june", // ramztexchem
+  pay_T5K613Uyy0hSg1: "28-june", // milansolanki1210
+  pay_T5Eeqh1nl2iSpv: "28-june", // fazneem1
+};
+
 // Razorpay Payment Page id → slot (most reliable when present in payload).
 const PAGE_TO_SLOT = {
   pl_SrCcaEEG4lDJ4U: "20-june",
@@ -116,7 +131,9 @@ console.log(`${APPLY ? "APPLYING" : "DRY RUN"} — ${rows.length} unassigned row
 const touched = new Set();
 let fixed = 0;
 for (const r of rows) {
-  const slot = await slotFor(r.razorpay_order_id, r.razorpay_payment_id);
+  // Manual map first (payment id or order-id field), then the API attempt.
+  let slot = PAY_TO_SLOT[r.razorpay_payment_id] || PAY_TO_SLOT[r.razorpay_order_id] || null;
+  if (!slot) slot = await slotFor(r.razorpay_order_id, r.razorpay_payment_id);
   if (!slot) { console.log(`  SKIP ${(r.email || "—").padEnd(34)} (no slot note · ₹${r.amount})`); continue; }
   console.log(`  ${(r.email || "—").padEnd(34)} → ${slot}`);
   fixed++; touched.add(slot);
