@@ -682,22 +682,9 @@ export default function WebinarLandingPage() {
           })}
         </div>
 
-        <p className={`mx-auto mt-6 max-w-2xl text-center text-xs leading-6 ${mutedText}`}>
-          Join karke aap hamari{" "}
-          <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-bold text-violet-500 underline">
-            Terms &amp; Conditions
-          </a>
-          ,{" "}
-          <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="font-bold text-violet-500 underline">
-            Privacy Policy
-          </a>{" "}
-          aur{" "}
-          <a href="/refund-policy" target="_blank" rel="noopener noreferrer" className="font-bold text-violet-500 underline">
-            Refund Policy
-          </a>{" "}
-          se agree karte hain.
-        </p>
       </section>
+
+      <WorkshopReviews />
 
       {/* Preference survey — when should the next workshop be? */}
       <section className="mx-auto max-w-3xl px-4 py-10 md:px-8">
@@ -993,8 +980,6 @@ export default function WebinarLandingPage() {
 
   <CenterCTA />
 </SectionWrap>
-
-      <WorkshopReviews />
 
       <section className="mx-auto max-w-7xl px-4 py-14 text-center md:px-8">
         <div className="rounded-[2.5rem] bg-gradient-to-r from-cyan-500 via-blue-600 to-violet-700 p-8 text-white shadow-2xl shadow-violet-300/30 md:p-12">
