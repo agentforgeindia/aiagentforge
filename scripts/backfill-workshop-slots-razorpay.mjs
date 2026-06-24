@@ -86,9 +86,9 @@ function resolve(payment, order, invoice) {
 let dumped = false;
 async function slotFor(orderId, paymentId) {
   const { payment, order, invoice } = await gather(orderId, paymentId);
-  if (DEBUG && !dumped && payment) {
+  if (DEBUG && !dumped && order) {
     dumped = true;
-    console.log("\n──── DEBUG (first payment row) ────");
+    console.log("\n──── DEBUG (first row WITH an order) ────");
     console.log("PAYMENT:", JSON.stringify(payment, null, 2));
     console.log("ORDER:", JSON.stringify(order, null, 2));
     console.log("INVOICE:", JSON.stringify(invoice, null, 2));
