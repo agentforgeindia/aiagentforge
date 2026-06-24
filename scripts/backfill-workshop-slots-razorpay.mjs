@@ -34,8 +34,17 @@ const AUTH = "Basic " + Buffer.from(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_S
 
 async function rzp(path) {
   const r = await fetch(`https://api.razorpay.com/v1${path}`, { headers: { Authorization: AUTH } });
-  if (!r.ok) return null;
+  if (DEBUG) console.log(`  GET ${path.split("?")[0]} → ${r.status}`);
+  if (!r.ok) {
+    if (DEBUG) console.log(`    body: ${(await r.text()).slice(0, 200)}`);
+    return null;
+  }
   return r.json();
+}
+
+if (DEBUG) {
+  console.log("KEY_ID:", (env.RAZORPAY_KEY_ID || "(missing)").slice(0, 14) + "…",
+    "| SECRET len:", (env.RAZORPAY_KEY_SECRET || "").length);
 }
 
 // Gather payment (with invoice) + order for one registration.
@@ -92,8 +101,12 @@ console.log(`${APPLY ? "APPLYING" : "DRY RUN"} — ${rows.length} unassigned row
 const touched = new Set();
 let fixed = 0;
 for (const r of rows) {
+  if (DEBUG) {
+    if (!r.razorpay_order_id && !r.razorpay_payment_id) continue; // skip id-less rows in debug
+    console.log(`\nROW ${r.email || "—"} | order_id=${r.razorpay_order_id} | payment_id=${r.razorpay_payment_id}`);
+  }
   const slot = await slotFor(r.razorpay_order_id, r.razorpay_payment_id);
-  if (DEBUG) { console.log(`(debug: ${r.email} → ${slot || "unresolved"})`); break; }
+  if (DEBUG) { console.log(`→ resolved: ${slot || "unresolved"}`); break; }
   if (!slot) { console.log(`  SKIP ${(r.email || "—").padEnd(34)} (no slot note · ₹${r.amount})`); continue; }
   console.log(`  ${(r.email || "—").padEnd(34)} → ${slot}`);
   fixed++; touched.add(slot);
