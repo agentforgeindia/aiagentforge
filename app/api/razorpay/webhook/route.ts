@@ -63,6 +63,20 @@ function resolveWorkshopSlot(payment: any, order?: any, invoice?: any): string {
   for (const s of WORKSHOP_SLOTS) {
     if (raw.includes(s)) return s;
   }
+  // 2b. A human-readable date anywhere (e.g. a Payment Page field value like
+  //     "27 June 2026" or "1 July"). Lets the page carry the slot in any form.
+  const DATE_TO_SLOT: [RegExp, string][] = [
+    [/\b20\s*june\b/i, "20-june"],
+    [/\b21\s*june\b/i, "21-june"],
+    [/\b27\s*june\b/i, "27-june"],
+    [/\b28\s*june\b/i, "28-june"],
+    [/\b1\s*july\b/i, "1-july"],
+    [/\b4\s*july\b/i, "4-july"],
+    [/\b5\s*july\b/i, "5-july"],
+  ];
+  for (const [re, slot] of DATE_TO_SLOT) {
+    if (re.test(raw)) return slot;
+  }
   // 3. The page title "… Day 0N" ANYWHERE in the full payload — for hosted
   //    Payment Pages this rides in the invoice line-item / description even
   //    when payment.notes is empty. Scan the whole stringified payload.
