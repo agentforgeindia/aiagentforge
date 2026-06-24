@@ -40,19 +40,18 @@ const PAGE_TO_SLOT: Record<string, string> = {
 // Returns a valid workshop_slots slot_id, or 'unassigned' as a safe fallback
 // (that row is seeded by sql/workshop-payment-page-capture.sql, so the FK and
 // the admin list always accept it — the paid customer is never dropped).
-function resolveWorkshopSlot(payment: any, order?: any): string {
-  // 0. The Payment Page's `slot` note propagates to the order notes — the
-  //    most reliable signal (e.g. order.notes.slot = "27-june"). Razorpay
-  //    payment-page notes don't ride on the payment entity, so we read the
-  //    order we already fetched.
-  const noteSlot =
-    (order?.notes?.slot ?? payment?.notes?.slot ?? "").toString().trim().toLowerCase();
-  if (noteSlot && WORKSHOP_SLOTS.has(noteSlot)) return noteSlot;
+function resolveWorkshopSlot(payment: any, order?: any, invoice?: any): string {
+  // 0. The Payment Page's `slot` note — read it from the order, payment or
+  //    invoice (whichever carries it). e.g. notes.slot = "27-june".
+  for (const n of [order?.notes?.slot, payment?.notes?.slot, invoice?.notes?.slot]) {
+    const s = (n ?? "").toString().trim().toLowerCase();
+    if (s && WORKSHOP_SLOTS.has(s)) return s;
+  }
 
-  // 1. Payment Page id anywhere in the payload (also scan the order).
+  // 1. Payment Page id anywhere in the payload (scan payment + order + invoice).
   let raw = "";
   try {
-    raw = JSON.stringify(payment || {}) + JSON.stringify(order || {});
+    raw = JSON.stringify(payment || {}) + JSON.stringify(order || {}) + JSON.stringify(invoice || {});
   } catch {
     raw = "";
   }
@@ -81,8 +80,10 @@ async function fetchFullPayment(paymentId: string): Promise<any | null> {
   if (!keyId || !keySecret || !paymentId) return null;
   try {
     const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
+    // NOTE: `expand[]=invoice` is NOT valid on the payments API (returns 400).
+    // Fetch the plain payment; the invoice is fetched separately.
     const res = await fetch(
-      `https://api.razorpay.com/v1/payments/${paymentId}?expand[]=invoice`,
+      `https://api.razorpay.com/v1/payments/${paymentId}`,
       { headers: { Authorization: `Basic ${auth}` }, cache: "no-store" },
     );
     if (!res.ok) return null;
@@ -102,6 +103,25 @@ async function fetchOrder(orderId: string): Promise<any | null> {
   try {
     const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
     const res = await fetch(`https://api.razorpay.com/v1/orders/${orderId}`, {
+      headers: { Authorization: `Basic ${auth}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+// Fetch the Razorpay INVOICE. Hosted Payment Page payments create an invoice
+// that carries the page reference / notes — the reliable slot signal.
+async function fetchInvoice(invoiceId: string): Promise<any | null> {
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  if (!keyId || !keySecret || !invoiceId) return null;
+  try {
+    const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
+    const res = await fetch(`https://api.razorpay.com/v1/invoices/${invoiceId}`, {
       headers: { Authorization: `Basic ${auth}` },
       cache: "no-store",
     });
@@ -217,7 +237,9 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, skipped: "meeting" });
       }
 
-      const slot = resolveWorkshopSlot(full, order);
+      // Hosted Payment Page payments carry the slot signal on their invoice.
+      const invoice = full?.invoice_id ? await fetchInvoice(full.invoice_id) : null;
+      const slot = resolveWorkshopSlot(full, order, invoice);
       // DEBUG: when a payment can't be auto-slotted, dump the full payment
       // payload to Error Logs so we can see exactly which field carries the
       // workshop day / page reference, then fix routing for good.

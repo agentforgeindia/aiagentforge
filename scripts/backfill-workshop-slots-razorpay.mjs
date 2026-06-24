@@ -47,29 +47,32 @@ if (DEBUG) {
     "| SECRET len:", (env.RAZORPAY_KEY_SECRET || "").length);
 }
 
-// Gather payment (with invoice) + order for one registration.
+// Gather payment + order + invoice for one registration.
+// (expand[]=invoice is NOT valid on the payments API — fetch the invoice
+//  separately via payment.invoice_id.)
 async function gather(orderId, paymentId) {
   let payId = paymentId && paymentId.startsWith("pay_") ? paymentId : null;
   let ordId = orderId && orderId.startsWith("order_") ? orderId : null;
   if (!payId && orderId && orderId.startsWith("pay_")) payId = orderId;
 
-  const payment = payId ? await rzp(`/payments/${payId}?expand[]=invoice`) : null;
+  const payment = payId ? await rzp(`/payments/${payId}`) : null;
   if (!ordId && payment?.order_id) ordId = payment.order_id;
   const order = ordId ? await rzp(`/orders/${ordId}`) : null;
-  return { payment, order };
+  const invId = payment?.invoice_id;
+  const invoice = invId ? await rzp(`/invoices/${invId}`) : null;
+  return { payment, order, invoice };
 }
 
 // Resolve a registration's slot from any reliable signal in the payload.
-function resolve(payment, order) {
-  const inv = payment?.invoice || null;
+function resolve(payment, order, invoice) {
   // 1. slot note on order / payment / invoice
-  for (const n of [order?.notes?.slot, payment?.notes?.slot, inv?.notes?.slot]) {
+  for (const n of [order?.notes?.slot, payment?.notes?.slot, invoice?.notes?.slot]) {
     const s = (n || "").toString().trim().toLowerCase();
     if (VALID.has(s)) return s;
   }
   // 2. Payment Page id anywhere in payment+order+invoice
   let raw = "";
-  try { raw = JSON.stringify(payment || {}) + JSON.stringify(order || {}); } catch { /* */ }
+  try { raw = JSON.stringify(payment || {}) + JSON.stringify(order || {}) + JSON.stringify(invoice || {}); } catch { /* */ }
   for (const [pid, slot] of Object.entries(PAGE_TO_SLOT)) if (raw.includes(pid)) return slot;
   // 3. a slot string anywhere
   for (const s of VALID) if (raw.includes(s)) return s;
@@ -80,15 +83,18 @@ function resolve(payment, order) {
   return null;
 }
 
+let dumped = false;
 async function slotFor(orderId, paymentId) {
-  const { payment, order } = await gather(orderId, paymentId);
-  if (DEBUG) {
-    console.log("\n──── DEBUG payload ────");
+  const { payment, order, invoice } = await gather(orderId, paymentId);
+  if (DEBUG && !dumped && invoice) {
+    dumped = true;
+    console.log("\n──── DEBUG (first invoice / payment-page row) ────");
     console.log("PAYMENT:", JSON.stringify(payment, null, 2));
     console.log("ORDER:", JSON.stringify(order, null, 2));
-    console.log("───────────────────────\n");
+    console.log("INVOICE:", JSON.stringify(invoice, null, 2));
+    console.log("──────────────────────────────────────────────────\n");
   }
-  return resolve(payment, order);
+  return resolve(payment, order, invoice);
 }
 
 const { data: rows, error } = await db
@@ -101,12 +107,7 @@ console.log(`${APPLY ? "APPLYING" : "DRY RUN"} — ${rows.length} unassigned row
 const touched = new Set();
 let fixed = 0;
 for (const r of rows) {
-  if (DEBUG) {
-    if (!r.razorpay_order_id && !r.razorpay_payment_id) continue; // skip id-less rows in debug
-    console.log(`\nROW ${r.email || "—"} | order_id=${r.razorpay_order_id} | payment_id=${r.razorpay_payment_id}`);
-  }
   const slot = await slotFor(r.razorpay_order_id, r.razorpay_payment_id);
-  if (DEBUG) { console.log(`→ resolved: ${slot || "unresolved"}`); break; }
   if (!slot) { console.log(`  SKIP ${(r.email || "—").padEnd(34)} (no slot note · ₹${r.amount})`); continue; }
   console.log(`  ${(r.email || "—").padEnd(34)} → ${slot}`);
   fixed++; touched.add(slot);
