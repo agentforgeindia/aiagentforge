@@ -40,11 +40,19 @@ const PAGE_TO_SLOT: Record<string, string> = {
 // Returns a valid workshop_slots slot_id, or 'unassigned' as a safe fallback
 // (that row is seeded by sql/workshop-payment-page-capture.sql, so the FK and
 // the admin list always accept it — the paid customer is never dropped).
-function resolveWorkshopSlot(payment: any): string {
-  // 1. Payment Page id anywhere in the payload (most reliable).
+function resolveWorkshopSlot(payment: any, order?: any): string {
+  // 0. The Payment Page's `slot` note propagates to the order notes — the
+  //    most reliable signal (e.g. order.notes.slot = "27-june"). Razorpay
+  //    payment-page notes don't ride on the payment entity, so we read the
+  //    order we already fetched.
+  const noteSlot =
+    (order?.notes?.slot ?? payment?.notes?.slot ?? "").toString().trim().toLowerCase();
+  if (noteSlot && WORKSHOP_SLOTS.has(noteSlot)) return noteSlot;
+
+  // 1. Payment Page id anywhere in the payload (also scan the order).
   let raw = "";
   try {
-    raw = JSON.stringify(payment || {});
+    raw = JSON.stringify(payment || {}) + JSON.stringify(order || {});
   } catch {
     raw = "";
   }
@@ -209,7 +217,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true, skipped: "meeting" });
       }
 
-      const slot = resolveWorkshopSlot(full);
+      const slot = resolveWorkshopSlot(full, order);
       // DEBUG: when a payment can't be auto-slotted, dump the full payment
       // payload to Error Logs so we can see exactly which field carries the
       // workshop day / page reference, then fix routing for good.
