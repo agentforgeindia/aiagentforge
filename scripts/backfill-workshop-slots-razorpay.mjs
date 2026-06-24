@@ -9,6 +9,17 @@ import { createClient } from "@supabase/supabase-js";
 
 const VALID = new Set(["20-june", "21-june", "27-june", "28-june", "1-july", "5-july", "4-july"]);
 const APPLY = process.argv.includes("--apply");
+const DEBUG = process.argv.includes("--debug");
+
+// Razorpay Payment Page id → slot (most reliable when present in payload).
+const PAGE_TO_SLOT = {
+  pl_SrCcaEEG4lDJ4U: "20-june",
+  pl_T0jBVjq7V3m6YC: "21-june",
+  pl_T0jF2ojwXv8fB8: "27-june",
+  pl_T0jC2JKtO63npD: "28-june",
+  pl_T3vtDx51OXwQZv: "5-july",
+  pl_T4gvADKw9grX1q: "1-july",
+};
 
 const env = {};
 for (const l of fs.readFileSync(".env.local", "utf8").split("\n")) {
@@ -27,26 +38,53 @@ async function rzp(path) {
   return r.json();
 }
 
-// Resolve a registration's slot from its Razorpay order notes.
-async function slotFor(orderId) {
-  if (!orderId) return null;
-  let order = null;
-  if (orderId.startsWith("order_")) {
-    order = await rzp(`/orders/${orderId}`);
-  } else if (orderId.startsWith("pay_")) {
-    // QR/link payments stored the payment id — hop to its order.
-    const pay = await rzp(`/payments/${orderId}`);
-    if (pay?.order_id) order = await rzp(`/orders/${pay.order_id}`);
-    const noteP = (pay?.notes?.slot || "").toString().trim().toLowerCase();
-    if (VALID.has(noteP)) return noteP;
+// Gather payment (with invoice) + order for one registration.
+async function gather(orderId, paymentId) {
+  let payId = paymentId && paymentId.startsWith("pay_") ? paymentId : null;
+  let ordId = orderId && orderId.startsWith("order_") ? orderId : null;
+  if (!payId && orderId && orderId.startsWith("pay_")) payId = orderId;
+
+  const payment = payId ? await rzp(`/payments/${payId}?expand[]=invoice`) : null;
+  if (!ordId && payment?.order_id) ordId = payment.order_id;
+  const order = ordId ? await rzp(`/orders/${ordId}`) : null;
+  return { payment, order };
+}
+
+// Resolve a registration's slot from any reliable signal in the payload.
+function resolve(payment, order) {
+  const inv = payment?.invoice || null;
+  // 1. slot note on order / payment / invoice
+  for (const n of [order?.notes?.slot, payment?.notes?.slot, inv?.notes?.slot]) {
+    const s = (n || "").toString().trim().toLowerCase();
+    if (VALID.has(s)) return s;
   }
-  const note = (order?.notes?.slot || "").toString().trim().toLowerCase();
-  return VALID.has(note) ? note : null;
+  // 2. Payment Page id anywhere in payment+order+invoice
+  let raw = "";
+  try { raw = JSON.stringify(payment || {}) + JSON.stringify(order || {}); } catch { /* */ }
+  for (const [pid, slot] of Object.entries(PAGE_TO_SLOT)) if (raw.includes(pid)) return slot;
+  // 3. a slot string anywhere
+  for (const s of VALID) if (raw.includes(s)) return s;
+  // 4. "Day 0N" in the description/payload
+  const m = raw.match(/day\s*0?([1-4])(?!\d)/i);
+  const DAY = { 1: "20-june", 2: "21-june", 3: "27-june", 4: "28-june" };
+  if (m && DAY[m[1]]) return DAY[m[1]];
+  return null;
+}
+
+async function slotFor(orderId, paymentId) {
+  const { payment, order } = await gather(orderId, paymentId);
+  if (DEBUG) {
+    console.log("\n──── DEBUG payload ────");
+    console.log("PAYMENT:", JSON.stringify(payment, null, 2));
+    console.log("ORDER:", JSON.stringify(order, null, 2));
+    console.log("───────────────────────\n");
+  }
+  return resolve(payment, order);
 }
 
 const { data: rows, error } = await db
   .from("workshop_registrations")
-  .select("id, email, razorpay_order_id, amount")
+  .select("id, email, razorpay_order_id, razorpay_payment_id, amount")
   .eq("slot_id", "unassigned");
 if (error) { console.error(error.message); process.exit(1); }
 
@@ -54,7 +92,8 @@ console.log(`${APPLY ? "APPLYING" : "DRY RUN"} — ${rows.length} unassigned row
 const touched = new Set();
 let fixed = 0;
 for (const r of rows) {
-  const slot = await slotFor(r.razorpay_order_id);
+  const slot = await slotFor(r.razorpay_order_id, r.razorpay_payment_id);
+  if (DEBUG) { console.log(`(debug: ${r.email} → ${slot || "unresolved"})`); break; }
   if (!slot) { console.log(`  SKIP ${(r.email || "—").padEnd(34)} (no slot note · ₹${r.amount})`); continue; }
   console.log(`  ${(r.email || "—").padEnd(34)} → ${slot}`);
   fixed++; touched.add(slot);
