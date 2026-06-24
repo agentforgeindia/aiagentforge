@@ -7,7 +7,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Download, IndianRupee, RefreshCw, Search, ShieldCheck, Ticket } from "lucide-react";
+import { CalendarDays, Download, IndianRupee, RefreshCw, Search, ShieldCheck, Ticket } from "lucide-react";
 import AdminShell, {
   adminCardCls,
   adminInputCls,
@@ -50,6 +50,42 @@ const CALL_STATUSES = [
   "Not Interested",
   "No Answer",
 ];
+
+// Plan purchases made via a Razorpay Payment Page (no in-app userId, so the
+// webhook files them here). These are NOT ₹99 workshop tickets — they get
+// their own "Plan Purchases" tab, kept out of the workshop attendee lists.
+const PLAN_AMOUNTS: Record<number, string> = {
+  1999: "Starter",
+  9999: "Pro Creator",
+  39999: "Empire",
+};
+const planNameForAmount = (amount: number | null): string | null =>
+  amount != null ? PLAN_AMOUNTS[Number(amount)] ?? null : null;
+
+// A distinct colour per slot/date so each group is instantly recognisable.
+// (Static class strings — Tailwind can't see runtime-built names.)
+type GroupColor = { ring: string; head: string; soft: string; text: string };
+const PALETTE: GroupColor[] = [
+  { ring: "border-l-cyan-500",    head: "from-cyan-500 to-blue-600",     soft: "bg-cyan-50 dark:bg-cyan-500/15",    text: "text-cyan-700 dark:text-cyan-300" },
+  { ring: "border-l-violet-500",  head: "from-violet-500 to-purple-600", soft: "bg-violet-50 dark:bg-violet-500/15", text: "text-violet-700 dark:text-violet-300" },
+  { ring: "border-l-emerald-500", head: "from-emerald-500 to-teal-600",  soft: "bg-emerald-50 dark:bg-emerald-500/15", text: "text-emerald-700 dark:text-emerald-300" },
+  { ring: "border-l-amber-500",   head: "from-amber-500 to-orange-600",  soft: "bg-amber-50 dark:bg-amber-500/15",  text: "text-amber-700 dark:text-amber-300" },
+  { ring: "border-l-rose-500",    head: "from-rose-500 to-pink-600",     soft: "bg-rose-50 dark:bg-rose-500/15",    text: "text-rose-700 dark:text-rose-300" },
+  { ring: "border-l-blue-500",    head: "from-blue-500 to-indigo-600",   soft: "bg-blue-50 dark:bg-blue-500/15",    text: "text-blue-700 dark:text-blue-300" },
+  { ring: "border-l-fuchsia-500", head: "from-fuchsia-500 to-pink-600",  soft: "bg-fuchsia-50 dark:bg-fuchsia-500/15", text: "text-fuchsia-700 dark:text-fuchsia-300" },
+  { ring: "border-l-teal-500",    head: "from-teal-500 to-cyan-600",     soft: "bg-teal-50 dark:bg-teal-500/15",    text: "text-teal-700 dark:text-teal-300" },
+];
+// Neutral colour reserved for the catch-all "unassigned" bucket.
+const UNASSIGNED_COLOR: GroupColor = {
+  ring: "border-l-slate-400", head: "from-slate-500 to-slate-700",
+  soft: "bg-slate-100 dark:bg-white/10", text: "text-slate-600 dark:text-slate-300",
+};
+function colorForKey(key: string): GroupColor {
+  if (key === "unassigned") return UNASSIGNED_COLOR;
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return PALETTE[h % PALETTE.length];
+}
 
 // WhatsApp community group per slot.
 const SLOT_COMMUNITY: Record<string, string> = {
@@ -107,7 +143,7 @@ export default function AdminWorkshopRegistrationsPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [search, setSearch] = useState("");
   const [slotFilter, setSlotFilter] = useState("all");
-  const [tab, setTab] = useState<"upcoming" | "completed">("upcoming");
+  const [tab, setTab] = useState<"upcoming" | "completed" | "plans">("upcoming");
   const [callEdits, setCallEdits] = useState<Record<string, { call_status: string; call_notes: string }>>({});
 
   const saveCall = async (id: string, patch: { call_status?: string; call_notes?: string }) => {
@@ -173,9 +209,16 @@ export default function AdminWorkshopRegistrationsPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
-      const completed = completedSlotIds.has(r.slot_id);
-      if (tab === "completed" ? !completed : completed) return false;
-      if (slotFilter !== "all" && r.slot_id !== slotFilter) return false;
+      const isPlan = planNameForAmount(r.amount) != null;
+      // Plan purchases live only in their own tab; workshop tabs exclude them.
+      if (tab === "plans") {
+        if (!isPlan) return false;
+      } else {
+        if (isPlan) return false;
+        const completed = completedSlotIds.has(r.slot_id);
+        if (tab === "completed" ? !completed : completed) return false;
+      }
+      if (tab !== "plans" && slotFilter !== "all" && r.slot_id !== slotFilter) return false;
       if (q) {
         const hay =
           `${r.email ?? ""} ${r.phone ?? ""} ${r.name ?? ""} ${r.razorpay_payment_id ?? ""}`.toLowerCase();
@@ -200,6 +243,34 @@ export default function AdminWorkshopRegistrationsPage() {
     const revenue = filtered.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
     return { total, revenue };
   }, [filtered]);
+
+  // Group the filtered rows by date/slot (or plan, on the Plans tab) so each
+  // bucket gets its own colour-coded card — no more guessing which entry
+  // belongs to which date.
+  const groups = useMemo(() => {
+    const map = new Map<
+      string,
+      { key: string; label: string; color: GroupColor; rows: RegRow[]; total: number }
+    >();
+    filtered.forEach((r) => {
+      const key =
+        tab === "plans"
+          ? planNameForAmount(r.amount) ?? "Plan"
+          : r.slot_id;
+      const label =
+        tab === "plans"
+          ? `${planNameForAmount(r.amount) ?? "Plan"} Plan`
+          : slotLabel[r.slot_id] ?? r.slot_id;
+      let g = map.get(key);
+      if (!g) {
+        g = { key, label, color: colorForKey(key), rows: [], total: 0 };
+        map.set(key, g);
+      }
+      g.rows.push(r);
+      g.total += Number(r.amount) || 0;
+    });
+    return Array.from(map.values());
+  }, [filtered, tab, slotLabel]);
 
   if (loadingAuth) {
     return (
@@ -279,24 +350,27 @@ export default function AdminWorkshopRegistrationsPage() {
       {/* Seat counts per slot */}
       {slots.length > 0 && (
         <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {slots.map((s) => (
-            <div key={s.slot_id} className={`${adminCardCls} p-3`}>
-              <p className={`text-[11px] ${adminMutedCls}`}>{s.label}</p>
-              <p className="mt-1 text-lg font-bold">
-                {s.seats_filled}
-                <span className={`text-xs font-normal ${adminMutedCls}`}>
-                  {" "}
-                  / {s.max_seats} seats
-                </span>
-              </p>
-            </div>
-          ))}
+          {slots.map((s) => {
+            const c = colorForKey(s.slot_id);
+            return (
+              <div key={s.slot_id} className={`${adminCardCls} border-l-4 ${c.ring} p-3`}>
+                <p className={`text-[11px] font-semibold ${c.text}`}>{s.label}</p>
+                <p className="mt-1 text-lg font-bold">
+                  {s.seats_filled}
+                  <span className={`text-xs font-normal ${adminMutedCls}`}>
+                    {" "}
+                    / {s.max_seats} seats
+                  </span>
+                </p>
+              </div>
+            );
+          })}
         </div>
       )}
 
       {/* Tabs */}
       <div className="mb-4 flex items-center gap-2">
-        {(["upcoming", "completed"] as const).map((t) => (
+        {(["upcoming", "completed", "plans"] as const).map((t) => (
           <button
             key={t}
             type="button"
@@ -307,7 +381,7 @@ export default function AdminWorkshopRegistrationsPage() {
                 : "border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
             }`}
           >
-            {t === "upcoming" ? "Upcoming" : "Completed · Calling"}
+            {t === "upcoming" ? "Upcoming" : t === "completed" ? "Completed · Calling" : "Plan Purchases"}
           </button>
         ))}
       </div>
@@ -349,114 +423,145 @@ export default function AdminWorkshopRegistrationsPage() {
         </select>
       </div>
 
-      {/* List */}
-      <div className={`${adminCardCls} mt-4`}>
-        {loadingRows ? (
+      {/* List — grouped by date/slot, each bucket colour-coded */}
+      {loadingRows ? (
+        <div className={`${adminCardCls} mt-4`}>
           <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading...</p>
-        ) : filtered.length === 0 ? (
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className={`${adminCardCls} mt-4`}>
           <p className={`p-8 text-center text-sm ${adminMutedCls}`}>
             {rows.length === 0
               ? "No paid registrations yet."
               : "No registrations match the current filter."}
           </p>
-        ) : (
-          <ul className="divide-y divide-slate-200 dark:divide-slate-800">
-            {filtered.map((r) => (
-              <li
-                key={r.id}
-                className="px-4 py-3 transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10">
-                    <Ticket className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold">
-                      {r.email || r.name || "—"}
-                    </p>
-                    <p className={`truncate text-xs ${adminMutedCls}`}>
-                      {r.phone || "no phone"}
-                      {r.razorpay_payment_id ? ` · ${r.razorpay_payment_id}` : ""}
-                    </p>
-                  </div>
-                  <div className="hidden text-center sm:block">
-                    <p className="text-xs font-bold">
-                      {slotLabel[r.slot_id] ?? r.slot_id}
-                    </p>
-                    <p className={`text-[11px] ${adminMutedCls}`}>
-                      {formatDateTime(r.created_at)}
-                    </p>
-                  </div>
-                  {r.phone && (
-                    <a
-                      href={`tel:${r.phone}`}
-                      className="hidden shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-blue-500 sm:inline-block"
-                    >
-                      Call
-                    </a>
-                  )}
-                  {r.phone && SLOT_COMMUNITY[r.slot_id] && (
-                    <a
-                      href={communityWaLink(r.phone, r.slot_id, r.name)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="shrink-0 rounded-lg bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-500"
-                      title="Send the community join link on WhatsApp"
-                    >
-                      Community
-                    </a>
-                  )}
-                  <div className="flex items-center gap-1 text-right font-bold text-emerald-600">
-                    <IndianRupee className="h-3.5 w-3.5" />
-                    {Number(r.amount) || 0}
-                  </div>
+        </div>
+      ) : (
+        <div className="mt-4 space-y-4">
+          {groups.map((g) => (
+            <div
+              key={g.key}
+              className={`overflow-hidden rounded-xl border border-l-4 border-slate-200 ${g.color.ring} bg-white shadow-sm dark:border-slate-800 dark:bg-[#11141a]`}
+            >
+              {/* Colourful group header */}
+              <div className={`flex items-center justify-between gap-3 bg-gradient-to-r ${g.color.head} px-4 py-2.5 text-white`}>
+                <div className="flex min-w-0 items-center gap-2">
+                  <CalendarDays className="h-4 w-4 shrink-0" />
+                  <span className="truncate text-sm font-black tracking-tight">{g.label}</span>
                 </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="rounded-full bg-white/25 px-2.5 py-0.5 text-[11px] font-bold">
+                    {g.rows.length} {g.rows.length === 1 ? "entry" : "entries"}
+                  </span>
+                  <span className="inline-flex items-center gap-0.5 rounded-full bg-white/25 px-2.5 py-0.5 text-[11px] font-bold">
+                    <IndianRupee className="h-3 w-3" />
+                    {g.total.toLocaleString("en-IN")}
+                  </span>
+                </div>
+              </div>
 
-                {tab === "completed" && (
-                  <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
-                    <select
-                      value={callEdits[r.id]?.call_status || "New"}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setCallEdits((p) => ({ ...p, [r.id]: { call_status: v, call_notes: p[r.id]?.call_notes || "" } }));
-                        saveCall(r.id, { call_status: v });
-                      }}
-                      className={`${adminInputCls} sm:max-w-[170px]`}
-                    >
-                      {CALL_STATUSES.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                    <input
-                      value={callEdits[r.id]?.call_notes || ""}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setCallEdits((p) => ({ ...p, [r.id]: { call_status: p[r.id]?.call_status || "New", call_notes: v } }));
-                      }}
-                      onBlur={() => saveCall(r.id, { call_notes: callEdits[r.id]?.call_notes || "" })}
-                      placeholder="Call notes — what did they say? (purchased / demo pending …)"
-                      className={`${adminInputCls} flex-1`}
-                    />
-                    {r.promoted || promotedIds.has(r.id) ? (
-                      <span className="shrink-0 rounded-lg bg-emerald-100 px-3 py-2 text-center text-[11px] font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
-                        ✓ Lead
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => promoteLead(r.id)}
-                        className="shrink-0 rounded-lg bg-violet-600 px-3 py-2 text-[11px] font-bold text-white hover:bg-violet-500"
-                      >
-                        Promote to Lead
-                      </button>
+              {/* Rows in this group */}
+              <ul className="divide-y divide-slate-200 dark:divide-slate-800">
+                {g.rows.map((r) => (
+                  <li
+                    key={r.id}
+                    className="px-4 py-3 transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${g.color.soft} ${g.color.text}`}>
+                        <Ticket className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-bold">
+                          {r.email || r.name || "—"}
+                        </p>
+                        <p className={`truncate text-xs ${adminMutedCls}`}>
+                          {r.phone || "no phone"}
+                          {r.razorpay_payment_id ? ` · ${r.razorpay_payment_id}` : ""}
+                        </p>
+                      </div>
+                      <div className="hidden text-center sm:block">
+                        <p className={`text-[11px] font-bold ${g.color.text}`}>
+                          {planNameForAmount(r.amount)
+                            ? `${planNameForAmount(r.amount)} plan`
+                            : slotLabel[r.slot_id] ?? r.slot_id}
+                        </p>
+                        <p className={`text-[11px] ${adminMutedCls}`}>
+                          {formatDateTime(r.created_at)}
+                        </p>
+                      </div>
+                      {r.phone && (
+                        <a
+                          href={`tel:${r.phone}`}
+                          className="hidden shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-blue-500 sm:inline-block"
+                        >
+                          Call
+                        </a>
+                      )}
+                      {r.phone && SLOT_COMMUNITY[r.slot_id] && (
+                        <a
+                          href={communityWaLink(r.phone, r.slot_id, r.name)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0 rounded-lg bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-500"
+                          title="Send the community join link on WhatsApp"
+                        >
+                          Community
+                        </a>
+                      )}
+                      <div className="flex items-center gap-1 text-right font-bold text-emerald-600">
+                        <IndianRupee className="h-3.5 w-3.5" />
+                        {Number(r.amount) || 0}
+                      </div>
+                    </div>
+
+                    {tab === "completed" && (
+                      <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <select
+                          value={callEdits[r.id]?.call_status || "New"}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setCallEdits((p) => ({ ...p, [r.id]: { call_status: v, call_notes: p[r.id]?.call_notes || "" } }));
+                            saveCall(r.id, { call_status: v });
+                          }}
+                          className={`${adminInputCls} sm:max-w-[170px]`}
+                        >
+                          {CALL_STATUSES.map((s) => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
+                        </select>
+                        <input
+                          value={callEdits[r.id]?.call_notes || ""}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setCallEdits((p) => ({ ...p, [r.id]: { call_status: p[r.id]?.call_status || "New", call_notes: v } }));
+                          }}
+                          onBlur={() => saveCall(r.id, { call_notes: callEdits[r.id]?.call_notes || "" })}
+                          placeholder="Call notes — what did they say? (purchased / demo pending …)"
+                          className={`${adminInputCls} flex-1`}
+                        />
+                        {r.promoted || promotedIds.has(r.id) ? (
+                          <span className="shrink-0 rounded-lg bg-emerald-100 px-3 py-2 text-center text-[11px] font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                            ✓ Lead
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => promoteLead(r.id)}
+                            className="shrink-0 rounded-lg bg-violet-600 px-3 py-2 text-[11px] font-bold text-white hover:bg-violet-500"
+                          >
+                            Promote to Lead
+                          </button>
+                        )}
+                      </div>
                     )}
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
     </AdminShell>
   );
 }

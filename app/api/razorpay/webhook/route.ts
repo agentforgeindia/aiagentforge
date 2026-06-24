@@ -84,6 +84,36 @@ async function fetchFullPayment(paymentId: string): Promise<any | null> {
   }
 }
 
+// Fetch the Razorpay ORDER. Meeting bookings (/api/meetings/create-order)
+// tag their order with notes.type = "meeting" and a "meet_" receipt; that
+// signal lives on the order, not the payment, so we read it here.
+async function fetchOrder(orderId: string): Promise<any | null> {
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  if (!keyId || !keySecret || !orderId) return null;
+  try {
+    const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
+    const res = await fetch(`https://api.razorpay.com/v1/orders/${orderId}`, {
+      headers: { Authorization: `Basic ${auth}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+// A meeting booking? Such payments are recorded into the `meetings` table by
+// /api/meetings/book and must NOT also land in workshop_registrations.
+function isMeetingPayment(payment: any, order: any): boolean {
+  if (payment?.notes?.type === "meeting") return true; // fast path
+  if (order?.notes?.type === "meeting") return true;
+  if (typeof order?.receipt === "string" && order.receipt.startsWith("meet_"))
+    return true;
+  return false;
+}
+
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -169,6 +199,16 @@ export async function POST(request: Request) {
       // Use the FULL payment (notes + page reference) for slot routing;
       // fall back to the webhook's slim entity if the fetch fails.
       const full = (await fetchFullPayment(razorpayPaymentId)) || payment;
+
+      // ── Meeting bookings ──────────────────────────────────────────────
+      // A ₹99 meeting payment from /book-meeting is already saved to the
+      // `meetings` table (shown at /admin/meetings) by /api/meetings/book.
+      // Skip it here so it does NOT also leak into Workshop Registrations.
+      const order = razorpayOrderId ? await fetchOrder(razorpayOrderId) : null;
+      if (isMeetingPayment(full, order)) {
+        return NextResponse.json({ success: true, skipped: "meeting" });
+      }
+
       const slot = resolveWorkshopSlot(full);
       // DEBUG: when a payment can't be auto-slotted, dump the full payment
       // payload to Error Logs so we can see exactly which field carries the
