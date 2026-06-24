@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
 import { useAuth } from "@/app/components/AuthProvider";
+import SceneEditPanel from "@/app/components/SceneEditPanel";
 import { Crown, Sparkles, Upload, UploadCloud, X } from "lucide-react";
 import { track } from "@/lib/analytics";
 import StickyMobileCTA from "@/app/components/StickyMobileCTA";
@@ -4767,6 +4768,13 @@ export default function Home() {
                                   />
                                 ))}
                             </div>
+
+                            {referenceSceneUrl && (
+                              <SceneEditPanel
+                                sceneUrl={referenceSceneUrl}
+                                onSceneUpdated={setReferenceSceneUrl}
+                              />
+                            )}
                           </div>
                         )}
                     </section>
