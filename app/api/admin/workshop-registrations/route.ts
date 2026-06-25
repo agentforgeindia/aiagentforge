@@ -34,7 +34,7 @@ export async function GET(req: Request) {
   const { data: registrations, error } = await db
     .from("workshop_registrations")
     .select(
-      "id, slot_id, name, email, phone, amount, status, razorpay_order_id, razorpay_payment_id, created_at, call_status, call_notes, promoted",
+      "id, slot_id, name, email, phone, amount, status, razorpay_order_id, razorpay_payment_id, created_at, call_status, call_notes, promoted, community_joined",
     )
     .order("created_at", { ascending: false })
     .limit(5000);
@@ -63,13 +63,14 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await req.json().catch(() => ({}));
-  const { id, call_status, call_notes, slot_id } = body as Record<string, any>;
+  const { id, call_status, call_notes, slot_id, community_joined } = body as Record<string, any>;
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   const patch: Record<string, any> = {};
   if (call_status !== undefined) patch.call_status = call_status || null;
   if (call_notes !== undefined) patch.call_notes = call_notes || null;
   if (slot_id !== undefined && typeof slot_id === "string") patch.slot_id = slot_id;
+  if (community_joined !== undefined) patch.community_joined = Boolean(community_joined);
   if (!Object.keys(patch).length)
     return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
 

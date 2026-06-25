@@ -91,3 +91,33 @@ export async function GET(req: Request) {
 
   return NextResponse.json({ ok: true, failed: out });
 }
+
+// POST — manually mark a failed payment as PAID (e.g. they paid via QR
+// instead). Creates a confirmed workshop_registration in the chosen slot,
+// so it persists and shows in that date's group (and drops off this list).
+export async function POST(req: Request) {
+  if (!(await isAdmin(req.headers.get("authorization"))))
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const body = await req.json().catch(() => ({}));
+  const paymentId = String(body?.payment_id || "").trim();
+  const slot = String(body?.slot || "").trim().toLowerCase();
+  const email = body?.email ? String(body.email).trim() : null;
+  const phone = body?.phone ? String(body.phone).trim() : null;
+  const name = body?.name ? String(body.name).trim() : null;
+
+  if (!WORKSHOP_SLOTS.has(slot))
+    return NextResponse.json({ error: "Pick a valid workshop date first." }, { status: 400 });
+
+  const { error } = await db.rpc("register_workshop_seat", {
+    p_slot_id: slot,
+    p_order_id: paymentId || `manual_${Date.now()}`,
+    p_payment_id: paymentId || null,
+    p_amount: 99,
+    p_name: name,
+    p_email: email,
+    p_phone: phone,
+  });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
+}

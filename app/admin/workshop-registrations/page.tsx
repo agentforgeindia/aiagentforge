@@ -40,6 +40,7 @@ type RegRow = {
   call_status: string | null;
   call_notes: string | null;
   promoted: boolean | null;
+  community_joined: boolean | null;
 };
 
 type SlotRow = {
@@ -168,6 +169,34 @@ export default function AdminWorkshopRegistrationsPage() {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ id, ...patch }),
     }).catch(() => {});
+  };
+
+  // Mark a registrant as having joined (or not) the WhatsApp community.
+  const saveCommunity = async (id: string, joined: boolean) => {
+    setRows((p) => p.map((r) => (r.id === id ? { ...r, community_joined: joined } : r)));
+    const { data: session } = await supabase.auth.getSession();
+    const token = session.session?.access_token ?? "";
+    await fetch("/api/admin/workshop-registrations", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ id, community_joined: joined }),
+    }).catch(() => {});
+  };
+
+  // Failed payment paid via QR → mark as paid: creates a confirmed
+  // registration in the chosen slot (persists, drops off the Failed list).
+  const markPaid = async (f: FailedRow, slot: string) => {
+    if (!slot) return alert("Pick the workshop date first.");
+    if (!confirm("Mark this payment as PAID and add to the workshop?")) return;
+    const { data: session } = await supabase.auth.getSession();
+    const token = session.session?.access_token ?? "";
+    const res = await fetch("/api/admin/workshop-failed", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ payment_id: f.payment_id, slot, email: f.email, phone: f.phone }),
+    });
+    if (res.ok) setRefreshKey((k) => k + 1);
+    else alert("Could not mark paid. Please try again.");
   };
 
   // Manually move a registration to a slot (date) — for unassigned / wrong ones.
@@ -552,6 +581,18 @@ export default function AdminWorkshopRegistrationsPage() {
                         {f.phone ? "pick date" : "no phone"}
                       </span>
                     )}
+                    {/* Paid via QR? Mark paid → adds a confirmed registration */}
+                    <button
+                      type="button"
+                      onClick={() => markPaid(f, sel)}
+                      disabled={!sel}
+                      title="They paid via QR — mark as paid and add to the workshop"
+                      className={`shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-bold text-white transition ${
+                        sel ? "bg-violet-600 hover:bg-violet-500" : "cursor-not-allowed bg-slate-300"
+                      }`}
+                    >
+                      Mark Paid (QR)
+                    </button>
                   </li>
                 );
               })}
@@ -675,6 +716,19 @@ export default function AdminWorkshopRegistrationsPage() {
                           Community
                         </a>
                       )}
+                      {/* Manual "community joined" toggle / badge */}
+                      <button
+                        type="button"
+                        onClick={() => saveCommunity(r.id, !r.community_joined)}
+                        title={r.community_joined ? "Joined the community — click to undo" : "Mark as community joined"}
+                        className={`shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-bold transition ${
+                          r.community_joined
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                            : "border border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400"
+                        }`}
+                      >
+                        {r.community_joined ? "✓ Community joined" : "Mark joined"}
+                      </button>
                       <div className="flex items-center gap-1 text-right font-bold text-emerald-600">
                         <IndianRupee className="h-3.5 w-3.5" />
                         {Number(r.amount) || 0}
