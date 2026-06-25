@@ -57,23 +57,46 @@ export async function GET(req: Request) {
   });
 }
 
-// PATCH — update a registration's calling disposition + notes.
+// PATCH — update a registration's calling disposition + notes, or its slot.
 export async function PATCH(req: Request) {
   if (!(await isAdmin(req.headers.get("authorization"))))
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await req.json().catch(() => ({}));
-  const { id, call_status, call_notes } = body as Record<string, any>;
+  const { id, call_status, call_notes, slot_id } = body as Record<string, any>;
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   const patch: Record<string, any> = {};
   if (call_status !== undefined) patch.call_status = call_status || null;
   if (call_notes !== undefined) patch.call_notes = call_notes || null;
+  if (slot_id !== undefined && typeof slot_id === "string") patch.slot_id = slot_id;
   if (!Object.keys(patch).length)
     return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
 
+  // When moving a registration to a different slot, recompute seat counters
+  // for both the old and the new slot.
+  let oldSlot: string | null = null;
+  if (patch.slot_id) {
+    const { data: cur } = await db
+      .from("workshop_registrations").select("slot_id").eq("id", id).maybeSingle();
+    oldSlot = cur?.slot_id ?? null;
+  }
+
   const { error } = await db.from("workshop_registrations").update(patch).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  if (patch.slot_id) {
+    const affected = new Set([oldSlot, patch.slot_id].filter(Boolean) as string[]);
+    for (const s of affected) {
+      if (s === "unassigned") continue;
+      const { count } = await db
+        .from("workshop_registrations")
+        .select("id", { count: "exact", head: true })
+        .eq("slot_id", s);
+      await db.from("workshop_slots").update({ seats_filled: count ?? 0 }).eq("slot_id", s);
+    }
+  }
+
   return NextResponse.json({ ok: true });
 }
 

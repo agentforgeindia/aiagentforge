@@ -156,6 +156,18 @@ export default function AdminWorkshopRegistrationsPage() {
     }).catch(() => {});
   };
 
+  // Manually move a registration to a slot (date) — for unassigned / wrong ones.
+  const saveSlot = async (id: string, slot_id: string) => {
+    setRows((p) => p.map((r) => (r.id === id ? { ...r, slot_id } : r)));
+    const { data: session } = await supabase.auth.getSession();
+    const token = session.session?.access_token ?? "";
+    await fetch("/api/admin/workshop-registrations", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ id, slot_id }),
+    }).catch(() => {});
+  };
+
   const [promotedIds, setPromotedIds] = useState<Set<string>>(new Set());
   const promoteLead = async (id: string) => {
     if (!confirm("Promote this attendee to a CRM lead?")) return;
@@ -490,6 +502,20 @@ export default function AdminWorkshopRegistrationsPage() {
                           {formatDateTime(r.created_at)}
                         </p>
                       </div>
+                      {!planNameForAmount(r.amount) && (
+                        <select
+                          value={r.slot_id}
+                          onChange={(e) => saveSlot(r.id, e.target.value)}
+                          title="Assign / change workshop date"
+                          className="hidden h-8 max-w-[140px] shrink-0 rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-bold text-slate-700 outline-none focus:border-violet-400 sm:block dark:border-slate-700 dark:bg-[#11141a] dark:text-slate-200"
+                        >
+                          {slots.map((s) => (
+                            <option key={s.slot_id} value={s.slot_id}>
+                              {s.label}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                       {r.phone && (
                         <a
                           href={`tel:${r.phone}`}
