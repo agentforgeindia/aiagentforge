@@ -30,7 +30,7 @@ export function resendWhatsAppLink(phone: string, slot: string): string {
   const url = SLOT_PAGE_URL[slot] || "https://aiagentforge.in/workshop";
   const label = SLOT_LABEL[slot] || "the workshop";
   const msg =
-    `Hi! 👋 Aapka AgentForge TextilePrints → Mockup AI Workshop (${label}) ka ₹99 payment ` +
-    `complete nahi hua tha. Apni seat confirm karne ke liye yahan se payment poora karein 👇\n${url}`;
+    `Hi! 👋 Your ₹99 payment for the AgentForge TextilePrints → Mockup AI Workshop (${label}) ` +
+    `didn't go through. Complete your payment here to confirm your seat 👇\n${url}`;
   return `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
 }

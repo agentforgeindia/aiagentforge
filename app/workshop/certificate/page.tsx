@@ -323,7 +323,7 @@ export default function CertificatePage() {
     // Desktop fallback — give them the image + open the platform.
     downloadCertImage();
     alert(
-      "Aapka certificate download ho gaya hai 📥\nShare window khulne par usse attach kar dein.",
+      "Your certificate has been downloaded 📥\nAttach it in the share window that opens.",
     );
     if (platformUrl) openShare(platformUrl);
   };
@@ -375,7 +375,7 @@ export default function CertificatePage() {
     downloadCertImage();
     await copyLink();
     alert(
-      "Certificate download ho gaya 📥 aur caption copy ho gaya — apni post/status mein paste + attach kar dein.",
+      "Certificate downloaded 📥 and caption copied — paste & attach it in your post/status.",
     );
   };
 
