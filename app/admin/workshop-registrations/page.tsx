@@ -16,6 +16,15 @@ import AdminShell, {
 } from "../AdminShell";
 import { buildCsv, downloadCsv } from "@/lib/csv";
 import { useAdminPermissions } from "../AdminPermissions";
+import { resendWhatsAppLink } from "@/lib/workshopPages";
+
+type FailedRow = {
+  payment_id: string;
+  email: string | null;
+  phone: string | null;
+  created_at: number;
+  slot: string | null;
+};
 
 type RegRow = {
   id: string;
@@ -143,7 +152,12 @@ export default function AdminWorkshopRegistrationsPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [search, setSearch] = useState("");
   const [slotFilter, setSlotFilter] = useState("all");
-  const [tab, setTab] = useState<"upcoming" | "completed" | "plans">("upcoming");
+  const [tab, setTab] = useState<"upcoming" | "completed" | "plans" | "failed" | "qr">("upcoming");
+
+  // Failed/incomplete ₹99 payments (live from Razorpay).
+  const [failedRows, setFailedRows] = useState<FailedRow[]>([]);
+  const [loadingFailed, setLoadingFailed] = useState(false);
+  const [failedSel, setFailedSel] = useState<Record<string, string>>({});
   const [callEdits, setCallEdits] = useState<Record<string, { call_status: string; call_notes: string }>>({});
 
   const saveCall = async (id: string, patch: { call_status?: string; call_notes?: string }) => {
@@ -206,6 +220,22 @@ export default function AdminWorkshopRegistrationsPage() {
     })();
   }, [canView, refreshKey]);
 
+  // Failed payments load lazily when the Failed tab is opened.
+  useEffect(() => {
+    if (!canView || tab !== "failed") return;
+    setLoadingFailed(true);
+    (async () => {
+      const { data: session } = await supabase.auth.getSession();
+      const token = session.session?.access_token ?? "";
+      const res = await fetch("/api/admin/workshop-failed", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const json = await res.json();
+      if (json.ok) setFailedRows(json.failed as FailedRow[]);
+      setLoadingFailed(false);
+    })();
+  }, [canView, tab, refreshKey]);
+
   const slotLabel = useMemo(() => {
     const map: Record<string, string> = {};
     slots.forEach((s) => (map[s.slot_id] = s.label));
@@ -218,19 +248,42 @@ export default function AdminWorkshopRegistrationsPage() {
     return s;
   }, [slots]);
 
+  // A QR-code payment? (No real Razorpay order — order_id holds the payment id.)
+  const isQR = (r: RegRow) =>
+    planNameForAmount(r.amount) == null &&
+    !String(r.razorpay_order_id || "").startsWith("order_");
+
+  // Date dropdowns: Upcoming/QR/Failed show only upcoming dates (+ unassigned);
+  // Completed shows only past dates. Past dates drop off the upcoming view.
+  const slotOptions = useMemo(() => {
+    if (tab === "completed") return slots.filter((s) => slotIsPast(s.label));
+    return slots.filter((s) => s.slot_id === "unassigned" || !slotIsPast(s.label));
+  }, [slots, tab]);
+
+  // Real workshop dates only (for assigning a failed payment a date to resend).
+  const assignableSlots = useMemo(
+    () => slots.filter((s) => s.slot_id !== "unassigned" && !slotIsPast(s.label)),
+    [slots],
+  );
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
+    if (tab === "failed") return [];
     return rows.filter((r) => {
       const isPlan = planNameForAmount(r.amount) != null;
-      // Plan purchases live only in their own tab; workshop tabs exclude them.
+      const qr = isQR(r);
+      // Each kind lives in its own tab.
       if (tab === "plans") {
         if (!isPlan) return false;
+      } else if (tab === "qr") {
+        if (!qr) return false;
       } else {
-        if (isPlan) return false;
+        // upcoming / completed — exclude plans and QR payments.
+        if (isPlan || qr) return false;
         const completed = completedSlotIds.has(r.slot_id);
         if (tab === "completed" ? !completed : completed) return false;
       }
-      if (tab !== "plans" && slotFilter !== "all" && r.slot_id !== slotFilter) return false;
+      if (tab !== "plans" && tab !== "qr" && slotFilter !== "all" && r.slot_id !== slotFilter) return false;
       if (q) {
         const hay =
           `${r.email ?? ""} ${r.phone ?? ""} ${r.name ?? ""} ${r.razorpay_payment_id ?? ""}`.toLowerCase();
@@ -381,8 +434,8 @@ export default function AdminWorkshopRegistrationsPage() {
       )}
 
       {/* Tabs */}
-      <div className="mb-4 flex items-center gap-2">
-        {(["upcoming", "completed", "plans"] as const).map((t) => (
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        {(["upcoming", "completed", "plans", "qr", "failed"] as const).map((t) => (
           <button
             key={t}
             type="button"
@@ -393,7 +446,15 @@ export default function AdminWorkshopRegistrationsPage() {
                 : "border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
             }`}
           >
-            {t === "upcoming" ? "Upcoming" : t === "completed" ? "Completed · Calling" : "Plan Purchases"}
+            {t === "upcoming"
+              ? "Upcoming"
+              : t === "completed"
+                ? "Completed · Calling"
+                : t === "plans"
+                  ? "Plan Purchases"
+                  : t === "qr"
+                    ? "QR Payments"
+                    : "Failed · Resend"}
           </button>
         ))}
       </div>
@@ -409,34 +470,95 @@ export default function AdminWorkshopRegistrationsPage() {
         </div>
       )}
 
-      {/* Filters */}
-      <div className={`${adminCardCls} flex flex-col gap-2 p-3 sm:flex-row`}>
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by email, phone or payment id"
-            className={`${adminInputCls} pl-9`}
-          />
+      {/* Filters (not on the Failed tab — that data is live from Razorpay) */}
+      {tab !== "failed" && (
+        <div className={`${adminCardCls} flex flex-col gap-2 p-3 sm:flex-row`}>
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by email, phone or payment id"
+              className={`${adminInputCls} pl-9`}
+            />
+          </div>
+          {tab !== "plans" && tab !== "qr" && (
+            <select
+              value={slotFilter}
+              onChange={(e) => setSlotFilter(e.target.value)}
+              className={`${adminInputCls} sm:max-w-[220px]`}
+            >
+              <option value="all">All dates</option>
+              {slotOptions.map((s) => (
+                <option key={s.slot_id} value={s.slot_id}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
-        <select
-          value={slotFilter}
-          onChange={(e) => setSlotFilter(e.target.value)}
-          className={`${adminInputCls} sm:max-w-[220px]`}
-        >
-          <option value="all">All dates</option>
-          {slots.map((s) => (
-            <option key={s.slot_id} value={s.slot_id}>
-              {s.label}
-            </option>
-          ))}
-        </select>
-      </div>
+      )}
 
-      {/* List — grouped by date/slot, each bucket colour-coded */}
-      {loadingRows ? (
+      {/* Failed tab — live from Razorpay; pick a date and resend the link */}
+      {tab === "failed" ? (
+        loadingFailed ? (
+          <div className={`${adminCardCls} mt-4 p-6 text-center text-sm ${adminMutedCls}`}>
+            Loading from Razorpay…
+          </div>
+        ) : failedRows.length === 0 ? (
+          <div className={`${adminCardCls} mt-4 p-8 text-center text-sm ${adminMutedCls}`}>
+            No pending failed payments. 🎉
+          </div>
+        ) : (
+          <div className={`${adminCardCls} mt-4`}>
+            <p className={`px-4 pt-3 text-xs ${adminMutedCls}`}>
+              Incomplete ₹99 payments (last 30 days; people who later paid are hidden). Pick the
+              date, then tap Resend to WhatsApp them that slot’s payment page.
+            </p>
+            <ul className="divide-y divide-slate-200 dark:divide-slate-800">
+              {failedRows.map((f) => {
+                const sel = failedSel[f.payment_id] || f.slot || "";
+                return (
+                  <li key={f.payment_id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold">{f.email || f.phone || "—"}</p>
+                      <p className={`truncate text-xs ${adminMutedCls}`}>
+                        {f.phone || "no phone"} ·{" "}
+                        {formatDateTime(new Date(f.created_at * 1000).toISOString())}
+                      </p>
+                    </div>
+                    <select
+                      value={sel}
+                      onChange={(e) => setFailedSel((p) => ({ ...p, [f.payment_id]: e.target.value }))}
+                      className="h-8 max-w-[150px] rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-bold text-slate-700 outline-none focus:border-violet-400 dark:border-slate-700 dark:bg-[#11141a] dark:text-slate-200"
+                    >
+                      <option value="">Pick date…</option>
+                      {assignableSlots.map((s) => (
+                        <option key={s.slot_id} value={s.slot_id}>{s.label}</option>
+                      ))}
+                    </select>
+                    {f.phone && sel ? (
+                      <a
+                        href={resendWhatsAppLink(f.phone, sel)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 rounded-lg bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-500"
+                      >
+                        Resend on WhatsApp
+                      </a>
+                    ) : (
+                      <span className="shrink-0 text-[11px] font-bold text-slate-400">
+                        {f.phone ? "pick date" : "no phone"}
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )
+      ) : loadingRows ? (
         <div className={`${adminCardCls} mt-4`}>
           <p className={`p-6 text-center text-sm ${adminMutedCls}`}>Loading...</p>
         </div>
@@ -523,7 +645,11 @@ export default function AdminWorkshopRegistrationsPage() {
                           title="Assign / change workshop date"
                           className="hidden h-8 max-w-[140px] shrink-0 rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-bold text-slate-700 outline-none focus:border-violet-400 sm:block dark:border-slate-700 dark:bg-[#11141a] dark:text-slate-200"
                         >
-                          {slots.map((s) => (
+                          {/* current slot always selectable, plus the tab's options */}
+                          {!slotOptions.some((s) => s.slot_id === r.slot_id) && (
+                            <option value={r.slot_id}>{slotLabel[r.slot_id] ?? r.slot_id}</option>
+                          )}
+                          {slotOptions.map((s) => (
                             <option key={s.slot_id} value={s.slot_id}>
                               {s.label}
                             </option>
