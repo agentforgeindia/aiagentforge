@@ -489,7 +489,21 @@ export default function AdminWorkshopRegistrationsPage() {
                         </p>
                         <p className={`truncate text-xs ${adminMutedCls}`}>
                           {r.phone || "no phone"}
-                          {r.razorpay_payment_id ? ` · ${r.razorpay_payment_id}` : ""}
+                          {r.razorpay_payment_id && (
+                            <>
+                              {" · "}
+                              <a
+                                href={`https://dashboard.razorpay.com/app/payments/${r.razorpay_payment_id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-violet-600 hover:underline dark:text-violet-400"
+                                title="Open this payment in Razorpay to see its page / date"
+                              >
+                                {r.razorpay_payment_id}
+                              </a>
+                            </>
+                          )}
                         </p>
                       </div>
                       <div className="hidden text-center sm:block">
