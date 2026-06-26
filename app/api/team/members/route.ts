@@ -25,15 +25,30 @@ export async function GET(req: NextRequest) {
   const membership = await getTeamMembership(user.id, teamId);
   if (!membership) return NextResponse.json({ error: "Team not found or access denied." }, { status: 403 });
 
-  const { data, error } = await admin()
+  const { data: memberRows, error } = await admin()
     .from("team_members")
-    .select("id, user_id, role, joined_at, profiles(email, full_name)")
+    .select("id, user_id, role, joined_at")
     .eq("team_id", teamId)
     .order("joined_at");
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!memberRows?.length) return NextResponse.json({ members: [] });
 
-  return NextResponse.json({ members: data ?? [] });
+  // Fetch profiles separately (team_members.user_id → auth.users, not public.profiles FK)
+  const userIds = memberRows.map((m: any) => m.user_id);
+  const { data: profiles } = await admin()
+    .from("profiles")
+    .select("id, email, full_name")
+    .in("id", userIds);
+
+  const profileMap = Object.fromEntries((profiles ?? []).map((p: any) => [p.id, p]));
+
+  const members = memberRows.map((m: any) => ({
+    ...m,
+    profiles: profileMap[m.user_id] ?? null,
+  }));
+
+  return NextResponse.json({ members });
 }
 
 export async function DELETE(req: NextRequest) {

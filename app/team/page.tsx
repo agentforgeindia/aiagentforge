@@ -31,6 +31,8 @@ export default function TeamPage() {
   const [inviteUrl, setInviteUrl] = useState("");
   const [topupAmount, setTopupAmount] = useState("");
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [editingName, setEditingName] = useState(false);
+  const [editName, setEditName] = useState("");
 
   const bg = darkMode ? "bg-[#070b14] text-white" : "bg-[#fff8e8] text-[#111827]";
   const card = darkMode ? "border-white/10 bg-white/[0.07] shadow-black/40" : "border-black/10 bg-white/80 shadow-black/10";
@@ -122,6 +124,25 @@ export default function TeamPage() {
     }
   }
 
+  async function handleEditName() {
+    if (!team || !editName.trim()) return;
+    setMsg(null);
+    const token = await getToken();
+    const res = await fetch("/api/team/update", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ team_id: team.id, name: editName }),
+    });
+    const json = await res.json();
+    if (res.ok) {
+      setMsg({ text: "Team name updated!", ok: true });
+      setEditingName(false);
+      setTeam({ ...team, name: editName });
+    } else {
+      setMsg({ text: json.error || "Failed.", ok: false });
+    }
+  }
+
   async function handleRemove(userId: string) {
     if (!team) return;
     if (!confirm("Remove this member?")) return;
@@ -200,13 +221,37 @@ export default function TeamPage() {
               {/* ── Team Overview ── */}
               <div className={`mb-5 rounded-[2rem] border p-6 shadow-xl backdrop-blur-xl md:p-8 ${card}`}>
                 <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-2xl font-black">{team.name}</h3>
+                  <div className="flex-1 mr-4">
+                    {editingName ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className={`flex-1 rounded-xl border px-3 py-2 text-lg font-black outline-none focus:border-cyan-400/60 ${input}`}
+                          autoFocus
+                        />
+                        <button onClick={handleEditName} className="rounded-xl bg-cyan-500 px-4 py-2 text-xs font-black text-white hover:bg-cyan-600">Save</button>
+                        <button onClick={() => setEditingName(false)} className={`rounded-xl border px-4 py-2 text-xs font-black ${softCard}`}>Cancel</button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-2xl font-black">{team.name}</h3>
+                        {team.role === "owner" && (
+                          <button
+                            onClick={() => { setEditName(team.name); setEditingName(true); }}
+                            className={`rounded-lg border px-2.5 py-1 text-xs font-bold transition hover:border-cyan-400/40 hover:text-cyan-500 ${softCard}`}
+                          >
+                            Edit
+                          </button>
+                        )}
+                      </div>
+                    )}
                     <span className={`mt-1 inline-block text-xs font-bold uppercase tracking-widest ${muted}`}>
                       Your role: {team.role}
                     </span>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     <div className="text-3xl font-black text-cyan-500">{team.credits.toLocaleString()}</div>
                     <div className={`text-xs font-semibold uppercase tracking-widest ${muted}`}>Team Credits</div>
                   </div>
