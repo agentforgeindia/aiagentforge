@@ -30,7 +30,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/serverAuth";
 import { isAgentEnabled } from "@/lib/agentEnabled";
-import { deductCredits, refundCredits } from "@/lib/creditsServer";
+import { deductCredits, refundCredits, deductTeamCredits, refundTeamCredits } from "@/lib/creditsServer";
+import { getTeamMembership, teamHasBulkAccess } from "@/lib/teamAuth";
 import {
   firstUntrustedUrl,
   isAgentForgeHostedUrl,
@@ -60,7 +61,7 @@ type SingleBody = {
   generation_id: string;
   required_credits: number;
   source_image_url: string;
-  // anything else is passed through to n8n unchanged
+  team_id?: string | null;
   [k: string]: unknown;
 };
 
@@ -68,6 +69,7 @@ type BulkBody = {
   generation_mode: "bulk";
   required_credits: number;
   batch_id?: string | null;
+  team_id?: string | null;
   items: Array<{
     generation_id: string;
     source_image_url: string;
@@ -142,7 +144,7 @@ function validateBody(body: any): { ok: true; body: Body } | { ok: false; error:
 // Generations row insert — uses service role (RLS bypass).
 // ────────────────────────────────────────────────────────────
 
-async function createGenerationRows(body: Body, userId: string) {
+async function createGenerationRows(body: Body, userId: string, teamId?: string | null) {
   if (!supabaseUrl || !serviceRoleKey) {
     throw new Error("Supabase service-role env vars missing.");
   }
@@ -155,6 +157,7 @@ async function createGenerationRows(body: Body, userId: string) {
             user_id: userId,
             status: "pending",
             agent_type: "jewellery",
+            team_id: teamId ?? null,
           },
         ]
       : body.items.map((item) => ({
@@ -163,6 +166,7 @@ async function createGenerationRows(body: Body, userId: string) {
           status: "pending",
           batch_id: body.batch_id ?? null,
           agent_type: "jewellery",
+          team_id: teamId ?? null,
         }));
 
   const response = await fetch(`${supabaseUrl}/rest/v1/generations`, {
@@ -213,17 +217,37 @@ export async function POST(request: NextRequest) {
   const auditGenerationId =
     body.generation_mode === "single" ? body.generation_id : body.batch_id ?? null;
 
-  // 3. Atomic credit deduction.
-  const deduct = await deductCredits(
-    user.id,
-    body.required_credits,
-    "jewellery_generate",
-    auditGenerationId ?? undefined,
-  );
+  // 3. Resolve credit source: team pool or personal balance.
+  const teamId = typeof body.team_id === "string" && body.team_id ? body.team_id : null;
+
+  if (teamId) {
+    // Verify membership + bulk access
+    const membership = await getTeamMembership(user.id, teamId);
+    if (!membership) {
+      return NextResponse.json({ error: "Team not found or you are not a member." }, { status: 403 });
+    }
+    if (body.generation_mode === "bulk" && !teamHasBulkAccess(membership.plan)) {
+      return NextResponse.json(
+        { error: "Team plan does not include bulk generation.", code: "PLAN_REQUIRED" },
+        { status: 403 },
+      );
+    }
+  }
+
+  // 4. Atomic credit deduction (team pool or personal).
+  const deduct = teamId
+    ? await deductTeamCredits(teamId, user.id, body.required_credits, "jewellery_generate", auditGenerationId ?? undefined)
+    : await deductCredits(user.id, body.required_credits, "jewellery_generate", auditGenerationId ?? undefined);
+
   if (!deduct.ok) {
     if (deduct.reason === "insufficient") {
       return NextResponse.json(
-        { error: "Not enough credits.", code: "INSUFFICIENT_CREDITS" },
+        {
+          error: teamId
+            ? "Not enough credits in team pool."
+            : "Not enough credits.",
+          code: "INSUFFICIENT_CREDITS",
+        },
         { status: 402 },
       );
     }
@@ -233,26 +257,24 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 4. Insert generations row(s) with verified user_id.
+  // 5. Insert generations row(s) with verified user_id + team_id.
   try {
-    await createGenerationRows(body, user.id);
+    await createGenerationRows(body, user.id, teamId);
   } catch (err: any) {
-    await refundCredits(
-      user.id,
-      body.required_credits,
-      "refund:generation_row_insert_failed",
-      auditGenerationId ?? undefined,
-    );
+    // Refund to correct pool
+    if (teamId) {
+      await refundTeamCredits(teamId, user.id, body.required_credits, "refund:generation_row_insert_failed", auditGenerationId ?? undefined);
+    } else {
+      await refundCredits(user.id, body.required_credits, "refund:generation_row_insert_failed", auditGenerationId ?? undefined);
+    }
     return NextResponse.json(
       { error: err?.message || "Failed to register generation." },
       { status: 500 },
     );
   }
 
-  // 5. Forward to n8n with the verified user_id.
-  // We rewrite user_id so even if the client lied earlier, n8n
-  // only ever sees the JWT-verified one.
-  const forwardedPayload = { ...body, user_id: user.id };
+  // 6. Forward to n8n with the verified user_id.
+  const forwardedPayload = { ...body, user_id: user.id, team_id: teamId ?? undefined };
 
   let webhookResponse: Response;
   try {
@@ -263,12 +285,11 @@ export async function POST(request: NextRequest) {
       cache: "no-store",
     });
   } catch (err: any) {
-    await refundCredits(
-      user.id,
-      body.required_credits,
-      "refund:n8n_network_error",
-      auditGenerationId ?? undefined,
-    );
+    if (teamId) {
+      await refundTeamCredits(teamId, user.id, body.required_credits, "refund:n8n_network_error", auditGenerationId ?? undefined);
+    } else {
+      await refundCredits(user.id, body.required_credits, "refund:n8n_network_error", auditGenerationId ?? undefined);
+    }
     return NextResponse.json(
       { error: err?.message || "n8n unreachable." },
       { status: 502 },
@@ -284,12 +305,11 @@ export async function POST(request: NextRequest) {
   }
 
   if (!webhookResponse.ok) {
-    await refundCredits(
-      user.id,
-      body.required_credits,
-      "refund:n8n_error",
-      auditGenerationId ?? undefined,
-    );
+    if (teamId) {
+      await refundTeamCredits(teamId, user.id, body.required_credits, "refund:n8n_error", auditGenerationId ?? undefined);
+    } else {
+      await refundCredits(user.id, body.required_credits, "refund:n8n_error", auditGenerationId ?? undefined);
+    }
     return NextResponse.json(
       {
         error: n8nData?.error || n8nData?.message || "n8n webhook request failed",
@@ -299,7 +319,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 6. Success — return new balance for client UI refresh.
+  // 7. Success — return new balance for client UI refresh.
   return NextResponse.json({
     success: true,
     mode: body.generation_mode,
@@ -311,6 +331,7 @@ export async function POST(request: NextRequest) {
         : undefined,
     batch_id: body.generation_mode === "bulk" ? body.batch_id ?? null : undefined,
     new_balance: deduct.newBalance,
+    team_id: teamId ?? undefined,
     message:
       body.generation_mode === "single"
         ? "Jewellery generation started."
