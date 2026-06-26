@@ -181,7 +181,11 @@ export default function TeamPage() {
             </div>
             <h2 className="text-3xl font-black sm:text-4xl md:text-5xl">Your Team</h2>
             <p className={`mt-3 text-sm sm:text-base ${muted}`}>
-              Create a team, invite members, and share credits for bulk generation.
+              {!team
+                ? "Create a team, invite members, and share credits for bulk generation."
+                : team.role === "owner" || team.role === "admin"
+                ? "Manage your team, invite members, and top up the shared credit pool."
+                : "You're part of a team! Use team credits to run bulk generation on Jewellery AI, Textile AI, and Productography — without spending your personal balance."}
             </p>
           </div>
 
