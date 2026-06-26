@@ -1272,6 +1272,7 @@ const apparelModelUsageOptions = [
 
 const homeModelUsageOptions = [
   "No Model",
+  "Upload Your Model",
   "Model Standing Beside Product",
   "Model Holding Product",
   "Model Pointing Toward Product",
