@@ -5,7 +5,7 @@ import { useTeam } from "@/lib/useTeam";
 interface Props {
   useTeamCredits: boolean;
   onChange: (val: boolean, teamId: string | null) => void;
-  darkMode: boolean;
+  darkMode?: boolean;
 }
 
 export default function TeamCreditToggle({ useTeamCredits, onChange, darkMode }: Props) {
