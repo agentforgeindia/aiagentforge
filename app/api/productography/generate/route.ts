@@ -19,6 +19,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/serverAuth";
 import { isAgentEnabled } from "@/lib/agentEnabled";
 import { isAgentForgeHostedUrl } from "@/lib/uploadValidation";
+import { getTeamMembership } from "@/lib/teamAuth";
 
 export const runtime = "nodejs";
 
@@ -44,6 +45,7 @@ function isUuidish(s: unknown): s is string {
 async function insertGenerationRow(row: {
   id: string;
   user_id: string;
+  team_id?: string | null;
   design_url: string;
   product_type?: string;
   model_type?: string;
@@ -71,6 +73,7 @@ async function insertGenerationRow(row: {
         status: "pending",
         agent_type: "productography",
         category: "productography",
+        team_id: row.team_id ?? null,
       },
     ]),
     cache: "no-store",
@@ -118,10 +121,20 @@ export async function POST(request: Request) {
     );
   }
 
+  // Resolve team context (optional).
+  const teamId = typeof body?.team_id === "string" && body.team_id ? body.team_id : null;
+  if (teamId) {
+    const membership = await getTeamMembership(user.id, teamId);
+    if (!membership) {
+      return NextResponse.json({ error: "Team not found or you are not a member." }, { status: 403 });
+    }
+  }
+
   try {
     await insertGenerationRow({
       id: body.generation_id,
       user_id: user.id,
+      team_id: teamId,
       design_url: body.design_url,
       product_type: body.product_category ?? body.product_type,
       model_type: body.model_look ?? body.model_type,
@@ -138,7 +151,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const forwarded = { ...body, user_id: user.id, agent_type: "productography" };
+  const forwarded = { ...body, user_id: user.id, team_id: teamId ?? undefined, agent_type: "productography" };
 
   let response: Response;
   try {
