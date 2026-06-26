@@ -10,6 +10,7 @@ import SceneEditPanel from "@/app/components/SceneEditPanel";
 import { Crown, Sparkles, Upload, UploadCloud, X } from "lucide-react";
 import { track } from "@/lib/analytics";
 import StickyMobileCTA from "@/app/components/StickyMobileCTA";
+import TeamCreditToggle from "@/app/components/TeamCreditToggle";
 import { canGenerate } from "@/lib/checkCredits";
 import { shouldDeductCredits } from "@/lib/deductCredits";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
@@ -1163,14 +1164,22 @@ const extractDesignNumberFromText = (text: string): string => {
   if (!text) return "";
   const cleaned = text.replace(/\s+/g, " ");
   const patterns = [
+    // Alphanumeric prefix + dash + digits (+ optional suffix):
+    // matches "X1-2364", "X1-2368-A", "AB12-3456", "D-2364".
+    /\b([A-Z]{1,3}\d{0,3}[-_]\d{2,6}(?:[-_][A-Z0-9]{1,4})?)\b/,
     /\b([A-Z]{1,4}[-_]\d{2,6})\b/,
     /\b([A-Z]{1,4}\d{2,6})\b/,
-    /\b(\d{4,8})\b/,
     /\b([A-Z0-9]{3,}[-_][A-Z0-9]{2,})\b/,
+    /\b(\d{4,8})\b/,
   ];
   for (const p of patterns) {
     const m = cleaned.toUpperCase().match(p);
-    if (m) return m[1].replace(/_/g, "-");
+    if (m) {
+      const val = m[1].replace(/_/g, "-");
+      // Reject date / year-like tokens (e.g. "2026-04", "2026-04-20").
+      if (/^(19|20)\d{2}(-\d{1,2}){0,2}$/.test(val)) continue;
+      return val;
+    }
   }
   return "";
 };
@@ -1580,6 +1589,8 @@ export default function Home() {
       "",
   ).toLowerCase();
   const isFreePlan = !tryOnPlanText || tryOnPlanText.includes("free");
+
+  const [teamId, setTeamId] = useState<string | null>(null);
 
   const [showPromptBox, setShowPromptBox] = useState(false);
   const [showTextBox, setShowTextBox] = useState(false);
@@ -2068,7 +2079,38 @@ export default function Home() {
     return merged.length ? merged.join(", ") : "None";
   };
 
-  const runOcrOnFile = async (file: File): Promise<string> => {
+  // Vision OCR (Gemini) reads small white-on-dark article-number labels far
+  // more reliably than tesseract. We pass the already-uploaded public URL.
+  const runVisionOcr = async (imageUrl: string): Promise<string> => {
+    try {
+      const res = await fetch("/api/textile/ocr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image_url: imageUrl }),
+      });
+      if (!res.ok) return "";
+      const json = await res.json().catch(() => ({}));
+      const raw = String(json?.article_number || "").trim();
+      if (!raw) return "";
+      // Normalise the same way as tesseract output, but if the model returned
+      // a clean code that our regex doesn't recognise, keep the raw code.
+      return extractDesignNumberFromText(raw) || raw.toUpperCase().replace(/_/g, "-");
+    } catch (err) {
+      console.warn("Vision OCR failed:", err);
+      return "";
+    }
+  };
+
+  const runOcrOnFile = async (
+    file: File,
+    imageUrl?: string,
+  ): Promise<string> => {
+    // 1) Vision OCR first (most reliable for printed article boxes).
+    if (imageUrl) {
+      const visionCode = await runVisionOcr(imageUrl);
+      if (visionCode) return visionCode;
+    }
+    // 2) Fall back to on-device tesseract.
     try {
       const mod: any = await import("tesseract.js");
       const Tesseract = mod.default || mod;
@@ -2543,7 +2585,7 @@ export default function Home() {
         // "X1-2368-A" in a corner box), so OCR the image FIRST. Only fall
         // back to the filename if OCR finds nothing (filenames are often
         // WhatsApp/camera names with dates, not the real article number).
-        let detected = await runOcrOnFile(file);
+        let detected = await runOcrOnFile(file, url);
         if (!detected) {
           detected = extractDesignNumberFromName(file.name);
         }
@@ -2707,6 +2749,7 @@ export default function Home() {
     const payload = {
       generation_id: generationId,
       user_id: userId,
+      team_id: teamId ?? undefined,
       design_url: item.url,
       brand_details: selectedBrandDetails,
       company_name: selectedBrandDetails.company_name,
@@ -4930,6 +4973,12 @@ export default function Home() {
                         </span>
                       </div>
                     </div>
+
+                    <TeamCreditToggle
+                      useTeamCredits={!!teamId}
+                      onChange={(val, id) => setTeamId(id)}
+                      darkMode={darkMode}
+                    />
 
                     <div className="pt-2">
                       <button

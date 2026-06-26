@@ -7,6 +7,7 @@ import { track } from "@/lib/analytics";
 import { useTheme } from "@/app/components/ThemeProvider";
 import { useAuth } from "@/app/components/AuthProvider";
 import StickyMobileCTA from "@/app/components/StickyMobileCTA";
+import TeamCreditToggle from "@/app/components/TeamCreditToggle";
 import {
   BadgeCheck,
   Camera,
@@ -635,6 +636,13 @@ export default function ProductographyPage() {
   const resultRef = useRef<HTMLDivElement | null>(null);
   const cancelRef = useRef(false);
 
+  // Team access
+  const [teamId, setTeamId] = useState<string | null>(null);
+
+  // Upload Your Scene (Studio Professional)
+  const [referenceSceneUrl, setReferenceSceneUrl] = useState("");
+  const [sceneUploading, setSceneUploading] = useState(false);
+
   const [productCategory, setProductCategory] = useState("Cosmetics");
   const [modelUsage, setModelUsage] = useState("No Model");
   const [modelGroup, setModelGroup] = useState("Female");
@@ -729,6 +737,8 @@ export default function ProductographyPage() {
       if (useCompanyWebsite && companyWebsite.trim()) base += 1;
       if (useCompanyAddress && companyAddress.trim()) base += 1;
     }
+    // Upload Your Scene add-on: +2 credits.
+    if (referenceSceneUrl) base += 2;
     return base;
   })();
 
@@ -751,6 +761,19 @@ export default function ProductographyPage() {
     return () => {
       mounted = false;
     };
+  }, [authUser?.id]);
+
+  // Fetch user's team ID (for team credit deduction)
+  useEffect(() => {
+    if (!authUser?.id) return;
+    supabase.auth.getSession().then(({ data }) => {
+      const token = data.session?.access_token;
+      if (!token) return;
+      fetch("/api/team/me", { headers: { Authorization: `Bearer ${token}` } })
+        .then((r) => r.json())
+        .then((json) => { if (json.teams?.length > 0) setTeamId(json.teams[0].id); })
+        .catch(() => {});
+    });
   }, [authUser?.id]);
 
   // Post-generation flow (mirrors the textile agent):
@@ -1377,6 +1400,8 @@ export default function ProductographyPage() {
         background_style: resolvedBackground,
         background_theme: !customShootStyle.trim() && SHOOT_STYLES_WITH_BG_THEME.includes(shootStyle) ? backgroundTheme : "",
         studio_pose: !customShootStyle.trim() && SHOOT_STYLES_WITH_STUDIO_POSE.includes(shootStyle) && !modelLookDisabled ? studioPose : "",
+        reference_scene_url: !customShootStyle.trim() && shootStyle === "Studio Professional" ? (referenceSceneUrl || "") : "",
+        team_id: teamId ?? null,
         output_size: customOutputSize.trim() || outputSize,
         quality: resolvedQuality,
         output_quality: resolvedQuality,
@@ -2388,6 +2413,79 @@ export default function ProductographyPage() {
                       </div>
                     )}
 
+                    {/* Upload Your Scene — Studio Professional only */}
+                    {!customShootStyle.trim() && shootStyle === "Studio Professional" && (
+                      <div className="rounded-2xl border border-cyan-300/40 bg-cyan-400/5 p-4 dark:border-cyan-400/20">
+                        <h4 className="text-sm font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">
+                          Upload Your Scene
+                          <span className="ml-2 rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-black text-cyan-700 dark:bg-cyan-400/20 dark:text-cyan-300">+2 Credits</span>
+                        </h4>
+                        <p className={`mt-1 text-xs ${muted}`}>Upload your own background scene — AI will composite the product naturally into it, matching the scene's lighting and perspective.</p>
+                        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+                          <label
+                            className={`group relative flex min-h-[116px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
+                              referenceSceneUrl
+                                ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
+                                : darkMode
+                                  ? "bg-white/[0.045] hover:-translate-y-1 hover:bg-white/[0.08]"
+                                  : "bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10"
+                            } ${sceneUploading ? "pointer-events-none opacity-60" : ""}`}
+                          >
+                            <div className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${referenceSceneUrl ? "shadow-lg shadow-cyan-400/25" : "shadow-sm"}`}>
+                              {referenceSceneUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={referenceSceneUrl} alt="" className="block h-full w-full object-cover" />
+                              ) : (
+                                <span className="text-3xl" aria-hidden="true">📷</span>
+                              )}
+                            </div>
+                            <p className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${referenceSceneUrl ? "text-[#0077b6]" : darkMode ? "text-white/70" : "text-black/70"}`}>
+                              {sceneUploading ? "Uploading…" : referenceSceneUrl ? "Scene Ready ✓" : "Upload Your Scene"}
+                            </p>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              disabled={sceneUploading}
+                              onChange={async (e) => {
+                                const f = e.target.files?.[0];
+                                if (!f) return;
+                                if (!f.type.startsWith("image/")) {
+                                  alert("Please upload an image file.");
+                                  e.target.value = "";
+                                  return;
+                                }
+                                setSceneUploading(true);
+                                try {
+                                  const url = await uploadFile(f);
+                                  setReferenceSceneUrl(url);
+                                } catch {
+                                  alert("Scene upload failed. Please try again.");
+                                } finally {
+                                  setSceneUploading(false);
+                                  e.target.value = "";
+                                }
+                              }}
+                            />
+                            {referenceSceneUrl && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setReferenceSceneUrl("");
+                                }}
+                                className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow"
+                                aria-label="Remove scene"
+                              >
+                                ✕
+                              </button>
+                            )}
+                          </label>
+                        </div>
+                      </div>
+                    )}
+
                     <div>
                       <h4 className="text-xl font-black">Background</h4>
                       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
@@ -2479,7 +2577,19 @@ export default function ProductographyPage() {
                           <SummaryRow label="Background" value={customBackground.trim() || background} />
                           <SummaryRow label="Frame" value={`${customOutputSize.trim() || outputSize} / ${customQuality.trim() || quality}`} />
                           <SummaryRow label="Uploads" value={String(readyItems.length)} />
+                          {!customShootStyle.trim() && shootStyle === "Studio Professional" && referenceSceneUrl && (
+                            <SummaryRow label="Upload Your Scene" value="+2 credits" />
+                          )}
+                          {teamId && (
+                            <SummaryRow label="Team Credits" value="Active" />
+                          )}
                         </div>
+
+                        <TeamCreditToggle
+                          useTeamCredits={!!teamId}
+                          onChange={(val, id) => setTeamId(id)}
+                          darkMode={darkMode}
+                        />
 
                         <button
                           disabled={loading || uploading || readyItems.length === 0}

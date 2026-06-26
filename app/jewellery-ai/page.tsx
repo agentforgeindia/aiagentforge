@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/components/AuthProvider";
 import StickyMobileCTA from "@/app/components/StickyMobileCTA";
+import TeamCreditToggle from "@/app/components/TeamCreditToggle";
 import { track } from "@/lib/analytics";
 import {
   ArrowRight,
@@ -1072,6 +1073,14 @@ export default function JewelleryAIPage() {
   const [generationMode, setGenerationMode] = useState<GenerationMode>("single");
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [builderStep, setBuilderStep] = useState<BuilderStep>(1);
+
+  // Team access
+  const [teamId, setTeamId] = useState<string | null>(null);
+
+  // Upload Your Model
+  const [modelPhotoUrl, setModelPhotoUrl] = useState("");
+  const [modelPhotoUploading, setModelPhotoUploading] = useState(false);
+  const [tryOnConsent, setTryOnConsent] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [loadingFactIndex, setLoadingFactIndex] = useState(0);
   const [generationProgress, setGenerationProgress] = useState(8);
@@ -1209,6 +1218,19 @@ export default function JewelleryAIPage() {
       window.localStorage.setItem(JEWELLERY_GUIDANCE_KEY, JSON.stringify(next));
     } catch {}
   }, [generatedOutputUrl]);
+
+  // Fetch user's team ID (for team credit deduction)
+  useEffect(() => {
+    if (!authUser?.id) return;
+    supabase.auth.getSession().then(({ data }) => {
+      const token = data.session?.access_token;
+      if (!token) return;
+      fetch("/api/team/me", { headers: { Authorization: `Bearer ${token}` } })
+        .then((r) => r.json())
+        .then((json) => { if (json.teams?.length > 0) setTeamId(json.teams[0].id); })
+        .catch(() => {});
+    });
+  }, [authUser?.id]);
 
   // Always start at Step 1 when the user lands on the page (per requirement:
   // "first step se hi start ho" — fresh visit ko bhi reset karo, na sirf re-upload).
@@ -1416,7 +1438,8 @@ export default function JewelleryAIPage() {
         (useCompanyPhone && companyPhone.trim() ? 1 : 0) +
         (useCompanyAddress && companyAddress.trim() ? 1 : 0);
 
-    const perImageCredits = base + brandingCredits;
+    const modelUploadCredits = modelPhotoUrl ? 2 : 0;
+    const perImageCredits = base + brandingCredits + modelUploadCredits;
     return generationMode === "single" ? perImageCredits : Math.max(uploads.length, 1) * perImageCredits;
   }, [
     generationMode,
@@ -1434,6 +1457,7 @@ export default function JewelleryAIPage() {
     useCompanyAddress,
     companyAddress,
     profile,
+    modelPhotoUrl,
   ]);
 
   const previewImage = uploads[0]?.preview || null;
@@ -2023,6 +2047,12 @@ const handleGenerate = async () => {
       alert("Please upload jewellery image first.");
       return;
     }
+
+    if (modelPhotoUrl && !tryOnConsent) {
+      alert("Please confirm the consent checkbox for 'Upload Your Model' before generating.");
+      return;
+    }
+
 const WEBHOOK_URL =
   process.env.NEXT_PUBLIC_N8N_JEWELLERY_WEBHOOK_URL ||
   "https://n8n.aiagentforge.in/webhook/generate-jewellery";
@@ -2215,8 +2245,9 @@ const WEBHOOK_URL =
 
     const sharedSettings = {
       source_image_url: firstImageUrl,
-      model_image_url: "",
-      has_uploaded_model: false,
+      model_image_url: modelPhotoUrl || "",
+      model_photo_url: modelPhotoUrl || "",
+      has_uploaded_model: Boolean(modelPhotoUrl),
       plan: String(profile.plan || "starter").toLowerCase(),
       is_pro: String(profile.plan || "").toLowerCase().includes("pro"),
       is_empire: String(profile.plan || "").toLowerCase().includes("empire"),
@@ -2281,6 +2312,7 @@ const WEBHOOK_URL =
   generation_id: generationId,
   user_id: authUser.id,
   required_credits: credits,
+  team_id: teamId ?? null,
 
   source_image_url: uploadedImageUrls[0]?.source_image_url,
 
@@ -2292,7 +2324,8 @@ const WEBHOOK_URL =
   items: uploadedImageUrls.map((item, index) => ({
     generation_id: index === 0 ? generationId : newId(),
     source_image_url: item.source_image_url,
-    model_image_url: "",
+    model_image_url: modelPhotoUrl || "",
+    model_photo_url: modelPhotoUrl || "",
     original_name: item.original_name,
   })),
 
@@ -3454,6 +3487,87 @@ if (!response.ok) {
                       <TextInputBox label="Custom Model Look" value={customModelLook} onChange={setCustomModelLook} placeholder="Example: young Punjabi bride, mature elegant woman, male model for kada..." />
                     )}
 
+                    {/* Upload Your Model — virtual try-on with user's own photo */}
+                    <div className="rounded-[1.35rem] border border-cyan-300/40 bg-cyan-400/10 p-4 dark:border-cyan-400/20">
+                      <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">Upload Your Model <span className="ml-2 rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-black text-cyan-700 dark:bg-cyan-400/20 dark:text-cyan-300">+2 Credits</span></p>
+                      <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/50">Upload your own model photo — the AI will render the jewellery on the exact person in your photo. Face and identity preserved.</p>
+                      <div className="mt-3">
+                        <label
+                          className={`group relative flex min-h-[116px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
+                            modelPhotoUrl
+                              ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
+                              : "bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10 dark:bg-white/[0.045] dark:hover:bg-white/[0.08]"
+                          } ${modelPhotoUploading ? "pointer-events-none opacity-60" : ""} max-w-[160px]`}
+                        >
+                          <div className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${modelPhotoUrl ? "shadow-lg shadow-cyan-400/25" : "shadow-sm"}`}>
+                            {modelPhotoUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={modelPhotoUrl} alt="" className="block h-full w-full object-cover" />
+                            ) : (
+                              <Upload className="h-9 w-9 text-cyan-500" aria-hidden="true" />
+                            )}
+                          </div>
+                          <p className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${modelPhotoUrl ? "text-[#0077b6]" : "text-black/70 dark:text-white/70"}`}>
+                            {modelPhotoUploading ? "Uploading…" : modelPhotoUrl ? "Your Photo ✓" : "Upload Your Model"}
+                          </p>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={modelPhotoUploading}
+                            onChange={async (e) => {
+                              const f = e.target.files?.[0];
+                              if (!f) return;
+                              if (!f.type.startsWith("image/")) {
+                                alert("Please upload an image file.");
+                                e.target.value = "";
+                                return;
+                              }
+                              setModelPhotoUploading(true);
+                              try {
+                                const url = await uploadFileToSupabase(f, "jewellery-model-photos");
+                                setModelPhotoUrl(url);
+                                setTryOnConsent(false);
+                              } catch {
+                                alert("Photo upload failed. Please try again.");
+                              } finally {
+                                setModelPhotoUploading(false);
+                                e.target.value = "";
+                              }
+                            }}
+                          />
+                          {modelPhotoUrl && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setModelPhotoUrl("");
+                                setTryOnConsent(false);
+                              }}
+                              className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow"
+                              aria-label="Remove photo"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </label>
+                      </div>
+                      {modelPhotoUrl && (
+                        <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-50/60 p-3 text-xs text-slate-600 dark:border-white/15 dark:bg-white/[0.03] dark:text-white/75">
+                          <input
+                            type="checkbox"
+                            checked={tryOnConsent}
+                            onChange={(e) => setTryOnConsent(e.target.checked)}
+                            className="mt-0.5 h-4 w-4 shrink-0 accent-cyan-600"
+                          />
+                          <span>
+                            This is my own photo (or I have permission to use it), and I will use it only for this jewellery preview. AgentForge will delete it after the result is generated.
+                          </span>
+                        </label>
+                      )}
+                    </div>
+
                     {/* Pose */}
                     <SelectionGrid title="Pose" subtitle="Body, hand, neck or ear pose for jewellery presentation." options={POSE_OPTIONS} value={pose} onChange={setPose} />
                     <TextInputBox label="Custom Pose" value={customPose} onChange={setCustomPose} placeholder="Example: hand near face, neck close-up, bride looking side..." />
@@ -3490,6 +3604,12 @@ if (!response.ok) {
                     </div>
 
                         
+                    <TeamCreditToggle
+                      useTeamCredits={!!teamId}
+                      onChange={(val, id) => setTeamId(id)}
+                      darkMode={darkMode}
+                    />
+
                     <div className="rounded-[1.35rem] border border-cyan-300/40 bg-gradient-to-br from-cyan-400/10 via-blue-500/10 to-purple-500/10 p-5">
                       <div className="grid gap-3 sm:grid-cols-2">
                         <SummaryRow label="Jewellery" value={selectedJewelleryLabel} />
@@ -3500,6 +3620,12 @@ if (!response.ok) {
                         <SummaryRow label="Accessories" value={customAccessory || accessory} />
                         <SummaryRow label="Frame" value={`${outputSize} / ${quality}`} />
                         <SummaryRow label="Uploads" value={String(uploads.length)} />
+                        {modelPhotoUrl && (
+                          <SummaryRow label="Upload Your Model" value="+2 credits" />
+                        )}
+                        {teamId && (
+                          <SummaryRow label="Team Credits" value="Active" />
+                        )}
                       </div>
                       <button type="button" onClick={handleGenerate} disabled={isGenerating || !uploads.length} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 px-5 py-4 text-sm font-black text-white shadow-lg shadow-cyan-500/25 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50">
                         {isGenerating ? "Generating..." : `Generate Jewellery Visual • ${credits} Credits`}
