@@ -28,6 +28,7 @@ import { requireUser } from "@/lib/serverAuth";
 import { isAgentForgeHostedUrl } from "@/lib/uploadValidation";
 import { isAgentEnabled } from "@/lib/agentEnabled";
 import { getTeamMembership } from "@/lib/teamAuth";
+import { deductTeamCredits, refundTeamCredits } from "@/lib/creditsServer";
 
 export const runtime = "nodejs";
 
@@ -143,17 +144,33 @@ export async function POST(request: Request) {
     );
   }
 
-  // 3. Resolve team context (optional).
+  // 3. Resolve team context — if team_id present, deduct here (not in n8n).
   const teamId = typeof body?.team_id === "string" && body.team_id ? body.team_id : null;
-  if (teamId) {
+
+  let teamDeducted = false;
+  if (teamId && credits > 0) {
     const membership = await getTeamMembership(user.id, teamId);
     if (!membership) {
       return NextResponse.json({ error: "Team not found or you are not a member." }, { status: 403 });
     }
+
+    const deduct = await deductTeamCredits(
+      teamId, user.id, credits,
+      "textile_generate", body.generation_id,
+    );
+    if (!deduct.ok) {
+      if (deduct.reason === "insufficient") {
+        return NextResponse.json(
+          { error: "Not enough credits in team pool.", code: "INSUFFICIENT_CREDITS" },
+          { status: 402 },
+        );
+      }
+      return NextResponse.json({ error: deduct.message || "Credit deduction failed." }, { status: 500 });
+    }
+    teamDeducted = true;
   }
 
-  // 4. Persist the generation row first so the polling client
-  // can find it (and so n8n's credit RPC has a row to reference).
+  // 4. Persist generation row.
   try {
     await insertGenerationRow({
       id: body.generation_id,
@@ -169,27 +186,36 @@ export async function POST(request: Request) {
       custom_instruction: body.custom_instruction ?? null,
     });
   } catch (err: any) {
+    if (teamDeducted) {
+      await refundTeamCredits(teamId!, user.id, credits, "refund:generation_row_insert_failed", body.generation_id);
+    }
     return NextResponse.json(
       { error: err?.message || "Failed to register generation." },
       { status: 500 },
     );
   }
 
-  // 5. Forward to n8n with verified user_id + team_id.
-  const forwarded = { ...body, user_id: user.id, team_id: teamId ?? undefined };
+  // 5. Forward to n8n — tell it to skip credit deduction when team handled it.
+  const forwarded = {
+    ...body,
+    user_id: user.id,
+    team_id: teamId ?? undefined,
+    skip_credit_deduction: teamDeducted ? true : undefined,
+  };
 
   fetch(webhookUrl, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(forwarded),
-  cache: "no-store",
-}).catch((err) => {
-  console.error("n8n trigger failed:", err);
-});
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(forwarded),
+    cache: "no-store",
+  }).catch((err) => {
+    console.error("n8n trigger failed:", err);
+  });
 
-return NextResponse.json({
-  success: true,
-  status: "processing",
-  generation_id: body.generation_id,
-});
+  return NextResponse.json({
+    success: true,
+    status: "processing",
+    generation_id: body.generation_id,
+    team_credits_used: teamDeducted ? credits : undefined,
+  });
 }

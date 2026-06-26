@@ -20,6 +20,7 @@ import { requireUser } from "@/lib/serverAuth";
 import { isAgentEnabled } from "@/lib/agentEnabled";
 import { isAgentForgeHostedUrl } from "@/lib/uploadValidation";
 import { getTeamMembership } from "@/lib/teamAuth";
+import { deductTeamCredits, refundTeamCredits } from "@/lib/creditsServer";
 
 export const runtime = "nodejs";
 
@@ -121,13 +122,30 @@ export async function POST(request: Request) {
     );
   }
 
-  // Resolve team context (optional).
+  // Resolve team context — if team_id present, deduct here (not in n8n).
   const teamId = typeof body?.team_id === "string" && body.team_id ? body.team_id : null;
-  if (teamId) {
+
+  let teamDeducted = false;
+  if (teamId && credits > 0) {
     const membership = await getTeamMembership(user.id, teamId);
     if (!membership) {
       return NextResponse.json({ error: "Team not found or you are not a member." }, { status: 403 });
     }
+
+    const deduct = await deductTeamCredits(
+      teamId, user.id, credits,
+      "productography_generate", body.generation_id,
+    );
+    if (!deduct.ok) {
+      if (deduct.reason === "insufficient") {
+        return NextResponse.json(
+          { error: "Not enough credits in team pool.", code: "INSUFFICIENT_CREDITS" },
+          { status: 402 },
+        );
+      }
+      return NextResponse.json({ error: deduct.message || "Credit deduction failed." }, { status: 500 });
+    }
+    teamDeducted = true;
   }
 
   try {
@@ -145,13 +163,22 @@ export async function POST(request: Request) {
       custom_instruction: body.custom_instruction ?? null,
     });
   } catch (err: any) {
+    if (teamDeducted) {
+      await refundTeamCredits(teamId!, user.id, credits, "refund:generation_row_insert_failed", body.generation_id);
+    }
     return NextResponse.json(
       { error: err?.message || "Failed to register generation." },
       { status: 500 },
     );
   }
 
-  const forwarded = { ...body, user_id: user.id, team_id: teamId ?? undefined, agent_type: "productography" };
+  const forwarded = {
+    ...body,
+    user_id: user.id,
+    team_id: teamId ?? undefined,
+    agent_type: "productography",
+    skip_credit_deduction: teamDeducted ? true : undefined,
+  };
 
   let response: Response;
   try {
