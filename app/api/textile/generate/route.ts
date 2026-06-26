@@ -195,13 +195,20 @@ export async function POST(request: Request) {
     );
   }
 
-  // 5. Forward to n8n — tell it to skip credit deduction when team handled it.
-  const forwarded = {
-    ...body,
-    user_id: user.id,
-    team_id: teamId ?? undefined,
-    skip_credit_deduction: teamDeducted ? true : undefined,
-  };
+  // 5. Forward to n8n. When the team pool was already charged here, we
+  // both (a) flag skip_credit_deduction AND (b) zero out the credit
+  // fields in the forwarded payload — so even an unmodified n8n flow
+  // that deducts from `required_credits` charges 0 to personal balance.
+  const forwarded = teamDeducted
+    ? {
+        ...body,
+        user_id: user.id,
+        team_id: teamId ?? undefined,
+        skip_credit_deduction: true,
+        required_credits: 0,
+        credits_required: 0,
+      }
+    : { ...body, user_id: user.id, team_id: teamId ?? undefined };
 
   fetch(webhookUrl, {
     method: "POST",

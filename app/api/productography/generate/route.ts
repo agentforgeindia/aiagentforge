@@ -172,13 +172,20 @@ export async function POST(request: Request) {
     );
   }
 
-  const forwarded = {
-    ...body,
-    user_id: user.id,
-    team_id: teamId ?? undefined,
-    agent_type: "productography",
-    skip_credit_deduction: teamDeducted ? true : undefined,
-  };
+  // When the team pool was already charged here, flag skip_credit_deduction
+  // AND zero out the credit fields — so even an unmodified n8n flow that
+  // deducts from `required_credits` charges 0 to personal balance.
+  const forwarded = teamDeducted
+    ? {
+        ...body,
+        user_id: user.id,
+        team_id: teamId ?? undefined,
+        agent_type: "productography",
+        skip_credit_deduction: true,
+        required_credits: 0,
+        credits_required: 0,
+      }
+    : { ...body, user_id: user.id, team_id: teamId ?? undefined, agent_type: "productography" };
 
   let response: Response;
   try {
