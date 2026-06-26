@@ -35,6 +35,49 @@ export const metadata: Metadata = {
   },
 };
 
+// ============================================================
+// JSON-LD: ItemList (agent directory) + Breadcrumb
+// ============================================================
+const agentListSchema = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: "AgentForge AI — All AI Agents for Indian Businesses",
+  description:
+    "Complete directory of purpose-built AI agents for Indian manufacturers, sellers and brands — textile mockup, jewellery photoshoot, product photography, social ads, UGC and more.",
+  url: `${SITE}/agents`,
+  numberOfItems: 7,
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "TextilePrints to Mockup", item: `${SITE}/textileprints-to-mockup` },
+    { "@type": "ListItem", position: 2, name: "Jewellery AI Studio", item: `${SITE}/jewellery-ai` },
+    { "@type": "ListItem", position: 3, name: "Productography AI", item: `${SITE}/productography-ai` },
+    { "@type": "ListItem", position: 4, name: "Social Ads Designer AI", item: `${SITE}/social-ads` },
+    { "@type": "ListItem", position: 5, name: "UGC Forge AI", item: `${SITE}/ugc-forge` },
+    { "@type": "ListItem", position: 6, name: "TrendForge AI", item: `${SITE}/trendforge` },
+    { "@type": "ListItem", position: 7, name: "AI Scene Editor", item: `${SITE}/scene-editor` },
+  ],
+};
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: SITE },
+    { "@type": "ListItem", position: 2, name: "All AI Agents", item: `${SITE}/agents` },
+  ],
+};
+
 export default function AgentsLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(agentListSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      {children}
+    </>
+  );
 }

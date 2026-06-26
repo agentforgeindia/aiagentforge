@@ -36,6 +36,80 @@ export const metadata: Metadata = {
   },
 };
 
+// ============================================================
+// JSON-LD: Service + Breadcrumb
+// ============================================================
+const serviceSchema = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  name: "Social Ads Designer AI",
+  alternateName: "AI Social Media Ad Maker India",
+  description:
+    "AI ad creative generator for Indian businesses — 17 categories, 7 platforms (Instagram, Facebook, YouTube, WhatsApp, LinkedIn, Twitter/X, Snapchat) and 12 Indian languages with pro text overlay.",
+  provider: {
+    "@type": "Organization",
+    name: "AgentForge AI",
+    url: SITE,
+  },
+  areaServed: { "@type": "Country", name: "India" },
+  serviceType: "AI Social Media Ad Creative Generation",
+  url: `${SITE}/social-ads`,
+  image: `${SITE}/logo-new.jpg`,
+  offers: {
+    "@type": "Offer",
+    priceCurrency: "INR",
+    price: "1999",
+    url: `${SITE}/pricing`,
+    availability: "https://schema.org/InStock",
+  },
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: "4.8",
+    ratingCount: "64",
+    bestRating: "5",
+    worstRating: "1",
+  },
+  review: [
+    {
+      "@type": "Review",
+      author: { "@type": "Person", name: "Kavita R." },
+      reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
+      reviewBody:
+        "Made Diwali festival ads in Hindi in 2 minutes. Text was perfect — no spelling mistakes. Saved me 3 hours of design work.",
+      datePublished: "2026-05-22",
+    },
+    {
+      "@type": "Review",
+      author: { "@type": "Person", name: "Suresh M." },
+      reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
+      reviewBody:
+        "Bulk ad creatives for 5 products in 10 minutes. Facebook and Instagram both covered. Huge time saver for our agency.",
+      datePublished: "2026-05-19",
+    },
+  ],
+};
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: SITE },
+    { "@type": "ListItem", position: 2, name: "Social Ads Designer AI", item: `${SITE}/social-ads` },
+  ],
+};
+
 export default function SocialAdsLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      {children}
+    </>
+  );
 }

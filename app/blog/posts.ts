@@ -1480,7 +1480,7 @@ export const BLOG_POSTS: BlogPost[] = [
     slug: "why-i-built-agentforge-founders-letter",
     title: "Why I Built AgentForge: A Founder's Letter to Every Indian Seller",
     description:
-      "The real, unedited origin story of AgentForge AI — how a request for shirt mockups from Bhavin at Shree Ganesh Textile in Bhiwandi became India's first AI catalogue platform built for textile, jewellery and D2C sellers.",
+      "The real, unedited origin story of AgentForge AI — how a request for shirt mockups from Mr. Bhavin at Shree Ganesh Textile in Bhiwandi became India's first AI catalogue platform built for textile, jewellery and D2C sellers.",
     excerpt:
       "It did not start in a boardroom. It started with one shirt manufacturer in Bhiwandi asking for mockups he could not afford to shoot. That single conversation is why AgentForge exists.",
     keywords: [
@@ -1517,7 +1517,7 @@ export const BLOG_POSTS: BlogPost[] = [
       { type: "h2", text: "The conversation that started everything" },
       {
         type: "p",
-        text: "Bhavin runs Shree Ganesh Textile in Bhiwandi. Men's shirts — formal, casual, party-wear, full sleeves, half sleeves, every collar and every cut. The kind of operation that survives on speed: design, sample, drop, repeat. A few months ago, he was looking for someone who could give him good mockups — visuals he could send to wholesalers on WhatsApp the same day a fabric arrived. Not next week. Not after a model shoot. Same day.",
+        text: "Mr. Bhavin runs Shree Ganesh Textile in Bhiwandi. Men's shirts — formal, casual, party-wear, full sleeves, half sleeves, every collar and every cut. The kind of operation that survives on speed: design, sample, drop, repeat. A few months ago, he was looking for someone who could give him good mockups — visuals he could send to wholesalers on WhatsApp the same day a fabric arrived. Not next week. Not after a model shoot. Same day.",
       },
       {
         type: "p",
@@ -1527,7 +1527,7 @@ export const BLOG_POSTS: BlogPost[] = [
         type: "p",
         text: "He told me, very simply: 'There should be something that turns a fabric photo directly into a mockup. Build it.' That was the brief. One sentence. From one shirt manufacturer who knew exactly what the industry needed and could not find it anywhere.",
       },
-      { type: "h2", text: "Bhavin's problem is everyone's problem" },
+      { type: "h2", text: "Mr. Bhavin's problem is everyone's problem" },
       {
         type: "p",
         text: "I started showing early prototypes to other textile manufacturers across Bhiwandi, Surat, Ludhiana, Ahmedabad and Tirupur. Saree wholesalers. Kurti brands. Knitwear factories. The story was identical everywhere. Photography was the single biggest bottleneck between a designer's idea and a customer's WhatsApp screen. The brands with deep capital could ship daily. Everyone else lost orders waiting for photos.",

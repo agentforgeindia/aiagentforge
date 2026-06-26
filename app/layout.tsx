@@ -19,16 +19,21 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.aiagentforge.in"),
   title: {
-    default: "AI Textile Mockup Generator & Jewellery AI Studio | AgentForge AI",
+    default: "India's First AI Mockup, Photoshoot & Productography Workflow | AgentForge AI",
     template: "%s | AgentForge AI",
   },
 
   description:
-    "AgentForge AI is India's AI visual studio for textile mockups, jewellery photoshoots and product photography. Upload a photo, get catalogue-ready visuals in 60 seconds.",
+    "AgentForge AI — India's first professional AI workflow for textile mockup, jewellery photoshoot and product photography. Turn any fabric photo or product image into catalogue-ready visuals in 60 seconds. Trusted by 5,000+ Indian brands.",
 
   keywords: [
+    // Primary positioning
+    "India first AI mockup workflow",
+    "professional AI photoshoot workflow India",
+    "AI catalogue workflow India",
     // Textile / fashion
     "AI textile mockup generator India",
+    "textile prints to mockup AI",
     "AI saree mockup",
     "AI kurti catalogue maker",
     "AI kurta mockup",
@@ -43,10 +48,15 @@ export const metadata: Metadata = {
     "AI diamond ring catalogue",
     // Product photography
     "AI product photography India",
+    "AI productography India",
     "AI product photoshoot generator",
     "Amazon product photo AI",
     "Flipkart catalogue image AI",
     "AI ecommerce product shoot",
+    // Social & UGC
+    "AI social media ad maker India",
+    "AI UGC generator India",
+    "AI brand shoot India",
     // Generic
     "AI catalogue generator",
     "AI catalog maker India",
@@ -91,9 +101,9 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    title: "AI Textile Mockup Generator & Jewellery AI Studio | AgentForge AI",
+    title: "India's First AI Mockup, Photoshoot & Productography Workflow | AgentForge AI",
     description:
-      "India's AI visual studio for textile mockups, jewellery photoshoots and product photography. Generate catalogue-ready visuals in 60 seconds.",
+      "India's first professional AI workflow — textile mockup, jewellery photoshoot and product photography. Catalogue-ready visuals in 60 seconds. 5,000+ Indian brands trust AgentForge.",
     url: "https://www.aiagentforge.in",
     siteName: "AgentForge AI",
     images: [
@@ -110,9 +120,9 @@ export const metadata: Metadata = {
 
   twitter: {
     card: "summary_large_image",
-    title: "AI Textile Mockup Generator & Jewellery AI Studio | AgentForge AI",
+    title: "India's First AI Mockup, Photoshoot & Productography Workflow | AgentForge AI",
     description:
-      "Upload a photo. Get catalogue-ready AI visuals in 60 seconds. India's AI mockup & photoshoot platform.",
+      "Upload a photo. Get catalogue-ready AI visuals in 60 seconds. India's first professional AI workflow for mockup, photoshoot & productography.",
     images: ["/banner1.png"],
   },
 };
@@ -150,7 +160,7 @@ export default function RootLayout({
               url: "https://www.aiagentforge.in",
               logo: "https://www.aiagentforge.in/logo-new.jpg",
               description:
-                "India's AI visual studio for textile mockups, jewellery photoshoots and product photography. Generate catalogue-ready visuals in 60 seconds.",
+                "India's first professional AI workflow for textile mockup, jewellery photoshoot and product photography. Generate catalogue-ready visuals in 60 seconds.",
               email: "info@aiagentforge.in",
               address: {
                 "@type": "PostalAddress",
@@ -200,17 +210,21 @@ export default function RootLayout({
               operatingSystem: "Web, iOS, Android",
               url: "https://www.aiagentforge.in",
               description:
-                "AI visual studio for Indian textile, jewellery and product businesses. Generate model-worn fashion mockups, jewellery photoshoots and product photography in 60 seconds.",
+                "India's first professional AI workflow for textile mockup, jewellery photoshoot and product photography. Purpose-built for Indian manufacturers, wholesalers and D2C brands — 60 seconds per catalogue visual.",
               image: "https://www.aiagentforge.in/logo-new.jpg",
               softwareVersion: "2026.1",
               inLanguage: ["en", "en-IN"],
               featureList: [
-                "AI textile mockup generator (saree, kurti, kurta, lehenga, kidswear, home textile)",
-                "AI jewellery photoshoot (bridal, diamond, kundan, pearls, daily wear)",
-                "AI product photography (skincare, perfume, watches, gadgets, food)",
+                "TextilePrints to Mockup — flat fabric photo to model-worn AI mockup in 60s (saree, kurti, kurta, lehenga, kidswear, home textile)",
+                "Jewellery AI Studio — bridal, diamond, kundan, pearls and daily-wear photoshoots without a studio",
+                "Productography AI — Amazon-ready hero shots and D2C lifestyle images from a mobile photo",
+                "Social Ads Designer — AI ad creatives for 17 categories, 7 platforms and 12 Indian languages",
+                "UGC Forge — same-face brand shoot: your face, your product, editorial-quality brand content",
+                "TrendForge — pick a trend, upload a photo, generate viral ready-to-post visuals",
+                "Scene Editor — AI room staging and home textile visualiser for bedsheets, curtains and quilts",
                 "Article code + brand overlay on every output",
-                "Bulk catalogue generation (Empire plan)",
-                "HD 1080 output for Amazon, Flipkart, Meesho, Instagram",
+                "Bulk catalogue generation — Empire plan covers ~2,400 images/month for factories",
+                "HD 1080 output for Amazon, Flipkart, Meesho, Instagram and WhatsApp catalogues",
               ],
               offers: [
                 {

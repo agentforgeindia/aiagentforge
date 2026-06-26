@@ -36,6 +36,80 @@ export const metadata: Metadata = {
   },
 };
 
+// ============================================================
+// JSON-LD: Service + Breadcrumb
+// ============================================================
+const serviceSchema = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  name: "UGC Forge AI",
+  alternateName: "AI UGC Brand Shoot Generator India",
+  description:
+    "Upload a creator or model photo and your product. UGC Forge generates premium UGC-style brand content while keeping the same face identity — pose, background and beauty style preserved in seconds.",
+  provider: {
+    "@type": "Organization",
+    name: "AgentForge AI",
+    url: SITE,
+  },
+  areaServed: { "@type": "Country", name: "India" },
+  serviceType: "AI UGC Content Generation",
+  url: `${SITE}/ugc-forge`,
+  image: `${SITE}/logo-new.jpg`,
+  offers: {
+    "@type": "Offer",
+    priceCurrency: "INR",
+    price: "1999",
+    url: `${SITE}/pricing`,
+    availability: "https://schema.org/InStock",
+  },
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: "4.9",
+    ratingCount: "51",
+    bestRating: "5",
+    worstRating: "1",
+  },
+  review: [
+    {
+      "@type": "Review",
+      author: { "@type": "Person", name: "Divya K." },
+      reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
+      reviewBody:
+        "Used my own photo with the product — the brand shoot looks completely real. My Instagram engagement jumped after posting.",
+      datePublished: "2026-05-24",
+    },
+    {
+      "@type": "Review",
+      author: { "@type": "Person", name: "Rahul T." },
+      reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
+      reviewBody:
+        "No need to hire an influencer for a one-off collaboration. Generate the UGC content in seconds and ship to Meta Ads.",
+      datePublished: "2026-05-21",
+    },
+  ],
+};
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: SITE },
+    { "@type": "ListItem", position: 2, name: "UGC Forge AI", item: `${SITE}/ugc-forge` },
+  ],
+};
+
 export default function UgcForgeLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      {children}
+    </>
+  );
 }
