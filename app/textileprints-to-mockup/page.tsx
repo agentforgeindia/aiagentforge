@@ -1281,7 +1281,6 @@ const apparelModelUsageOptions = [
 
 const homeModelUsageOptions = [
   "No Model",
-  "Upload Your Model",
   "Model Standing Beside Product",
   "Model Holding Product",
   "Model Pointing Toward Product",
@@ -1359,12 +1358,18 @@ function buildModelLookList(
   // single
   const groups = modelGroupsFor(category, product);
   const multi = groups.length > 1;
+  // Home decor / universal fabric: drop "African Man" from the face list
+  // (the "Upload Your Model" card is appended at the end of Step 4 instead).
+  const isHomeLike =
+    category === "Home Textile" || category === "Universal Fabric";
   const out: ModelLookItem[] = [];
   for (const g of groups) {
     for (const e of MODEL_ETHNICITIES) {
       const noun = MODEL_GROUP_NOUN[g];
+      const value = `${e.label} ${noun}`;
+      if (isHomeLike && value === "African Man") continue;
       out.push({
-        value: `${e.label} ${noun}`,
+        value,
         label: multi ? `${e.label} ${noun}` : e.label,
         imgs: [face(g, e.key)],
       });
@@ -3327,6 +3332,180 @@ export default function Home() {
     </div>
   );
 
+  // "Upload Your Model" card — shared between Step 3 (apparel) and Step 4
+  // (home decor). Sets modelUsage="Upload Your Model" on upload so all the
+  // existing credit / payload / try-on logic keeps working unchanged.
+  const renderUploadModelCard = () => (
+    <label
+      key="Upload Your Model"
+      className={`group relative flex min-h-[116px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
+        modelUsage === "Upload Your Model"
+          ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
+          : darkMode
+            ? "bg-white/[0.045] hover:-translate-y-1 hover:bg-white/[0.08]"
+            : "bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10"
+      } ${modelPhotoUploading ? "pointer-events-none opacity-60" : ""}`}
+    >
+      <div
+        className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${
+          modelPhotoUrl ? "shadow-lg shadow-cyan-400/25" : "shadow-sm"
+        }`}
+      >
+        {modelPhotoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={modelPhotoUrl} alt="" className="block h-full w-full object-cover" />
+        ) : (
+          <UploadCloud className="h-9 w-9 text-cyan-500" aria-hidden="true" />
+        )}
+      </div>
+      <p
+        className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${
+          modelUsage === "Upload Your Model" ? "text-[#0077b6]" : darkMode ? "text-white/70" : "text-black/70"
+        }`}
+      >
+        {modelPhotoUploading
+          ? "Uploading…"
+          : modelPhotoUrl
+            ? "Your Photo ✓"
+            : "Upload Your Model"}
+      </p>
+      <input
+        type="file"
+        accept="image/*"
+        className="hidden"
+        disabled={modelPhotoUploading}
+        onChange={async (e) => {
+          const f = e.target.files?.[0];
+          if (!f) return;
+          if (!f.type.startsWith("image/")) {
+            alert("Please upload a photo (image file).");
+            e.target.value = "";
+            return;
+          }
+          if (isFreePlan) {
+            const used = Number(
+              (typeof window !== "undefined" &&
+                localStorage.getItem(TRYON_USED_KEY)) || 0,
+            );
+            if (used >= TRYON_FREE_LIMIT) {
+              alert(
+                `Free plan me Virtual Try-On sirf ${TRYON_FREE_LIMIT} baar use ho sakta hai. Unlimited ke liye apna plan upgrade karein.`,
+              );
+              e.target.value = "";
+              return;
+            }
+          }
+          setModelPhotoUploading(true);
+          try {
+            const url = await uploadFile(f);
+            setModelPhotoUrl(url);
+            setModelUsage("Upload Your Model");
+            setCustomFaceExpression("");
+          } catch {
+            alert("Photo upload failed. Please try again.");
+          } finally {
+            setModelPhotoUploading(false);
+            e.target.value = "";
+          }
+        }}
+      />
+      {modelPhotoUrl && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setModelPhotoUrl("");
+            setTryOnConsent(false);
+            if (modelUsage === "Upload Your Model")
+              setModelUsage(isHomeLikeCategory ? "No Model" : "Single Model");
+          }}
+          className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow"
+          aria-label="Remove photo"
+        >
+          ✕
+        </button>
+      )}
+    </label>
+  );
+
+  // A single ethnicity/group face card in the Step-4 Model Look grid.
+  const renderModelLookCard = (item: ModelLookItem) => {
+    const isActive = !customModelType.trim() && modelType === item.value;
+    return (
+      <button
+        key={item.value}
+        type="button"
+        onClick={() => {
+          setModelType(item.value);
+          setCustomModelType("");
+        }}
+        className={`group flex flex-col items-center rounded-[22px] border p-3 text-center transition-all duration-300 active:scale-[0.97] ${
+          isActive
+            ? "scale-[1.02] border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/60"
+            : darkMode
+              ? "border-white/10 bg-white/[0.04] hover:-translate-y-0.5 hover:bg-white/[0.08]"
+              : "border-slate-200 bg-white/90 hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-lg hover:shadow-cyan-500/10"
+        }`}
+      >
+        <div
+          className={`mb-2 h-20 w-full overflow-hidden rounded-2xl bg-gradient-to-b from-slate-100/70 to-transparent dark:from-white/[0.06] sm:h-24 ${
+            item.imgs.length === 4
+              ? "grid grid-cols-2 grid-rows-2 gap-0.5 p-1"
+              : "flex items-end justify-center gap-0.5"
+          }`}
+        >
+          {item.imgs.map((src, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={i}
+              src={src}
+              alt={item.label}
+              loading="lazy"
+              className={`object-contain transition duration-300 group-hover:scale-105 ${
+                item.imgs.length === 1
+                  ? "h-full w-full"
+                  : item.imgs.length === 2
+                    ? "h-full w-1/2"
+                    : "h-full min-h-0 w-full"
+              }`}
+            />
+          ))}
+        </div>
+        <p
+          className={`text-[12px] font-black leading-4 sm:text-sm ${
+            isActive
+              ? "text-cyan-700 dark:text-cyan-200"
+              : "text-slate-700 dark:text-white/75"
+          }`}
+        >
+          {item.label}
+        </p>
+      </button>
+    );
+  };
+
+  // Try-on consent — mandatory before generating with a user-uploaded photo.
+  const renderTryOnConsent = () =>
+    modelUsage === "Upload Your Model" && modelPhotoUrl ? (
+      <label className={`mt-3 flex cursor-pointer items-start gap-2 rounded-2xl border p-3 text-xs ${darkMode ? "border-white/15 bg-white/[0.03] text-white/75" : "border-cyan-400/30 bg-cyan-50/60 text-slate-600"}`}>
+        <input
+          type="checkbox"
+          checked={tryOnConsent}
+          onChange={(e) => setTryOnConsent(e.target.checked)}
+          className="mt-0.5 h-4 w-4 shrink-0 accent-cyan-600"
+        />
+        <span>
+          This is my own photo (or I have permission to use it), and I will use
+          it only for this textile preview. AgentForge will delete it after the
+          result is generated.
+          {isFreePlan && (
+            <span className="font-bold"> Free plan: up to {TRYON_FREE_LIMIT} try-ons.</span>
+          )}
+        </span>
+      </label>
+    ) : null;
+
   return (
     <main
       className={`relative min-h-screen overflow-x-hidden pb-28 sm:pb-0 ${pageBg}`}
@@ -4346,97 +4525,7 @@ export default function Home() {
                       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
                         {dynamicModelUsageOptions.map((item) =>
                           item === "Upload Your Model" ? (
-                            <label
-                              key={item}
-                              className={`group relative flex min-h-[116px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
-                                modelUsage === item
-                                  ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
-                                  : darkMode
-                                    ? "bg-white/[0.045] hover:-translate-y-1 hover:bg-white/[0.08]"
-                                    : "bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10"
-                              } ${modelPhotoUploading ? "pointer-events-none opacity-60" : ""}`}
-                            >
-                              <div
-                                className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${
-                                  modelPhotoUrl ? "shadow-lg shadow-cyan-400/25" : "shadow-sm"
-                                }`}
-                              >
-                                {modelPhotoUrl ? (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img src={modelPhotoUrl} alt="" className="block h-full w-full object-cover" />
-                                ) : (
-                                  <UploadCloud className="h-9 w-9 text-cyan-500" aria-hidden="true" />
-                                )}
-                              </div>
-                              <p
-                                className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${
-                                  modelUsage === item ? "text-[#0077b6]" : darkMode ? "text-white/70" : "text-black/70"
-                                }`}
-                              >
-                                {modelPhotoUploading
-                                  ? "Uploading…"
-                                  : modelPhotoUrl
-                                    ? "Your Photo ✓"
-                                    : "Upload Your Model"}
-                              </p>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                disabled={modelPhotoUploading}
-                                onChange={async (e) => {
-                                  const f = e.target.files?.[0];
-                                  if (!f) return;
-                                  if (!f.type.startsWith("image/")) {
-                                    alert("Please upload a photo (image file).");
-                                    e.target.value = "";
-                                    return;
-                                  }
-                                  if (isFreePlan) {
-                                    const used = Number(
-                                      (typeof window !== "undefined" &&
-                                        localStorage.getItem(TRYON_USED_KEY)) || 0,
-                                    );
-                                    if (used >= TRYON_FREE_LIMIT) {
-                                      alert(
-                                        `Free plan me Virtual Try-On sirf ${TRYON_FREE_LIMIT} baar use ho sakta hai. Unlimited ke liye apna plan upgrade karein.`,
-                                      );
-                                      e.target.value = "";
-                                      return;
-                                    }
-                                  }
-                                  setModelPhotoUploading(true);
-                                  try {
-                                    const url = await uploadFile(f);
-                                    setModelPhotoUrl(url);
-                                    setModelUsage("Upload Your Model");
-                                    setCustomFaceExpression("");
-                                  } catch {
-                                    alert("Photo upload failed. Please try again.");
-                                  } finally {
-                                    setModelPhotoUploading(false);
-                                    e.target.value = "";
-                                  }
-                                }}
-                              />
-                              {modelPhotoUrl && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setModelPhotoUrl("");
-                                    setTryOnConsent(false);
-                                    if (modelUsage === "Upload Your Model")
-                                      setModelUsage("Single Model");
-                                  }}
-                                  className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow"
-                                  aria-label="Remove photo"
-                                >
-                                  ✕
-                                </button>
-                              )}
-                            </label>
+                            renderUploadModelCard()
                           ) : (
                             <OptionCard
                               key={item}
@@ -4463,27 +4552,9 @@ export default function Home() {
                       </div>
 
                       {/* Try-on consent — mandatory before generating with a
-                          user-uploaded photo (misuse / privacy safeguard). */}
-                      {modelUsage === "Upload Your Model" && modelPhotoUrl && (
-                        <label className={`mt-3 flex cursor-pointer items-start gap-2 rounded-2xl border p-3 text-xs ${darkMode ? "border-white/15 bg-white/[0.03] text-white/75" : "border-cyan-400/30 bg-cyan-50/60 text-slate-600"}`}>
-                          <input
-                            type="checkbox"
-                            checked={tryOnConsent}
-                            onChange={(e) => setTryOnConsent(e.target.checked)}
-                            className="mt-0.5 h-4 w-4 shrink-0 accent-cyan-600"
-                          />
-                          <span>
-                            This is my own photo (or I have permission to use it),
-                            and I will use it only for this textile preview.
-                            AgentForge will delete it after the result is generated.
-                            {isFreePlan && (
-                              <span className="font-bold">
-                                {" "}Free plan: up to {TRYON_FREE_LIMIT} try-ons.
-                              </span>
-                            )}
-                          </span>
-                        </label>
-                      )}
+                          user-uploaded photo. For home decor the upload card +
+                          consent live in Step 4 instead. */}
+                      {!isHomeLikeCategory && renderTryOnConsent()}
                     </section>
 
                     <section>
@@ -4491,7 +4562,40 @@ export default function Home() {
                         4. Model Look
                       </h4>
 
-                      {modelLookDisabled ? (
+                      {isHomeLikeCategory ? (
+                        // Home decor: ethnicity faces (when a model usage is
+                        // picked) + the "Upload Your Model" card appended at the
+                        // end, after "Latin American Man".
+                        <>
+                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
+                            {!modelLookDisabled &&
+                              modelUsage !== "Upload Your Model" &&
+                              modelLookList.map((item) => renderModelLookCard(item))}
+                            {renderUploadModelCard()}
+                          </div>
+
+                          {modelUsage === "Upload Your Model" ? (
+                            <>
+                              <p className={`mt-3 text-xs ${darkMode ? "text-white/55" : "text-slate-500"}`}>
+                                Using your uploaded photo — the model, face and
+                                pose come from your photo.
+                              </p>
+                              {renderTryOnConsent()}
+                            </>
+                          ) : modelLookDisabled ? (
+                            <p className={`mt-3 text-xs ${darkMode ? "text-white/55" : "text-slate-500"}`}>
+                              Apni khud ki model photo upload karein, ya Step 3 me
+                              koi model-scene usage choose karein.
+                            </p>
+                          ) : (
+                            renderCustomInput(
+                              "Or type your own — e.g. 'Indian Woman', 'Premium Indian Couple', 'Asian Family'",
+                              customModelType,
+                              setCustomModelType,
+                            )
+                          )}
+                        </>
+                      ) : modelLookDisabled ? (
                         <div className={`rounded-2xl border border-dashed p-5 text-center text-sm ${darkMode ? "border-white/15 bg-white/[0.03] text-white/55" : "border-black/15 bg-black/[0.02] text-slate-500"}`}>
                           {modelUsage === "Upload Your Model" ? (
                             <>
@@ -4509,61 +4613,7 @@ export default function Home() {
                       ) : (
                         <>
                           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
-                            {modelLookList.map((item) => {
-                              const isActive =
-                                !customModelType.trim() && modelType === item.value;
-                              return (
-                                <button
-                                  key={item.value}
-                                  type="button"
-                                  onClick={() => {
-                                    setModelType(item.value);
-                                    setCustomModelType("");
-                                  }}
-                                  className={`group flex flex-col items-center rounded-[22px] border p-3 text-center transition-all duration-300 active:scale-[0.97] ${
-                                    isActive
-                                      ? "scale-[1.02] border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/60"
-                                      : darkMode
-                                        ? "border-white/10 bg-white/[0.04] hover:-translate-y-0.5 hover:bg-white/[0.08]"
-                                        : "border-slate-200 bg-white/90 hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-lg hover:shadow-cyan-500/10"
-                                  }`}
-                                >
-                                  <div
-                                    className={`mb-2 h-20 w-full overflow-hidden rounded-2xl bg-gradient-to-b from-slate-100/70 to-transparent dark:from-white/[0.06] sm:h-24 ${
-                                      item.imgs.length === 4
-                                        ? "grid grid-cols-2 grid-rows-2 gap-0.5 p-1"
-                                        : "flex items-end justify-center gap-0.5"
-                                    }`}
-                                  >
-                                    {item.imgs.map((src, i) => (
-                                      // eslint-disable-next-line @next/next/no-img-element
-                                      <img
-                                        key={i}
-                                        src={src}
-                                        alt={item.label}
-                                        loading="lazy"
-                                        className={`object-contain transition duration-300 group-hover:scale-105 ${
-                                          item.imgs.length === 1
-                                            ? "h-full w-full"
-                                            : item.imgs.length === 2
-                                              ? "h-full w-1/2"
-                                              : "h-full min-h-0 w-full"
-                                        }`}
-                                      />
-                                    ))}
-                                  </div>
-                                  <p
-                                    className={`text-[12px] font-black leading-4 sm:text-sm ${
-                                      isActive
-                                        ? "text-cyan-700 dark:text-cyan-200"
-                                        : "text-slate-700 dark:text-white/75"
-                                    }`}
-                                  >
-                                    {item.label}
-                                  </p>
-                                </button>
-                              );
-                            })}
+                            {modelLookList.map((item) => renderModelLookCard(item))}
                           </div>
 
                           {renderCustomInput(

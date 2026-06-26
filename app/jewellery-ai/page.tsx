@@ -274,7 +274,7 @@ const JEWEL_MODEL_LOOK_OPTIONS: OptionItem[] = [
   { label: "Middle Eastern Model", icon: UserRound, hint: "Middle-Eastern look", iconFile: "/model-faces/women-middle-eastern.png" },
   { label: "African Model", icon: UserRound, hint: "African look", iconFile: "/model-faces/women-african.png" },
   { label: "European Model", icon: UserRound, hint: "European look", iconFile: "/model-faces/women-western.png" },
-  { label: "Custom-Look", icon: Sparkles, hint: "Describe your own" },
+  { label: "Upload Your Model", icon: Upload, hint: "Your own photo (+2)" },
 ];
 
 // Background-theme + studio-pose sub-options (textile-parity), shown only
@@ -1081,6 +1081,10 @@ export default function JewelleryAIPage() {
   const [modelPhotoUrl, setModelPhotoUrl] = useState("");
   const [modelPhotoUploading, setModelPhotoUploading] = useState(false);
   const [tryOnConsent, setTryOnConsent] = useState(false);
+
+  // Upload Your Scene (background scene the jewellery is composited into)
+  const [referenceSceneUrl, setReferenceSceneUrl] = useState("");
+  const [sceneUploading, setSceneUploading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [loadingFactIndex, setLoadingFactIndex] = useState(0);
   const [generationProgress, setGenerationProgress] = useState(8);
@@ -1439,7 +1443,8 @@ export default function JewelleryAIPage() {
         (useCompanyAddress && companyAddress.trim() ? 1 : 0);
 
     const modelUploadCredits = modelPhotoUrl ? 2 : 0;
-    const perImageCredits = base + brandingCredits + modelUploadCredits;
+    const sceneUploadCredits = referenceSceneUrl ? 2 : 0;
+    const perImageCredits = base + brandingCredits + modelUploadCredits + sceneUploadCredits;
     return generationMode === "single" ? perImageCredits : Math.max(uploads.length, 1) * perImageCredits;
   }, [
     generationMode,
@@ -1458,6 +1463,7 @@ export default function JewelleryAIPage() {
     companyAddress,
     profile,
     modelPhotoUrl,
+    referenceSceneUrl,
   ]);
 
   const previewImage = uploads[0]?.preview || null;
@@ -2048,6 +2054,11 @@ const handleGenerate = async () => {
       return;
     }
 
+    if (modelLook === "Upload Your Model" && !modelPhotoUrl) {
+      alert("Apni model photo upload karein — Model Look me 'Upload Your Model' card.");
+      return;
+    }
+
     if (modelPhotoUrl && !tryOnConsent) {
       alert("Please confirm the consent checkbox for 'Upload Your Model' before generating.");
       return;
@@ -2137,7 +2148,9 @@ const WEBHOOK_URL =
     const resolvedModelLook =
       modelLook === "Custom-Look"
         ? customModelLook.trim() || "Indian Model"
-        : modelLook;
+        : modelLook === "Upload Your Model"
+          ? "Uploaded Model"
+          : modelLook;
     const isNoModelLook = modelLook === "No Model";
 
     // Map selected size → actual output dimensions
@@ -2248,6 +2261,8 @@ const WEBHOOK_URL =
       model_image_url: modelPhotoUrl || "",
       model_photo_url: modelPhotoUrl || "",
       has_uploaded_model: Boolean(modelPhotoUrl),
+      reference_scene_url: referenceSceneUrl || "",
+      has_uploaded_scene: Boolean(referenceSceneUrl),
       plan: String(profile.plan || "starter").toLowerCase(),
       is_pro: String(profile.plan || "").toLowerCase().includes("pro"),
       is_empire: String(profile.plan || "").toLowerCase().includes("empire"),
@@ -2326,6 +2341,7 @@ const WEBHOOK_URL =
     source_image_url: item.source_image_url,
     model_image_url: modelPhotoUrl || "",
     model_photo_url: modelPhotoUrl || "",
+    reference_scene_url: referenceSceneUrl || "",
     original_name: item.original_name,
   })),
 
@@ -3427,6 +3443,72 @@ if (!response.ok) {
                     {/* Shoot Style — now includes both shoot atmosphere AND model look */}
                     <SelectionGrid title="Shoot Style &amp; Model Look" subtitle="One unified pick — lighting, background, presentation, plus Indian/bridal/luxury model aesthetic." options={SHOOT_STYLE_OPTIONS} value={shootStyle} onChange={setShootStyle} />
 
+                    {/* Upload Your Scene — composite the jewellery into your own background */}
+                    <div className="rounded-[1.35rem] border border-cyan-300/40 bg-cyan-400/10 p-4 dark:border-cyan-400/20">
+                      <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">Upload Your Scene <span className="ml-2 rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-black text-cyan-700 dark:bg-cyan-400/20 dark:text-cyan-300">+2 Credits</span></p>
+                      <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/50">Upload your own background scene — AI will place the jewellery naturally into it, matching the scene&apos;s lighting and perspective.</p>
+                      <div className="mt-3">
+                        <label
+                          className={`group relative flex min-h-[116px] min-w-0 max-w-[160px] cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
+                            referenceSceneUrl
+                              ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
+                              : "bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10 dark:bg-white/[0.045] dark:hover:bg-white/[0.08]"
+                          } ${sceneUploading ? "pointer-events-none opacity-60" : ""}`}
+                        >
+                          <div className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${referenceSceneUrl ? "shadow-lg shadow-cyan-400/25" : "shadow-sm"}`}>
+                            {referenceSceneUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={referenceSceneUrl} alt="" className="block h-full w-full object-cover" />
+                            ) : (
+                              <span className="text-3xl" aria-hidden="true">📷</span>
+                            )}
+                          </div>
+                          <p className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${referenceSceneUrl ? "text-[#0077b6]" : "text-black/70 dark:text-white/70"}`}>
+                            {sceneUploading ? "Uploading…" : referenceSceneUrl ? "Scene Ready ✓" : "Upload Your Scene"}
+                          </p>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={sceneUploading}
+                            onChange={async (e) => {
+                              const f = e.target.files?.[0];
+                              if (!f) return;
+                              if (!f.type.startsWith("image/")) {
+                                alert("Please upload an image file.");
+                                e.target.value = "";
+                                return;
+                              }
+                              setSceneUploading(true);
+                              try {
+                                const url = await uploadFileToSupabase(f, "jewellery-scenes");
+                                setReferenceSceneUrl(url);
+                              } catch {
+                                alert("Scene upload failed. Please try again.");
+                              } finally {
+                                setSceneUploading(false);
+                                e.target.value = "";
+                              }
+                            }}
+                          />
+                          {referenceSceneUrl && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setReferenceSceneUrl("");
+                              }}
+                              className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow"
+                              aria-label="Remove scene"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </label>
+                      </div>
+                    </div>
+
                     {/* Outdoor Premium / Luxury Editorial → background theme box */}
                     {(shootStyle === "Outdoor Premium" || shootStyle === "Luxury Editorial") && (
                       <div className="rounded-[1.35rem] border border-cyan-300/40 bg-cyan-400/10 p-4 dark:border-cyan-400/20">
@@ -3482,12 +3564,10 @@ if (!response.ok) {
                 {builderStep === 3 && (
                   <div className="space-y-4">
                     {/* Model Look — which kind of model wears the jewellery */}
-                    <SelectionGrid title="Model Look" subtitle="Which model wears your jewellery — or No Model for product-only." options={JEWEL_MODEL_LOOK_OPTIONS} value={modelLook} onChange={setModelLook} />
-                    {modelLook === "Custom-Look" && (
-                      <TextInputBox label="Custom Model Look" value={customModelLook} onChange={setCustomModelLook} placeholder="Example: young Punjabi bride, mature elegant woman, male model for kada..." />
-                    )}
+                    <SelectionGrid title="Model Look" subtitle="Which model wears your jewellery — No Model for product-only, or Upload Your Model for your own photo." options={JEWEL_MODEL_LOOK_OPTIONS} value={modelLook} onChange={setModelLook} />
 
                     {/* Upload Your Model — virtual try-on with user's own photo */}
+                    {modelLook === "Upload Your Model" && (
                     <div className="rounded-[1.35rem] border border-cyan-300/40 bg-cyan-400/10 p-4 dark:border-cyan-400/20">
                       <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">Upload Your Model <span className="ml-2 rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-black text-cyan-700 dark:bg-cyan-400/20 dark:text-cyan-300">+2 Credits</span></p>
                       <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/50">Upload your own model photo — the AI will render the jewellery on the exact person in your photo. Face and identity preserved.</p>
@@ -3567,6 +3647,7 @@ if (!response.ok) {
                         </label>
                       )}
                     </div>
+                    )}
 
                     {/* Pose */}
                     <SelectionGrid title="Pose" subtitle="Body, hand, neck or ear pose for jewellery presentation." options={POSE_OPTIONS} value={pose} onChange={setPose} />
@@ -3613,7 +3694,7 @@ if (!response.ok) {
                       <div className="grid gap-3 sm:grid-cols-2">
                         <SummaryRow label="Jewellery" value={selectedJewelleryLabel} />
                         <SummaryRow label="Shoot Style" value={customShootStyle || shootStyle} />
-                        <SummaryRow label="Model Look" value={modelLook === "Custom-Look" ? (customModelLook || "Custom") : modelLook} />
+                        <SummaryRow label="Model Look" value={modelLook === "Upload Your Model" ? "Your Photo" : modelLook} />
                         <SummaryRow label="Pose" value={customPose || pose} />
                         <SummaryRow label="Face Expression" value={faceExpression} />
                         <SummaryRow label="Accessories" value={customAccessory || accessory} />
@@ -3621,6 +3702,9 @@ if (!response.ok) {
                         <SummaryRow label="Uploads" value={String(uploads.length)} />
                         {modelPhotoUrl && (
                           <SummaryRow label="Upload Your Model" value="+2 credits" />
+                        )}
+                        {referenceSceneUrl && (
+                          <SummaryRow label="Upload Your Scene" value="+2 credits" />
                         )}
                         {teamId && (
                           <SummaryRow label="Team Credits" value="Active" />
