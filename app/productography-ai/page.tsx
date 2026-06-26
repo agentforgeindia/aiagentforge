@@ -301,7 +301,6 @@ const STUDIO_POSE_ICONS: Record<string, string> = {
   "Walking Toward Camera": UI("sp-walking-toward-camera"),
 };
 const studioPoseOptions = [
-  "Auto",
   "Standing Front",
   "Three-Quarter Turn",
   "Hand in Pocket",
@@ -639,9 +638,14 @@ export default function ProductographyPage() {
   // Team access
   const [teamId, setTeamId] = useState<string | null>(null);
 
-  // Upload Your Scene (Studio Professional)
+  // Upload Your Scene (Luxury Studio)
   const [referenceSceneUrl, setReferenceSceneUrl] = useState("");
   const [sceneUploading, setSceneUploading] = useState(false);
+
+  // Upload Your Photo (virtual try-on with user's own model photo)
+  const [modelPhotoUrl, setModelPhotoUrl] = useState("");
+  const [modelPhotoUploading, setModelPhotoUploading] = useState(false);
+  const [tryOnConsent, setTryOnConsent] = useState(false);
 
   const [productCategory, setProductCategory] = useState("Cosmetics");
   const [modelUsage, setModelUsage] = useState("No Model");
@@ -651,7 +655,7 @@ export default function ProductographyPage() {
   const [shootStyle, setShootStyle] = useState("Luxury Studio");
   const [background, setBackground] = useState("Plain White");
   const [backgroundTheme, setBackgroundTheme] = useState("Royal Palace");
-  const [studioPose, setStudioPose] = useState("Auto");
+  const [studioPose, setStudioPose] = useState("Standing Front");
   const [outputSize, setOutputSize] = useState("1080x1080");
   const [quality, setQuality] = useState("Premium");
 
@@ -739,6 +743,8 @@ export default function ProductographyPage() {
     }
     // Upload Your Scene add-on: +2 credits.
     if (referenceSceneUrl) base += 2;
+    // Upload Your Photo (virtual try-on) add-on: +2 credits.
+    if (modelPhotoUrl) base += 2;
     return base;
   })();
 
@@ -818,7 +824,7 @@ export default function ProductographyPage() {
       setShootStyle(s.shootStyle || "Luxury Studio");
       setBackground(s.background || "Plain White");
       setBackgroundTheme(s.backgroundTheme || "Royal Palace");
-      setStudioPose(s.studioPose || "Auto");
+      setStudioPose(s.studioPose || "Standing Front");
       setOutputSize(s.outputSize || "1080x1080");
       setQuality(s.quality || "Premium");
       setCustomCategory(s.customCategory || "");
@@ -1400,7 +1406,10 @@ export default function ProductographyPage() {
         background_style: resolvedBackground,
         background_theme: !customShootStyle.trim() && SHOOT_STYLES_WITH_BG_THEME.includes(shootStyle) ? backgroundTheme : "",
         studio_pose: !customShootStyle.trim() && SHOOT_STYLES_WITH_STUDIO_POSE.includes(shootStyle) && !modelLookDisabled ? studioPose : "",
-        reference_scene_url: !customShootStyle.trim() && shootStyle === "Studio Professional" ? (referenceSceneUrl || "") : "",
+        reference_scene_url: !customShootStyle.trim() && shootStyle === "Luxury Studio" ? (referenceSceneUrl || "") : "",
+        model_photo_url: modelPhotoUrl || "",
+        model_image_url: modelPhotoUrl || "",
+        has_uploaded_model: Boolean(modelPhotoUrl),
         team_id: teamId ?? null,
         output_size: customOutputSize.trim() || outputSize,
         quality: resolvedQuality,
@@ -1488,6 +1497,11 @@ export default function ProductographyPage() {
     }
     if (!readyItems.length) {
       alert("Please upload at least one product image.");
+      return;
+    }
+
+    if (modelPhotoUrl && !tryOnConsent) {
+      alert("Please confirm the consent checkbox for 'Upload Your Photo' before generating.");
       return;
     }
 
@@ -2322,6 +2336,92 @@ export default function ProductographyPage() {
                             );
                           })}
                         </div>
+
+                        {/* Upload Your Photo — virtual try-on with user's own model */}
+                        <div className="mt-4 rounded-2xl border border-cyan-300/40 bg-cyan-400/5 p-4 dark:border-cyan-400/20">
+                          <h4 className="text-sm font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">
+                            Upload Your Photo
+                            <span className="ml-2 rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-black text-cyan-700 dark:bg-cyan-400/20 dark:text-cyan-300">+2 Credits</span>
+                          </h4>
+                          <p className={`mt-1 text-xs ${muted}`}>Upload your own model photo — AI will render the product on the exact person. Face and identity preserved.</p>
+                          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+                            <label
+                              className={`group relative flex min-h-[116px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
+                                modelPhotoUrl
+                                  ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
+                                  : darkMode
+                                    ? "bg-white/[0.045] hover:-translate-y-1 hover:bg-white/[0.08]"
+                                    : "bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10"
+                              } ${modelPhotoUploading ? "pointer-events-none opacity-60" : ""}`}
+                            >
+                              <div className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${modelPhotoUrl ? "shadow-lg shadow-cyan-400/25" : "shadow-sm"}`}>
+                                {modelPhotoUrl ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img src={modelPhotoUrl} alt="" className="block h-full w-full object-cover" />
+                                ) : (
+                                  <UploadCloud className="h-9 w-9 text-cyan-500" aria-hidden="true" />
+                                )}
+                              </div>
+                              <p className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${modelPhotoUrl ? "text-[#0077b6]" : darkMode ? "text-white/70" : "text-black/70"}`}>
+                                {modelPhotoUploading ? "Uploading…" : modelPhotoUrl ? "Your Photo ✓" : "Upload Your Photo"}
+                              </p>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                disabled={modelPhotoUploading}
+                                onChange={async (e) => {
+                                  const f = e.target.files?.[0];
+                                  if (!f) return;
+                                  if (!f.type.startsWith("image/")) {
+                                    alert("Please upload an image file.");
+                                    e.target.value = "";
+                                    return;
+                                  }
+                                  setModelPhotoUploading(true);
+                                  try {
+                                    const url = await uploadFile(f);
+                                    setModelPhotoUrl(url);
+                                    setTryOnConsent(false);
+                                  } catch {
+                                    alert("Photo upload failed. Please try again.");
+                                  } finally {
+                                    setModelPhotoUploading(false);
+                                    e.target.value = "";
+                                  }
+                                }}
+                              />
+                              {modelPhotoUrl && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setModelPhotoUrl("");
+                                    setTryOnConsent(false);
+                                  }}
+                                  className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow"
+                                  aria-label="Remove photo"
+                                >
+                                  ✕
+                                </button>
+                              )}
+                            </label>
+                          </div>
+                          {modelPhotoUrl && (
+                            <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-50/60 p-3 text-xs text-slate-600 dark:border-white/15 dark:bg-white/[0.03] dark:text-white/75">
+                              <input
+                                type="checkbox"
+                                checked={tryOnConsent}
+                                onChange={(e) => setTryOnConsent(e.target.checked)}
+                                className="mt-0.5 h-4 w-4 shrink-0 accent-cyan-600"
+                              />
+                              <span>
+                                This is my own photo (or I have permission to use it), and I will use it only for this product preview. AgentForge will delete it after the result is generated.
+                              </span>
+                            </label>
+                          )}
+                        </div>
                       </div>
                     )}
 
@@ -2413,14 +2513,14 @@ export default function ProductographyPage() {
                       </div>
                     )}
 
-                    {/* Upload Your Scene — Studio Professional only */}
-                    {!customShootStyle.trim() && shootStyle === "Studio Professional" && (
+                    {/* Upload Your Scene — Luxury Studio only */}
+                    {!customShootStyle.trim() && shootStyle === "Luxury Studio" && !modelLookDisabled && (
                       <div className="rounded-2xl border border-cyan-300/40 bg-cyan-400/5 p-4 dark:border-cyan-400/20">
                         <h4 className="text-sm font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">
                           Upload Your Scene
                           <span className="ml-2 rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-black text-cyan-700 dark:bg-cyan-400/20 dark:text-cyan-300">+2 Credits</span>
                         </h4>
-                        <p className={`mt-1 text-xs ${muted}`}>Upload your own background scene — AI will composite the product naturally into it, matching the scene's lighting and perspective.</p>
+                        <p className={`mt-1 text-xs ${muted}`}>Upload your own background scene — AI will composite the product naturally into it, matching the scene&apos;s lighting and perspective.</p>
                         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                           <label
                             className={`group relative flex min-h-[116px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
@@ -2577,8 +2677,11 @@ export default function ProductographyPage() {
                           <SummaryRow label="Background" value={customBackground.trim() || background} />
                           <SummaryRow label="Frame" value={`${customOutputSize.trim() || outputSize} / ${customQuality.trim() || quality}`} />
                           <SummaryRow label="Uploads" value={String(readyItems.length)} />
-                          {!customShootStyle.trim() && shootStyle === "Studio Professional" && referenceSceneUrl && (
+                          {!customShootStyle.trim() && shootStyle === "Luxury Studio" && referenceSceneUrl && (
                             <SummaryRow label="Upload Your Scene" value="+2 credits" />
+                          )}
+                          {modelPhotoUrl && (
+                            <SummaryRow label="Upload Your Photo" value="+2 credits" />
                           )}
                           {teamId && (
                             <SummaryRow label="Team Credits" value="Active" />
