@@ -3607,7 +3607,6 @@ if (!response.ok) {
                     <TeamCreditToggle
                       useTeamCredits={!!teamId}
                       onChange={(val, id) => setTeamId(id)}
-                      darkMode={darkMode}
                     />
 
                     <div className="rounded-[1.35rem] border border-cyan-300/40 bg-gradient-to-br from-cyan-400/10 via-blue-500/10 to-purple-500/10 p-5">
