@@ -2039,8 +2039,7 @@ export default function Home() {
 
     // Bring-your-own add-ons: uploaded scene (+2) and uploaded model (+2).
     const sceneCredits = referenceSceneUrl ? 2 : 0;
-    const modelUploadCredits =
-      modelUsage === "Upload Your Model" && modelPhotoUrl ? 2 : 0;
+    const modelUploadCredits = modelPhotoUrl ? 2 : 0;
 
     return baseCredits + extraCredits + sceneCredits + modelUploadCredits;
   };
@@ -3095,8 +3094,11 @@ export default function Home() {
       return;
     }
 
-    // Virtual try-on safeguards: photo + consent required; free plans capped.
-    if (modelUsage === "Upload Your Model") {
+    // Virtual try-on / uploaded-model safeguards: photo + consent required;
+    // free plans capped. Triggers whenever a photo is uploaded (home decor:
+    // step-3 interaction stays selected) OR the apparel "Upload Your Model"
+    // usage card is picked.
+    if (modelUsage === "Upload Your Model" || modelPhotoUrl) {
       if (!modelPhotoUrl) {
         alert("Apni photo upload karein — Model step me 'Upload Your Model' card.");
         setBuilderStep(2);
@@ -3349,7 +3351,7 @@ export default function Home() {
     <label
       key="Upload Your Model"
       className={`group relative flex min-h-[116px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
-        modelUsage === "Upload Your Model"
+        !!modelPhotoUrl || modelUsage === "Upload Your Model"
           ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
           : darkMode
             ? "bg-white/[0.045] hover:-translate-y-1 hover:bg-white/[0.08]"
@@ -3370,7 +3372,7 @@ export default function Home() {
       </div>
       <p
         className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${
-          modelUsage === "Upload Your Model" ? "text-[#0077b6]" : darkMode ? "text-white/70" : "text-black/70"
+          !!modelPhotoUrl || modelUsage === "Upload Your Model" ? "text-[#0077b6]" : darkMode ? "text-white/70" : "text-black/70"
         }`}
       >
         {modelPhotoUploading
@@ -3409,7 +3411,11 @@ export default function Home() {
           try {
             const url = await uploadFile(f);
             setModelPhotoUrl(url);
-            setModelUsage("Upload Your Model");
+            // Apparel: the upload card lives in Step 3, so it IS the usage.
+            // Home/Universal: the upload lives in Step 4 (Model Look) — keep the
+            // Step-3 interaction (Sitting / Standing / Holding…) selected so the
+            // uploaded model follows it. Only the model look becomes "your photo".
+            if (!isHomeLikeCategory) setModelUsage("Upload Your Model");
             setCustomFaceExpression("");
           } catch {
             alert("Photo upload failed. Please try again.");
@@ -3449,6 +3455,11 @@ export default function Home() {
         onClick={() => {
           setModelType(item.value);
           setCustomModelType("");
+          // Picking a preset face deselects the uploaded photo.
+          if (modelPhotoUrl) {
+            setModelPhotoUrl("");
+            setTryOnConsent(false);
+          }
         }}
         className={`group flex flex-col items-center rounded-[22px] border p-3 text-center transition-all duration-300 active:scale-[0.97] ${
           isActive
@@ -3497,7 +3508,7 @@ export default function Home() {
 
   // Try-on consent — mandatory before generating with a user-uploaded photo.
   const renderTryOnConsent = () =>
-    modelUsage === "Upload Your Model" && modelPhotoUrl ? (
+    modelPhotoUrl ? (
       <label className={`mt-3 flex cursor-pointer items-start gap-2 rounded-2xl border p-3 text-xs ${darkMode ? "border-white/15 bg-white/[0.03] text-white/75" : "border-cyan-400/30 bg-cyan-50/60 text-slate-600"}`}>
         <input
           type="checkbox"
@@ -4573,38 +4584,43 @@ export default function Home() {
                       </h4>
 
                       {isHomeLikeCategory ? (
-                        // Home decor: ethnicity faces (when a model usage is
-                        // picked) + the "Upload Your Model" card appended at the
-                        // end, after "Latin American Man".
-                        <>
-                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
-                            {!modelLookDisabled &&
-                              modelUsage !== "Upload Your Model" &&
-                              modelLookList.map((item) => renderModelLookCard(item))}
-                            {renderUploadModelCard()}
+                        modelLookDisabled ? (
+                          // No Model (or mannequin / flat lay) → no human model is
+                          // used, so show nothing to pick — no faces, no upload.
+                          <div className={`rounded-2xl border border-dashed p-5 text-center text-sm ${darkMode ? "border-white/15 bg-white/[0.03] text-white/55" : "border-black/15 bg-black/[0.02] text-slate-500"}`}>
+                            No human model is used for{" "}
+                            <span className="font-bold">{modelUsage}</span> — Model
+                            Look is not applicable. Pick a model interaction in Step 3
+                            to add a model.
                           </div>
+                        ) : (
+                          // Home decor: ethnicity faces + "Upload Your Model" card.
+                          // The Step-3 interaction (Sitting / Standing / Holding…)
+                          // stays selected; uploading just sets the model photo.
+                          <>
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
+                              {modelLookList.map((item) => renderModelLookCard(item))}
+                              {renderUploadModelCard()}
+                            </div>
 
-                          {modelUsage === "Upload Your Model" ? (
-                            <>
-                              <p className={`mt-3 text-xs ${darkMode ? "text-white/55" : "text-slate-500"}`}>
-                                Using your uploaded photo — the model, face and
-                                pose come from your photo.
-                              </p>
-                              {renderTryOnConsent()}
-                            </>
-                          ) : modelLookDisabled ? (
-                            <p className={`mt-3 text-xs ${darkMode ? "text-white/55" : "text-slate-500"}`}>
-                              Apni khud ki model photo upload karein, ya Step 3 me
-                              koi model-scene usage choose karein.
-                            </p>
-                          ) : (
-                            renderCustomInput(
-                              "Or type your own — e.g. 'Indian Woman', 'Premium Indian Couple', 'Asian Family'",
-                              customModelType,
-                              setCustomModelType,
-                            )
-                          )}
-                        </>
+                            {modelPhotoUrl ? (
+                              <>
+                                <p className={`mt-3 text-xs ${darkMode ? "text-white/55" : "text-slate-500"}`}>
+                                  Using your uploaded photo — the model&apos;s face comes
+                                  from your photo; the pose follows your Step-3
+                                  interaction.
+                                </p>
+                                {renderTryOnConsent()}
+                              </>
+                            ) : (
+                              renderCustomInput(
+                                "Or type your own — e.g. 'Indian Woman', 'Premium Indian Couple', 'Asian Family'",
+                                customModelType,
+                                setCustomModelType,
+                              )
+                            )}
+                          </>
+                        )
                       ) : modelLookDisabled ? (
                         <div className={`rounded-2xl border border-dashed p-5 text-center text-sm ${darkMode ? "border-white/15 bg-white/[0.03] text-white/55" : "border-black/15 bg-black/[0.02] text-slate-500"}`}>
                           {modelUsage === "Upload Your Model" ? (
@@ -5018,7 +5034,7 @@ export default function Home() {
                         {referenceSceneUrl && (
                           <SummaryRow label="Upload Your Scene" value="+2 credits" />
                         )}
-                        {modelUsage === "Upload Your Model" && modelPhotoUrl && (
+                        {modelPhotoUrl && (
                           <SummaryRow label="Upload Your Model" value="+2 credits" />
                         )}
                       </div>
