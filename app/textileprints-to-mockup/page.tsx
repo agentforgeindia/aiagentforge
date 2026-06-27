@@ -2751,6 +2751,25 @@ export default function Home() {
       ? customFaceExpression.trim() || faceExpression
       : "Not applicable";
 
+    // "Upload Your Model" → a concrete usage the n8n flow understands.
+    // Apparel: the person WEARS the garment (Single Model / virtual try-on).
+    // Home/Universal: the person can't "wear" a curtain/bedsheet — they must
+    // appear IN the scene interacting with the product, so map to a home
+    // interaction that the home workflow renders a model for.
+    const modelUsageForN8n =
+      modelUsage === "Upload Your Model"
+        ? isHomeLikeCategory
+          ? "Model Standing Beside Product"
+          : "Single Model"
+        : modelUsage;
+
+    // Category-aware instruction for the uploaded model photo.
+    const modelPhotoInstruction = modelPhotoUrl
+      ? isHomeLikeCategory
+        ? `UPLOADED MODEL (see model_photo_url): Place the EXACT person from this uploaded photo INTO the scene with the product (${resolvedSudanGarment || resolvedProduct || "the product"}). The person should naturally interact with the product — standing beside / holding / pointing toward it as per the selected interaction. Preserve their face, identity, body shape and skin tone exactly — do not change the face. The person is a MODEL posing with the home-textile product; they do NOT wear it. Realistic, tasteful, fully clothed. Absolutely no nudity, no sexualisation and no inappropriate content.`
+        : "VIRTUAL TRY-ON (see model_photo_url): Render this garment on the EXACT person in the uploaded model photo. Preserve their face, identity, body shape and skin tone exactly — do not change the face. Keep them fully clothed, realistic and tasteful. Absolutely no nudity, no sexualisation and no inappropriate content."
+      : "";
+
     const payload = {
       generation_id: generationId,
       user_id: userId,
@@ -2766,7 +2785,7 @@ export default function Home() {
       company_website_position: companyWebsitePosition,
       company_address_position: companyAddressPosition,
       textile_category: textileCategory,
-      model_usage: modelUsage === "Upload Your Model" ? "Single Model" : modelUsage,
+      model_usage: modelUsageForN8n,
       model_type: resolvedModelType,
       product_type: resolvedSudanGarment || resolvedProduct,
       shoot_style: resolvedShootStyle,
@@ -2790,14 +2809,12 @@ export default function Home() {
       custom_instruction: [
         customInstruction,
         `Category: ${textileCategory}`,
-        `Model usage / interaction: ${modelUsage === "Upload Your Model" ? "Single Model" : modelUsage}`,
+        `Model usage / interaction: ${modelUsageForN8n}`,
         ...extraPromptHints,
         referenceSceneUrl
           ? "REFERENCE SCENE PROVIDED (see reference_scene_url): Place the product naturally INTO this uploaded scene, replacing the existing furnishing/product in that photo. Match the scene's lighting, perspective, shadows, depth and overall style so it looks real. Keep the rest of the scene unchanged."
           : "",
-        modelPhotoUrl
-          ? "VIRTUAL TRY-ON (see model_photo_url): Render this garment on the EXACT person in the uploaded model photo. Preserve their face, identity, body shape and skin tone exactly — do not change the face. Keep them fully clothed, realistic and tasteful. Absolutely no nudity, no sexualisation and no inappropriate content."
-          : "",
+        modelPhotoInstruction,
         showFaceExpression
           ? `Model face expression: ${resolvedFaceExpression}`
           : "No face expression needed because no human face/model is selected.",
@@ -2846,7 +2863,7 @@ export default function Home() {
         model_photo_url: modelPhotoUrl || "",
 
         textile_category: textileCategory,
-        model_usage: modelUsage === "Upload Your Model" ? "Single Model" : modelUsage,
+        model_usage: modelUsageForN8n,
         model_type: resolvedModelType,
         product_type: resolvedSudanGarment || resolvedProduct,
         shoot_style: resolvedShootStyle,
