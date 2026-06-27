@@ -20,7 +20,7 @@ import { requireUser } from "@/lib/serverAuth";
 import { isAgentEnabled } from "@/lib/agentEnabled";
 import { isAgentForgeHostedUrl } from "@/lib/uploadValidation";
 import { getTeamMembership } from "@/lib/teamAuth";
-import { deductTeamCredits, refundTeamCredits } from "@/lib/creditsServer";
+import { deductTeamCredits, refundTeamCredits, refundCredits } from "@/lib/creditsServer";
 
 export const runtime = "nodejs";
 
@@ -172,20 +172,18 @@ export async function POST(request: Request) {
     );
   }
 
-  // When the team pool was already charged here, flag skip_credit_deduction
-  // AND zero out the credit fields — so even an unmodified n8n flow that
-  // deducts from `required_credits` charges 0 to personal balance.
-  const forwarded = teamDeducted
-    ? {
-        ...body,
-        user_id: user.id,
-        team_id: teamId ?? undefined,
-        agent_type: "productography",
-        skip_credit_deduction: true,
-        required_credits: 0,
-        credits_required: 0,
-      }
-    : { ...body, user_id: user.id, team_id: teamId ?? undefined, agent_type: "productography" };
+  // For a team generation, the productography n8n workflow still deducts
+  // `credits` from this user's PERSONAL balance internally (can't be skipped
+  // from here). Pre-credit the same amount to personal now — n8n's later
+  // deduction nets it to zero, leaving only the team pool charged. Done
+  // after the row insert so a failed insert can't leak credits.
+  if (teamDeducted) {
+    await refundCredits(user.id, credits, "team_offset:productography", body.generation_id);
+  }
+
+  // Forward with the REAL required_credits so n8n's personal deduction
+  // exactly cancels the offset above.
+  const forwarded = { ...body, user_id: user.id, team_id: teamId ?? undefined, agent_type: "productography" };
 
   let response: Response;
   try {
