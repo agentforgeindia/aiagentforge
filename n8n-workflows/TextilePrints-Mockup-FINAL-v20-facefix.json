@@ -1,0 +1,1066 @@
+{
+  "name": "TextilePrints-Mockup-FINAL-v20-facefix",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-mockup",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*",
+          "rawBody": false,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type"
+              }
+            ]
+          }
+        }
+      },
+      "id": "aced948f-e0e6-4141-b101-a5781a1f9b5e",
+      "name": "Webhook - Generate Mockup1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1744,
+        -4432
+      ],
+      "webhookId": "4d51e093-85e3-4fc5-8b2a-86087a39d526"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === INPUT VALIDATION v3 ===\nlet input = $json.body || $json;\nif (typeof input === \"string\") input = JSON.parse(input);\nif (typeof input?.body === \"string\") input = JSON.parse(input.body);\nif (input?.body && typeof input.body === \"object\") input = input.body;\n\nconst errors = [];\nconst designUrl = String(input.design_url || input.image_url || input.input_image_url || '').trim();\nif (!designUrl) errors.push('design_url is required');\nelse if (!/^https?:\\/\\//i.test(designUrl)) errors.push('design_url must be an http(s) URL');\n\nconst generationId = String(input.generation_id || input.id || '').trim();\nif (!generationId) errors.push('generation_id is required');\n\nconst userId = String(input.user_id || '').trim();\nif (!userId) errors.push('user_id is required');\n\nconst qualityRaw = String(input.quality || 'Catalogue Ready').trim();\nconst validQualities = ['Draft Preview', 'Catalogue Ready', 'Ultra Realistic', 'Premium', 'Ultra HD'];\nlet quality = qualityRaw;\nif (!validQualities.includes(quality)) {\n  const norm = quality.toLowerCase().replace(/[_-]/g, ' ').trim();\n  if (norm.includes('draft')) quality = 'Draft Preview';\n  else if (norm.includes('ultra')) quality = 'Ultra Realistic';\n  else quality = 'Catalogue Ready';\n}\n\nlet creditCost = 15;\nif (quality === 'Ultra Realistic' || quality === 'Ultra HD') creditCost = 20;\nelse if (quality === 'Catalogue Ready' || quality === 'Premium') creditCost = 17;\n\nif (errors.length) {\n  return [{ json: { validation_failed: true, validation_errors: errors, ...input } }];\n}\n\nreturn [{\n  json: {\n    validation_failed: false,\n    generation_id: generationId,\n    user_id: userId,\n    design_url: designUrl,\n    quality,\n    credit_cost: creditCost,\n    raw_input: input\n  }\n}];"
+      },
+      "id": "857e94b5-ac3e-4a94-a0c8-1bda5e3c66b1",
+      "name": "Code - Validate Input1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1520,
+        -4432
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_valid",
+              "leftValue": "={{$json.validation_failed}}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "cbd2a570-3efe-45eb-a9b9-a66e53718cf1",
+      "name": "IF - Input Valid?1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1296,
+        -4432
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// =====================================================================\n//  PHOTOGRAPHY-GRADE PROMPT BUILDER  v4  (AgentForge)\n// =====================================================================\n//  Changes over v3:\n//   - PRINT FORENSIC LOCK promoted to RULE #0 (top of prompt).\n//   - Added PHOTOREALISM ENGINEERING block (RAW-photo physics).\n//   - Added SENSOR + LENS AUTHENTICITY block.\n//   - Added HUMAN IMPERFECTION CHECKLIST (expanded skin/eyes/hands).\n//   - Added AMBIENT PHYSICS (contact shadows, light bounce, occlusion).\n//   - Overlay text re-described as \"post-production composite layer\"\n//     so model never embeds it INTO fabric.\n//   - Negative prompt expanded with Nano-Banana-2-specific AI tells.\n//   - Pose payload supports custom pose passthrough (input.custom_pose).\n// =====================================================================\n\nconst meta  = $node['Code - Validate Input1'].json;\nconst input = meta.raw_input || meta;\n\nconst clean = (v, fallback = '') => {\n  if (v === undefined || v === null) return fallback;\n  const s = String(v).trim();\n  return s || fallback;\n};\nconst lower = v => clean(v).toLowerCase();\n\n// ========= core fields =========\nconst category        = clean(input.textile_category || input.category, 'Apparel');\nconst productType     = clean(input.product_type || input.product, 'Textile Product');\nconst modelUsage      = clean(input.model_usage, 'Single Model');\nconst modelLook       = clean(input.model_type || input.model_look, 'Indian Model');\nconst pose            = clean(input.custom_pose || input.pose || input.model_pose || input.scene_view, 'Front Face');\nconst expression      = clean(input.face_expression || input.model_expression,\n                              'relaxed natural expression with a soft, real smile');\nconst shootStyle      = clean(input.shoot_style, 'Studio Catalogue');\nconst outputSize      = clean(input.output_size, '1080x1080');\nconst quality         = meta.quality;\nconst accessories     = clean(input.accessories, '');\nconst customRaw       = clean(input.custom_instruction, '');\nconst articleNumber   = clean(input.article_number || input.design_number, '');\nconst articlePosition = clean(input.article_position || input.watermark_position, 'top-right');\nconst designUrl       = meta.design_url;\nconst generationId    = meta.generation_id;\nconst logoUrl         = clean(input.logo_url || input.company_logo_url, '');\nconst sofaSeater        = clean(input.sofa_seater, '');\nconst towelType         = clean(input.towel_type, '');\nconst studioPose        = clean(input.studio_pose, '');\nconst outdoorBackground = clean(input.outdoor_background, '');\nconst otherDesc         = clean(input.other_product_description, '');\nconst autoDetect        = (input.auto_detect_product === true) || (String(input.auto_detect_product).toLowerCase() === 'true') || (lower(input.product_type || input.product) === 'other');\n\n// Branding\nconst brand = input.brand_details || {};\nconst positions = brand.positions || {};\nconst companyName    = clean(input.company_name    || brand.company_name, '');\nconst companyPhone   = clean(input.company_phone   || input.phone_number || brand.phone_number, '');\nconst companyWebsite = clean(input.company_website || input.website      || brand.website, '');\nconst companyAddress = clean(input.company_address || input.address      || brand.address, '');\nconst companyNamePosition    = clean(input.company_name_position    || positions.company_name,  'bottom-left');\nconst companyPhonePosition   = clean(input.company_phone_position   || positions.phone_number,  'bottom-left');\nconst companyWebsitePosition = clean(input.company_website_position || positions.website,       'bottom-right');\nconst companyAddressPosition = clean(input.company_address_position || positions.address,       'bottom-left');\n\nconst customInstruction = customRaw\n  .split('|')\n  .map(s => s.trim())\n  .filter(Boolean)\n  .join(' | ');\n\n// ========= flags =========\nconst c = lower(category);\nconst p = lower(productType);\nconst u = lower(modelUsage);\nconst poseKey  = lower(pose);\nconst styleKey = lower(shootStyle);\nconst lookKey  = lower(modelLook);\n\nconst isHomeTextile =\n  c.includes('home') || c.includes('decor') || c.includes('universal') ||\n  ['bedsheet','curtain','pillow','cushion','sofa','towel','blanket','quilt',\n   'bathrobe','rug','carpet','wall fabric','wall panel','fabric roll','table cover',\n   'flat fabric','hanging fabric','rolled fabric','folded fabric','close-up texture',\n   'fabric hanging','fabric bag','upholstery','luxury bedroom'\n  ].some(x => p.includes(x));\n\nconst isNoModel = u.includes('no model') || u === 'none' || u.includes('flat lay') ||\n                  u.includes('flatlay') || u.includes('product only');\nconst isMannequin = u.includes('mannequin');\n\nconst isTraditional = ['kurta','saree','salwar','kameez','lehenga','dupatta','pathani',\n                       'sherwani','anarkali','sharara','palazzo','blouse','dhoti'].some(x => p.includes(x));\nconst isFemaleProduct = ['saree','kurti','blouse','dupatta','lehenga','anarkali','frock',\n                         'gown','dress','sharara','palazzo','salwar','kameez','girls','ladies suit','cord set','stole','scarf'].some(x => p.includes(x));\nconst isMaleProduct = ['mens shirt','male kurta','pathani','blazer','waistcoat','sherwani',\n                       '3 piece','2 piece','trouser','boys shirt','boys kurta'].some(x => p.includes(x));\nconst isKidsProduct = ['kids','boys','girls','frock','night suit','baby'].some(x => p.includes(x));\n\nconst isLuxury  = styleKey.includes('luxury') || styleKey.includes('editorial') || styleKey.includes('hotel');\nconst isWhiteBg = styleKey.includes('white')  || styleKey.includes('ecommerce') || styleKey.includes('e-commerce');\nconst isOutdoor = styleKey.includes('outdoor') || styleKey.includes('garden') || styleKey.includes('street') ||\n                  styleKey.includes('sunset');\nconst isStudio  = styleKey.includes('studio')  || styleKey.includes('catalogue');\n\n\n// =====================================================================\n//  RULE #0 - PRINT FORENSIC LOCK (absolute, non-negotiable)\n// =====================================================================\nconst printForensicRule = `\n=====================================================================\n  RULE #0 - PRINT FORENSIC LOCK (ABSOLUTE, OVERRIDES EVERYTHING)\n=====================================================================\nThe uploaded textile design at ${designUrl} is the GROUND TRUTH source\nof the print. Treat it the way a forensic photographer treats evidence.\n\nTHE PRINT MUST BE PRESERVED PIXEL-FOR-PIXEL where the fabric is flat:\n- Every motif, line, curve, dot, and colour in the source MUST appear\n  in the output identically.\n- Do NOT redraw. Do NOT re-interpret. Do NOT stylise.\n- Do NOT shift hue, saturation, brightness, or contrast of the print.\n- Do NOT change motif SCALE - the repeat-size must remain natural to\n  the garment cut (a 10cm motif on the source stays a 10cm motif on\n  the garment, not stretched or shrunk).\n- Do NOT change motif ROTATION. The print orientation on the body\n  matches how a real cut-and-sew operation would lay the fabric.\n- Do NOT invent decorative elements that are not in the source.\n- Do NOT add embroidery, sequins, beadwork, foil, or any embellishment\n  unless the source already has it.\n- Do NOT crop the pattern repeat to \"look better.\"\n- Apply the print to the fabric ONCE, cleanly mapped to the product's cut panels. Do NOT duplicate it, double-expose it, tile it excessively, or overlay a second floating copy of the design.\n- Do NOT blow up a single motif so large that one motif covers the whole garment. The motif scale stays true to the source.\n- The print must look genuinely WOVEN / PRINTED INTO the cloth - never pasted-on, stuck-on, floating above the fabric, oversized, or overlapping itself.\n\nBORDER / PLACEMENT-PRINT RULE (CRITICAL): If the uploaded design has a distinct decorative BORDER strip along the BOTTOM of the image (a horizontal band clearly different from the main scattered / all-over motif), that border belongs ONLY at the very BOTTOM HEM of the finished product.\n- For a shirt / kurta / any garment: the border runs horizontally along the BOTTOM HEM only. The body, chest, shoulders, sleeves, CUFFS, COLLAR / neckline and the BUTTON PLACKET must use the MAIN all-over motif - NOT the border.\n- Do NOT copy, mirror, repeat or scatter the border onto the collar, neckline, cuffs, button placket, yoke, shoulders or sleeves. The border appears exactly once, as a single horizontal band at the hem.\n- For home textiles (curtain / bedsheet / sofa cover / table cover): the border sits along the natural edge(s) of that item only, never tiled across the whole surface.\n- Keep the border's motifs, colours and scale exactly as in the source and align it cleanly to the product cut, like a real engineered placement print.\n\nCENTRE-FRONT PLACKET — CLEAN CHANNEL RULE (CRITICAL, NON-NEGOTIABLE for shirts / kurtas / any button-front garment): Keep a NARROW VERTICAL CHANNEL of plain, motif-FREE base fabric running straight down the centre-front button placket, about 4-6 cm wide (wide enough to clear the buttons). ALL buttons sit on this plain ground. NO leaf, flower, butti or motif may sit on, cross, touch or be cut by this centre channel. Every motif stays a COMPLETE, WHOLE, UNBROKEN shape and is positioned to the LEFT or RIGHT of the channel — never straddling it, never sliced or halved by the placket, the button strip or any individual button. Think of it as a real engineered placement shirt where the button stand is deliberately kept clean. The collar band, cuffs and the button band itself also stay on plain ground (the all-over scattered motif fills the rest of the body, chest, shoulders and sleeves as normal). For the side seams, shoulder seams and sleeve seams the print simply continues naturally. The result must read as a premium tailored shirt with ZERO leaves chopped at the centre buttons.\n\nAUTHENTIC PHOTOGRAPH (NO AI / CGI LOOK): the result MUST look like a real DSLR photograph of a real human, never an AI render, 3D model or \"AI-influencer\" face. Natural skin with visible pores and tiny imperfections (never plastic-smooth or waxy), realistic hair with a few stray flyaway strands, subtle natural facial asymmetry, real catch-lights in the eyes, and true-to-life fabric wrinkles and drape. Avoid airbrushed perfection, glassy eyes, over-symmetry and any synthetic AI sheen.\n\nHUMAN BODY ANATOMY LOCK (CRITICAL whenever a model is present): render perfectly correct, natural human anatomy.\n- Hands: EXACTLY five fingers per hand (count them), natural finger length, correct thumb; no fused, extra, missing, bent-backwards or melted fingers.\n- Feet: EXACTLY five toes per foot, natural foot shape and size with a correct ankle; never elongated, melted, flipper-like or club-shaped feet.\n- Arms & legs: natural human length and proportion; elbows, knees, wrists and ankles bend the correct way; no over-long, rubbery, twisted, duplicated or merged limbs.\n- Body count: one head, two arms and two legs per person, and the correct NUMBER of people for the scene; never merge two bodies, never add a stray extra hand/leg, never leave a floating disconnected limb.\n- Keep the pose physically plausible and relaxed, so the model looks like a real photographed human while the printed textile stays clearly visible.\n\nTHE ONLY ACCEPTABLE TRANSFORMATIONS:\n- Realistic fabric distortion at seams, drape folds, body curves, and\n  pleats - exactly as cloth behaves in real photographs.\n- Realistic light fall-off across the fabric (highlights and shadows\n  on the print are OK; print colour itself does not change).\n- Realistic fabric thickness (the print at a sharp fold may compress\n  slightly, the way real cloth does).\n\nIf the model's beauty and the print's fidelity ever conflict - THE\nPRINT WINS. Always.\n`;\n\n\n// =====================================================================\n//  PHOTOREALISM ENGINEERING - RAW-photo physics layer\n// =====================================================================\nconst photorealismBlock = `\nPHOTOREALISM ENGINEERING - TREAT THIS AS A RAW FILE FROM A REAL CAMERA:\n\nThis output must be indistinguishable from a 14-bit RAW photograph\nstraight out of a professional camera body. A trained retoucher\nopening it in Lightroom should not see any AI signature.\n\nOPTICAL PHYSICS (subtle, never exaggerated):\n- Depth-of-field falls off gradually with real lens math - sharpness\n  rolls off on a curve, not in a hard plane.\n- Bokeh discs at out-of-focus highlights are slightly cat-eye shaped\n  at the frame edges (real lens vignetting).\n- Faint, natural chromatic aberration on high-contrast edges in the\n  corners - a 1-2 pixel red/blue fringe is realistic, never magenta.\n- Subtle lens vignetting darkening the corners by ~10-15%.\n- Diffraction softness at f/8+ if the scene calls for it.\n\nSENSOR + EXPOSURE PHYSICS:\n- 14-bit dynamic range - highlights roll off into soft shoulder, not\n  clipped white. Shadows hold detail, not crushed black.\n- Natural grain structure: a fine, organic ISO grain pattern\n  appropriate to the ISO specified in the camera line. Never digital\n  noise. Never mushy noise reduction.\n- Micro-contrast in skin, hair, and fabric weave - the way modern\n  full-frame sensors render real surface texture.\n- No over-sharpened halos. No HDR look. No tone-mapped flatness.\n\nAMBIENT PHYSICS:\n- Contact shadows where the model's foot meets the floor, where hands\n  meet hips, where clothes meet skin. Soft, anchored, never floating.\n- Ambient occlusion in skin creases, between fingers, under the jaw,\n  inside garment folds - small darkenings where light cannot reach.\n- Realistic light bounce: a red garment subtly bounces warm light\n  onto the underside of the jaw. Indoor incandescents bounce warm\n  light onto everything in the lower half of frame.\n- Skin shows real subsurface scattering - light penetrates 1-2mm into\n  skin and re-emerges slightly redder, especially at ear edges,\n  fingertips, and the soft side of the nose.\n- A few airborne dust particles softly catching the key light if the\n  scene is indoor - only a few, never theatrical.\n\nCOLOUR SCIENCE:\n- Skin tones in the natural Caucasian/South-Asian/East-Asian/African\n  ranges depending on the model cast - never orange, never magenta,\n  never grey. Match the Fitzpatrick scale honestly.\n- White balance neutral to the lighting condition (warm 3200K indoor,\n  cool-warm 5600K outdoor golden hour).\n- Colour palette respects the source textile - the rest of the scene\n  is chosen to complement the print, never compete with it.\n`;\n\n\n// =====================================================================\n//  CAMERA + LIGHTING per shoot style\n// =====================================================================\nlet cameraSpec, lightingSpec, referenceSpec;\n\nif (isWhiteBg) {\n  cameraSpec    = 'Captured on a Phase One XF IQ4 medium-format camera, Schneider 80mm LS lens at f/8, ISO 50, 1/200s. Clinical e-commerce composition, product centred, model held in clean catalogue pose.';\n  lightingSpec  = 'Lighting: two large softboxes at 45 degrees, one overhead strip light, perfectly even pure white seamless paper backdrop with subtle natural floor shadow under the product. No colour cast, no rim-light theatrics.';\n  referenceSpec = 'Visual reference: the standardised look of Myntra / Ajio / Amazon Fashion catalogue product photography.';\n} else if (isOutdoor) {\n  cameraSpec    = 'Captured on a Canon EOS R5 with 85mm f/1.4 prime, shot at f/2.8, ISO 200, 1/500s. Shallow depth of field with the model in sharp focus and background softly blurred. Natural perspective, no fisheye, no wide-angle distortion.';\n  lightingSpec  = 'Lighting: golden-hour ambient daylight, soft warm key from camera-left, subtle bounce fill from a silver reflector, gentle natural rim from skylight. No harsh shadows. Skin keeps a healthy natural warmth, not orange.';\n  referenceSpec = 'Luxury ethnic fashion campaign photography similar to Myntra Luxe, Kalki Fashion, Aza Fashion, and Sabyasachi campaign aesthetics.';\n} else if (isLuxury) {\n  cameraSpec    = 'Captured on a Hasselblad H6D-100c with HC 100mm f/2.2, shot at f/4, ISO 100. Medium-format clarity, painterly fall-off, micro-contrast in fabric weave clearly visible.';\n  lightingSpec  = 'Lighting: a large window-shaped softbox high camera-left as the key, plus a soft bounce fill on the opposite side so the GARMENT PRINT stays fully visible and well-exposed - editorial mood, but NEVER so dark that the print, colours or fabric detail are lost. A gentle hair / rim light separates the model from the background. Refined and cinematic, never muddy, never underexposed.';\n  referenceSpec = 'Visual reference: a Sabyasachi or Tarun Tahiliani campaign - heritage luxury, controlled palette, restrained styling.';\n} else if (isStudio) {\n  cameraSpec    = 'Captured on a Sony A7R V with 70-200mm GM II at 135mm, f/5.6, ISO 100, 1/160s. Compressed perspective typical of professional studio catalogue work, full-body or three-quarter framing.';\n  lightingSpec  = 'Lighting: large octabox key at 45 degrees camera-right, fill softbox camera-left at half power, hair light from rear-top, seamless paper backdrop in a neutral mid-tone. Soft directional shadows on fabric folds.';\n  referenceSpec = 'Visual reference: the clean professional catalogue look of Fabindia, Westside, Manyavar or Biba lookbooks - commercial, well-lit, fabric-forward.';\n} else if (isHomeTextile) {\n  cameraSpec    = 'Captured on a Fujifilm GFX 100S with 32-64mm zoom at 45mm, f/5.6, ISO 200, tripod-mounted. Architectural perspective straightened in post, no wide-angle distortion of furniture.';\n  lightingSpec  = 'Lighting: large window daylight from the side, soft bounce fill, practical lamps glowing warm in the background for ambient depth. Interior-magazine lighting, never flash-flat.';\n  referenceSpec = 'Visual reference: the styled interior photography of Architectural Digest India and Good Homes magazine - lived-in but elegant, never showroom-sterile.';\n} else {\n  cameraSpec    = 'Captured on a Sony A7R V with 50mm f/1.4 GM, shot at f/2.8, ISO 200, 1/250s. Honest natural perspective.';\n  lightingSpec  = 'Lighting: large softbox key with subtle fill, controlled shadows that reveal fabric texture and drape.';\n  referenceSpec = 'Visual reference: clean Indian e-commerce fashion photography.';\n}\n\n\n// =====================================================================\n//  POSE / VIEW\n// =====================================================================\nlet poseInstruction = '';\nif      (poseKey.includes('side'))         poseInstruction = 'Pose the model in a relaxed three-quarter turn (about 30-45 degrees off-axis from the lens), one shoulder slightly forward, weight on the back foot. The fabric print on the front of the garment must remain clearly visible; do not turn into a strict profile.';\nelse if (poseKey.includes('walking'))      poseInstruction = 'Pose: a single mid-stride frame captured at the moment the lead foot lands. Arms swing naturally - not posed. Slight forward lean. The garment shows believable motion blur only in the lower hem; the face and torso remain sharp.';\nelse if (poseKey.includes('sitting'))      poseInstruction = 'Pose: seated naturally on a neutral bench, stool or low ledge. Spine relaxed, never ramrod-straight. Hands rested. The fabric drape falls realistically across the lap with believable gravity creases.';\nelse if (poseKey.includes('close'))        poseInstruction = 'Composition: tight torso-to-thigh crop showing weave detail, stitching, button placket and fabric drape. Model partially in frame - head and shoes cut off intentionally, magazine-style.';\nelse if (poseKey.includes('back'))         poseInstruction = 'Pose: model turned slightly over the shoulder, looking back at the lens. Hair falls naturally on one side. Garment back panel fully visible.';\nelse if (poseKey.includes('half body'))    poseInstruction = 'Composition: a HALF-BODY crop from the top of the head down to roughly the waist / hips. The ENTIRE upper half of the garment must sit fully inside the frame and be clearly visible. Natural standing posture. Do NOT crop into the garment and do NOT switch to a tight close-up.';\nelse if (poseKey.includes('full body'))    poseInstruction = 'Composition: a true FULL-BODY shot framing the model from the top of the head down to the shoes, with a little headroom above and floor visible below the feet. The ENTIRE garment from collar to hem must be visible. Do NOT crop the head or feet and do NOT zoom into a half-body crop.';\nelse if (poseKey.includes('auto'))         poseInstruction = 'Pose: choose the most flattering catalogue pose for this garment so that the printed pattern is maximally visible and the silhouette reads cleanly.';\nelse if (poseKey.includes('top'))          poseInstruction = 'Composition: directly overhead flat-lay, camera perfectly parallel to the surface. Product laid flat with natural soft creases, fabric edges aligned but not surgically straight.';\nelse if (poseKey.includes('folded'))       poseInstruction = 'Composition: product neatly folded as it would arrive in a premium retail box. Visible fold lines, soft fabric edges, one corner gently lifted to reveal the pattern repeat.';\nelse if (poseKey.includes('room corner'))  poseInstruction = 'Composition: interior corner shot, two walls meeting at the rear-third of the frame, product styled as a natural part of the room - never floating, never centred.';\nelse if (poseKey.includes('hotel'))        poseInstruction = 'Composition: editorial hotel-room interior, bed or seating area as foreground, soft window light from the side, the textile product as the visual hero of the scene.';\nelse if (poseKey.includes('lifestyle'))    poseInstruction = 'Composition: model interacting with the environment as if mid-moment - pouring tea, looking out a window, reading. The garment is the focus but the moment is real, not staged.';\nelse if (poseKey.includes('front'))        poseInstruction = 'Pose: relaxed front-facing catalogue stance. Shoulders square but not stiff, one hand at the side, the other resting lightly at the waist or pocket. Subtle weight shift to one leg so the silhouette feels human, not symmetrical.';\nelse                                       poseInstruction = `Pose / scene direction (user-specified): ${pose}. Render this exactly as described while keeping the printed pattern clearly visible.`;\n\nif (studioPose && lower(studioPose) !== 'auto') {\n  poseInstruction = 'STUDIO POSE (' + studioPose + '): direct the model into a clean, professional \"' + studioPose + '\" studio catalogue pose, keeping the full printed garment clearly visible and the silhouette reading cleanly.';\n}\n\n\n// =====================================================================\n//  MODEL CASTING + IMPERFECTION CHECKLIST\n// =====================================================================\nlet modelInstruction = '';\n\nif (isNoModel) {\n  modelInstruction = 'NO HUMAN MODEL in this image. Product-only composition. Use a clean flat-lay, an invisible-ghost-mannequin technique, or a fabric drape against a neutral background depending on the product.';\n} else if (isMannequin) {\n  modelInstruction = 'MANNEQUIN PRESENTATION: use a smooth, matte-finish premium retail mannequin with no facial features and no hair - pure neutral cream or pale grey colour. The mannequin holds the garment so the print is clearly visible. No human skin, no hair.';\n} else {\n  let ethnicityLine = '';\n  if (u.includes('family')) ethnicityLine = 'A warm, natural family group for a premium fashion catalogue: two adults plus one or two children, all clearly visible and tastefully styled (overall cast look: ' + modelLook + '). Real, lived-in interactions, never stiff stock poses. The printed textile garment is worn by the family members so the print is clearly visible on the clothing.'; else if (u.includes('couple')) ethnicityLine = 'A natural-looking couple of two adult models for a premium fashion catalogue (overall cast look: ' + modelLook + '). A subtle, authentic connection, never theatrical. The printed textile garment is worn by the couple so the print is clearly visible.'; else if (lookKey.includes('indian'))         ethnicityLine = 'Indian / South Asian features - warm brown skin tone (Fitzpatrick III-IV), dark brown eyes, dark hair styled simply, age 22-30, height-proportional build of a working fashion model. Looks like the kind of person you would see in a Tata Cliq or Nykaa Fashion campaign.';\n  else if (lookKey.includes('western') ||\n           lookKey.includes('european'))   ethnicityLine = 'European features - fair to medium skin tone, light or dark hair, age 22-30, fashion-model proportions. Looks like a working model from a Zara or COS campaign.';\n  else if (lookKey.includes('asian'))      ethnicityLine = 'East Asian features - fair to light golden skin tone, dark hair, age 22-30. Looks like a working model from a Uniqlo or Muji campaign.';\n  else if (lookKey.includes('middle'))     ethnicityLine = 'Middle Eastern features - olive skin tone, dark hair, dark eyes, age 22-30, refined modelling proportions. Looks like a campaign model for a Dubai-based luxury label.';\n  else if (lookKey.includes('african'))    ethnicityLine = 'African features - rich deep skin tone (Fitzpatrick V-VI), natural hair textures, age 22-30. Looks like a working model from a contemporary West African or Lagos Fashion Week campaign.';\n  else if (lookKey.includes(\"latin\")) ethnicityLine = \"Latin American features - warm tan / olive skin tone, dark wavy hair, dark eyes, age 22-30, fashion-model proportions. Looks like a working model from a Latin American fashion campaign.\";\n  else if (lookKey.includes('couple'))     ethnicityLine = 'A natural-looking couple of two adult models. Their connection is subtle - a glance, a hand near the shoulder - never forced or theatrical.';\n  else if (lookKey.includes('family'))     ethnicityLine = 'A warm family group: two adults plus 1-2 children. Real-feeling interactions, not staged smiles to camera. Family is fully clothed and the focus is the textile product.';\n  else                                     ethnicityLine = `A professional fashion model with ${modelLook} features.`;\n\n  let genderHint = '';\n  if (isFemaleProduct) genderHint = 'The model is FEMALE - graceful, confident posture, hair styled simply, modest tasteful presentation. Age appropriate to the product (22-30 for adult-women products, 6-12 for girls\\' products).';\n  else if (isMaleProduct) genderHint = 'The model is MALE - relaxed confident posture, well-groomed hair, clean shaven or trimmed beard appropriate to the look (22-30 for adult-men products, 6-12 for boys\\' products).';\n  else genderHint = 'Gender of the model should match the product category naturally.';\n\n  // Honour the explicit Model Look role from model_type (e.g. Indian Woman / Asian Boy).\n  const _explFemale = /(woman|female|girl)/.test(lookKey);\n  const _explMale   = /(man|male|boy)/.test(lookKey);\n  const _explChild  = /(boy|girl)/.test(lookKey);\n  if (_explChild) {\n    genderHint = (_explFemale ? 'The model is a YOUNG GIRL' : 'The model is a YOUNG BOY') + ' aged 5-11 (this OVERRIDES any adult age mentioned above) - wholesome, fully-clothed, brand-safe child catalogue styling, no suggestive posing.';\n  } else if (_explFemale) {\n    genderHint = 'The model is a FEMALE adult, age 22-30 - graceful confident posture, hair styled simply, modest tasteful presentation.';\n  } else if (_explMale) {\n    genderHint = 'The model is a MALE adult, age 22-30 - relaxed confident posture, well-groomed hair, clean-shaven or neatly trimmed beard.';\n  }\n  let kidsLine = '';\n  if (isKidsProduct) {\n    kidsLine = '\\nKIDS DIGNITY: the child model is fully clothed, age 4-10, photographed in a wholesome catalogue manner. Natural play-like posture. No suggestive posing. No alone-in-bedroom scenes. Always tasteful and brand-safe.';\n  }\n\n  modelInstruction = `MODEL CASTING:\n${ethnicityLine}\n${genderHint}${kidsLine}\n\nHUMAN IMPERFECTION CHECKLIST - MANDATORY TO AVOID THE \"AI LOOK\":\n\nSkin texture (most important):\n- Visible pores on the nose, forehead, cheeks - at sensor-level detail.\n- Faint vellus hair (peach fuzz) on the cheek and jawline, catching\n  light softly.\n- One or two natural micro-features: a small mole, a tiny freckle, a\n  faint scar, or slight redness at the side of the nose. Never a\n  perfectly clean face.\n- Subsurface scattering - light penetrates the skin and re-emerges\n  slightly warmer at the ear edges, nostril rim, fingertips, lips.\n- Natural asymmetry between the left and right side of the face.\n\nEyes:\n- Realistic moisture film over the cornea.\n- Individual eyelashes visible - not a clumpy black mass.\n- Catchlights from the actual light setup specified - asymmetric\n  between the two eyes (each eye catches a slightly different angle).\n- Faint vein traces in the sclera (whites are not pure white).\n- Iris has a real radial fibre structure - never a flat colour disc.\n\nHair:\n- Natural flyaways at the temples and crown.\n- Individual strands visible at the parting and along the hairline.\n- Light penetrates the outermost strands and creates a soft rim glow\n  where the key light hits.\n- Realistic hair-fabric contact - strands fall across the shoulder of\n  the garment, not floating above it.\n\nHands (Nano-Banana fails here most):\n- Exactly five fingers per hand. Count them.\n- Each fingernail has a visible cuticle and nail bed.\n- Knuckle creases on the back of the hand.\n- Tendon shadows when the hand is partially flexed.\n- Realistic finger thickness tapering - not sausage-fingers, not\n  pencil-fingers.\n- Where a hand touches the garment, the fabric compresses slightly\n  and a contact shadow forms.\n\nBody:\n- Real working-model proportions - not exaggerated, not Barbie/Ken.\n- Visible shoulder structure, collarbones, natural arm muscle tone.\n- Where the garment touches the body, fabric tension lines appear at\n  shoulder seam, bust point, waist, and elbow crease - exactly as a\n  real photographer would see them.\n\nEXPRESSION:\n${expression}. The expression must feel CAUGHT, not held - a frame\nplucked from a moment of natural emotion. Eye contact is soft, not\nintense. Lips are relaxed, never a forced perfect smile. Slight\nasymmetry in the smile or brow makes it real.`;\n}\n\nconst premiumBeautyDirection = `\nPREMIUM FASHION BEAUTY DIRECTION:\n\nThe model is professionally styled, the way premium Indian ethnic\nbrand campaigns style their cast - but inside the bounds of REALISM:\n\nFace:\n- Glowing healthy skin, hydrated, with natural sheen on the high\n  points (forehead, nose bridge, cheekbones).\n- Subtle professional makeup - foundation matched to skin, light\n  contour, defined brow, neutral or rose lip.\n- Skin colour is harmonious, not orange, not over-bronzed.\n- Confident catalogue expression, never selfie-style.\n\nHair:\n- Properly styled by a fashion-shoot grooming team - soft volume,\n  clean hairline, intentional flyaways.\n- Not messy, not laundromat-fresh either - somewhere between.\n\nWardrobe styling beyond the garment:\n- Any visible secondary clothing (e.g. churidar under the kameez,\n  blouse under the saree) is in a complementary solid shade chosen\n  by an art director, never a clashing print.\n\nBrand reference for overall look:\n- Myntra Luxe, Aza Fashion, Kalki Fashion, Manyavar, Biba, Tata\n  Cliq Luxury, House of Anita Dongre.\n\nREJECT all of these immediately:\n- Casual home-photo vibe.\n- Selfie / mobile camera aesthetic.\n- Tired face, dull skin, no-makeup base, ordinary local look.\n- Tourist-photo vibe, terrace-shoot vibe.\n- Random candid expression that doesn't belong in a catalogue.\n`;\n\n// =====================================================================\n//  PRODUCT-SPECIFIC TAILORING (every category, deeply)\n// =====================================================================\nlet productInstruction = '';\nlet garmentNegatives = '';\n\n// == APPAREL: MEN ==\nif (p.includes(\"men's shirt\") || (p.includes('shirt') && !p.includes('t-shirt') && !p.includes('tshirt') && !p.includes('boys'))) {\n  productInstruction = 'GARMENT - MEN\\'S FORMAL SHIRT: tailored woven shirt with crisp turn-down collar standing properly at the neck, clean front placket sitting flat on the chest with mother-of-pearl buttons in correct count (7-8 from collar to hem), shoulder seam falling exactly at the shoulder point, sleeve cuff with two buttons, square hem with optional side vents. No chest pocket unless explicitly requested. Pattern across the placket and chest must continue naturally as if cut from a single piece of fabric.';\n} else if (p.includes('male kurta') || (p.includes('kurta') && !p.includes('kids') && !p.includes('boys') && !p.includes('kurti'))) {\n  productInstruction = 'GARMENT - MEN\\'S KURTA: traditional Indian menswear kurta with mandarin collar or band-collar, full-length sleeves to the wrist, knee-length hem with side slits at the hip, button placket from collar to mid-chest. Loose comfortable fit. The print runs continuously across the front panel without seam disruption. Pair with a churidar, pyjama or straight-cut trouser.';\n} else if (p.includes('pathani')) {\n  productInstruction = 'GARMENT - PATHANI SUIT: long kurta (mid-thigh to knee length) with mandarin collar, full sleeves, matching Pathani-cut trousers (tapered ankle, wider at hip). Subtle structured look, traditional Pathan-Afghan silhouette.';\n} else if (p.includes('3 piece suit') || p.includes('three piece')) {\n  productInstruction = 'GARMENT - 3-PIECE FORMAL SUIT: matching jacket + waistcoat + trouser set. Jacket with notch lapels rolled crisply, single-breasted two-button closure, jacket buttoning at the natural waist, single back vent. Waistcoat fitted at the torso with five buttons. Trousers with slight break at the shoe. No bunching at the buttons.';\n} else if (p.includes('2 piece suit') || p.includes('two piece')) {\n  productInstruction = 'GARMENT - 2-PIECE FORMAL SUIT: jacket + trouser set. Jacket with notch or peak lapels, single-breasted, jacket button at the natural waist, side vents. Trousers tailored with slight break. Crease lines straight on the trouser front.';\n} else if (p.includes('blazer')) {\n  productInstruction = 'GARMENT - BLAZER: tailored single-breasted blazer with notch lapels, two-button front, structured shoulder line, working sleeve buttons, side vents. Worn open or closed naturally. The print on the body and lapels lines up correctly.';\n} else if (p.includes('waistcoat')) {\n  productInstruction = 'GARMENT - WAISTCOAT: fitted V-neck waistcoat with five buttons, welt pockets at the waist, adjustable strap at the back, snug across the torso with no pulling. Worn over a shirt of complementary colour.';\n} else if (p.includes('hoodie')) {\n  productInstruction = 'GARMENT - HOODIE: relaxed casual hoodie with drawstring hood, kangaroo pocket at the front, ribbed cuffs and bottom band, dropped shoulder for a contemporary streetwear silhouette. Fleece interior visible at the hood lining.';\n} else if (p.includes('co-ord') || p.includes('cord set') || p.includes('cord')) {\n  productInstruction = 'GARMENT - CO-ORD SET: matching top + bottom (shirt + pant, or kurti + pant) in the same print. The two pieces clearly belong together. Pattern continuity respected even across the waistband break.';\n\n// == APPAREL: LADIES ==\n} else if (p.includes('saree')) {\n  productInstruction = 'GARMENT - SAREE (reproduce the blouse, body and pallu DIRECTLY from the uploaded LAYOUT - do not invent or default any part): the uploaded artwork is a COMPLETE saree layout. ANALYSE the image yourself and identify its zones, then build each part FROM THE DESIGN ITSELF. (1) BLOUSE: look at the layout and find the BLOUSE PANEL - usually a narrow lengthwise strip of small repeating buti / motifs along one edge, or a distinct separate piece - and make the fitted blouse EXACTLY from that panel, matching its real print, motifs and colours. Do NOT replace the blouse with a plain colour of your own choosing; the blouse must reflect whatever the design blouse panel actually shows. If (and only if) the design blouse panel is itself a plain solid, then a plain blouse is correct - otherwise reproduce its print. (2) SAREE BODY: the large central field (for example the striped or all-over area framed by its border) forms the pleats and the body of the drape. (3) PALLU: the wide, heavily ornamented band of borders at the OPPOSITE end is the pallu, draped over the LEFT shoulder so its rich motif is clearly visible. Render an authentic Indian saree drape - 5.5 m pleated neatly at the waist (5-7 pleats tucked in), the body print flowing across the drape, and the pallu over the left shoulder. PRESERVE every zone of the print EXACTLY per RULE #0 - same colours, motifs and pattern scale, nothing recoloured or simplified. The underskirt edge stays concealed.';\n} else if (p.includes('lehenga')) {\n  productInstruction = 'GARMENT - LEHENGA CHOLI SET: three-piece ensemble. Ghagra (long flared skirt) with natural pleated flare reaching ankle-length, fitted choli (blouse) with proper bust dart shaping, and a dupatta draped across one shoulder or held in the hand. The print continuity is preserved across the lehenga panels (typically 12-16 kalis / panels). Heavier border at the hem.';\n} else if (p.includes('salwar') || p.includes('kameez') || p.includes('anarkali') || p.includes('ladies suit')) {\n  productInstruction = 'GARMENT - INDIAN SALWAR SUIT (authentic 3-piece): a proper traditional ladies salwar suit. The kameez top falls to the knee or below (longer flared kameez for Anarkali). The bottom MUST be a genuine LOOSE Indian SALWAR - wide and softly pleated at the waist, tapering to a gathered cuff at the ankle (Patiala / regular salwar volume). It is STRICTLY FORBIDDEN to render skin-tight churidar, leggings, jeggings, tights, pyjama-bottoms or western trousers - the lower must clearly read as a flowing traditional Indian salwar. A matching dupatta is draped naturally over one shoulder or across the chest. All three pieces share one coordinated colour story and fabric weight.';\n} else if (p.includes('kurti')) {\n  productInstruction = 'GARMENT - KURTI: women\\'s tunic hitting mid-thigh, fitted or A-line silhouette, round or boat-neck neckline, three-quarter or full sleeves. The model MUST wear a coordinated lower garment (churidar, leggings or palazzo) in a SOLID colour pulled from the kurti print palette - the model is NEVER bare-legged and NEVER shown without a lower. The kurti print is the hero of the front panel while the lower stays a clean complementary solid.';\n} else if (p.includes('sharara')) {\n  productInstruction = 'GARMENT - SHARARA SUIT: short kurti or peplum top paired with wide-flared sharara pants that flare dramatically from the knee. Pant volume falls beautifully to the floor. Dupatta included.';\n} else if (p.includes('palazzo')) {\n  productInstruction = 'GARMENT - PALAZZO SUIT: kurti or kurta paired with wide-leg palazzo pants flared from the waist down. Pants fall in soft folds to the ankle. Comfortable elegant silhouette.';\n} else if (p.includes('gown')) {\n  productInstruction = 'GARMENT - GOWN: floor-length women\\'s gown with a fitted bodice and flared or A-line skirt. Visible neckline cut, waist seam if applicable, hem falling naturally without floating. Indo-Western styling acceptable. The fabric drape obeys gravity.';\n} else if (p.includes('dress') && !p.includes('frock')) {\n  productInstruction = 'GARMENT - WESTERN DRESS: knee-length or midi dress, fitted bodice with waist seam, A-line or sheath skirt, visible neckline (round / V / square / boat), sleeve length as the pattern best suits. Hem falls naturally with gravity creases.';\n} else if (p.includes('blouse')) {\n  productInstruction = 'GARMENT - SAREE BLOUSE: fitted choli with princess seams or darts for a custom-tailored fit. Short or three-quarter sleeves, back closure (hook or tie), neckline cut as the design suggests (round / sweetheart / boat). Visible stitching at darts and seams.';\n} else if (p.includes('dupatta') || p.includes('stole') || p.includes('scarf')) {\n  productInstruction = 'GARMENT - DUPATTA / STOLE / SCARF: long fabric rectangle draped naturally - over one shoulder, across the chest, or held in the hand. Length 2.0-2.5 m. The print and the border are both visible. Subtle drape creases.';\n\n// == SUDAN WEAR (international niche: same engine, Sudanese garment rules) ==\n} else if (p.includes('toub') || p.includes('thobe') || p.includes('thawb')) {\n  productInstruction = 'GARMENT - SUDANESE TOUB (authentic full-length draped wrap, the ENTIRE garment made from the uploaded print): dress an elegant Sudanese female model in a traditional Sudanese Toub created ENTIRELY from the uploaded textile design. The fabric is wrapped authentically around the whole body and gracefully draped up and over the HEAD and SHOULDERS in genuine Sudan Toub draping style, falling FULL-LENGTH to the floor with realistic fabric flow, soft draping folds and true textile texture. The uploaded print stays UNCHANGED and clearly visible across the ENTIRE garment - same colours, motifs and pattern placement per RULE #0. The fabric is OPAQUE and substantial like a real garment: it is STRICTLY NOT a thin see-through dupatta or chunri, and STRICTLY NOT a plain / solid dress with a separate scarf - the uploaded print must cover the WHOLE draped garment (body and head-drape together), not merely a scarf. Full body visible, sophisticated pose, premium luxury ethnic-fashion catalogue presentation.';\n  garmentNegatives = 'saree drape, abaya cut, hijab-only styling, salwar suit, churidar, leggings, lehenga, western dress, plain dress with a separate scarf, see-through dupatta or chunri over a bare dress, print only on a scarf, extra embroidery not in the uploaded design, extra prints not in the uploaded design, fabric colour changed, pattern modified, cropped body, distorted hands';\n} else if (p.includes('jalabiya') || p.includes('jalabia') || p.includes('jellabiya')) {\n  productInstruction = 'GARMENT - SUDANESE JALABIYA: a loose, flowing ankle-length womens gown cut in one relaxed silhouette from shoulder to hem, with a round or lightly embroidered neckline, long full sleeves, and an unfitted comfortable body that skims (never clings to) the figure. The uploaded print covers the FULL jalabiya as one continuous cloth, flowing without interruption down the front; any decorative border sits at the neckline, cuffs and hem. Soft vertical drape folds true to a lightweight festive fabric. Modest, elegant, occasion-wear presentation.';\n} else if (p.includes('abaya')) {\n  productInstruction = 'GARMENT - ABAYA (modest overlayer robe): a full-length, floor-skimming robe with a straight columnar silhouette falling cleanly from the shoulders, long sleeves and a graceful vertical drape. The uploaded print covers the entire abaya as a single continuous cloth; where the design suits, the print may be concentrated as an elegant front panel and along the sleeve openings while the body stays in a coordinated tone. Worn over an inner garment with a matching hijab head-covering framing the face. Refined, modest, premium styling.';\n} else if (p.includes('bridal')) {\n  productInstruction = 'GARMENT - SUDANESE BRIDAL LOOK: present the uploaded print as a luxurious bridal toub or jalabiya in rich ceremonial fabric, draped gracefully over the bride with full modest coverage. Style with tasteful gold jewellery (earrings, necklace, bangles), subtle henna on the hands and a warm regal posture. The print stays the hero and reads as one continuous luxurious cloth across the drape. Warm golden wedding-photography tones - elegant and celebratory, never gaudy.';\n} else if (p.includes('pant set') || (p.includes('sudan') && p.includes('pant'))) {\n  productInstruction = 'GARMENT - SUDANESE PANT SET (embellished 3-piece, modest): a complete coordinated set in the uploaded print made of THREE matching pieces - (1) a loose draped CAPE-STYLE TOP with wide BATWING sleeves that fall in soft fabric wings from the shoulders down along the arms; (2) full HAREM / DHOTI PANTS that are relaxed and generously draped through the hip and thigh and softly GATHERED at each ankle (clearly TWO separate trouser legs, NEVER a skirt and NEVER a single wrapped cloth), ending just above flat or wedge sandals; (3) a matching attached HEAD-SCARF / hijab draping over the hair and one shoulder while leaving the face open. The uploaded print flows as ONE continuous coordinated fabric across the cape top, both pant legs and the scarf, preserved exactly per RULE #0 - same colours, motifs and pattern scale. A tasteful vertical decorative panel of gold / stone embroidery may run down the centre-front and along one thigh if the design suits, but the uploaded print always stays the hero. Full-length modest coverage. Present on a poised Sudanese / Middle-Eastern female model, FULL-BODY framing so the entire set is visible (cape sleeves, BOTH gathered pant legs and the sandals), elegant catalogue pose, clean studio background.';\n\n// == KIDS ==\n} else if (p.includes('boys shirt')) {\n  productInstruction = 'GARMENT - BOYS\\' SHIRT: child-sized formal shirt with turn-down collar, full sleeves with single-button cuff, front placket. Age 6-10. Snug fit appropriate to a child.';\n} else if (p.includes('boys kurta') || (p.includes('kids') && p.includes('kurta'))) {\n  productInstruction = 'GARMENT - BOYS\\' KURTA: child-sized traditional Indian kurta with mandarin collar, knee-length, full sleeves, side slits, paired with a churidar or pyjama. Age 6-10.';\n} else if (p.includes('girls top') || (p.includes('top') && p.includes('jean')) || p.includes('jeans')) {\n  productInstruction = 'GARMENT - GIRLS\\' TOP & JEANS SET: a girls smart-casual two-piece - a printed top (the uploaded design is the hero on the top) paired with well-fitted blue denim jeans. Age 4-10. Modest, wholesome kidswear styling.';\n} else if (p.includes('girls t-shirt') || (p.includes('girls') && (p.includes('t-shirt') || p.includes('tshirt')))) {\n  productInstruction = 'GARMENT - GIRLS\\' T-SHIRT: child-sized girls jersey-knit tee, ribbed crew or round neck, short or cap sleeves, age 4-10, paired with a coordinated skirt/shorts/leggings in a solid complementary colour. Print clear on the front panel. Wholesome catalogue presentation.';\n} else if (p.includes('girls frock') || (p.includes('frock'))) {\n  productInstruction = 'GARMENT - GIRLS\\' FROCK: child-sized A-line frock dress, gathered or pleated skirt, age-appropriate modest neckline, sleeves can be puffed/short/full. Age 4-10. Wholesome catalogue presentation.';\n} else if (p.includes('kids t-shirt') || (p.includes('kids') && p.includes('tshirt'))) {\n  productInstruction = 'GARMENT - KIDS\\' T-SHIRT: jersey-knit children\\'s tee, ribbed crew-neck collar, short sleeves, age 4-10. Print clear on the front panel.';\n} else if (p.includes('kids suit')) {\n  productInstruction = 'GARMENT - KIDS\\' SUIT: study the uploaded design image carefully and reproduce the SAME kids outfit style and silhouette shown in it (whether it is an ethnic kurta-pyjama set, an indo-western set, or a formal 2-piece suit), applying the uploaded print faithfully per RULE #0. Child-sized, age 6-12, neatly tailored, smart occasion look.';\n} else if (p.includes('night suit')) {\n  productInstruction = 'GARMENT - KIDS\\' NIGHT SUIT: 2-piece pyjama set for children - short or full-sleeve top + drawstring pant. Soft cotton fabric look. Age 4-10. Comfortable home-wear presentation, not bedroom-suggestive.';\n} else if (p.includes('tshirt') || p.includes('t-shirt')) {\n  productInstruction = 'GARMENT - T-SHIRT: cotton jersey-knit tee with realistic drape, ribbed crew collar, sleeve hem and bottom hem clearly visible, shoulder seam at the shoulder point. Print on the front panel.';\n} else if (p.includes('trouser')) {\n  productInstruction = 'GARMENT - TROUSER: tailored mens trouser with waistband, belt loops, front zip closure, side pockets, straight or slim leg, slight break at the shoe. Crease line straight down the front.';\n\n// == HOME TEXTILE ==\n} else if (p.includes('bedsheet') || p.includes('luxury bedroom')) {\n  productInstruction = 'HOME TEXTILE - BEDSHEET / BEDDING SET: a fitted bedsheet draped over a king-size or queen-size bed, with two matching pillow covers tucked under, the top edge folded back slightly to show contrast piping if any. The print covers the entire visible surface. Natural soft creases from being lived in, not factory-flat. The bed sits in a tastefully styled bedroom corner.';\n} else if (p.includes('curtain')) {\n  productInstruction = 'HOME TEXTILE - CURTAIN: curtain panel hung from a real rod (with grommets, eyelets, or pinch-pleat header - pick the most elegant for the print), reaching from ceiling to floor with hem brushing or pooling slightly. Natural gravity folds - not perfectly straight. Daylight filtering through suggests the actual fabric weight. Print runs vertically and the repeat is respected.';\n} else if (p.includes('pillow cover') || (p.includes('pillow') && !p.includes('cushion'))) {\n  productInstruction = 'HOME TEXTILE - PILLOW COVER: rectangular bed pillow (50x75 cm typical) with the printed cover envelope-style or with hidden zipper, placed against the headboard of a styled bed. The print is fully visible on the front face. Soft natural compression where the head would rest.';\n} else if (p.includes('cushion')) {\n  productInstruction = 'HOME TEXTILE - CUSHION COVER: square cushion (45x45 cm) placed naturally on a sofa or accent chair. Subtle compression where it meets the seat, slight tilt, real-world arrangement - not perfectly squared. Piping or contrast border visible if any.';\n} else if (p.includes('sofa cover')) {\n  const _seatNum = (() => { const m = String(sofaSeater).match(/(\\d+)/); return m ? parseInt(m[1], 10) : 3; })();\n  const _seatLabel = _seatNum + '-seater';\n  const _seatLayout = _seatNum >= 6\n    ? ('a large L-shaped / sectional sofa with EXACTLY ' + _seatNum + ' separate seat cushions')\n    : ('a single straight-row sofa with EXACTLY ' + _seatNum + ' separate seat cushions placed side by side');\n  productInstruction = 'HOME TEXTILE - SOFA COVER on a ' + _seatLabel + ' sofa. CRITICAL SEAT COUNT (non-negotiable): the sofa MUST be ' + _seatLayout + ' - count the cushions: exactly ' + _seatNum + ', no more and no fewer. Do NOT silently change it to a different size. The fitted slipcover stretches over the frame with the print covering all ' + _seatNum + ' seat cushions, the full backrest and both arms, with correct proportions for a ' + _seatLabel + ' frame. Natural fabric tension and minor wrinkles where the cover meets the cushions.';\n} else if (p.includes('table cover') || p.includes('table cloth')) {\n  productInstruction = 'HOME TEXTILE - TABLE COVER: rectangular or round table cover draped over a dining table, hem falling 25-30 cm below the table edge on all sides. Natural fabric weight visible at the drape. Centre piece (e.g. ceramic vase) anchors the composition.';\n} else if (p.includes('towel')) {\n  const towelLine = towelType ? (' Styled specifically as a ' + towelType.toLowerCase() + ' towel' + (/(boy|girl|kid|baby)/i.test(towelType) ? ' - a smaller kids-size towel with playful, wholesome, child-friendly styling.' : '.')) : '';\n  productInstruction = 'HOME TEXTILE - TOWEL: terry-cloth towel with visible loop texture, rolled or folded on a luxury vanity, OR hanging neatly on a chrome/brass hook. Hem and woven label edge visible. Never floating.' + towelLine;\n} else if (p.includes('bathrobe')) {\n  productInstruction = 'HOME TEXTILE - BATHROBE: terry or waffle-cloth bathrobe shown on a clean hanger against a spa-bathroom wall, OR worn closed by a fully-covered adult model in a refined spa setting. Print clearly visible. Modest tasteful presentation only.';\n} else if (p.includes('blanket') || p.includes('quilt')) {\n  productInstruction = 'HOME TEXTILE - BLANKET / QUILT: heavy blanket or stitched quilt draped over a bed or sofa, one corner folded back to show a contrast lining or border. Natural soft drape, visible quilt stitching pattern if a quilt. Print covers the full top surface.';\n} else if (p.includes('rug') || p.includes('carpet')) {\n  productInstruction = 'HOME TEXTILE - RUG / CARPET: rectangular rug lying flat on a wooden, marble or tile floor. Pile direction visible. One corner of the underlying floor showing. Natural shadow from ambient lighting. The print covers the entire pile surface.';\n} else if (p.includes('wall fabric') || p.includes('wall panel')) {\n  productInstruction = 'HOME TEXTILE - WALL FABRIC PANEL: fabric panel stretched on a wooden frame and mounted as wall art behind a sofa or bed. Print clearly visible flat on the panel. Subtle wall shadow around the panel edges suggesting depth.';\n} else if (p.includes('fabric bag') || p.includes('bag')) {\n  productInstruction = 'DECOR - FABRIC TOTE BAG: structured cotton or canvas tote with two webbed handles, the print covering both faces. Bag sits upright on a clean surface OR is carried over the shoulder of a model. Top edge of the bag shows interior lining.';\n} else if (p.includes('upholstery')) {\n  productInstruction = 'HOME TEXTILE - UPHOLSTERY FABRIC: woven upholstery wrapped over a sample accent armchair or footstool, the print covering the visible cushioned surface. Natural fabric tension along the curved frame edges.';\n\n// == UNIVERSAL FABRIC ==\n} else if (p.includes('flat fabric')) {\n  productInstruction = 'UNIVERSAL FABRIC - FLAT LAYOUT: the fabric laid completely flat on a neutral matte surface (oak wood, marble, or seamless paper), photographed from directly overhead. The print repeat is fully visible across the frame. Natural soft creases acceptable but no hard wrinkles.';\n} else if (p.includes('hanging fabric') || p.includes('hanging display')) {\n  productInstruction = 'UNIVERSAL FABRIC - HANGING DISPLAY: a length of fabric hanging from a wooden rod against a clean studio wall. Natural gravity folds, soft sheen on the cloth, full pattern visible top to bottom.';\n} else if (p.includes('rolled fabric')) {\n  productInstruction = 'UNIVERSAL FABRIC - ROLLED BOLT: the fabric rolled neatly on a cardboard tube (a textile bolt) resting on a wooden surface. One end of the roll is unfurled and laid flat to reveal the print clearly. Wholesale-trade aesthetic.';\n} else if (p.includes('folded fabric')) {\n  productInstruction = 'UNIVERSAL FABRIC - FOLDED STACK: 3-4 different folded fabric stacks of the same print in slightly different colourways, stacked one above the other on a wooden table, retail-display style. Hem edges clean.';\n} else if (p.includes('close-up') || p.includes('closeup texture')) {\n  productInstruction = 'UNIVERSAL FABRIC - CLOSE-UP MACRO: extreme macro shot of the fabric surface, weave structure clearly visible (warp + weft yarns), thread count perceivable, micro fibres softly catching the light. Print colour and motif are razor-sharp.';\n\n// == OTHER / AUTO-DETECT ==\n} else if (autoDetect) {\n  productInstruction = 'AUTO-DETECT PRODUCT: the user did not choose a fixed product type. Carefully analyse the uploaded design image and infer what product it is intended for (a specific garment type, or a home-textile / fabric item), then construct THAT product realistically and apply the uploaded print faithfully per RULE #0, with correct stitching, seams and natural drape.' + (otherDesc ? ' User hint about the product: \"' + otherDesc + '\" - follow this hint.' : '');\n\n// == FALLBACK ==\n} else if (!isHomeTextile) {\n  productInstruction = 'GARMENT: properly constructed with visible seams, hem stitching, and natural fabric drape that responds to gravity and the model\\'s body shape.';\n} else {\n  productInstruction = 'HOME TEXTILE: realistic fabric weight, drape, and stitching. Placed within a genuine interior context, never floating in space.';\n}\n\n\n// =====================================================================\n//  OUTDOOR BACKGROUND THEME (premium - never old / rundown houses)\n// =====================================================================\nconst outdoorThemeMap = {\n  'royal palace':  'a grand royal palace courtyard - ornate Rajasthani / Mughal arches, carved sandstone pillars and intricate jharokhas, regal and pristine',\n  'wedding theme': 'a luxurious Indian wedding venue - an elegant floral mandap, warm fairy lights, marigold and rose decor, a premium festive ambience',\n  'sea face':      'a clean upscale sea-face promenade at golden hour - calm ocean horizon, soft waves, a breezy premium coastal vibe',\n  'forest':        'a lush green forest clearing with soft dappled sunlight filtering through tall trees, serene and cinematic',\n  'temple':        'an elegant Indian temple exterior - clean carved-stone architecture with brass accents, dignified and pristine, never crowded',\n  'forts':         'a majestic historic Indian fort - massive clean sandstone ramparts and arched gateways at a regal scale, well-maintained and never ruined',\n  'river site':    'a scenic riverside ghat in soft light - calm flowing water and clean stone steps, a tranquil premium setting',\n  'waterfall':     'a beautiful natural waterfall backdrop with lush greenery and soft mist, fresh and cinematic',\n  'mountains':     'a breathtaking mountain landscape - layered peaks under soft haze, a crisp premium open-air vibe',\n  'garden':        'a manicured luxury garden - clipped hedges, blooming flowerbeds and a stone fountain, in soft natural light'\n};\nconst outdoorThemeKey  = lower(outdoorBackground);\nlet outdoorThemeDesc = outdoorThemeMap[outdoorThemeKey] || outdoorThemeMap['royal palace'];\n// Wedding / festive themes must match the model's region AND the design mood.\nif (outdoorThemeKey.includes('wedding')) {\n  if (lookKey.includes('western') || lookKey.includes('european')) outdoorThemeDesc = 'an elegant WESTERN wedding setting - a classic church, vineyard or manicured-garden ceremony with white floral arches, soft drapes and warm string lights, refined and premium';\n  else if (lookKey.includes('asian'))   outdoorThemeDesc = 'a refined EAST-ASIAN wedding setting - a tasteful modern banquet or garden ceremony with soft florals, lanterns and clean premium decor';\n  else if (lookKey.includes('middle'))  outdoorThemeDesc = 'a luxurious MIDDLE-EASTERN wedding setting - an opulent banquet hall with gold-and-ivory drapes, ornate florals and warm chandeliers';\n  else if (lookKey.includes('african')) outdoorThemeDesc = 'an elegant AFRICAN wedding celebration - a vibrant yet premium outdoor ceremony with rich florals and warm festive decor';\n  else if (lookKey.includes('latin'))   outdoorThemeDesc = 'a romantic LATIN-AMERICAN wedding setting - a warm hacienda or garden ceremony with lush florals and string lights';\n  else outdoorThemeDesc = 'a luxurious INDIAN wedding venue chosen to suit the design - vary the mood naturally between an ornate floral mandap, a royal palace lawn, a haldi / sangeet stage or a grand reception, with tasteful (not overpowering) marigold, rose or seasonal florals. Do NOT reuse the same generic marigold backdrop every time; let the decor colours echo the uploaded print.';\n}\nconst outdoorSceneInstruction = 'SCENE: a premium outdoor setting - ' + outdoorThemeDesc + '. The background is softly out of focus from the wide lens aperture and complements (never competes with) the textile print. STRICTLY NO old, broken, dilapidated, rundown or shabby houses or walls, NO slums, NO messy streets - the backdrop must always look premium, clean and aspirational, like a high-budget brand campaign.';\n\n// =====================================================================\n//  BACKGROUND / SCENE\n// =====================================================================\nlet backgroundInstruction = '';\nif (isHomeTextile) {\n  if      (p.includes('curtain'))                       backgroundInstruction = 'SCENE: a contemporary Indian living room or bedroom corner with a window. Daylight streaming through the curtain. Minimal but warm decor - a chair, a side table with a book, perhaps a potted plant.';\n  else if (p.includes('bedsheet') || p.includes('blanket') || p.includes('quilt') || p.includes('luxury bedroom'))\n                                                        backgroundInstruction = 'SCENE: a styled bedroom - wooden bed frame, soft headboard, bedside lamps switched on for warm glow, a window with sheer curtains in the background. Lived-in but tidy.';\n  else if (p.includes('cushion') || p.includes('sofa')) backgroundInstruction = 'SCENE: a styled living room - fabric sofa, low coffee table with a ceramic vase, framed art on the wall behind. The cushions are the visual focus.';\n  else if (p.includes('towel') || p.includes('bathrobe')) backgroundInstruction = 'SCENE: a luxury spa-style bathroom - natural stone surfaces, brass fittings, neutral palette, one orchid or plant for life.';\n  else if (p.includes('rug') || p.includes('carpet'))   backgroundInstruction = 'SCENE: a modern Indian living room - wooden floor, minimalist sofa, plant in the corner. The rug anchors the room.';\n  else if (p.includes('wall'))                          backgroundInstruction = 'SCENE: a contemporary home interior wall as the backdrop, with the panel as a focal art piece. Soft natural light from the side.';\n  else if (p.includes('table cover'))                   backgroundInstruction = 'SCENE: a tasteful dining setting - wooden chairs, a centre piece (vase or candle), framed window light. The cover is the visual hero.';\n  else                                                  backgroundInstruction = 'SCENE: a tasteful interior context appropriate to the product. Warm, lived-in, never showroom-cold.';\n} else if (isWhiteBg)        backgroundInstruction = 'SCENE: seamless pure-white paper background (RGB 245-250), soft natural floor shadow directly below the subject. Absolutely no props, no texture, no colour spill.';\nelse if (isOutdoor)          backgroundInstruction = outdoorSceneInstruction;\nelse if (isLuxury)           backgroundInstruction = outdoorBackground ? (outdoorSceneInstruction + ' Treat it as a high-end EDITORIAL outdoor scene - refined cinematic mood lighting, but the model and the printed garment stay clearly visible with no crushed blacks over the fabric.') : 'SCENE: an opulent luxury interior with restrained editorial styling - a polished marble floor, a single statement artwork, an antique accent chair and tall drapes. Soft directional mood lighting that still keeps the model and the printed garment clearly visible, with no crushed blacks over the fabric.';\nelse if (isTraditional)      backgroundInstruction = 'SCENE: a tasteful traditional Indian setting - a wooden jharokha window, a courtyard wall with natural texture, brass diyas softly lit, a curtain edge in frame. Culturally accurate but never stereotyped.';\nelse                         backgroundInstruction = 'SCENE: a clean professional studio environment with a softly graduated mid-tone backdrop (warm grey, off-white, or soft cream depending on the garment colour story).';\n\n\n// =====================================================================\n//  ACCESSORIES / STYLING\n// =====================================================================\nconst accessoriesInstruction = accessories && accessories.toLowerCase() !== 'none'\n  ? `STYLING: model is accessorised with - ${accessories}. Accessories must look real, not jewellery-store-render shiny; metal has subtle wear, gemstones have real internal refraction.`\n  : 'STYLING: minimal accessories. Let the textile design be the hero. A simple watch or single earring is acceptable if natural.';\n\n\n// =====================================================================\n//  ARTICLE NUMBER OVERLAY - FIXED 12pt, post-production layer\n// =====================================================================\nconst articleInstruction = articleNumber\n  ? `OVERLAY TEXT - ARTICLE NUMBER (POST-PRODUCTION COMPOSITE LAYER):\nThis is a separate text layer composited on TOP of the finished\nphotograph. It is NEVER printed on the fabric, NEVER embedded in the\nscene, NEVER part of the garment.\n\nRender the text \"${articleNumber}\" in the ${articlePosition} corner.\n\nCRITICAL TYPE-SETTING REQUIREMENTS:\n- Font family: clean modern sans-serif (Helvetica / Inter / Roboto).\n- Font size: NOT rendered by the AI at all - the image must be completely free of any overlay text, label, badge, pill or watermark, because all such text is added later in post-production - small, neat, magazine-\n  credit-line size. Never larger.\n- Font weight: medium (500-600). Letter-spacing: +25 milli-em.\n- Colour: AI chooses between pure white (#FFFFFF) and pure black\n  (#0E0E0E) based on highest contrast against the underlying pixels.\n- Background pill: soft semi-transparent rectangle behind the text,\n  rounded 4px corners, 6px horizontal padding, 3px vertical padding,\n  blurred subtle drop shadow. Opacity ~60%.\n- Position: 24px inset from both edges of the chosen corner.\n- The text must be CRISP, perfectly aligned, fully readable.`\n  : 'OVERLAY TEXT: no article number overlay required.';\n\n\n// =====================================================================\n//  COMPANY BRAND OVERLAYS - FIXED 12pt, post-production layer\n// =====================================================================\nconst brandParts = [\n  companyName    ? `company name \"${companyName}\" at the ${companyNamePosition} corner`           : '',\n  companyPhone   ? `phone / WhatsApp number \"${companyPhone}\" at the ${companyPhonePosition} corner` : '',\n  companyWebsite ? `website \"${companyWebsite}\" at the ${companyWebsitePosition} corner`            : '',\n  companyAddress ? `address \"${companyAddress}\" at the ${companyAddressPosition} corner`            : '',\n].filter(Boolean);\n\nconst brandInstruction = brandParts.length\n  ? `CATALOGUE BRANDING TEXT OVERLAY (POST-PRODUCTION COMPOSITE LAYER):\nThese are SEPARATE text layers composited on top of the finished\nphotograph. NEVER embedded in fabric. NEVER part of the garment print.\n\nCRITICAL TYPE-SETTING REQUIREMENTS for all branding lines:\n- Font family: clean modern sans-serif (Helvetica / Inter / Roboto).\n- Font size: NOT rendered by the AI at all - the image must be completely free of any overlay text, label, badge, pill or watermark, because all such text is added later in post-production for EVERY branding line.\n  Same size throughout. The company name is NOT bigger than the\n  website. The phone is NOT bigger than the address. ALL SAME SIZE.\n- Font weight: medium (500). Letter-spacing: +25 milli-em.\n- Colour: AI chooses between pure white (#FFFFFF) and dark charcoal\n  (#1A1A1A) per element, based on highest contrast at that location.\n- Stacked lines in the same corner: 4px line-height between them.\n- Position: 24px inset from each edge of the chosen corner.\n\nRender in this manner: ${brandParts.join('; ')}.\n\nThe branding text must be crisp, perfectly aligned, never overlap the\nmodel's face or the garment print, and must look like real magazine\ncatalogue overlay text - clean and professional.`\n  : 'CATALOGUE BRANDING TEXT OVERLAY: none.';\n\n\n// =====================================================================\n//  COMPANY LOGO OVERLAY (handled by client-side Canvas - skip in AI)\n// =====================================================================\nconst logoInstruction = logoUrl\n  ? `LOGO: the company logo will be composited by the post-production\npipeline AFTER this image is rendered. DO NOT attempt to render any\nlogo, brand mark, or symbol inside this image. Leave a clean ~25%\narea in the ${companyNamePosition} corner free of busy detail so the\nlogo composite reads cleanly.`\n  : 'LOGO OVERLAY: none.';\n\n\n// =====================================================================\n//  CUSTOM INSTRUCTION FROM USER (override)\n// =====================================================================\nconst customLine = customInstruction\n  ? `\\n\\nUSER OVERRIDE INSTRUCTION (highest priority if conflicting with style choices - but RULE #0 PRINT FORENSIC LOCK still wins):\\n${customInstruction}`\n  : '';\n\n\n// =====================================================================\n//  NEGATIVE PROMPT (Nano-Banana-2 specific failure modes)\n// =====================================================================\nconst negativePrompt = [\n  // Plastic AI tell-tales\n  'plastic skin, waxy skin, doll skin, airbrushed skin, smooth skin without pores',\n  'beauty filter face, snapchat filter, instagram filter, perfect symmetry',\n  'mannequin face on a human, dead eyes, doll eyes, glossy lips',\n  'overexposed highlights on skin, bloomed skin, glowing forehead',\n  'porcelain skin, painted skin, illustrated skin',\n  'identical twin face stamp, repeated stock-model face',\n\n  // Anatomy\n  'extra fingers, missing fingers, fused fingers, malformed hands, six fingers, four fingers',\n  'distorted face, asymmetric eyes, crossed eyes, lazy eye, melted features',\n  'broken anatomy, dislocated limbs, extra limbs, missing limbs',\n  'extra toes, missing toes, fused toes, deformed feet, melted feet, club foot, flipper feet, elongated legs, rubbery limbs, twisted limbs, duplicate limbs, merged bodies, floating limb, disconnected hand, malformed knee, malformed elbow, six fingers, four fingers, fused fingers, bent-back fingers, distorted legs, unnatural leg length',\n  'wrong number of teeth, dental row distortion, oversized teeth',\n  'ear distortion, missing earlobe, double earlobe',\n\n  // Print integrity (CRITICAL - RULE #0)\n  'redrawn pattern, reinterpreted motif, simplified pattern, changed pattern colours',\n  'stretched pattern, warped pattern, broken pattern repeat, pixelated pattern',\n  'pattern scale enlarged or shrunk beyond source',\n  'pattern colour shifted from source',\n  'fabric texture invented instead of preserved',\n  'AI-generated fabric texture, generic fabric, fake silk shine',\n  'embroidery added that is not in the source',\n  'sequins, beadwork, or foil added that is not in the source',\n  'motif rotated 90 or 180 degrees from source',\n  'pattern repeating at wrong frequency, pattern printed on the wall, pattern on the background wall, design on the wall, wallpaper made from the print, repeated motif covering the wall or room, print outside the fabric item, pattern on the floor or ceiling, print bleeding into the scenery or surroundings',\n\n  // Render tells\n  'CGI render look, 3D render, octane render, Unreal Engine look, blender render',\n  'over-sharpened, oversharpened halos around edges',\n  'plastic doll figure, action-figure proportions',\n  'cartoon, anime, illustration, painting, drawing, sketch, manga',\n  'video-game character, MMO armour look',\n  'AI-art signature aesthetic, midjourney signature, stable-diffusion signature',\n\n  // Cheap photo problems\n  'harsh on-camera flash, red-eye, blown highlights, crushed shadows',\n  'low resolution, blurry, motion blur on face, out of focus subject',\n  'banding in gradients, posterised tones',\n  'JPEG compression artefacts, chroma noise, colour banding in skies',\n  'cluttered background, messy props, random people in background',\n  'duplicate model in background, ghost double of model',\n\n  // Lighting failures\n  'flat face lighting, ring-light circle in the eyes',\n  'two suns, two key shadows in conflict, impossible lighting direction',\n  'no contact shadow under feet, floating subject',\n  'shadow direction not matching the key light',\n\n  // Text problems\n  'random text, gibberish text, watermarks, signatures, copyright symbols',\n  'duplicate article number, distorted article text, illegible article number',\n'leaf cut in half by buttons, motif bisected by placket, broken motif at button strip, chopped leaf at centre-front, pattern sliced by buttons, leaf under a button, motif crossing the button placket, motif on the button band, half leaf at the centre seam',\n  'oversized text, giant logo, text that covers face or garment',\n  'text rendered onto the fabric instead of as an overlay',\n  'misspelled brand name, garbled text in the overlay',\n  'inconsistent font size between branding lines',\n  'large watermark text, dominant branding',\n\n  // Indian-market specific failures\n  'amateur indian terrace photo, casual home photography',\n  'mobile camera look, tourist photography',\n  'local boutique low-budget look, basement-shoot vibe',\n  'unprepared model, weak makeup, dull expression, ordinary face, tired face',\n  'unprofessional styling, ill-fitting garment, badly-tied saree',\n  'culturally inappropriate styling',\n\n  // Style consistency\n  'multiple style mixed in one frame, half-realistic half-illustration',\n  'Never different font sizes',\n  'Never oversized branding'\n].join(', ') + (garmentNegatives ? ', ' + garmentNegatives : '');\n\n\n// =====================================================================\n//  FINAL ASSEMBLY\n// =====================================================================\nconst aspectLabel = (() => {\n  const m = outputSize.match(/(\\d+)\\s*x\\s*(\\d+)/i);\n  if (!m) return outputSize;\n  const a = +m[1], b = +m[2];\n  if (a === b) return '1:1 square';\n  return a > b ? `${a}:${b} landscape` : `${a}:${b} portrait`;\n})();\n\nconst prompt = `\n${printForensicRule} GARMENT-ONLY PRINT RULE (CRITICAL, NON-NEGOTIABLE): The uploaded textile print appears ONLY on the actual textile product itself - the garment worn by the model, OR the curtain / bedsheet / cushion / sofa cover / table cloth / towel / the specific fabric item being shown. For home textiles (curtains, bedsheets, cushions, etc.) the print is ONLY on that fabric item and NEVER on the walls, window, furniture or room surfaces. The background, scene, walls, floor and surroundings MUST be a real photographic location as described in the SCENE section - they must NEVER show, repeat, echo, tile or contain the textile pattern. Do NOT fill the background with the print. Do NOT place a giant version of the pattern behind the model. Do NOT use the design as wallpaper or scenery. Only the clothes carry the print; everything else is a normal real-world photographic environment. \\n\\nDESIGN STUDY & THEME COHERENCE (do this FIRST): Before composing, visually STUDY the uploaded print - its dominant colours, motif style (floral / geometric / traditional / contemporary / festive) and overall mood. Then build a scene, styling and colour story that genuinely COMPLEMENT this specific design - backdrop, props and model styling must feel intentionally matched to the print, never random or a repeated default. Match the cultural / regional context to the selected model look (Indian model -> Indian setting & styling, Western model -> Western, and likewise for Asian / Middle-Eastern / African / Latin). For any wedding or festive theme, derive the celebration style from BOTH the design and the model's region, and vary it - do not reuse the same decor every time. \n\nSHOOT BRIEF - INDIAN TEXTILE CATALOGUE MOCKUP\nQUALITY BENCHMARK: this must look like a high-budget national brand campaign shoot (Raymond / Sabyasachi / Manyavar level) that cost lakhs to produce - flawless clarity, razor-sharp focus, premium lighting and finish, with ZERO compromise on sharpness or detail. The uploaded design/print must remain EXACTLY as provided (see RULE #0) and must never be redrawn, recoloured or altered in any way.\n${referenceSpec}\n\n${photorealismBlock}\n\nCAMERA AND LENS:\n${cameraSpec}\n\nLIGHTING:\n${lightingSpec}\n\n${modelInstruction}\n\n${premiumBeautyDirection}\n\n${productInstruction}\n\n${poseInstruction}\n\n${backgroundInstruction}\n\n${accessoriesInstruction}\n\nOVERLAY TEXT POLICY: ABSOLUTELY DO NOT render any article number, design code, label, pill, badge or text anywhere in the image. Leave every corner completely clean and text-free. This text is composited later by a separate post-production layer.\n\nBRANDING TEXT POLICY: ABSOLUTELY DO NOT render any company name, phone number, website, address, watermark or branding text anywhere in the image. Leave every corner completely clean and text-free. All branding is composited later by a separate post-production layer.\n\n${logoInstruction}\n\n=====================================================================\n  OUTPUT REQUIREMENTS\n=====================================================================\n- Aspect: ${aspectLabel}.\n- Quality tier: ${quality} - render with the appropriate level of\n  detail, micro-contrast, and finish for this tier.\n- ALL overlay text (article number + every company brand line) MUST\n  be rendered at NOT rendered by the AI at all - the image must be completely free of any overlay text, label, badge, pill or watermark, because all such text is added later in post-production. Clean modern\n  sans-serif. Same size for every text element. Never larger. Never\n  varying. Magazine-credit-line scale.\n- Output must look like a 14-bit RAW photograph straight out of the\n  camera body specified above. A trained photo retoucher opening the\n  file in Lightroom should not be able to identify any AI signature.\n- RULE #0 (PRINT FORENSIC LOCK) overrides every other instruction in\n  this brief. If anything else conflicts with print fidelity, the\n  print wins.\n\nDO NOT:\n${negativePrompt}${customLine}\n`.trim();\n\n// ===== AgentForge face/scene lock injection (v20) =====\nvar __NL = String.fromCharCode(10);\nvar __FACE_LOCK = \"=== CRITICAL — REAL MODEL FACE LOCK (HIGHEST PRIORITY, OVERRIDES EVERYTHING) ===\\nOne of the input images is a REAL photograph of the actual customer/model (the virtual try-on reference). This is a VIRTUAL TRY-ON of that EXACT same human being now wearing/showing the uploaded item. You MUST keep this person's face 100% IDENTICAL to that reference photo: same face shape, bone structure, jawline, cheekbones, eye shape and eye colour, eyebrows, nose, lips, skin tone and complexion, hairline, hairstyle, age and gender. Do NOT invent or generate a new face. Do NOT beautify, slim, smooth, re-shape, lighten, age or change the ethnicity of the face. Treat the face and head as a LOCKED, unchangeable identity that is simply re-photographed now wearing the new item/garment. If the output face does not clearly look like the SAME person as the reference photo, it is a FAILED result. Only the garment/jewellery, pose and background may change — the person's identity must be preserved exactly.\";\nvar __SCENE_LOCK = \"=== CRITICAL — USER-UPLOADED SCENE COMPOSITE (HIGHEST PRIORITY) ===\\nOne of the input images is the user's OWN background scene/photo. Place the product naturally INTO this EXACT scene, replacing any existing product/placeholder in it. Match the scene's real lighting direction, perspective, shadows, depth of field, reflections and colour temperature so the product looks genuinely photographed there. Keep the uploaded scene itself UNCHANGED — do NOT redraw, restyle or regenerate the background. Only the product is inserted/relit realistically into the user's scene.\";\nvar __modelPhotoUrl = clean(input.model_photo_url || input.model_image_url, '');\nvar __referenceSceneUrl = clean(input.reference_scene_url, '');\nvar __finalPrompt = prompt;\nif (__modelPhotoUrl) { __finalPrompt = __FACE_LOCK + __NL + __NL + __finalPrompt; }\nif (__referenceSceneUrl) { __finalPrompt = __SCENE_LOCK + __NL + __NL + __finalPrompt; }\n\nreturn [\n  {\n    json: {\n      ...meta,\n      ...input,\n      generation_id: generationId,\n      design_url:    designUrl,\n      textile_category: category,\n      category, product_type: productType, model_usage: modelUsage,\n      model_type: modelLook, model_look: modelLook,\n      pose, face_expression: expression,\n      shoot_style: shootStyle, output_size: outputSize, quality,\n      article_number: articleNumber, article_position: articlePosition,\n      company_name: companyName, company_phone: companyPhone,\n      company_website: companyWebsite, company_address: companyAddress,\n      company_name_position:    companyNamePosition,\n      company_phone_position:   companyPhonePosition,\n      company_website_position: companyWebsitePosition,\n      company_address_position: companyAddressPosition,\n      logo_url: logoUrl,\n      final_prompt: __finalPrompt,\n      model_photo_url: __modelPhotoUrl,\n      reference_scene_url: __referenceSceneUrl,\n      negative_prompt: negativePrompt,\n      credit_cost: meta.credit_cost,\n      user_id: meta.user_id\n    }\n  }\n];"
+      },
+      "id": "e72edadf-ff33-4401-8870-cc72b67960bf",
+      "name": "Code - Build Photography-Grade Prompt v3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        -4512
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://poeqfzmwbatioabmhlxe.supabase.co/rest/v1/generations?id=eq.{{$json.generation_id}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvZXFmem13YmF0aW9hYm1obHhlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzUwNDA3MywiZXhwIjoyMDkzMDgwMDczfQ.-eQ3JiKtHejIswxKnK7r5-yxz30CUOTWzOItIT_2Gqk"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvZXFmem13YmF0aW9hYm1obHhlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzUwNDA3MywiZXhwIjoyMDkzMDgwMDczfQ.-eQ3JiKtHejIswxKnK7r5-yxz30CUOTWzOItIT_2Gqk"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"status\":\"processing\",\"prompt\":{{$json.final_prompt.toJsonString()}},\"updated_at\":{{$now.toISO().toJsonString()}}}",
+        "options": {}
+      },
+      "id": "60a02298-bb27-4db5-be95-e78dfc0580bf",
+      "name": "Supabase - Mark Processing1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -416,
+        -4512
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://queue.fal.run/fal-ai/nano-banana-2/edit",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Key 7cc8f2ab-e42f-4a87-b974-6b61a87e9d52:123a76ac61d54e5634af71a3ecb95792"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "prompt",
+              "value": "={{ $node[\"Code - Build Photography-Grade Prompt v3\"].json.final_prompt }}"
+            },
+            {
+              "name": "image_urls",
+              "value": "={{ (() => { const b=$node[\"Code - Build Photography-Grade Prompt v3\"].json; const a=[b.design_url]; if(b.model_photo_url) a.push(b.model_photo_url); if(b.reference_scene_url) a.push(b.reference_scene_url); return a; })() }}"
+            },
+            {
+              "name": "num_images",
+              "value": "={{ 1 }}"
+            },
+            {
+              "name": "output_format",
+              "value": "png"
+            },
+            {
+              "name": "negative_prompt",
+              "value": "={{ $node[\"Code - Build Photography-Grade Prompt v3\"].json.negative_prompt || \"\" }}"
+            },
+            {
+              "name": "aspect_ratio",
+              "value": "={{ (() => { const s = String($node[\"Code - Build Photography-Grade Prompt v3\"].json.output_size || \"1080x1080\"); const m = s.match(/(\\d+)\\s*[x:]\\s*(\\d+)/i); if(!m) return \"1:1\"; const w=+m[1], h=+m[2]; if(w===h) return \"1:1\"; return w>h ? \"16:9\" : \"9:16\"; })() }}"
+            },
+            {
+              "name": "resolution",
+              "value": "={{ String($node[\"Code - Build Photography-Grade Prompt v3\"].json.quality || \"Premium\").toLowerCase().includes(\"ultra\") ? \"4K\" : \"1K\" }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "7c319a5f-ca47-4556-81e2-fb7af40279e7",
+      "name": "Fal - Create Image Request1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -192,
+        -4512
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "id": "fe5fed78-0a85-4955-88ac-205f6d8c063b",
+      "name": "Wait 5s (Initial)1",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        16,
+        -4512
+      ],
+      "webhookId": "7a78773d-0163-4556-8a3b-5b88d5c179fe"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === POLLING LOOP CONTROLLER ===\n// Replaces the brittle \"poll once then maybe retry once\" pattern\n// with a clean loop counter. Max 12 attempts x 5 seconds = 60 seconds.\n//\n// State is carried on the item itself.\n\nconst MAX_ATTEMPTS = 12;\n\n// First time entering the loop\nconst current = $json.poll_attempt || 0;\nconst nextAttempt = current + 1;\n\nreturn [\n  {\n    json: {\n      ...$json,\n      poll_attempt: nextAttempt,\n      poll_exhausted: nextAttempt > MAX_ATTEMPTS\n    }\n  }\n];"
+      },
+      "id": "347b2524-e647-4b44-9516-75de79a6fdd3",
+      "name": "Code - Poll Controller1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        -4512
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_exhausted",
+              "leftValue": "={{$json.poll_exhausted}}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6d661856-8834-47a8-bcd1-3be50f7063a2",
+      "name": "IF - Can Poll Again?1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        464,
+        -4512
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$node['Fal - Create Image Request1'].json.status_url || $node['Fal - Create Image Request1'].json.urls?.status || ('https://queue.fal.run/fal-ai/gpt-image-1.5/edit/requests/' + $node['Fal - Create Image Request1'].json.request_id + '/status')}}\n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Key 7cc8f2ab-e42f-4a87-b974-6b61a87e9d52:123a76ac61d54e5634af71a3ecb95792"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "8377960d-6536-4280-bb30-8bd6dbd12aab",
+      "name": "Fal - Poll Result1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        688,
+        -4592
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// === EXTRACT STATUS FROM FAL POLL RESPONSE ===\n// This node reads the Fal queue status. If completed, it carries the response_url forward.\n// The actual generated image URL is fetched in the next HTTP node.\n\nconst input = $json;\n\nconst directImage =\n  input?.images?.[0]?.url ||\n  input?.image?.url ||\n  input?.image_url ||\n  input?.output_image_url ||\n  input?.output_url ||\n  input?.url ||\n  input?.data?.images?.[0]?.url ||\n  input?.data?.image_url ||\n  '';\n\nconst responseUrl =\n  input?.response_url ||\n  input?.urls?.response ||\n  $node['Fal - Create Image Request1'].json.response_url ||\n  $node['Fal - Create Image Request1'].json.urls?.response ||\n  ('https://queue.fal.run/fal-ai/nano-banana/requests/' + $node['Fal - Create Image Request1'].json.request_id);\n\nconst status = String(input?.status || input?.state || '').toUpperCase();\n\nconst isComplete =\n  Boolean(directImage) ||\n  (['COMPLETED', 'COMPLETED_OK', 'FINISHED', 'SUCCEEDED', 'SUCCESS'].includes(status) && Boolean(responseUrl));\n\nconst isFailed = ['FAILED', 'ERROR', 'CANCELLED'].includes(status);\n\nconst attempt = $node['Code - Poll Controller1'].json.poll_attempt;\n\nreturn [\n  {\n    json: {\n      ...input,\n      poll_attempt: attempt,\n      final_response_url: responseUrl,\n      final_image_url: directImage,\n      is_complete: isComplete,\n      is_failed: isFailed,\n      generation_id: $node['Code - Build Photography-Grade Prompt v3'].json.generation_id,\n      user_id: $node['Code - Build Photography-Grade Prompt v3'].json.user_id,\n      credit_cost: $node['Code - Build Photography-Grade Prompt v3'].json.credit_cost,\n      output_size: $node['Code - Build Photography-Grade Prompt v3'].json.output_size\n    }\n  }\n];"
+      },
+      "id": "748618ac-e6f1-41f1-a7aa-448834092d12",
+      "name": "Code - Extract Image1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -4592
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_image_ready",
+              "leftValue": "={{ $json.is_complete === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "806506ae-b04f-4c73-8241-c0ce2a90b05c",
+      "name": "IF - Image Ready?1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        -4592
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "4bd2b01c-fb2b-4436-a8df-eb6eb921e095",
+      "name": "Wait 5s (Loop)1",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        896,
+        -4384
+      ],
+      "webhookId": "12d4d113-ea1e-49b6-b06c-f49728f0edd8"
+    },
+    {
+      "parameters": {
+        "url": "={{$json.final_image_url}}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "e4005528-3e36-40a6-8a42-8acb0c5b8096",
+      "name": "HTTP - Download Generated Image1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1792,
+        -4672
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://poeqfzmwbatioabmhlxe.supabase.co/storage/v1/object/mockups/{{$node['Code - Build Photography-Grade Prompt v3'].json.user_id}}/{{$node['Code - Build Photography-Grade Prompt v3'].json.generation_id}}.png",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvZXFmem13YmF0aW9hYm1obHhlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzUwNDA3MywiZXhwIjoyMDkzMDgwMDczfQ.-eQ3JiKtHejIswxKnK7r5-yxz30CUOTWzOItIT_2Gqk"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvZXFmem13YmF0aW9hYm1obHhlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzUwNDA3MywiZXhwIjoyMDkzMDgwMDczfQ.-eQ3JiKtHejIswxKnK7r5-yxz30CUOTWzOItIT_2Gqk"
+            },
+            {
+              "name": "Content-Type",
+              "value": "image/png"
+            },
+            {
+              "name": "x-upsert",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "671e2d17-52a4-40c9-b29f-bde9478202b9",
+      "name": "Supabase - Upload to Storage1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2016,
+        -4672
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// === BUILD PERMANENT URL (mockups bucket) ===\nconst supabaseUrl = 'https://poeqfzmwbatioabmhlxe.supabase.co';\n\nconst generationId =\n  $node['Code - Extract Final Image URL'].json.generation_id ||\n  $node['Code - Extract Image1'].json.generation_id ||\n  $node['Code - Build Photography-Grade Prompt v3'].json.generation_id;\n\nconst userId =\n  $node['Code - Extract Final Image URL'].json.user_id ||\n  $node['Code - Extract Image1'].json.user_id ||\n  $node['Code - Build Photography-Grade Prompt v3'].json.user_id;\n\nconst permanentUrl = `${supabaseUrl}/storage/v1/object/public/mockups/${userId}/${generationId}.png`;\n\nreturn [\n  {\n    json: {\n      permanent_image_url: permanentUrl,\n      image_url: permanentUrl,\n      output_url: permanentUrl,\n      output_image_url: permanentUrl,\n      original_fal_url: $node['Code - Extract Final Image URL'].json.final_image_url,\n      generation_id: generationId,\n      user_id: userId,\n      output_size: $node['Code - Build Photography-Grade Prompt v3'].json.output_size,\n      prompt_used: $node['Code - Build Photography-Grade Prompt v3'].json.final_prompt,\n      credit_cost: $node['Code - Build Photography-Grade Prompt v3'].json.credit_cost\n    }\n  }\n];"
+      },
+      "id": "6621e96d-59a4-4370-8d6d-eb0b7c13e6a2",
+      "name": "Code - Build Permanent URL1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        -4672
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://poeqfzmwbatioabmhlxe.supabase.co/rest/v1/generations?id=eq.{{$json.generation_id}}&select=id,status,image_url,output_url,output_image_url",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvZXFmem13YmF0aW9hYm1obHhlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzUwNDA3MywiZXhwIjoyMDkzMDgwMDczfQ.-eQ3JiKtHejIswxKnK7r5-yxz30CUOTWzOItIT_2Gqk"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvZXFmem13YmF0aW9hYm1obHhlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzUwNDA3MywiZXhwIjoyMDkzMDgwMDczfQ.-eQ3JiKtHejIswxKnK7r5-yxz30CUOTWzOItIT_2Gqk"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"status\": \"completed\",\n  \"image_url\": \"{{$node['Code - Build Permanent URL1'].json.permanent_image_url}}\",\n  \"output_url\": \"{{$node['Code - Build Permanent URL1'].json.permanent_image_url}}\",\n  \"output_image_url\": \"{{$node['Code - Build Permanent URL1'].json.permanent_image_url}}\",\n  \"original_provider_url\": \"{{$node['Code - Build Permanent URL1'].json.original_fal_url}}\",\n  \"completed_at\": \"{{$now.toISO()}}\",\n  \"updated_at\": \"{{$now.toISO()}}\"\n}",
+        "options": {}
+      },
+      "id": "b76c4f2e-4bcc-4b10-9b3c-4a2403f4c70a",
+      "name": "Supabase - Mark Completed1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2464,
+        -4672
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"status\": \"completed\",\n  \"image_url\": \"{{$json.image_url}}\",\n  \"final_image_url\": \"{{$json.image_url}}\",\n  \"output_url\": \"{{$json.output_url}}\",\n  \"output_image_url\": \"{{$json.output_image_url}}\",\n  \"imageUrl\": \"{{$json.image_url}}\",\n  \"finalImageUrl\": \"{{$json.image_url}}\",\n  \"outputImageUrl\": \"{{$json.output_image_url}}\",\n  \"url\": \"{{$json.image_url}}\",\n  \"generation_id\": \"{{$json.id}}\",\n  \"id\": \"{{$json.id}}\",\n  \"data\": {\n    \"image_url\": \"{{$json.image_url}}\",\n    \"final_image_url\": \"{{$json.image_url}}\",\n    \"output_url\": \"{{$json.output_url}}\",\n    \"output_image_url\": \"{{$json.output_image_url}}\",\n    \"imageUrl\": \"{{$json.image_url}}\",\n    \"finalImageUrl\": \"{{$json.image_url}}\",\n    \"url\": \"{{$json.image_url}}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "830533b0-e477-43c5-9923-e3942b7059de",
+      "name": "Respond - Success1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2672,
+        -4672
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"error\": \"Validation failed\",\n  \"validation_errors\": {{$json.validation_errors ? JSON.stringify($json.validation_errors) : \"[]\"}}\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "87887de7-3380-4a47-8d82-ac86e22363d6",
+      "name": "Respond - Validation Failed1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1248,
+        -4128
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://poeqfzmwbatioabmhlxe.supabase.co/rest/v1/rpc/deduct_credits",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvZXFmem13YmF0aW9hYm1obHhlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzUwNDA3MywiZXhwIjoyMDkzMDgwMDczfQ.-eQ3JiKtHejIswxKnK7r5-yxz30CUOTWzOItIT_2Gqk"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvZXFmem13YmF0aW9hYm1obHhlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzUwNDA3MywiZXhwIjoyMDkzMDgwMDczfQ.-eQ3JiKtHejIswxKnK7r5-yxz30CUOTWzOItIT_2Gqk"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "p_user_id",
+              "value": "={{ $json.user_id }}"
+            },
+            {
+              "name": "p_amount",
+              "value": "={{ $json.credit_cost }}"
+            },
+            {
+              "name": "p_reason",
+              "value": "textile_generate"
+            },
+            {
+              "name": "p_generation_id",
+              "value": "={{ $json.generation_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6a9b3f54-fabb-40d1-ad21-02b70bce505c",
+      "name": "Supabase - Deduct Credits",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -896,
+        -4160
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond_deduct_ok_string_safe",
+              "leftValue": "={{ String($json.success ?? ($json[0] && $json[0].success) ?? false).toLowerCase() }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "96d112ee-1623-4434-8263-d53e65ecd41c",
+      "name": "IF - Credits OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -592,
+        -4160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://poeqfzmwbatioabmhlxe.supabase.co/rest/v1/rpc/refund_credits",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvZXFmem13YmF0aW9hYm1obHhlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzUwNDA3MywiZXhwIjoyMDkzMDgwMDczfQ.-eQ3JiKtHejIswxKnK7r5-yxz30CUOTWzOItIT_2Gqk"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvZXFmem13YmF0aW9hYm1obHhlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzUwNDA3MywiZXhwIjoyMDkzMDgwMDczfQ.-eQ3JiKtHejIswxKnK7r5-yxz30CUOTWzOItIT_2Gqk"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "p_user_id",
+              "value": "={{ $json.user_id }}"
+            },
+            {
+              "name": "p_amount",
+              "value": "={{ $json.credit_cost }}"
+            },
+            {
+              "name": "p_reason",
+              "value": "refund:textile_n8n_failed"
+            },
+            {
+              "name": "p_generation_id",
+              "value": "={{ $json.generation_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "50ad0c35-1e33-4ac5-99fd-2ec83b02dbf6",
+      "name": "Supabase - Refund Credits",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        704,
+        -4080
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\"success\": false, \"error\": \"Insufficient credits\", \"details\": {{ (($json[0] && $json[0].error) ? $json[0].error : ($json.error || \"Insufficient credits\")).toJsonString() }} }",
+        "options": {
+          "responseCode": 402
+        }
+      },
+      "id": "c65a6053-3027-40cf-87cd-dd69379acaf7",
+      "name": "Respond - Insufficient Credits",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -304,
+        -4128
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.final_response_url || $node['Fal - Create Image Request1'].json.response_url || $node['Fal - Create Image Request1'].json.urls?.response || ('https://queue.fal.run/fal-ai/nano-banana/requests/' + $node['Fal - Create Image Request1'].json.request_id)}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Key 7cc8f2ab-e42f-4a87-b974-6b61a87e9d52:123a76ac61d54e5634af71a3ecb95792"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "9af94427-bf6e-4ce8-ab3b-4e71fc425d7b",
+      "name": "Fal - Fetch Final Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1344,
+        -4672
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $json;\n\nconst image =\n  input?.data?.[0]?.url ||\n  input?.images?.[0]?.url ||\n  input?.image?.url ||\n  input?.image_url ||\n  input?.output_image_url ||\n  input?.output_url ||\n  input?.url ||\n  input?.data?.images?.[0]?.url ||\n  input?.data?.image_url ||\n  input?.result?.images?.[0]?.url ||\n  input?.result?.image_url ||\n  input?.response?.images?.[0]?.url ||\n  input?.response?.image_url ||\n  '';\n\nif (!image || !/^https?:\\/\\//i.test(image)) {\n  throw new Error(\"GPT/FAL final image URL missing. Response keys changed.\");\n}\n\nreturn [\n  {\n    json: {\n      ...input,\n      final_image_url: image,\n      generation_id: $node['Code - Build Photography-Grade Prompt v3'].json.generation_id,\n      user_id: $node['Code - Build Photography-Grade Prompt v3'].json.user_id,\n      credit_cost: $node['Code - Build Photography-Grade Prompt v3'].json.credit_cost,\n      output_size: $node['Code - Build Photography-Grade Prompt v3'].json.output_size\n    }\n  }\n];"
+      },
+      "id": "75002d7c-43f5-4c1d-ad73-e900879f935a",
+      "name": "Code - Extract Final Image URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        -4672
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://poeqfzmwbatioabmhlxe.supabase.co/rest/v1/generations?id=eq.{{$json.generation_id || $node['Code - Build Photography-Grade Prompt v3'].json.generation_id}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvZXFmem13YmF0aW9hYm1obHhlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzUwNDA3MywiZXhwIjoyMDkzMDgwMDczfQ.-eQ3JiKtHejIswxKnK7r5-yxz30CUOTWzOItIT_2Gqk"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvZXFmem13YmF0aW9hYm1obHhlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzUwNDA3MywiZXhwIjoyMDkzMDgwMDczfQ.-eQ3JiKtHejIswxKnK7r5-yxz30CUOTWzOItIT_2Gqk"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"status\":\"failed\",\"error_message\":\"Generation timed out or failed before final image URL was returned.\",\"updated_at\":{{$now.toISO().toJsonString()}}}",
+        "options": {}
+      },
+      "id": "c858bdd1-1356-41c6-be85-ab2b2431afa8",
+      "name": "Supabase - Mark Failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        496,
+        -4080
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"error\": \"Generation timed out or failed before final image URL was returned.\",\n  \"generation_id\": \"{{$node['Code - Build Photography-Grade Prompt v3'].json.generation_id}}\"\n}",
+        "options": {
+          "responseCode": 504
+        }
+      },
+      "id": "ff0b0686-eaa7-4c88-bc65-994e2e01aaa3",
+      "name": "Respond - Failed",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        896,
+        -4080
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - Generate Mockup1": {
+      "main": [
+        [
+          {
+            "node": "Code - Validate Input1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Validate Input1": {
+      "main": [
+        [
+          {
+            "node": "IF - Input Valid?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Input Valid?1": {
+      "main": [
+        [
+          {
+            "node": "Supabase - Deduct Credits",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - Validation Failed1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase - Deduct Credits": {
+      "main": [
+        [
+          {
+            "node": "IF - Credits OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Credits OK?": {
+      "main": [
+        [
+          {
+            "node": "Code - Build Photography-Grade Prompt v3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - Insufficient Credits",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Build Photography-Grade Prompt v3": {
+      "main": [
+        [
+          {
+            "node": "Supabase - Mark Processing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase - Mark Processing1": {
+      "main": [
+        [
+          {
+            "node": "Fal - Create Image Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fal - Create Image Request1": {
+      "main": [
+        [
+          {
+            "node": "Wait 5s (Initial)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 5s (Initial)1": {
+      "main": [
+        [
+          {
+            "node": "Code - Poll Controller1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Poll Controller1": {
+      "main": [
+        [
+          {
+            "node": "IF - Can Poll Again?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Can Poll Again?1": {
+      "main": [
+        [
+          {
+            "node": "Fal - Poll Result1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase - Mark Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fal - Poll Result1": {
+      "main": [
+        [
+          {
+            "node": "Code - Extract Image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Extract Image1": {
+      "main": [
+        [
+          {
+            "node": "IF - Image Ready?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Image Ready?1": {
+      "main": [
+        [
+          {
+            "node": "Fal - Fetch Final Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait 5s (Loop)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 5s (Loop)1": {
+      "main": [
+        [
+          {
+            "node": "Code - Poll Controller1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP - Download Generated Image1": {
+      "main": [
+        [
+          {
+            "node": "Supabase - Upload to Storage1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase - Upload to Storage1": {
+      "main": [
+        [
+          {
+            "node": "Code - Build Permanent URL1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Build Permanent URL1": {
+      "main": [
+        [
+          {
+            "node": "Supabase - Mark Completed1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase - Mark Completed1": {
+      "main": [
+        [
+          {
+            "node": "Respond - Success1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase - Refund Credits": {
+      "main": [
+        [
+          {
+            "node": "Respond - Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fal - Fetch Final Result": {
+      "main": [
+        [
+          {
+            "node": "Code - Extract Final Image URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Extract Final Image URL": {
+      "main": [
+        [
+          {
+            "node": "HTTP - Download Generated Image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase - Mark Failed": {
+      "main": [
+        [
+          {
+            "node": "Supabase - Refund Credits",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "8b287a2d-c1df-49db-987d-b27c128f47e6",
+  "meta": {
+    "instanceId": "8e6d0b245d7f3074f901649cd61115a8be939832abaa24c7195c16fb0db16d1d"
+  },
+  "id": "AZjAE59hhRoPt8uu",
+  "tags": [
+    {
+      "updatedAt": "2026-05-16T06:30:21.316Z",
+      "createdAt": "2026-05-16T06:30:21.316Z",
+      "id": "80Byv8lhhpd0rOeY",
+      "name": "Production"
+    },
+    {
+      "updatedAt": "2026-05-16T06:30:21.321Z",
+      "createdAt": "2026-05-16T06:30:21.321Z",
+      "id": "NfaOTft0CiQdgUvi",
+      "name": "Textile"
+    },
+    {
+      "updatedAt": "2026-05-16T06:30:21.311Z",
+      "createdAt": "2026-05-16T06:30:21.311Z",
+      "id": "ny7JqecK6xhn5BOo",
+      "name": "AgentForge"
+    },
+    {
+      "updatedAt": "2026-05-16T06:30:21.320Z",
+      "createdAt": "2026-05-16T06:30:21.320Z",
+      "id": "xBsNHNCwDNeAhep5",
+      "name": "Mockup"
+    }
+  ]
+}
