@@ -112,7 +112,46 @@ export async function POST(req: Request) {
     }
   }
 
-  // Add credits atomically
+  // Where should the bonus go? If this generation was paid for from a team
+  // pool (the generation row carries team_id), the reward belongs to that
+  // same team pool — not the member's personal balance. Otherwise it goes
+  // to the logged-in user's personal credits.
+  let rewardTeamId: string | null = null;
+  if (generation_id) {
+    const { data: genRow } = await supabase
+      .from("generations")
+      .select("team_id")
+      .eq("id", generation_id)
+      .maybeSingle();
+    rewardTeamId = (genRow?.team_id as string | null) ?? null;
+  }
+
+  if (rewardTeamId) {
+    // Credit the team pool atomically (also writes team_credit_transactions).
+    const { data: newTeamBalance, error: teamErr } = await supabase.rpc(
+      "topup_team_credits",
+      {
+        p_team_id: rewardTeamId,
+        p_actor_id: user.id,
+        p_amount: creditsToAdd,
+        p_reason: "feedback_reward",
+      },
+    );
+
+    if (teamErr) {
+      console.error("[feedback/submit] team credit reward error:", teamErr.message);
+      return NextResponse.json({ error: "Credits update failed." }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      ok: true,
+      creditsAwarded: creditsToAdd,
+      newBalance: Number(newTeamBalance),
+      credited_to: "team",
+    });
+  }
+
+  // Personal reward — add credits atomically to the logged-in user.
   const { data: profileData, error: profileError } = await supabase
     .from("profiles")
     .select("credits")
@@ -148,5 +187,6 @@ export async function POST(req: Request) {
     ok: true,
     creditsAwarded: creditsToAdd,
     newBalance,
+    credited_to: "personal",
   });
 }

@@ -28,7 +28,7 @@ import { requireUser } from "@/lib/serverAuth";
 import { isAgentForgeHostedUrl } from "@/lib/uploadValidation";
 import { isAgentEnabled } from "@/lib/agentEnabled";
 import { getTeamMembership } from "@/lib/teamAuth";
-import { deductTeamCredits, refundTeamCredits, refundCredits } from "@/lib/creditsServer";
+import { deductTeamCredits, refundTeamCredits } from "@/lib/creditsServer";
 
 export const runtime = "nodejs";
 
@@ -195,18 +195,24 @@ export async function POST(request: Request) {
     );
   }
 
-  // 5. For a team generation, the textile n8n workflow still deducts
-  // `credits` from this user's PERSONAL balance internally (it can't be
-  // skipped from here). So pre-credit the same amount to personal now —
-  // n8n's later deduction nets it back to zero, leaving only the team
-  // pool charged. Done after the row insert so a failed insert can't leak.
-  if (teamDeducted) {
-    await refundCredits(user.id, credits, "team_offset:textile", body.generation_id);
-  }
-
-  // Forward to n8n with the REAL required_credits so its personal
-  // deduction exactly cancels the offset above.
-  const forwarded = { ...body, user_id: user.id, team_id: teamId ?? undefined };
+  // 5. Forward to n8n.
+  //  • Personal generation (no team): leave the credit fields untouched so
+  //    the n8n workflow deducts from the logged-in user's PERSONAL balance,
+  //    exactly as before. (Toggle OFF → personal.)
+  //  • Team generation: the team pool was already charged above. Tell n8n to
+  //    skip its own deduction and zero the credit fields so personal is NOT
+  //    touched. (Toggle ON → team only.)  Requires the n8n workflow to honour
+  //    skip_credit_deduction — see the IF-node note in the deploy docs.
+  const forwarded = teamDeducted
+    ? {
+        ...body,
+        user_id: user.id,
+        team_id: teamId ?? undefined,
+        skip_credit_deduction: true,
+        required_credits: 0,
+        credits_required: 0,
+      }
+    : { ...body, user_id: user.id, team_id: teamId ?? undefined };
 
   fetch(webhookUrl, {
     method: "POST",
