@@ -801,7 +801,8 @@ export default function ProductographyPage() {
         window.dispatchEvent(new Event("af-notifications-refresh"));
     }
     if (pgPrevResultOpen.current && !resultModalOpen) {
-      if (!reviewedResult) setShowRatingModal(true);
+      // Team-credit generations earn no bonus → don't prompt for a review.
+      if (!reviewedResult && !teamId) setShowRatingModal(true);
       setItems([]);
       setBuilderStep(1);
     }
@@ -1544,7 +1545,7 @@ export default function ProductographyPage() {
   };
 
   const requestDownload = () => {
-    if (!reviewedResult) { setDownloadAfterReview(true); setShowRatingModal(true); return; }
+    if (!reviewedResult && !teamId) { setDownloadAfterReview(true); setShowRatingModal(true); return; }
     handleDownloadResult();
   };
 

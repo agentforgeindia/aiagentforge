@@ -37,7 +37,6 @@ export async function POST(req: Request) {
   }
 
   const hasFeedback = typeof feedback === "string" && feedback.trim().length > 0;
-  const creditsToAdd = (rating ? 1 : 0) + (hasFeedback ? 2 : 0);
 
   const supabase = adminClient();
 
@@ -57,6 +56,25 @@ export async function POST(req: Request) {
       );
     }
   }
+
+  // Team-credit generations earn NO feedback bonus. If this generation was
+  // paid for from a team pool (the generation row carries team_id), the user
+  // gave feedback for work they didn't pay for personally — so no reward is
+  // granted (neither to personal nor team). Feedback/testimonial is still
+  // saved; only the credit award is suppressed.
+  let isTeamGeneration = false;
+  if (generation_id) {
+    const { data: genRow } = await supabase
+      .from("generations")
+      .select("team_id")
+      .eq("id", generation_id)
+      .maybeSingle();
+    isTeamGeneration = Boolean(genRow?.team_id);
+  }
+
+  const creditsToAdd = isTeamGeneration
+    ? 0
+    : (rating ? 1 : 0) + (hasFeedback ? 2 : 0);
 
   // Save feedback row
   const { error: insertError } = await supabase.from("feedback").insert({
@@ -112,42 +130,14 @@ export async function POST(req: Request) {
     }
   }
 
-  // Where should the bonus go? If this generation was paid for from a team
-  // pool (the generation row carries team_id), the reward belongs to that
-  // same team pool — not the member's personal balance. Otherwise it goes
-  // to the logged-in user's personal credits.
-  let rewardTeamId: string | null = null;
-  if (generation_id) {
-    const { data: genRow } = await supabase
-      .from("generations")
-      .select("team_id")
-      .eq("id", generation_id)
-      .maybeSingle();
-    rewardTeamId = (genRow?.team_id as string | null) ?? null;
-  }
-
-  if (rewardTeamId) {
-    // Credit the team pool atomically (also writes team_credit_transactions).
-    const { data: newTeamBalance, error: teamErr } = await supabase.rpc(
-      "topup_team_credits",
-      {
-        p_team_id: rewardTeamId,
-        p_actor_id: user.id,
-        p_amount: creditsToAdd,
-        p_reason: "feedback_reward",
-      },
-    );
-
-    if (teamErr) {
-      console.error("[feedback/submit] team credit reward error:", teamErr.message);
-      return NextResponse.json({ error: "Credits update failed." }, { status: 500 });
-    }
-
+  // Team-credit generation → no bonus at all. Feedback/testimonial is saved
+  // above, but we award zero credits and return here.
+  if (isTeamGeneration) {
     return NextResponse.json({
       ok: true,
-      creditsAwarded: creditsToAdd,
-      newBalance: Number(newTeamBalance),
-      credited_to: "team",
+      creditsAwarded: 0,
+      credited_to: "none",
+      reason: "team_generation_no_bonus",
     });
   }
 

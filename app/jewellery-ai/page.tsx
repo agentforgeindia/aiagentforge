@@ -1262,7 +1262,8 @@ export default function JewelleryAIPage() {
         window.dispatchEvent(new Event("af-notifications-refresh"));
     }
     if (jwPrevResultOpen.current && !resultModalOpen) {
-      if (!reviewedResult) setShowRatingModal(true);
+      // Team-credit generations earn no bonus → don't prompt for a review.
+      if (!reviewedResult && !teamId) setShowRatingModal(true);
       setUploads([]);
       setGeneratedOutputUrl("");
       setBuilderStep(1);
@@ -1970,7 +1971,7 @@ const applyLogoOverlay = async (
 // Gate: ask for a review before the first download. User keeps
 // viewing the output; after rating (or skip) the download proceeds.
 const requestDownload = () => {
-  if (!reviewedResult) {
+  if (!reviewedResult && !teamId) {
     setDownloadAfterReview(true);
     setShowRatingModal(true);
     return;

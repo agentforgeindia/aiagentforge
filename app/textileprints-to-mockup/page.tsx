@@ -1709,7 +1709,8 @@ export default function Home() {
         reviewedResult ||
         (typeof window !== "undefined" &&
           localStorage.getItem("textile_rating_never_ask") === "1");
-      if (!skip) setShowRatingModal(true);
+      // Team-credit generations earn no bonus → don't pester for a review.
+      if (!skip && !teamId) setShowRatingModal(true);
       // Clear the finished run so the agent page is fresh for a NEW
       // design — the uploaded design is removed, no page refresh needed.
       setItems([]);
@@ -3247,6 +3248,8 @@ export default function Home() {
   const RATING_NEVER_KEY = "textile_rating_never_ask";
   const maybeAskRating = () => {
     if (reviewedResult) return;
+    // Team-credit generations earn no bonus → skip the review prompt.
+    if (teamId) return;
     if (
       typeof window !== "undefined" &&
       localStorage.getItem(RATING_NEVER_KEY) === "1"
