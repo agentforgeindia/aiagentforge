@@ -2838,6 +2838,7 @@ export default function Home() {
       body: JSON.stringify({
         generation_id: generationId,
         // user_id deliberately omitted — server stamps it from JWT.
+        team_id: teamId ?? undefined,
         design_url: item.url,
         // Optional: user's own scene to composite the product into.
         reference_scene_url: referenceSceneUrl || "",
