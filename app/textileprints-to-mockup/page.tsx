@@ -2752,24 +2752,11 @@ export default function Home() {
       ? customFaceExpression.trim() || faceExpression
       : "Not applicable";
 
-    // "Upload Your Model" → a concrete usage the n8n flow understands.
-    // Apparel: the person WEARS the garment (Single Model / virtual try-on).
-    // Home/Universal: the person can't "wear" a curtain/bedsheet — they must
-    // appear IN the scene interacting with the product, so map to a home
-    // interaction that the home workflow renders a model for.
+    // Pass the raw selection through. The n8n prompt builder owns ALL the
+    // model/interaction logic (apparel try-on AND home scene posing) — the
+    // frontend must NOT inject scene rules, that caused bad outputs.
     const modelUsageForN8n =
-      modelUsage === "Upload Your Model"
-        ? isHomeLikeCategory
-          ? "Model Standing Beside Product"
-          : "Single Model"
-        : modelUsage;
-
-    // Category-aware instruction for the uploaded model photo.
-    const modelPhotoInstruction = modelPhotoUrl
-      ? isHomeLikeCategory
-        ? `UPLOADED MODEL (see model_photo_url): Place the EXACT person from this uploaded photo INTO the scene with the product (${resolvedSudanGarment || resolvedProduct || "the product"}). INTERACTION IS MANDATORY — the person must interact with the product EXACTLY as: "${modelUsageForN8n}". If it says SITTING, the person is genuinely SEATED ON/WITH the product (e.g. sitting on the sofa, on the bed); if HOLDING, they hold it in their hands; if POINTING, they point toward it; if STANDING BESIDE, they stand right next to it touching/gesturing to it. Do NOT default to a person merely standing off to the side — follow the stated interaction precisely and place the person CLOSE TO and engaged with the product, not in a far corner. Preserve their face, identity, body shape and skin tone exactly — do not change the face. The person is a MODEL posing WITH the home-textile product; they do NOT wear it. CRITICAL SCALE: size the person REALISTICALLY for the room — correct real-world human proportions relative to the ${resolvedSudanGarment || resolvedProduct || "product"}, walls, floor and furniture, with natural perspective, depth and grounded contact shadows. The person must NOT look oversized, zoomed-in or larger than the scene — they blend in as if really photographed in that room, positioned naturally for the chosen interaction. Realistic, tasteful, fully clothed. Absolutely no nudity, no sexualisation and no inappropriate content.`
-        : "VIRTUAL TRY-ON (see model_photo_url): Render this garment on the EXACT person in the uploaded model photo. Preserve their face, identity, body shape and skin tone exactly — do not change the face. Keep them fully clothed, realistic and tasteful. Absolutely no nudity, no sexualisation and no inappropriate content."
-      : "";
+      modelUsage === "Upload Your Model" ? "Single Model" : modelUsage;
 
     const payload = {
       generation_id: generationId,
@@ -2815,7 +2802,9 @@ export default function Home() {
         referenceSceneUrl
           ? "REFERENCE SCENE PROVIDED (see reference_scene_url): Place the product naturally INTO this uploaded scene, replacing the existing furnishing/product in that photo. Match the scene's lighting, perspective, shadows, depth and overall style so it looks real. Keep the rest of the scene unchanged."
           : "",
-        modelPhotoInstruction,
+        modelPhotoUrl
+          ? "VIRTUAL TRY-ON (see model_photo_url): Render this garment on the EXACT person in the uploaded model photo. Preserve their face, identity, body shape and skin tone exactly — do not change the face. Keep them fully clothed, realistic and tasteful. Absolutely no nudity, no sexualisation and no inappropriate content."
+          : "",
         showFaceExpression
           ? `Model face expression: ${resolvedFaceExpression}`
           : "No face expression needed because no human face/model is selected.",
