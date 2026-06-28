@@ -274,7 +274,6 @@ const JEWEL_MODEL_LOOK_OPTIONS: OptionItem[] = [
   { label: "Middle Eastern Model", icon: UserRound, hint: "Middle-Eastern look", iconFile: "/model-faces/women-middle-eastern.png" },
   { label: "African Model", icon: UserRound, hint: "African look", iconFile: "/model-faces/women-african.png" },
   { label: "European Model", icon: UserRound, hint: "European look", iconFile: "/model-faces/women-western.png" },
-  { label: "Upload Your Model", icon: Upload, hint: "Your own photo (+2)" },
 ];
 
 // Background-theme + studio-pose sub-options (textile-parity), shown only
@@ -763,12 +762,87 @@ function OptionCard({
   );
 }
 
+// In-grid upload card (matches OptionCard look) — used for "Upload Your Model"
+// and "Upload Your Scene" so the upload lives as a card inside the grid itself.
+function UploadCard({
+  label,
+  previewUrl,
+  uploading,
+  active,
+  onFile,
+  onRemove,
+}: {
+  label: string;
+  previewUrl: string;
+  uploading: boolean;
+  active: boolean;
+  onFile: (file: File) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <label
+      className={clsx(
+        "group relative flex min-h-[118px] cursor-pointer flex-col items-center justify-center rounded-[24px] border p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4",
+        active || previewUrl
+          ? "scale-[1.025] border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/60"
+          : "border-slate-200 bg-white/90 hover:-translate-y-1 hover:border-cyan-300 hover:bg-white hover:shadow-xl hover:shadow-cyan-500/10 dark:border-white/10 dark:bg-white/[0.045] dark:hover:bg-white/[0.08]",
+        uploading && "pointer-events-none opacity-60",
+      )}
+    >
+      <div className="mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-[22px] bg-white text-cyan-700 sm:h-[76px] sm:w-[76px] sm:rounded-[26px]">
+        {previewUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={previewUrl} alt="" className="block h-full w-full object-cover" />
+        ) : (
+          <Upload className="h-8 w-8" />
+        )}
+      </div>
+      <p className={clsx("text-[12px] font-black leading-4 sm:text-sm", active || previewUrl ? "text-cyan-700 dark:text-cyan-200" : "text-slate-700 dark:text-white/75")}>
+        {uploading ? "Uploading…" : previewUrl ? `${label} ✓` : label}
+      </p>
+      <span className="mt-1 rounded-full bg-cyan-100 px-2 py-0.5 text-[9px] font-black text-cyan-700 dark:bg-cyan-400/20 dark:text-cyan-300">+2 Credits</span>
+      <input
+        type="file"
+        accept="image/*"
+        className="hidden"
+        disabled={uploading}
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (!f) return;
+          if (!f.type.startsWith("image/")) {
+            alert("Please upload an image file.");
+            e.target.value = "";
+            return;
+          }
+          onFile(f);
+          e.target.value = "";
+        }}
+      />
+      {previewUrl && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onRemove();
+          }}
+          className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow"
+          aria-label={`Remove ${label}`}
+        >
+          ✕
+        </button>
+      )}
+    </label>
+  );
+}
+
 function SelectionGrid({
   title,
   subtitle,
   options,
   value,
   onChange,
+  extraCard,
   footer,
 }: {
   title: string;
@@ -776,6 +850,7 @@ function SelectionGrid({
   options: OptionItem[];
   value: string;
   onChange: (value: string) => void;
+  extraCard?: React.ReactNode;
   footer?: React.ReactNode;
 }) {
   return (
@@ -788,6 +863,7 @@ function SelectionGrid({
         {options.map((option) => (
           <OptionCard key={option.label} option={option} active={value === option.label} onClick={() => onChange(option.label)} />
         ))}
+        {extraCard}
       </div>
       {footer ? <div className="mt-4 border-t border-black/5 pt-4 dark:border-white/10">{footer}</div> : null}
     </div>
@@ -3452,79 +3528,33 @@ if (!response.ok) {
 
                 {builderStep === 2 && (
                   <div className="space-y-4">
-                    {/* Shoot Style — now includes both shoot atmosphere AND model look.
-                        "Upload Your Scene" lives INSIDE this same box as a footer. */}
+                    {/* Shoot Style — "Upload Your Scene" is an in-grid card placed
+                        right after "Studio Professional" (the last option). */}
                     <SelectionGrid
                       title="Shoot Style &amp; Model Look"
-                      subtitle="One unified pick — lighting, background, presentation, plus Indian/bridal/luxury model aesthetic."
+                      subtitle="One unified pick — lighting, background, presentation. Last card: upload your own background scene."
                       options={SHOOT_STYLE_OPTIONS}
                       value={shootStyle}
                       onChange={setShootStyle}
-                      footer={
-                        <>
-                          <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">Upload Your Scene <span className="ml-2 rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-black text-cyan-700 dark:bg-cyan-400/20 dark:text-cyan-300">+2 Credits</span></p>
-                          <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/50">Upload your own background scene — AI will place the jewellery naturally into it, matching the scene&apos;s lighting and perspective.</p>
-                          <div className="mt-3">
-                            <label
-                              className={`group relative flex min-h-[116px] min-w-0 max-w-[160px] cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
-                                referenceSceneUrl
-                                  ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
-                                  : "bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10 dark:bg-white/[0.045] dark:hover:bg-white/[0.08]"
-                              } ${sceneUploading ? "pointer-events-none opacity-60" : ""}`}
-                            >
-                              <div className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${referenceSceneUrl ? "shadow-lg shadow-cyan-400/25" : "shadow-sm"}`}>
-                                {referenceSceneUrl ? (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img src={referenceSceneUrl} alt="" className="block h-full w-full object-cover" />
-                                ) : (
-                                  <span className="text-3xl" aria-hidden="true">📷</span>
-                                )}
-                              </div>
-                              <p className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${referenceSceneUrl ? "text-[#0077b6]" : "text-black/70 dark:text-white/70"}`}>
-                                {sceneUploading ? "Uploading…" : referenceSceneUrl ? "Scene Ready ✓" : "Upload Your Scene"}
-                              </p>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                disabled={sceneUploading}
-                                onChange={async (e) => {
-                                  const f = e.target.files?.[0];
-                                  if (!f) return;
-                                  if (!f.type.startsWith("image/")) {
-                                    alert("Please upload an image file.");
-                                    e.target.value = "";
-                                    return;
-                                  }
-                                  setSceneUploading(true);
-                                  try {
-                                    const url = await uploadFileToSupabase(f, "jewellery-scenes");
-                                    setReferenceSceneUrl(url);
-                                  } catch {
-                                    alert("Scene upload failed. Please try again.");
-                                  } finally {
-                                    setSceneUploading(false);
-                                    e.target.value = "";
-                                  }
-                                }}
-                              />
-                              {referenceSceneUrl && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setReferenceSceneUrl("");
-                                  }}
-                                  className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow"
-                                  aria-label="Remove scene"
-                                >
-                                  ✕
-                                </button>
-                              )}
-                            </label>
-                          </div>
-                        </>
+                      extraCard={
+                        <UploadCard
+                          label="Upload Your Scene"
+                          previewUrl={referenceSceneUrl}
+                          uploading={sceneUploading}
+                          active={false}
+                          onFile={async (f) => {
+                            setSceneUploading(true);
+                            try {
+                              const url = await uploadFileToSupabase(f, "jewellery-scenes");
+                              setReferenceSceneUrl(url);
+                            } catch {
+                              alert("Scene upload failed. Please try again.");
+                            } finally {
+                              setSceneUploading(false);
+                            }
+                          }}
+                          onRemove={() => setReferenceSceneUrl("")}
+                        />
                       }
                     />
 
@@ -3582,95 +3612,54 @@ if (!response.ok) {
 
                 {builderStep === 3 && (
                   <div className="space-y-4">
-                    {/* Model Look — Upload Your Model upload UI lives INSIDE this
-                        same box (footer), shown only when that card is picked. */}
+                    {/* Model Look — "Upload Your Model" is an in-grid card (last
+                        card). Uploading it sets modelLook + the model photo. The
+                        only thing in the footer is the consent checkbox. */}
                     <SelectionGrid
                       title="Model Look"
-                      subtitle="Which model wears your jewellery — No Model for product-only, or Upload Your Model for your own photo."
+                      subtitle="Which model wears your jewellery — No Model for product-only, or Upload Your Model (last card) for your own photo."
                       options={JEWEL_MODEL_LOOK_OPTIONS}
                       value={modelLook}
                       onChange={setModelLook}
+                      extraCard={
+                        <UploadCard
+                          label="Upload Your Model"
+                          previewUrl={modelPhotoUrl}
+                          uploading={modelPhotoUploading}
+                          active={modelLook === "Upload Your Model"}
+                          onFile={async (f) => {
+                            setModelPhotoUploading(true);
+                            try {
+                              const url = await uploadFileToSupabase(f, "jewellery-model-photos");
+                              setModelPhotoUrl(url);
+                              setModelLook("Upload Your Model");
+                              setTryOnConsent(false);
+                            } catch {
+                              alert("Photo upload failed. Please try again.");
+                            } finally {
+                              setModelPhotoUploading(false);
+                            }
+                          }}
+                          onRemove={() => {
+                            setModelPhotoUrl("");
+                            setTryOnConsent(false);
+                            if (modelLook === "Upload Your Model") setModelLook("No Model");
+                          }}
+                        />
+                      }
                       footer={
-                        modelLook === "Upload Your Model" ? (
-                          <>
-                            <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">Upload Your Model <span className="ml-2 rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-black text-cyan-700 dark:bg-cyan-400/20 dark:text-cyan-300">+2 Credits</span></p>
-                            <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/50">Upload your own model photo — the AI will render the jewellery on the exact person in your photo. Face and identity preserved.</p>
-                            <div className="mt-3">
-                              <label
-                                className={`group relative flex min-h-[116px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
-                                  modelPhotoUrl
-                                    ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
-                                    : "bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10 dark:bg-white/[0.045] dark:hover:bg-white/[0.08]"
-                                } ${modelPhotoUploading ? "pointer-events-none opacity-60" : ""} max-w-[160px]`}
-                              >
-                                <div className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${modelPhotoUrl ? "shadow-lg shadow-cyan-400/25" : "shadow-sm"}`}>
-                                  {modelPhotoUrl ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={modelPhotoUrl} alt="" className="block h-full w-full object-cover" />
-                                  ) : (
-                                    <Upload className="h-9 w-9 text-cyan-500" aria-hidden="true" />
-                                  )}
-                                </div>
-                                <p className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${modelPhotoUrl ? "text-[#0077b6]" : "text-black/70 dark:text-white/70"}`}>
-                                  {modelPhotoUploading ? "Uploading…" : modelPhotoUrl ? "Your Photo ✓" : "Upload Your Model"}
-                                </p>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  disabled={modelPhotoUploading}
-                                  onChange={async (e) => {
-                                    const f = e.target.files?.[0];
-                                    if (!f) return;
-                                    if (!f.type.startsWith("image/")) {
-                                      alert("Please upload an image file.");
-                                      e.target.value = "";
-                                      return;
-                                    }
-                                    setModelPhotoUploading(true);
-                                    try {
-                                      const url = await uploadFileToSupabase(f, "jewellery-model-photos");
-                                      setModelPhotoUrl(url);
-                                      setTryOnConsent(false);
-                                    } catch {
-                                      alert("Photo upload failed. Please try again.");
-                                    } finally {
-                                      setModelPhotoUploading(false);
-                                      e.target.value = "";
-                                    }
-                                  }}
-                                />
-                                {modelPhotoUrl && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      setModelPhotoUrl("");
-                                      setTryOnConsent(false);
-                                    }}
-                                    className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow"
-                                    aria-label="Remove photo"
-                                  >
-                                    ✕
-                                  </button>
-                                )}
-                              </label>
-                            </div>
-                            {modelPhotoUrl && (
-                              <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-50/60 p-3 text-xs text-slate-600 dark:border-white/15 dark:bg-white/[0.03] dark:text-white/75">
-                                <input
-                                  type="checkbox"
-                                  checked={tryOnConsent}
-                                  onChange={(e) => setTryOnConsent(e.target.checked)}
-                                  className="mt-0.5 h-4 w-4 shrink-0 accent-cyan-600"
-                                />
-                                <span>
-                                  This is my own photo (or I have permission to use it), and I will use it only for this jewellery preview. AgentForge will delete it after the result is generated.
-                                </span>
-                              </label>
-                            )}
-                          </>
+                        modelPhotoUrl ? (
+                          <label className="flex cursor-pointer items-start gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-50/60 p-3 text-xs text-slate-600 dark:border-white/15 dark:bg-white/[0.03] dark:text-white/75">
+                            <input
+                              type="checkbox"
+                              checked={tryOnConsent}
+                              onChange={(e) => setTryOnConsent(e.target.checked)}
+                              className="mt-0.5 h-4 w-4 shrink-0 accent-cyan-600"
+                            />
+                            <span>
+                              This is my own photo (or I have permission to use it), and I will use it only for this jewellery preview. AgentForge will delete it after the result is generated.
+                            </span>
+                          </label>
                         ) : null
                       }
                     />
