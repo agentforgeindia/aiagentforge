@@ -5,6 +5,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { daySlots, isWorkingDay, slotIso, slotLabel } from "@/lib/meetingSlots";
+import { listZoomMeetings } from "@/lib/zoom";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,6 +42,18 @@ export async function GET(req: Request) {
     const takenMs = new Set(
       (booked || []).map((b) => new Date(b.start_time).getTime()),
     );
+
+    // Also block slots for meetings created directly in the Zoom app (they are
+    // not in our DB). Best-effort — never fail slot loading over it.
+    try {
+      const zoomList = await listZoomMeetings("upcoming");
+      for (const z of zoomList) {
+        if (z.start_time) takenMs.add(new Date(z.start_time).getTime());
+      }
+    } catch {
+      /* ignore Zoom errors */
+    }
+
     const now = Date.now();
 
     // Return ALL slots with availability flags so the UI can show

@@ -167,13 +167,14 @@ export default function BookMeetingPage() {
     }
   };
 
-  const cardCls = "border-black/10 bg-white/75 shadow-xl shadow-black/5 backdrop-blur";
+  const cardCls =
+    "border-black/10 bg-white/75 shadow-xl shadow-black/5 backdrop-blur dark:border-white/10 dark:bg-white/[0.05] dark:shadow-black/40";
 
   return (
-    <main className="relative isolate min-h-screen overflow-hidden bg-[#f8fbff] px-4 py-10 text-slate-950">
+    <main className="relative isolate min-h-screen overflow-hidden bg-[#f8fbff] px-4 py-10 text-slate-950 dark:bg-[#070b14] dark:text-white">
       {/* ===== Premium home-style background + doodles ===== */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee22,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf622,transparent_35%),radial-gradient(circle_at_bottom,#f59e0b18,transparent_35%),linear-gradient(180deg,#f8fbff_0%,#eef8ff_55%,#fffaf2_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#22d3ee22,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf622,transparent_35%),radial-gradient(circle_at_bottom,#f59e0b18,transparent_35%),linear-gradient(180deg,#f8fbff_0%,#eef8ff_55%,#fffaf2_100%)] dark:bg-[radial-gradient(circle_at_top_left,#22d3ee1a,transparent_35%),radial-gradient(circle_at_top_right,#8b5cf61a,transparent_35%),radial-gradient(circle_at_bottom,#f59e0b12,transparent_35%),linear-gradient(180deg,#070b14_0%,#0b1220_55%,#0a0f1c_100%)]" />
         <div className="absolute inset-0 opacity-[0.12]">
           <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -200,7 +201,7 @@ export default function BookMeetingPage() {
         ].map((x, n) => (
           <div
             key={n}
-            className="absolute rounded-[1.4rem] bg-white/70 p-3 text-3xl shadow-xl backdrop-blur-md"
+            className="absolute rounded-[1.4rem] bg-white/70 p-3 text-3xl shadow-xl backdrop-blur-md dark:bg-white/10"
             style={{ left: x.l, top: x.t, animation: `bmFloat ${9 + n}s ease-in-out infinite`, animationDelay: `${n * 0.6}s` }}
           >
             {x.i}
@@ -212,7 +213,7 @@ export default function BookMeetingPage() {
         {/* Header */}
         <div className="mb-8 text-center">
           <img src="/af-logo.png" alt="AgentForge" className="mx-auto h-12 w-auto" />
-          <div className="mt-4 inline-flex rounded-full border border-cyan-200 bg-cyan-50 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-cyan-700">
+          <div className="mt-4 inline-flex rounded-full border border-cyan-200 bg-cyan-50 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-cyan-700 dark:border-cyan-400/30 dark:bg-cyan-400/10 dark:text-cyan-300">
             Online · Zoom Meeting
           </div>
           <h1 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl">
@@ -221,7 +222,7 @@ export default function BookMeetingPage() {
               Meeting
             </span>
           </h1>
-          <p className="mt-3 text-sm font-semibold text-slate-600">
+          <p className="mt-3 text-sm font-semibold text-slate-600 dark:text-white/60">
             Mon–Sat · 11:00 AM – 7:00 PM IST · 30-minute slots · live on Zoom · ₹99
           </p>
         </div>
@@ -230,14 +231,14 @@ export default function BookMeetingPage() {
           <div className={`rounded-[2rem] border ${cardCls} mx-auto max-w-xl p-8 text-center`}>
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-4xl">✓</div>
             <h2 className="mt-4 text-2xl font-black">You&apos;re booked! 🎉</h2>
-            <p className="mt-2 text-sm font-bold text-slate-600">
+            <p className="mt-2 text-sm font-bold text-slate-600 dark:text-white/60">
               {new Date(done.start_time).toLocaleString("en-IN", { dateStyle: "full", timeStyle: "short" })}
             </p>
             <a href={done.join_url} target="_blank" rel="noopener noreferrer"
               className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-violet-700 px-7 py-3.5 text-sm font-black uppercase tracking-wide text-white shadow-xl">
               📹 Join Zoom Link
             </a>
-            <p className="mt-4 text-xs font-medium text-slate-500">Save this link — we&apos;ll also reach out on your email/phone.</p>
+            <p className="mt-4 text-xs font-medium text-slate-500 dark:text-white/55">Save this link — we&apos;ll also reach out on your email/phone.</p>
           </div>
         ) : (
           <div className="grid gap-5 lg:grid-cols-2">
@@ -247,12 +248,12 @@ export default function BookMeetingPage() {
                 <p className="text-base font-black">{MONTHS[cursor.m]} {cursor.y}</p>
                 <div className="flex gap-2">
                   <button type="button" onClick={prevMonth} disabled={atCurrentMonth}
-                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-30">‹</button>
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 dark:text-white/75 hover:bg-slate-50 disabled:opacity-30 dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/20">‹</button>
                   <button type="button" onClick={nextMonth}
-                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50">›</button>
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 dark:text-white/75 hover:bg-slate-50 dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/20">›</button>
                 </div>
               </div>
-              <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-black uppercase tracking-wide text-slate-400">
+              <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-black uppercase tracking-wide text-slate-400 dark:text-white/45">
                 {WD.map((w) => <div key={w} className="py-1">{w[0]}</div>)}
               </div>
               <div className="mt-1 grid grid-cols-7 gap-1">
@@ -272,8 +273,8 @@ export default function BookMeetingPage() {
                         isSel
                           ? "bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg"
                           : disabled
-                            ? "cursor-not-allowed text-slate-300"
-                            : `text-slate-700 hover:bg-cyan-50 ${isToday ? "ring-2 ring-cyan-300" : ""}`
+                            ? "cursor-not-allowed text-slate-300 dark:text-white/25"
+                            : `text-slate-700 dark:text-white/75 hover:bg-cyan-50 dark:hover:bg-cyan-400/10 ${isToday ? "ring-2 ring-cyan-300" : ""}`
                       }`}
                     >
                       {d}
@@ -281,7 +282,7 @@ export default function BookMeetingPage() {
                   );
                 })}
               </div>
-              <p className="mt-4 text-[11px] font-semibold text-slate-400">Sundays closed · past dates disabled</p>
+              <p className="mt-4 text-[11px] font-semibold text-slate-400 dark:text-white/45">Sundays closed · past dates disabled</p>
             </div>
 
             {/* ===== Slots (seats) ===== */}
@@ -289,7 +290,7 @@ export default function BookMeetingPage() {
               {!selected ? (
                 <div className="flex h-full min-h-[260px] flex-col items-center justify-center text-center">
                   <span className="text-4xl">📅</span>
-                  <p className="mt-3 text-sm font-bold text-slate-500">Pick a date to see available seats</p>
+                  <p className="mt-3 text-sm font-bold text-slate-500 dark:text-white/55">Pick a date to see available seats</p>
                 </div>
               ) : (
                 <>
@@ -297,14 +298,14 @@ export default function BookMeetingPage() {
                     <p className="text-sm font-black">
                       {new Date(selected + "T12:00:00").toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short" })}
                     </p>
-                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-black text-emerald-700">
+                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-black text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">
                       {avail} seats left
                     </span>
                   </div>
                   {loadingSlots ? (
-                    <p className="py-10 text-center text-sm text-slate-500">Loading…</p>
+                    <p className="py-10 text-center text-sm text-slate-500 dark:text-white/55">Loading…</p>
                   ) : closed ? (
-                    <p className="py-10 text-center text-sm text-slate-500">Closed on Sundays.</p>
+                    <p className="py-10 text-center text-sm text-slate-500 dark:text-white/55">Closed on Sundays.</p>
                   ) : (
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                       {slots.map((s) => (
@@ -317,12 +318,12 @@ export default function BookMeetingPage() {
                             picked?.iso === s.iso
                               ? "border-cyan-500 bg-cyan-500 text-white shadow"
                               : s.available
-                                ? "border-slate-200 bg-white text-slate-700 hover:border-cyan-300 hover:bg-cyan-50"
-                                : "cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300 line-through"
+                                ? "border-slate-200 bg-white text-slate-700 dark:text-white/75 hover:border-cyan-300 hover:bg-cyan-50 dark:border-white/10 dark:bg-white/10 dark:hover:border-cyan-400/40 dark:hover:bg-cyan-400/10"
+                                : "cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300 dark:text-white/25 line-through dark:border-white/5 dark:bg-white/[0.03]"
                           }`}
                         >
                           <span className="text-sm font-black">{s.label}</span>
-                          <span className={`text-[9px] font-bold uppercase tracking-wide ${picked?.iso === s.iso ? "text-white/80" : s.available ? "text-emerald-600" : "text-slate-300"}`}>
+                          <span className={`text-[9px] font-bold uppercase tracking-wide ${picked?.iso === s.iso ? "text-white/80" : s.available ? "text-emerald-600" : "text-slate-300 dark:text-white/25"}`}>
                             {s.available ? "1 seat" : s.taken ? "Booked" : "—"}
                           </span>
                         </button>
@@ -343,14 +344,14 @@ export default function BookMeetingPage() {
                   </span>
                 </p>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name *" className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20" />
-                  <select value={type} onChange={(e) => setType(e.target.value)} className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm focus:border-cyan-500 focus:outline-none">
+                  <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name *" className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-white/15 dark:bg-white/10 dark:text-white dark:placeholder:text-white/40 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20" />
+                  <select value={type} onChange={(e) => setType(e.target.value)} className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-white/15 dark:bg-white/10 dark:text-white dark:placeholder:text-white/40 focus:border-cyan-500 focus:outline-none">
                     {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
-                  <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20" />
-                  <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20" />
+                  <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-white/15 dark:bg-white/10 dark:text-white dark:placeholder:text-white/40 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20" />
+                  <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-white/15 dark:bg-white/10 dark:text-white dark:placeholder:text-white/40 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20" />
                 </div>
-                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="What would you like to discuss? (optional)" rows={2} className="mt-3 w-full resize-none rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm focus:border-cyan-500 focus:outline-none" />
+                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="What would you like to discuss? (optional)" rows={2} className="mt-3 w-full resize-none rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm dark:border-white/15 dark:bg-white/10 dark:text-white dark:placeholder:text-white/40 focus:border-cyan-500 focus:outline-none" />
                 <button type="button" onClick={book} disabled={booking}
                   className="mt-4 w-full rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-violet-700 px-6 py-4 text-sm font-black uppercase tracking-wide text-white shadow-xl shadow-violet-500/25 transition hover:scale-[1.01] active:scale-95 disabled:opacity-60">
                   {booking ? "Processing…" : "Pay ₹99 & Book Meeting →"}
@@ -360,7 +361,7 @@ export default function BookMeetingPage() {
           </div>
         )}
 
-        <p className="mt-8 text-center text-xs font-medium text-slate-400">
+        <p className="mt-8 text-center text-xs font-medium text-slate-400 dark:text-white/45">
           Powered by AgentForge AI · Secure meeting on Zoom
         </p>
       </div>
