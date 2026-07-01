@@ -90,24 +90,63 @@ export type ZoomListItem = {
 // List the host's scheduled/upcoming meetings straight from Zoom, so meetings
 // created directly in the Zoom app still show up in the admin panel.
 export async function listZoomMeetings(
-  type: "upcoming" | "scheduled" = "upcoming",
+  _type: "upcoming" | "scheduled" = "upcoming",
 ): Promise<ZoomListItem[]> {
   if (!zoomConfigured()) return [];
   const token = await getAccessToken();
-  const res = await fetch(
-    `https://api.zoom.us/v2/users/${encodeURIComponent(HOST_EMAIL!)}/meetings?type=${type}&page_size=100`,
-    { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" },
-  );
-  const json = await res.json();
-  if (!res.ok || !Array.isArray(json.meetings)) return [];
-  return json.meetings.map((m: any) => ({
-    id: String(m.id),
-    topic: m.topic || "Zoom Meeting",
-    start_time: m.start_time || "",
-    duration: Number(m.duration) || 30,
-    join_url: m.join_url || "",
-    agenda: m.agenda || "",
-  }));
+  // Fetch BOTH "scheduled" and "upcoming" and merge — Zoom splits meetings
+  // across these buckets, so one query alone can miss some.
+  const byId = new Map<string, ZoomListItem>();
+  for (const type of ["scheduled", "upcoming"] as const) {
+    try {
+      const res = await fetch(
+        `https://api.zoom.us/v2/users/${encodeURIComponent(HOST_EMAIL!)}/meetings?type=${type}&page_size=300`,
+        { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" },
+      );
+      const json = await res.json();
+      if (!res.ok || !Array.isArray(json.meetings)) continue;
+      for (const m of json.meetings) {
+        const id = String(m.id);
+        if (!byId.has(id)) {
+          byId.set(id, {
+            id,
+            topic: m.topic || "Zoom Meeting",
+            start_time: m.start_time || "",
+            duration: Number(m.duration) || 30,
+            join_url: m.join_url || "",
+            agenda: m.agenda || "",
+          });
+        }
+      }
+    } catch {
+      /* skip this bucket */
+    }
+  }
+  return [...byId.values()];
+}
+
+// Reschedule / edit an existing meeting (topic, start time, duration, agenda).
+export async function updateZoomMeeting(
+  meetingId: string,
+  opts: { topic?: string; startTime?: string; duration?: number; agenda?: string },
+): Promise<void> {
+  if (!zoomConfigured() || !meetingId) throw new Error("Zoom is not configured.");
+  const token = await getAccessToken();
+  const patch: Record<string, unknown> = { timezone: "Asia/Kolkata" };
+  if (opts.topic) patch.topic = opts.topic;
+  if (opts.startTime) patch.start_time = opts.startTime;
+  if (typeof opts.duration === "number") patch.duration = opts.duration;
+  if (opts.agenda !== undefined) patch.agenda = opts.agenda;
+  const res = await fetch(`https://api.zoom.us/v2/meetings/${meetingId}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+    cache: "no-store",
+  });
+  if (!res.ok && res.status !== 204) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error("Zoom update failed: " + ((json as any).message || res.status));
+  }
 }
 
 // Cancel/delete a scheduled meeting (best-effort).

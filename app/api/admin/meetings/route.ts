@@ -2,7 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { createZoomMeeting, deleteZoomMeeting, listZoomMeetings, zoomConfigured } from "@/lib/zoom";
+import { createZoomMeeting, deleteZoomMeeting, listZoomMeetings, updateZoomMeeting, zoomConfigured } from "@/lib/zoom";
 
 // A datetime-local value ("2026-07-06T11:00") carries no timezone. The admin
 // means IST. Return { zoomLocal } (naive local for Zoom + timezone) and
@@ -138,6 +138,62 @@ export async function POST(req: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true, meeting: data });
+}
+
+// Edit / reschedule an existing meeting (topic, start_time, duration, notes).
+export async function PATCH(req: Request) {
+  if (!(await isAdmin(req.headers.get("authorization"))))
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const body = await req.json().catch(() => ({}));
+  const { id, topic, meeting_type, name, start_time, duration, notes } = body as Record<string, any>;
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+
+  const dur = duration ? Number(duration) : undefined;
+  const norm = start_time ? normalizeStartIST(String(start_time)) : null;
+  const agenda = [meeting_type, name && `With ${name}`, notes].filter(Boolean).join(" — ").slice(0, 1000);
+
+  // Resolve the Zoom meeting id.
+  let zoomId = "";
+  let dbId = "";
+  if (String(id).startsWith("zoom-")) {
+    zoomId = String(id).slice(5);
+  } else {
+    dbId = String(id);
+    const { data: row } = await db.from("meetings").select("zoom_meeting_id").eq("id", dbId).maybeSingle();
+    zoomId = row?.zoom_meeting_id ? String(row.zoom_meeting_id) : "";
+  }
+
+  // Update Zoom first.
+  if (zoomId) {
+    try {
+      await updateZoomMeeting(zoomId, {
+        topic: topic ? String(topic).slice(0, 200) : undefined,
+        startTime: norm?.zoomLocal,
+        duration: dur,
+        agenda,
+      });
+    } catch (e: any) {
+      return NextResponse.json({ error: e?.message || "Zoom update failed." }, { status: 500 });
+    }
+  }
+
+  // Update our DB row (only if it's a tracked meeting; zoom-only rows sync via webhook/live-merge).
+  if (dbId) {
+    const patch: Record<string, unknown> = {};
+    if (topic) patch.topic = String(topic).slice(0, 200);
+    if (meeting_type !== undefined) patch.meeting_type = meeting_type || null;
+    if (name !== undefined) patch.name = name || null;
+    if (norm) patch.start_time = norm.dbIso;
+    if (dur) patch.duration = dur;
+    if (notes !== undefined) patch.notes = notes || null;
+    if (Object.keys(patch).length) {
+      const { error } = await db.from("meetings").update(patch).eq("id", dbId);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+  }
+
+  return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(req: Request) {
