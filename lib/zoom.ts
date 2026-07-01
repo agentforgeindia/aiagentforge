@@ -78,6 +78,38 @@ export async function createZoomMeeting(opts: {
   };
 }
 
+export type ZoomListItem = {
+  id: string;
+  topic: string;
+  start_time: string; // ISO with offset (UTC 'Z') from Zoom
+  duration: number;
+  join_url: string;
+  agenda?: string;
+};
+
+// List the host's scheduled/upcoming meetings straight from Zoom, so meetings
+// created directly in the Zoom app still show up in the admin panel.
+export async function listZoomMeetings(
+  type: "upcoming" | "scheduled" = "upcoming",
+): Promise<ZoomListItem[]> {
+  if (!zoomConfigured()) return [];
+  const token = await getAccessToken();
+  const res = await fetch(
+    `https://api.zoom.us/v2/users/${encodeURIComponent(HOST_EMAIL!)}/meetings?type=${type}&page_size=100`,
+    { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" },
+  );
+  const json = await res.json();
+  if (!res.ok || !Array.isArray(json.meetings)) return [];
+  return json.meetings.map((m: any) => ({
+    id: String(m.id),
+    topic: m.topic || "Zoom Meeting",
+    start_time: m.start_time || "",
+    duration: Number(m.duration) || 30,
+    join_url: m.join_url || "",
+    agenda: m.agenda || "",
+  }));
+}
+
 // Cancel/delete a scheduled meeting (best-effort).
 export async function deleteZoomMeeting(meetingId: string): Promise<void> {
   if (!zoomConfigured() || !meetingId) return;

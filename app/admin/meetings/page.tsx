@@ -187,7 +187,7 @@ export default function AdminMeetingsPage() {
                     {m.source === "public" && <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">Self-booked</span>}
                   </p>
                   <p className={`mt-0.5 text-xs ${adminMutedCls}`}>
-                    {new Date(m.start_time).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })} · {m.duration} min
+                    {new Date(m.start_time).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kolkata" })} · {m.duration} min
                     {m.name ? ` · ${m.name}` : ""}{m.phone ? ` · ${m.phone}` : ""}
                   </p>
                 </div>
