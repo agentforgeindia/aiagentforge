@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { CalendarClock, RefreshCw, ShieldCheck, Trash2, Video } from "lucide-react";
+import { CalendarClock, Pencil, RefreshCw, ShieldCheck, Trash2, Video, X } from "lucide-react";
 import AdminShell, {
   adminCardCls,
   adminInputCls,
@@ -51,6 +51,7 @@ export default function AdminMeetingsPage() {
   const [duration, setDuration] = useState(30);
   const [notes, setNotes] = useState("");
   const [posting, setPosting] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const token = useMemo(
     () => async () => (await supabase.auth.getSession()).data.session?.access_token ?? "",
@@ -73,6 +74,33 @@ export default function AdminMeetingsPage() {
     })();
   }, [canView, refreshKey, token]);
 
+  // Convert an ISO start_time to the "YYYY-MM-DDTHH:mm" value a datetime-local
+  // input expects, rendered in IST.
+  const toLocalInputIST = (iso: string): string => {
+    const d = new Date(iso);
+    const ist = new Date(d.getTime() + (330 + d.getTimezoneOffset()) * 60000);
+    const p = (n: number) => String(n).padStart(2, "0");
+    return `${ist.getFullYear()}-${p(ist.getMonth() + 1)}-${p(ist.getDate())}T${p(ist.getHours())}:${p(ist.getMinutes())}`;
+  };
+
+  const startEdit = (m: Meeting) => {
+    setEditingId(m.id);
+    setTopic(m.topic || "");
+    setType(m.meeting_type || "Demo");
+    setName(m.name || "");
+    setEmail(m.email || "");
+    setPhone(m.phone || "");
+    setStartTime(toLocalInputIST(m.start_time));
+    setDuration(m.duration || 30);
+    setNotes("");
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setTopic(""); setName(""); setEmail(""); setPhone(""); setStartTime(""); setNotes(""); setDuration(30);
+  };
+
   const schedule = async () => {
     if (!topic.trim() || !startTime) {
       alert("Topic aur date/time zaroori hai.");
@@ -80,20 +108,23 @@ export default function AdminMeetingsPage() {
     }
     setPosting(true);
     try {
+      const editing = Boolean(editingId);
       const res = await fetch("/api/admin/meetings", {
-        method: "POST",
+        method: editing ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${await token()}` },
         body: JSON.stringify({
+          ...(editing ? { id: editingId } : {}),
           topic, meeting_type: type, name, email, phone,
           start_time: startTime, duration, notes,
         }),
       });
       const json = await res.json();
       if (!res.ok) {
-        alert(json.error || "Could not schedule.");
+        alert(json.error || (editing ? "Could not update." : "Could not schedule."));
         return;
       }
-      setTopic(""); setName(""); setEmail(""); setPhone(""); setStartTime(""); setNotes("");
+      setEditingId(null);
+      setTopic(""); setName(""); setEmail(""); setPhone(""); setStartTime(""); setNotes(""); setDuration(30);
       setRefreshKey((k) => k + 1);
     } finally {
       setPosting(false);
@@ -161,10 +192,17 @@ export default function AdminMeetingsPage() {
           </select>
         </div>
         <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes (optional)" rows={2} className={`${adminInputCls} resize-none`} />
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          {editingId && (
+            <button type="button" onClick={cancelEdit} disabled={posting} className={adminSecondaryBtnCls}>
+              <X className="h-4 w-4" /> Cancel edit
+            </button>
+          )}
           <button type="button" onClick={schedule} disabled={posting || !zoomReady} className={adminPrimaryBtnCls}>
             <CalendarClock className="h-4 w-4" />
-            {posting ? "Scheduling…" : "Schedule Zoom Meeting"}
+            {posting
+              ? (editingId ? "Updating…" : "Scheduling…")
+              : (editingId ? "Update Meeting" : "Schedule Zoom Meeting")}
           </button>
         </div>
       </div>
@@ -184,7 +222,8 @@ export default function AdminMeetingsPage() {
                     {m.topic}
                     {m.meeting_type && <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-white/10 dark:text-slate-300">{m.meeting_type}</span>}
                     {m.status === "cancelled" && <span className="ml-2 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700">Cancelled</span>}
-                    {m.source === "public" && <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">Self-booked</span>}
+                    {m.source === "public" && <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300">Paid · Self-booked</span>}
+                    {m.source === "zoom" && <span className="ml-2 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold text-violet-700 dark:bg-violet-400/15 dark:text-violet-300">Zoom</span>}
                   </p>
                   <p className={`mt-0.5 text-xs ${adminMutedCls}`}>
                     {new Date(m.start_time).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kolkata" })} · {m.duration} min
@@ -195,6 +234,11 @@ export default function AdminMeetingsPage() {
                   <a href={m.join_url} target="_blank" rel="noopener noreferrer" className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-blue-500">
                     <Video className="h-3.5 w-3.5" /> Join
                   </a>
+                )}
+                {m.status !== "cancelled" && (
+                  <button type="button" onClick={() => startEdit(m)} className="shrink-0 rounded-lg p-2 text-slate-500 hover:bg-slate-500/10 dark:text-white/60" aria-label="Edit">
+                    <Pencil className="h-4 w-4" />
+                  </button>
                 )}
                 {m.status !== "cancelled" && (
                   <button type="button" onClick={() => cancel(m.id)} className="shrink-0 rounded-lg p-2 text-rose-500 hover:bg-rose-500/10" aria-label="Cancel">
