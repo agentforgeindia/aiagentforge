@@ -33,6 +33,8 @@ export default function LayoutClient({
   const pathname = usePathname();
 
   const isWorkshopPage = pathname.startsWith("/workshop");
+  // Standalone conversion page — own header/CTA, same treatment as /workshop.
+  const isOnsiteTrainingPage = pathname.startsWith("/onsite-training");
   const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/signup");
   // Invoice / bill download pages render plain — no navbar, footer,
   // chat or popup — so the browser's "Save as PDF" produces a clean,
@@ -43,7 +45,7 @@ export default function LayoutClient({
   const isAdminPage = pathname.startsWith("/admin");
 
   const hideChrome =
-    isWorkshopPage || isAuthPage || isInvoicePage || isAdminPage;
+    isWorkshopPage || isOnsiteTrainingPage || isAuthPage || isInvoicePage || isAdminPage;
 
   return (
     <>
