@@ -22,7 +22,7 @@ export const metadata: Metadata = {
       "We're visiting showrooms and factories next week to train staff on generating AI catalogue mockups live. Book your date.",
     url: `${SITE}/onsite-training`,
     siteName: "AgentForge AI",
-    images: [{ url: "/banner1.png", width: 1200, height: 630, alt: "AgentForge On-Site AI Training" }],
+    images: [{ url: "/banner.jpeg", width: 1600, height: 666, alt: "AgentForge — Create Anything. Show Everything." }],
     locale: "en_IN",
     type: "website",
   },
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Free On-Site AI Training — AgentForge Comes to Your Showroom",
     description: "Book a free on-site visit — hands-on AI mockup training for your staff.",
-    images: ["/banner1.png"],
+    images: ["/banner.jpeg"],
   },
 };
 
