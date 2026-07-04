@@ -828,7 +828,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
+          <div className="grid items-start gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
             {[
               {
                 href: "/ai-textile-mockup-generator-india",
