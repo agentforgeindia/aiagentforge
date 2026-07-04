@@ -876,7 +876,7 @@ export default function Home() {
                     : "border-black/10 bg-white/85 hover:border-cyan-300"
                 }`}
               >
-                <div className={`relative aspect-[16/10] w-full overflow-hidden ${item.tintBg}`}>
+                <div className={`relative aspect-square w-full overflow-hidden ${item.tintBg}`}>
                   <img
                     src={item.icon}
                     alt={`${item.title} icon`}
