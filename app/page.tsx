@@ -865,42 +865,47 @@ export default function Home() {
                 icon: "/Productography-icons/cosmatics.svg",
                 tintBg: darkMode ? "bg-emerald-500/10" : "bg-emerald-50",
               },
-            ].map((item) => (
+            ].map((item, i) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`group relative flex flex-col overflow-hidden rounded-[1.5rem] border p-5 shadow-lg backdrop-blur transition hover:-translate-y-1 hover:shadow-xl ${
+                style={{ animation: `afCardFloat 5s ease-in-out ${i * 0.3}s infinite` }}
+                className={`group relative flex flex-col overflow-hidden rounded-[1.5rem] border shadow-lg backdrop-blur transition hover:-translate-y-1 hover:shadow-xl ${
                   darkMode
                     ? "border-white/10 bg-white/[0.05] hover:border-cyan-300/50"
                     : "border-black/10 bg-white/85 hover:border-cyan-300"
                 }`}
               >
-                <div
-                  className={`flex aspect-[16/10] w-full items-center justify-center rounded-2xl ${item.tintBg}`}
-                >
+                <div className={`relative aspect-[16/10] w-full overflow-hidden ${item.tintBg}`}>
                   <img
                     src={item.icon}
                     alt={`${item.title} icon`}
-                    width={160}
-                    height={160}
                     loading="lazy"
-                    className="h-20 w-20 object-contain transition group-hover:scale-110 sm:h-24 sm:w-24"
-                    style={{ mixBlendMode: darkMode ? "screen" : "multiply" }}
+                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                     onError={(e) => {
                       (e.currentTarget as HTMLImageElement).style.display = "none";
                     }}
                   />
                 </div>
-                <h4 className="mt-4 text-base font-black leading-snug sm:text-lg">{item.title}</h4>
-                <p className={`mt-2 line-clamp-2 text-xs leading-5 sm:text-sm sm:leading-6 ${muted}`}>
-                  {item.desc}
-                </p>
-                <span className="mt-4 inline-flex items-center gap-1 text-[11px] font-black text-cyan-600 dark:text-cyan-300">
-                  Open →
-                </span>
+                <div className="flex flex-col p-5">
+                  <h4 className="text-base font-black leading-snug sm:text-lg">{item.title}</h4>
+                  <p className={`mt-2 line-clamp-2 text-xs leading-5 sm:text-sm sm:leading-6 ${muted}`}>
+                    {item.desc}
+                  </p>
+                  <span className="mt-4 inline-flex items-center gap-1 text-[11px] font-black text-cyan-600 dark:text-cyan-300">
+                    Open →
+                  </span>
+                </div>
               </Link>
             ))}
           </div>
+
+          <style>{`
+            @keyframes afCardFloat {
+              0%, 100% { transform: translateY(0); }
+              50%      { transform: translateY(-6px); }
+            }
+          `}</style>
 
           <div className="mt-6 text-center">
             <Link

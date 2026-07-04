@@ -225,7 +225,7 @@ export default function HomeSocialSection({
     return () => window.clearInterval(id);
   }, [paused, ready]);
 
-  // Smooth-scroll the active slide into view.
+  // Smooth-scroll the active slide flush to the start of the viewport.
   useEffect(() => {
     const container = sliderRef.current;
     if (!container) return;
@@ -512,6 +512,12 @@ export default function HomeSocialSection({
               </div>
             );
           })}
+          {/* Trailing spacer — gives the scroll container enough travel
+              room to snap the last card(s) flush to the start; without
+              it, the browser clamps scrollLeft short and leaves a sliver
+              of the previous card visible. Sized to a full container
+              width so this holds regardless of card count or breakpoint. */}
+          <div aria-hidden className="w-full shrink-0" />
         </div>
       </div>
 

@@ -150,7 +150,7 @@ export default function NotificationBell() {
 
       {open && (
         <div
-          className={`absolute right-0 top-12 z-[9999] w-80 overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-2xl ${
+          className={`fixed inset-x-4 top-16 z-[9999] overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-2xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-80 ${
             darkMode
               ? "border-white/10 bg-[#0b1220]/98 text-white"
               : "border-black/10 bg-white/98 text-black"
