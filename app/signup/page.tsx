@@ -152,6 +152,14 @@ export default function SignupPage() {
         return;
       }
 
+      // Email confirmation ON → user is created but no session yet.
+      // Don't send them to home logged-out; ask them to verify, then login.
+      if (data.user && !data.session) {
+        setMessage("Account created! Please check your email to verify, then login.");
+        setTimeout(() => router.push("/login"), 2500);
+        return;
+      }
+
       if (data.user) {
         const profileReady = await ensureUserProfile(data.user.id, data.user.email, name);
         if (!profileReady) return;

@@ -20,7 +20,7 @@
     "@fontsource/noto-sans-tamil": "^5.1.0",
     "@fontsource/noto-sans-telugu": "^5.1.0",
     "@fontsource/poppins": "^5.1.0",
-    "@supabase/supabase-js": "^2.104.1",
+    "@supabase/supabase-js": "^2.110.8",
     "@types/nodemailer": "^8.0.0",
     "lucide-react": "^1.14.0",
     "next": "16.2.4",
