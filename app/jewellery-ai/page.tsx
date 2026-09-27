@@ -234,13 +234,9 @@ const POSE_OPTIONS: OptionItem[] = [
 // Constant kept for backward-compat references (unused by UI).
 const MODEL_LOOK_OPTIONS: OptionItem[] = [];
 
-const FACE_EXPRESSION_OPTIONS: OptionItem[] = [
-  { label: "Soft Smile", icon: Sparkles, hint: "Warm face", iconFile: "soft-smile" },
-  { label: "Confident", icon: BadgeCheck, hint: "Premium vibe", iconFile: "/ui-icons/fe-confident.png" },
-  { label: "Serious", icon: UserRound, hint: "Editorial", iconFile: "/ui-icons/fe-serious.png" },
-  { label: "Royal", icon: Crown, hint: "Bridal aura", iconFile: "royal" },
-  { label: "Natural", icon: ShieldCheck, hint: "Real feel", iconFile: "natural" },
-];
+// Face expression is no longer user-selectable: every model gets a natural,
+// relaxed, genuine expression.
+const NATURAL_FACE_EXPRESSION = "natural, relaxed, genuine expression";
 
 // Camera angle — crucial for jewellery presentation
 const CAMERA_ANGLE_OPTIONS: OptionItem[] = [
@@ -1127,7 +1123,7 @@ export default function JewelleryAIPage() {
   const [modelType, setModelType] = useState("No Model");
   const [pose, setPose] = useState("Auto Pose");
   const [modelLook, setModelLook] = useState("Indian Model");
-  const [faceExpression, setFaceExpression] = useState("Soft Smile");
+  const faceExpression = NATURAL_FACE_EXPRESSION;
   const [shootStyle, setShootStyle] = useState("Luxury Studio");
   const [jewelOutdoorBg, setJewelOutdoorBg] = useState("Royal Palace");
   const [jewelStudioPose, setJewelStudioPose] = useState("Auto");
@@ -1288,7 +1284,6 @@ export default function JewelleryAIPage() {
         setModelType(settings.modelType || "No Model");
         setPose(settings.pose || "Auto Pose");
         setModelLook(settings.modelLook || "Indian Model");
-        setFaceExpression(settings.faceExpression || "Soft Smile");
         setShootStyle(settings.shootStyle || "Luxury Studio");
         setAccessory(settings.accessory || "No Accessories");
         setCameraAngle(settings.cameraAngle || "Auto Angle");
@@ -1501,7 +1496,6 @@ export default function JewelleryAIPage() {
     setAccessory(s.accessories);
     setModelType(s.model_type);
     setPose(s.pose);
-    setFaceExpression(s.face_expression);
     setCameraAngle(s.camera_angle);
   };
 
@@ -1600,7 +1594,7 @@ export default function JewelleryAIPage() {
       : builderStep === 2
         ? Boolean(shootStyle && accessory)
         : builderStep === 3
-          ? Boolean(modelType && pose && modelLook && faceExpression && outputSize && quality)
+          ? Boolean(modelType && pose && modelLook && outputSize && quality)
           : true;
 
   const scrollToStepTop = () => {
@@ -3684,8 +3678,6 @@ if (!response.ok) {
                 {builderStep === 4 && (
   <div className="space-y-4">
 
-    {/* Face Expression — placed before Frame & Quality */}
-    <SelectionGrid title="Face Expression" subtitle="Useful when model face is visible — picks the mood of the shot." options={FACE_EXPRESSION_OPTIONS} value={faceExpression} onChange={setFaceExpression} />
 
     <FrameQualityGrid
       outputSize={outputSize}
@@ -3722,7 +3714,6 @@ if (!response.ok) {
                         <SummaryRow label="Shoot Style" value={customShootStyle || shootStyle} />
                         <SummaryRow label="Model Look" value={modelLook === "Upload Your Model" ? "Your Photo" : modelLook} />
                         <SummaryRow label="Pose" value={customPose || pose} />
-                        <SummaryRow label="Face Expression" value={faceExpression} />
                         <SummaryRow label="Accessories" value={customAccessory || accessory} />
                         <SummaryRow label="Frame" value={`${outputSize} / ${quality}`} />
                         <SummaryRow label="Uploads" value={String(uploads.length)} />

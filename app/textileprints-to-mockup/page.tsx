@@ -6,10 +6,10 @@ import { createPortal } from "react-dom";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
 import { useAuth } from "@/app/components/AuthProvider";
-import SceneEditPanel from "@/app/components/SceneEditPanel";
 import { Crown, Sparkles, Upload, UploadCloud, X } from "lucide-react";
 import { track } from "@/lib/analytics";
 import StickyMobileCTA from "@/app/components/StickyMobileCTA";
+import { buildShootHints } from "@/lib/textileShootLibrary";
 import TeamCreditToggle from "@/app/components/TeamCreditToggle";
 import { canGenerate } from "@/lib/checkCredits";
 import { shouldDeductCredits } from "@/lib/deductCredits";
@@ -368,6 +368,7 @@ const exactIconFileByTitle: Record<string, string> = {
   "folded product view": "folded product view",
   "close-up texture view": "close up texture view",
   "room corner setup": "room corner setup",
+  "studio setup": "photo studio setup",
   "hotel room setup": "hotel room seutp",
   "outdoor premium": "outdoor premium",
   "studio professional": "photo studio setup",
@@ -972,6 +973,13 @@ const USAGE_ICONS: Record<string, string> = {
   "Family Scene": UI("u-family"),
   Mannequin: UI("u-mannequin"),
 };
+// Mannequin card shows a dress form matching the category.
+const mannequinIcon = (category: string) =>
+  category === "Men's Wear"
+    ? UI("u-mannequin-men")
+    : category === "Kids Wear"
+      ? UI("u-mannequin-kids")
+      : UI("u-mannequin");
 const POSE_ICONS: Record<string, string> = {
   "Front Face": UI("pose-front-face"),
   "Side Pose": UI("pose-side"),
@@ -1012,11 +1020,15 @@ const FACE_EXPR_ICONS: Record<string, string> = {
   Smiling: UI("fe-smiling"),
   "Soft Look": UI("fe-soft-look"),
 };
+// Shoot styles offered on the textile page. Studio Professional picks a
+// trending studio / editorial set in the backend (reference boards).
+const SHOOT_STYLES = ["Outdoor Premium", "Studio Professional", "White Background", "Upload Your Scene"];
 const SHOOT_STYLE_ICONS: Record<string, string> = {
   "Outdoor Premium": UI("ss-outdoor-premium"),
   "Studio Professional": UI("ss-studio-professional"),
   "White Background": UI("ss-white-background"),
   "Luxury Editorial": UI("ss-luxury-editorial"),
+  "Upload Your Scene": UI("ss-luxury-editorial"),
 };
 const ACCESSORY_ICONS: Record<string, string> = {
   None: UI("acc-none"),
@@ -1272,11 +1284,12 @@ const productOptionsByCategory: Record<TextileCategory, string[]> = {
   ],
 };
 
+// Men's / Ladies / Kids: single model, mannequin, or the user's own photo
+// ("Upload Your Model" always last). Family scene removed.
 const apparelModelUsageOptions = [
   "Single Model",
-  "Upload Your Model",
-  "Family Scene",
   "Mannequin",
+  "Upload Your Model",
 ];
 
 const homeModelUsageOptions = [
@@ -1379,11 +1392,9 @@ function buildModelLookList(
 }
 
 const apparelPoseOptions = [
-  "Front Face",
   "Side Pose",
   "Walking Pose",
   "Sitting Pose",
-  "Close-up Shot",
   "Half Body",
   "Full Body",
   "Auto",
@@ -1392,9 +1403,6 @@ const apparelPoseOptions = [
 const homeSceneOptions = [
   "Lifestyle Room View",
   "Front View",
-  "Top View",
-  "Folded Product View",
-  "Close-up Texture View",
   "Room Corner Setup",
   "Hotel Room Setup",
 ];
@@ -1519,7 +1527,9 @@ export default function Home() {
   const [modelUsage, setModelUsage] = useState("Single Model");
   const [modelType, setModelType] = useState("Indian Man");
   const [product, setProduct] = useState("Men\'s Shirt");
-  const [shootStyle, setShootStyle] = useState("Outdoor Premium");
+  const [shootStyle, setShootStyle] = useState("Studio Professional");
+  // Home / Universal: which card in the merged "Scene / View & Shoot Style" list is picked.
+  const [homePick, setHomePick] = useState<"scene" | "style">("scene");
   const [accessories, setAccessories] = useState<string[]>(["None"]);
   const [outputSize, setOutputSize] = useState("1080x1080");
   const [quality, setQuality] = useState("Premium");
@@ -1577,7 +1587,11 @@ export default function Home() {
   // User-uploaded reference scene — when set, the product is composited
   // INTO this photo (e.g. a styled Pinterest room) instead of a preset BG.
   const [referenceSceneUrl, setReferenceSceneUrl] = useState("");
+  // The uploaded scene only counts while "Upload Your Scene" is the shoot style.
+  const activeSceneUrl =
+    !customShootStyle.trim() && shootStyle === "Upload Your Scene" ? referenceSceneUrl : "";
   const [sceneUploading, setSceneUploading] = useState(false);
+  const sceneInputRef = useRef<HTMLInputElement | null>(null);
   // Virtual try-on — user uploads their own photo, the garment is rendered
   // on THAT person. Consent is mandatory; free plans are capped to 3 uses.
   const [modelPhotoUrl, setModelPhotoUrl] = useState("");
@@ -1644,10 +1658,18 @@ export default function Home() {
   const dynamicModelUsageOptions = isHomeLikeCategory
     ? homeModelUsageOptions
     : apparelModelUsageOptions;
+  // Apparel no longer offers "Family Scene" (e.g. an old saved setting) → fall back.
+  useEffect(() => {
+    if (!isHomeLikeCategory && modelUsage === "Family Scene") {
+      setModelUsage("Single Model");
+    }
+  }, [isHomeLikeCategory, modelUsage]);
   const dynamicPoseOptions = isHomeLikeCategory
     ? homeSceneOptions
     : apparelPoseOptions;
-  const showFaceExpression = !/no model|flat lay|mannequin/i.test(modelUsage);
+  // Face Expression picker removed — models get a natural, relaxed look.
+  const showFaceExpression = false;
+  const hasHumanFace = !/no model|flat lay|mannequin/i.test(modelUsage);
   const builderStepMeta = [
     { id: 1, title: "Product", sub: "Category + product" },
     { id: 2, title: "Model", sub: "Usage + look" },
@@ -1665,7 +1687,8 @@ export default function Home() {
               (!showFaceExpression ||
                 customFaceExpression.trim() ||
                 faceExpression) &&
-              (customShootStyle.trim() || shootStyle),
+              (customShootStyle.trim() || shootStyle) &&
+              (customShootStyle.trim() || shootStyle !== "Upload Your Scene" || !!referenceSceneUrl),
             )
           : true;
 
@@ -1855,9 +1878,9 @@ export default function Home() {
     const s = JSON.parse(saved);
     // Guard against categories/products removed in a later release
     // (e.g. the old "Decor & Accessories" category).
-    const savedCategory: TextileCategory = productOptionsByCategory[
-      s.textileCategory as TextileCategory
-    ]
+    const savedCategory: TextileCategory = textileCategories.some(
+      (c) => c.title === s.textileCategory,
+    )
       ? (s.textileCategory as TextileCategory)
       : "Men's Wear";
     const savedProducts = productOptionsByCategory[savedCategory];
@@ -1867,14 +1890,16 @@ export default function Home() {
     setProduct(
       savedProducts.includes(s.product) ? s.product : savedProducts[0],
     );
-    setShootStyle(s.shootStyle || "Outdoor Premium");
+    const savedStyle = SHOOT_STYLES.includes(s.shootStyle) ? s.shootStyle : "Studio Professional";
+    setShootStyle(savedStyle);
+    setHomePick(savedStyle === "Studio Professional" ? "scene" : "style");
     setAccessories(Array.isArray(s.accessories) ? s.accessories : ["None"]);
     setOutputSize(s.outputSize || "1080x1080");
     setQuality(s.quality || "Premium");
     setCustomInstruction(s.customInstruction || "");
     setCustomModelType(s.customModelType || "");
     setCustomProduct(s.customProduct || "");
-    setCustomShootStyle(s.customShootStyle || "");
+    setCustomShootStyle("");
     setCustomAccessory(s.customAccessory || "");
     setCustomOutputSize(s.customOutputSize || "");
     setCustomQuality(s.customQuality || "");
@@ -1894,8 +1919,21 @@ export default function Home() {
     setCompanyAddressPosition(s.companyAddressPosition || "bottom-left");
     setWatermarkPosition(s.watermarkPosition || "bottom-right");
     setWatermarkColor(s.watermarkColor || "white");
-    setPose(s.pose || "Auto");
-    setCustomPose(s.customPose || "");
+    // Old saved picks ("Front Face", "Close-up Shot") were removed → Auto.
+    // Old saved picks that were removed → default.
+    setPose(
+      s.pose === "Studio Setup"
+        ? "Lifestyle Room View"
+        : s.pose && s.pose !== "Front Face" && s.pose !== "Close-up Shot"
+          ? s.pose
+          : "Auto",
+    );
+    // Home / Universal no longer has a free-text scene box.
+    setCustomPose(
+      savedCategory === "Home Textile" || savedCategory === "Universal Fabric"
+        ? ""
+        : s.customPose || "",
+    );
     setFaceExpression(s.faceExpression || "Happy");
     setCustomFaceExpression(s.customFaceExpression || "");
     setShowPromptBox(s.showPromptBox || false);
@@ -2038,7 +2076,7 @@ export default function Home() {
         (details.address?.trim() ? 1 : 0);
 
     // Bring-your-own add-ons: uploaded scene (+2) and uploaded model (+2).
-    const sceneCredits = referenceSceneUrl ? 2 : 0;
+    const sceneCredits = activeSceneUrl ? 2 : 0;
     const modelUploadCredits = modelPhotoUrl ? 2 : 0;
 
     return baseCredits + extraCredits + sceneCredits + modelUploadCredits;
@@ -2696,19 +2734,32 @@ export default function Home() {
     const resolvedOtherDesc = isOtherProduct ? otherProductDesc.trim() : "";
     const resolvedOutdoorBackground =
       !customShootStyle.trim() &&
-      (shootStyle === "Outdoor Premium" || shootStyle === "Luxury Editorial")
+      shootStyle === "Outdoor Premium"
         ? outdoorBackground
         : "";
-    const resolvedStudioPose =
-      !customShootStyle.trim() &&
-      shootStyle === "Studio Professional" &&
-      !isHomeLikeCategory
-        ? studioPose
-        : "";
+    // Studio-pose sub-tabs removed — the main Pose picker drives the pose.
+    const resolvedStudioPose = "";
 
     // Extra prompt hints folded into custom_instruction so the n8n
     // prompt builder honours them even before reading the new fields.
+    // Shoot library (Men's / Ladies / Kids / Home): fresh mannequin, pose and
+    // studio-set picks every generation + a lower colour read from the design.
+    const shootHints = await buildShootHints({
+      category: textileCategory,
+      product: resolvedSudanGarment || resolvedProduct,
+      modelUsage,
+      pose: resolvedPose,
+      studioPose: resolvedStudioPose,
+      shootStyle: resolvedShootStyle,
+      customShootStyle: !!customShootStyle.trim(),
+      outdoorBackground: resolvedOutdoorBackground,
+      accessories: resolveAccessories(),
+      hasReferenceScene: !!activeSceneUrl,
+      designUrl: item.url,
+    });
+
     const extraPromptHints = [
+      ...shootHints,
       resolvedSofaSeater ? `Sofa size: ${resolvedSofaSeater}` : "",
       resolvedTowelType ? `Towel type: ${resolvedTowelType}` : "",
       resolvedSudanGarment
@@ -2747,8 +2798,8 @@ export default function Home() {
       selectedBrandDetails,
     );
 
-    const resolvedFaceExpression = showFaceExpression
-      ? customFaceExpression.trim() || faceExpression
+    const resolvedFaceExpression = hasHumanFace
+      ? "natural, relaxed, genuine expression"
       : "Not applicable";
 
     // Pass the raw selection through. The n8n prompt builder owns ALL the
@@ -2798,14 +2849,14 @@ export default function Home() {
         `Category: ${textileCategory}`,
         `Model usage / interaction: ${modelUsageForN8n}`,
         ...extraPromptHints,
-        referenceSceneUrl
+        activeSceneUrl
           ? "REFERENCE SCENE PROVIDED (see reference_scene_url): Place the product naturally INTO this uploaded scene, replacing the existing furnishing/product in that photo. Match the scene's lighting, perspective, shadows, depth and overall style so it looks real. Keep the rest of the scene unchanged."
           : "",
         modelPhotoUrl
           ? "VIRTUAL TRY-ON (see model_photo_url): Render this garment on the EXACT person in the uploaded model photo. Preserve their face, identity, body shape and skin tone exactly — do not change the face. Keep them fully clothed, realistic and tasteful. Absolutely no nudity, no sexualisation and no inappropriate content."
           : "",
-        showFaceExpression
-          ? `Model face expression: ${resolvedFaceExpression}`
+        hasHumanFace
+          ? "Model face: natural, relaxed, genuine expression (no forced or toothy smile)."
           : "No face expression needed because no human face/model is selected.",
         // Branding + article text is composited on the frontend (canvas).
         // The AI must NOT render any text — otherwise it doubles.
@@ -2847,7 +2898,7 @@ export default function Home() {
         team_id: teamId ?? undefined,
         design_url: item.url,
         // Optional: user's own scene to composite the product into.
-        reference_scene_url: referenceSceneUrl || "",
+        reference_scene_url: activeSceneUrl || "",
         // Optional: user's own photo for a virtual try-on (garment on them).
         model_photo_url: modelPhotoUrl || "",
 
@@ -4409,9 +4460,16 @@ export default function Home() {
                                 item.title === "Home Textile" ||
                                   item.title === "Universal Fabric"
                                   ? "Lifestyle Room View"
-                                  : "Front Face",
+                                  : "Auto",
                               );
                               setCustomPose("");
+                              if (
+                                item.title === "Home Textile" ||
+                                item.title === "Universal Fabric"
+                              ) {
+                                setHomePick("scene");
+                                setShootStyle("Studio Professional");
+                              }
                               setFaceExpression("Happy");
                               setCustomFaceExpression("");
                             }}
@@ -4565,7 +4623,9 @@ export default function Home() {
                                       textileCategory,
                                       customProduct.trim() || product,
                                     )
-                                  : USAGE_ICONS[item]
+                                  : item === "Mannequin"
+                                    ? mannequinIcon(textileCategory)
+                                    : USAGE_ICONS[item]
                               }
                             />
                           ),
@@ -4653,11 +4713,131 @@ export default function Home() {
                   </div>
                 )}
 
-                {builderStep === 3 && (
+                {builderStep === 3 && (() => {
+                  // Home / Universal: Scene / View and Shoot Style are ONE list
+                  // with a single selection. Apparel keeps Pose + Shoot Style.
+                  const styleActive = (item: string) =>
+                    shootStyle === item && (!isHomeLikeCategory || homePick === "style");
+                  const pickStyle = (item: string) => {
+                    setShootStyle(item);
+                    setCustomShootStyle("");
+                    if (isHomeLikeCategory) {
+                      setHomePick("style");
+                      setPose("Front View");
+                      setCustomPose("");
+                    }
+                    // Upload Your Scene opens the file picker straight away.
+                    if (item === "Upload Your Scene" && !sceneUploading)
+                      sceneInputRef.current?.click();
+                  };
+                  const styleCards = (
+                    SHOOT_STYLES.map((item) =>
+                          item === "Upload Your Scene" ? (
+                            <div key={item} className="relative min-w-0">
+                              <OptionCard
+                                title={
+                                  sceneUploading
+                                    ? "Uploading…"
+                                    : referenceSceneUrl
+                                      ? "Scene Ready ✓"
+                                      : item
+                                }
+                                active={styleActive(item)}
+                                onClick={() => pickStyle(item)}
+                                darkMode={darkMode}
+                                imgSrc={referenceSceneUrl || SHOOT_STYLE_ICONS[item]}
+                              />
+                              {referenceSceneUrl && (
+                                <button
+                                  type="button"
+                                  onClick={() => setReferenceSceneUrl("")}
+                                  className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-rose-600 text-[11px] font-black text-white shadow"
+                                  aria-label="Remove scene"
+                                >
+                                  ✕
+                                </button>
+                              )}
+                              <input
+                                ref={sceneInputRef}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                disabled={sceneUploading}
+                                onChange={async (e) => {
+                                  const f = e.target.files?.[0];
+                                  if (!f) return;
+                                  if (!f.type.startsWith("image/")) {
+                                    alert("Please upload an image file.");
+                                    e.target.value = "";
+                                    return;
+                                  }
+                                  setSceneUploading(true);
+                                  try {
+                                    const url = await uploadFile(f);
+                                    setReferenceSceneUrl(url);
+                                  } catch {
+                                    alert("Scene upload failed. Please try again.");
+                                  } finally {
+                                    setSceneUploading(false);
+                                    e.target.value = "";
+                                  }
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            <OptionCard
+                              key={item}
+                              title={item}
+                              active={styleActive(item)}
+                              onClick={() => pickStyle(item)}
+                              darkMode={darkMode}
+                              imgSrc={SHOOT_STYLE_ICONS[item]}
+                            />
+                          ),
+                        )
+                  );
+                  const stylePanels = (
+                    <>
+                      {/* Outdoor Premium → background theme selector */}
+                      {styleActive("Outdoor Premium") && (
+                        <div className="mt-5 rounded-2xl border border-cyan-400/30 bg-cyan-400/5 p-4">
+                          <p className="text-xs font-black uppercase tracking-widest text-cyan-600">
+                            Select Background Theme
+                          </p>
+                          <p className={`mt-1 text-xs ${muted}`}>
+                            Pick the outdoor backdrop. Default is a premium
+                            Royal Palace — no old/rundown houses.
+                          </p>
+                          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+                            {outdoorBackgroundOptions.map((item) => (
+                              <OptionCard
+                                key={item}
+                                title={item}
+                                active={outdoorBackground === item}
+                                onClick={() => setOutdoorBackground(item)}
+                                darkMode={darkMode}
+                                useGlyph
+                                imgSrc={BG_THEME_ICONS[item]}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {styleActive("Upload Your Scene") && (
+                        <p className={`mt-3 text-xs ${muted}`}>
+                          {referenceSceneUrl
+                            ? "Your scene is ready — the product will be placed naturally into it (+2 credits). Tap the card to change it."
+                            : "Tap “Upload Your Scene” to pick a photo of your own space or backdrop (+2 credits)."}
+                        </p>
+                      )}
+                    </>
+                  );
+                  return (
                   <div className="space-y-6">
                     <section>
                       <p className="mb-4 text-base font-black uppercase tracking-widest text-cyan-600 sm:text-lg">
-                        5. {isHomeLikeCategory ? "Scene / View" : "Pose"}
+                        5. {isHomeLikeCategory ? "Scene / View & Shoot Style" : "Pose"}
                       </p>
 
                       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
@@ -4665,255 +4845,55 @@ export default function Home() {
                           <OptionCard
                             key={item}
                             title={item}
-                            active={!customPose.trim() && pose === item}
+                            active={
+                              isHomeLikeCategory
+                                ? homePick === "scene" && pose === item
+                                : !customPose.trim() && pose === item
+                            }
                             onClick={() => {
                               setPose(item);
                               setCustomPose("");
+                              if (isHomeLikeCategory) {
+                                setHomePick("scene");
+                                setShootStyle("Studio Professional");
+                              }
                             }}
                             darkMode={darkMode}
                             imgSrc={POSE_ICONS[item]}
                           />
                         ))}
+                        {isHomeLikeCategory && styleCards}
                       </div>
 
-                      {renderCustomInput(
-                        isHomeLikeCategory
-                          ? "Or type your own scene — e.g. 'model pointing at curtain near window'"
-                          : "Or type your own pose — e.g. 'hands on hips', 'walking', 'sitting'",
-                        customPose,
-                        setCustomPose,
-                      )}
+                      {isHomeLikeCategory
+                        ? stylePanels
+                        : renderCustomInput(
+                            "Or type your own pose — e.g. 'hands on hips', 'walking', 'sitting'",
+                            customPose,
+                            setCustomPose,
+                          )}
                     </section>
 
-                    {showFaceExpression && (
+                    {!isHomeLikeCategory && (
                       <section>
                         <h4 className="mb-4 text-base font-black uppercase tracking-widest text-cyan-600 sm:text-lg">
-                          6. Face Expression
+                          6. Select Shoot Style
                         </h4>
-
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
-                          {faceExpressionOptions.map((item) => (
-                            <OptionCard
-                              key={item}
-                              title={item}
-                              active={
-                                !customFaceExpression.trim() &&
-                                faceExpression === item
-                              }
-                              onClick={() => {
-                                setFaceExpression(item);
-                                setCustomFaceExpression("");
-                              }}
-                              darkMode={darkMode}
-                              imgSrc={FACE_EXPR_ICONS[item]}
-                            />
-                          ))}
+                          {styleCards}
                         </div>
-
-                        {renderCustomInput(
-                          "Or type expression — e.g. 'premium confident smile', 'calm luxury look'",
-                          customFaceExpression,
-                          setCustomFaceExpression,
-                        )}
+                        {stylePanels}
                       </section>
                     )}
-
-                    <section>
-                      <h4 className="mb-4 text-base font-black uppercase tracking-widest text-cyan-600 sm:text-lg">
-                        {showFaceExpression
-                          ? "7. Select Shoot Style"
-                          : "6. Select Shoot Style"}
-                      </h4>
-                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
-                        {[
-                          "Outdoor Premium",
-                          "Studio Professional",
-                          "White Background",
-                          "Luxury Editorial",
-                        ].map((item) => (
-                          <OptionCard
-                            key={item}
-                            title={item}
-                            active={
-                              !customShootStyle.trim() && shootStyle === item
-                            }
-                            onClick={() => {
-                              setShootStyle(item);
-                              setCustomShootStyle("");
-                            }}
-                            darkMode={darkMode}
-                            imgSrc={SHOOT_STYLE_ICONS[item]}
-                          />
-                        ))}
-                      </div>
-                      {renderCustomInput(
-                        "Or type your own — e.g. 'Luxury bedroom', 'Boutique shop', 'Modern apartment'",
-                        customShootStyle,
-                        setCustomShootStyle,
-                      )}
-
-                      {/* Outdoor Premium / Luxury Editorial → royal background theme selector */}
-                      {!customShootStyle.trim() &&
-                        (shootStyle === "Outdoor Premium" ||
-                          shootStyle === "Luxury Editorial") && (
-                          <div className="mt-5 rounded-2xl border border-amber-400/30 bg-amber-400/5 p-4">
-                            <p className="text-xs font-black uppercase tracking-widest text-amber-600">
-                              Select Background Theme
-                            </p>
-                            <p className={`mt-1 text-xs ${muted}`}>
-                              Pick the {shootStyle === "Luxury Editorial" ? "editorial" : "outdoor"} backdrop. Default is a premium
-                              Royal Palace — no old/rundown houses.
-                            </p>
-                            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
-                              {outdoorBackgroundOptions.map((item) => (
-                                <OptionCard
-                                  key={item}
-                                  title={item}
-                                  active={outdoorBackground === item}
-                                  onClick={() => setOutdoorBackground(item)}
-                                  darkMode={darkMode}
-                                  useGlyph
-                                  imgSrc={BG_THEME_ICONS[item]}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                      {/* Studio Professional → studio pose selector */}
-                      {!customShootStyle.trim() &&
-                        shootStyle === "Studio Professional" && (
-                          <div className="mt-5 rounded-2xl border border-cyan-400/30 bg-cyan-400/5 p-4">
-                            <p className="text-xs font-black uppercase tracking-widest text-cyan-600">
-                              Select Studio Pose
-                            </p>
-                            <p className={`mt-1 text-xs ${muted}`}>
-                              {isHomeLikeCategory
-                                ? "Choose a studio angle / pose — or upload your own scene to place the product into it."
-                                : "Choose a studio pose — or upload your own scene to place the product into it."}
-                            </p>
-
-                            {/* Grid: "Upload Your Scene" card (replaces the old
-                                "Auto") rendered like a pose card, then the poses. */}
-                            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-                              <label
-                                className={`group relative flex min-h-[116px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
-                                  referenceSceneUrl
-                                    ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
-                                    : darkMode
-                                      ? "bg-white/[0.045] hover:-translate-y-1 hover:bg-white/[0.08]"
-                                      : "bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10"
-                                } ${sceneUploading ? "pointer-events-none opacity-60" : ""}`}
-                              >
-                                <div
-                                  className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${
-                                    referenceSceneUrl ? "shadow-lg shadow-cyan-400/25" : "shadow-sm"
-                                  }`}
-                                >
-                                  {referenceSceneUrl ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img
-                                      src={referenceSceneUrl}
-                                      alt=""
-                                      className="block h-full w-full object-cover"
-                                    />
-                                  ) : (
-                                    <span className="text-3xl" aria-hidden="true">
-                                      📷
-                                    </span>
-                                  )}
-                                </div>
-                                <p
-                                  className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${
-                                    referenceSceneUrl
-                                      ? "text-[#0077b6]"
-                                      : darkMode
-                                        ? "text-white/70"
-                                        : "text-black/70"
-                                  }`}
-                                >
-                                  {sceneUploading
-                                    ? "Uploading…"
-                                    : referenceSceneUrl
-                                      ? "Scene Ready ✓"
-                                      : "Upload Your Scene"}
-                                </p>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  disabled={sceneUploading}
-                                  onChange={async (e) => {
-                                    const f = e.target.files?.[0];
-                                    if (!f) return;
-                                    if (!f.type.startsWith("image/")) {
-                                      alert("Please upload an image file.");
-                                      e.target.value = "";
-                                      return;
-                                    }
-                                    setSceneUploading(true);
-                                    try {
-                                      const url = await uploadFile(f);
-                                      setReferenceSceneUrl(url);
-                                    } catch {
-                                      alert("Scene upload failed. Please try again.");
-                                    } finally {
-                                      setSceneUploading(false);
-                                      e.target.value = "";
-                                    }
-                                  }}
-                                />
-                                {referenceSceneUrl && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      setReferenceSceneUrl("");
-                                    }}
-                                    className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow"
-                                    aria-label="Remove scene"
-                                  >
-                                    ✕
-                                  </button>
-                                )}
-                              </label>
-
-                              {studioPoseOptions
-                                .filter((p) => p !== "Auto")
-                                .map((item) => (
-                                  <OptionCard
-                                    key={item}
-                                    title={item}
-                                    active={studioPose === item}
-                                    onClick={() => setStudioPose(item)}
-                                    darkMode={darkMode}
-                                    useGlyph
-                                    imgSrc={STUDIO_POSE_ICONS[item]}
-                                  />
-                                ))}
-                            </div>
-
-                            {referenceSceneUrl && (
-                              <SceneEditPanel
-                                sceneUrl={referenceSceneUrl}
-                                onSceneUpdated={setReferenceSceneUrl}
-                              />
-                            )}
-                          </div>
-                        )}
-                    </section>
-
                   </div>
-                )}
+                  );
+                })()}
 
                 {builderStep === 4 && (
                   <div className="space-y-6">
                     <section>
                       <h4 className="mb-4 text-base font-black uppercase tracking-widest text-cyan-600 sm:text-lg">
-                        {showFaceExpression
-                          ? "8. Accessories / Styling"
-                          : "7. Accessories / Styling"}
+                        {isHomeLikeCategory ? "6." : "7."} Accessories / Styling
                       </h4>
                       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
                         {["None", "Sunglasses", "Watch", "Bracelet"].map(
@@ -4940,9 +4920,7 @@ export default function Home() {
 
                     <section>
                       <h4 className="mb-4 text-base font-black uppercase tracking-widest text-cyan-600 sm:text-lg">
-                        {showFaceExpression
-                          ? "9. Output & Quality"
-                          : "8. Output & Quality"}
+                        {isHomeLikeCategory ? "7." : "8."} Output & Quality
                       </h4>
                       <div className="grid gap-5 lg:grid-cols-2">
                         <div className="space-y-4">
@@ -5018,20 +4996,14 @@ export default function Home() {
                         <SummaryRow label="Model Usage" value={modelUsage} />
                         <SummaryRow label="Model Look" value={modelLookDisabled ? "No model" : (customModelType.trim() || modelType)} />
                         <SummaryRow label={isHomeLikeCategory ? "Scene" : "Pose"} value={customPose.trim() || pose} />
-                        {showFaceExpression && (
-                          <SummaryRow label="Face" value={customFaceExpression.trim() || faceExpression} />
-                        )}
                         <SummaryRow label="Shoot Style" value={customShootStyle.trim() || shootStyle} />
-                        {!customShootStyle.trim() && (shootStyle === "Outdoor Premium" || shootStyle === "Luxury Editorial") && (
+                        {shootStyle === "Outdoor Premium" && (
                           <SummaryRow label="Background" value={outdoorBackground} />
-                        )}
-                        {!customShootStyle.trim() && shootStyle === "Studio Professional" && (
-                          <SummaryRow label="Studio Pose" value={studioPose} />
                         )}
                         <SummaryRow label="Accessories" value={accessories.length ? accessories.join(", ") : "None"} />
                         <SummaryRow label="Frame" value={`${customOutputSize.trim() || outputSize} / ${customQuality.trim() || quality}`} />
                         <SummaryRow label="Uploads" value={String(readyItems.length)} />
-                        {referenceSceneUrl && (
+                        {activeSceneUrl && (
                           <SummaryRow label="Upload Your Scene" value="+2 credits" />
                         )}
                         {modelPhotoUrl && (
