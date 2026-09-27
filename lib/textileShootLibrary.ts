@@ -187,6 +187,152 @@ function looksFor(cat: "men" | "ladies" | "kids"): Look[] {
   return cat === "men" ? [...studio, ...MEN_LOOKS] : [...studio, ...LADIES_LOOKS];
 }
 
+// ── Studio Professional backgrounds (the "Select Studio Background" picker) ──
+// Each option = the reference set + related trending variants; a fresh variant
+// is picked every generation. The pose is the one the set was shot with.
+export const STUDIO_BACKGROUNDS: Record<string, Look[]> = {
+  "Spotlight Plinth": [
+    { set: "a dark teal-blue studio lit by a single hard spotlight from above, a low glowing white rectangular plinth, deep moody vignette and a long soft shadow", pose: "standing tall on the plinth, one hand relaxed in the pocket, weight on one leg, calm direct gaze \u2014 full body" },
+    { set: "a deep midnight-navy studio with a single overhead spotlight pooling on a glossy black round plinth", pose: "standing on the plinth in a three-quarter turn, chin slightly lifted \u2014 full body" },
+    { set: "a warm terracotta seamless studio with a hard spotlight circle on the floor and a low white box plinth", pose: "standing on the box plinth with one foot forward, relaxed arms \u2014 full body" },
+  ],
+  "Retro Red Room": [
+    { set: "a rich crimson-red retro room: a mid-century walnut sideboard with a vintage television and record player, a round brass wall clock and a warm glowing table lamp", pose: "standing and leaning one elbow casually on the sideboard, legs loosely crossed at the ankle \u2014 full body" },
+    { set: "a mustard-and-olive 1970s lounge set with a walnut record console, a sunburst mirror and a tall ribbed table lamp", pose: "seated on the edge of a low velvet armchair, forearms on the knees, relaxed look \u2014 full body" },
+    { set: "a deep emerald retro study with wood-panelled walls, a leather club chair and a brass floor lamp", pose: "standing beside the club chair with one hand resting on its back \u2014 full body" },
+  ],
+  "Crate Stack": [
+    { set: "a clean light-grey cyclorama with a sculptural stack of black plastic crates built up behind like a throne", pose: "seated on the crates with one foot raised on a lower crate, forearm resting on the knee \u2014 full body" },
+    { set: "a pale-grey cyclorama with a tall stepped stack of white concrete breeze blocks", pose: "seated high on the blocks, one leg dropped down, relaxed confident look \u2014 full body" },
+    { set: "a sand-coloured studio with a stepped pyramid of natural wooden pallets", pose: "standing on the lowest pallet step, one hand in the pocket \u2014 full body" },
+  ],
+  "Rope Installation": [
+    { set: "a minimal warm-beige set with dozens of taut cream ropes hanging from the ceiling to the floor around a round linen-draped podium, soft diffused light", pose: "standing on the podium between the ropes, hands in the pockets, relaxed shoulders \u2014 full body" },
+    { set: "a blush-pink set with long sheer fabric strips hanging from the ceiling around a round white podium", pose: "standing on the podium, one hand lightly touching a fabric strip \u2014 full body" },
+    { set: "a stone-grey set with hundreds of fine gold threads hanging floor to ceiling around a round plinth", pose: "standing still on the plinth among the threads, calm gaze \u2014 full body" },
+  ],
+  "Velvet Club": [
+    { set: "a deep olive-green velvet curtain backdrop over an artificial-grass floor with a white court line, scattered tennis balls, a vintage leather holdall and a wooden racket \u2014 preppy country-club editorial", pose: "seated back in a vintage wooden armchair, legs crossed, one hand resting on the armrest \u2014 full body", who: "men" },
+    { set: "a deep burgundy velvet curtain backdrop with a vintage gramophone, a velvet pouf and a patterned rug", pose: "seated on the velvet pouf with legs crossed, poised and elegant \u2014 full body" },
+    { set: "a navy velvet curtain backdrop over a polished wooden floor with a vintage trunk and a brass floor lamp", pose: "standing beside the trunk with one foot resting on it \u2014 full body" },
+  ],
+  "Wood Slice Set": [
+    { set: "a warm ivory seamless studio with irregular natural tree-trunk wood slices scattered across the floor like stepping stones", pose: "standing on one wood slice, one hand in the pocket, slight hip shift, confident gaze \u2014 full body" },
+    { set: "a warm ivory studio with smooth river stones and dried pampas grass scattered across the floor", pose: "standing among the stones, relaxed natural stance \u2014 full body" },
+    { set: "a beige set with raw tree stumps of different heights and a single dried branch", pose: "seated on the tallest stump, one leg extended \u2014 full body" },
+  ],
+  "Stone Boulders": [
+    { set: "a moody warm-grey studio framed by giant pale sculptural boulders, a single soft directional light", pose: "walking slowly in profile between the boulders, gaze ahead, garment moving naturally \u2014 full body" },
+    { set: "a giant hollow driftwood arch standing in snowy mountains, a warm-lit wooden bench inside the arch glowing against the cold blue light", pose: "seated on the glowing bench inside the arch, hands on the knees \u2014 full body" },
+    { set: "a sand-toned set with a monumental smooth sandstone rock formation and soft side light", pose: "leaning lightly against the rock, arms relaxed \u2014 full body" },
+  ],
+  "Arched Corridor": [
+    { set: "a long sandstone corridor of repeating arches with golden sunlight streaming in and deep one-point perspective", pose: "walking toward the camera down the centre of the corridor, arms relaxed \u2014 full body" },
+    { set: "a warm plaster room with a tall pointed arch and a carved jaali lattice window casting dappled patterned light across the floor", pose: "standing in the arched doorway, three-quarter turn toward the light \u2014 full body" },
+    { set: "a sunlit sculptural ivory interior with a sweeping curved staircase and a long flowing red silk ribbon swirling through the air", pose: "standing on the lower steps turned three-quarters to camera, looking back over the shoulder \u2014 full body", who: "ladies" },
+    { set: "a white-washed Mediterranean arcade with soft blue shadows and pink bougainvillea spilling over the arches", pose: "standing under an arch, one hand on the pillar \u2014 full body" },
+  ],
+  "Mirror Sky": [
+    { set: "a surreal sky set of tall glossy mirror panels reflecting drifting white clouds, standing on a still mirror-water floor", pose: "standing tall and still, arms relaxed by the sides, crisp reflection below \u2014 full body" },
+    { set: "a calm pastel pink-and-peach sunset sea with perfectly still water", pose: "standing on a single rock rising out of the glassy water, head turned slightly \u2014 full body with the reflection" },
+    { set: "a twilight rocky seashore with a large glass display cube and polished chrome spheres on the dark sand", pose: "standing inside the glass cube, poised and still \u2014 full body" },
+    { set: "snowy pink-lit mountain peaks at dusk over a frozen mirror lake, a lone cream sofa and a glowing floor lamp standing on the ice", pose: "seated relaxed on the sofa on the ice, one arm along the backrest \u2014 full body" },
+  ],
+  "Desert Dunes": [
+    { set: "soft cream desert dunes with a huge sheer ivory fabric billowing in the wind behind the subject", pose: "standing with one hand in the pocket, looking off to the side \u2014 full body" },
+    { set: "sun-bleached white adobe desert architecture under a deep blue sky, handwoven kilim rugs laid on the ground and hung on the walls", pose: "walking toward the camera along the rug path \u2014 full body" },
+    { set: "a monumental curved concrete arch framing a clear deep-blue sky with the sun flaring softly behind the head", pose: "low-angle hero stance, feet apart, one hand in the pocket \u2014 full body" },
+    { set: "a luxury resort poolside with cream parasols, sage-green loungers and lush tropical palms", pose: "walking barefoot along the pool edge in profile, soft smile \u2014 full body", who: "ladies" },
+    { set: "a top-down view of a narrow wooden canoe on dark still water among giant round green lily pads", pose: "lying back in the canoe, arms folded above the head, garment spread out and fully visible \u2014 shot from directly above", who: "ladies" },
+  ],
+};
+export const KIDS_STUDIO_BACKGROUNDS: Record<string, Look[]> = {
+  "Red Stool Studio": [
+    { set: "a soft warm-grey studio with a small red-painted wooden step stool", pose: "standing proudly on the stool holding a small potted orchid \u2014 full body" },
+    { set: "a soft powder-blue studio with a small yellow wooden step stool", pose: "standing on the stool with hands on the hips, big smile \u2014 full body" },
+  ],
+  "Flower Cabinet": [
+    { set: "a sage-green wall with floating flower heads and a small white cabinet overflowing with fresh flowers", pose: "cheeky stance beside the cabinet, arms folded, one foot forward \u2014 full body" },
+    { set: "a blush-pink wall with floating paper butterflies and a small white shelf of potted flowers", pose: "standing beside the shelf holding one flower \u2014 full body" },
+  ],
+  "Boho Rattan": [
+    { set: "a boho corner with a rattan flower-shaped chair, tall potted palms, a cream curtain and a patterned jute rug", pose: "sitting in the rattan chair, hands in the lap, sweet smile \u2014 full body" },
+    { set: "a boho nook with a hanging rattan egg chair, pampas grass and a round jute rug", pose: "sitting in the egg chair swinging the legs \u2014 full body" },
+  ],
+  "White Bow Dream": [
+    { set: "a dreamy all-white set with a giant satin bow, clouds of white hydrangeas and a soft teddy bear", pose: "sitting on a little white bench, hands on the knees \u2014 full body" },
+    { set: "a dreamy pastel-pink set with a giant satin bow, pink peonies and a small vintage white armchair", pose: "sitting in the armchair holding a teddy bear \u2014 full body" },
+  ],
+  "Wildflower Bench": [
+    { set: "a warm beige set with tall wildflowers, a small wooden bench and a wicker picnic basket", pose: "sitting on the little bench, legs dangling, holding a flower \u2014 full body" },
+    { set: "a soft cream set with tall white poppies, a tiny wooden bench and a lace-lined picnic basket", pose: "standing beside the bench holding the basket \u2014 full body" },
+  ],
+  "Daisy Rain Boots": [
+    { set: "a teal painted backdrop with giant white paper daisies, a mossy grass floor and little yellow rain boots", pose: "standing and holding a small soft toy, curious happy look \u2014 full body" },
+    { set: "a sky-blue painted backdrop with giant paper tulips, a grassy floor and a tiny watering can", pose: "standing and holding the watering can \u2014 full body" },
+  ],
+  "Marigold White": [
+    { set: "a bright white set with a tiny white chair, buckets of orange marigolds and falling petals", pose: "standing holding a big bouquet of marigolds against the chest \u2014 full body" },
+    { set: "a bright white set with a tiny white chair, buckets of sunflowers and falling yellow petals", pose: "standing beside the chair holding one sunflower \u2014 full body" },
+  ],
+  "Sage Table Room": [
+    { set: "a soft beige room with a whitewashed wooden floor and a small sage table with a watering can of daisies", pose: "standing at the little table with both hands resting on it \u2014 full body" },
+    { set: "a soft cream room with a small wooden table set for a tiny tea party with teddy bears", pose: "standing at the table pouring pretend tea \u2014 full body" },
+  ],
+  "Meadow Butterfly": [
+    { set: "a sunny wildflower meadow with rolling green hills and a soft blue sky", pose: "running playfully through the flowers reaching toward a butterfly \u2014 full body" },
+    { set: "a rustic wooden garden fence covered in morning-glory flowers with a small wicker basket on the grass", pose: "standing by the fence on tiptoes, turned three-quarters so the garment front is visible \u2014 full body" },
+  ],
+  "Bubble Window": [
+    { set: "a cosy room with a large arched garden window, floating soap bubbles and a little wooden stool with potted blossoms", pose: "standing by the window blowing soap bubbles \u2014 full body" },
+    { set: "a sunny playroom with a round window, floating soap bubbles and a small rocking horse", pose: "standing beside the rocking horse, bubbles floating around \u2014 full body" },
+  ],
+};
+
+// Home textile → Studio Professional backgrounds (Home textile boards + trends).
+export const HOME_STUDIO_BACKGROUNDS: Record<string, string[]> = {
+  "Warm Minimal Studio": [
+    "a warm beige seamless studio with sculptural ceramic vases, dried pampas stems and soft window light casting long gentle shadows",
+    "a soft sand-toned studio with rounded plaster plinths, a single olive branch in a stone vase and diffused daylight",
+  ],
+  "Velvet Lounge": [
+    "a luxe lounge with deep burgundy walls, a green velvet sofa, brass lamps glowing and botanical art",
+    "a moody emerald-green room with gold wall sconces, a velvet armchair, lit candles and blossom branches in a vase",
+  ],
+  "Forest Glade": [
+    "a misty ancient forest with a mossy floor and shafts of soft morning light",
+    "an outdoor forest-glade setting under a canopy of sheer white fabric on a wooden frame, a jute rug on the grass and warm lanterns",
+  ],
+  "Desert Canyon": [
+    "a dramatic red sandstone canyon at golden hour with warm raking light",
+    "an open desert landscape under a clear blue sky with soft rolling dunes and a single vintage carved chair",
+  ],
+  "Mirror Lake": [
+    "a still mirror-water lake reflecting the product under a soft pastel sky",
+    "snowy pink-lit mountain peaks at dusk over a frozen mirror lake with a glowing floor lamp",
+  ],
+  "Stone Arch View": [
+    "a weathered stone arch framing a calm blue lake and distant mountains, warm sunlight on the stone floor",
+    "a white-washed Mediterranean terrace arch overlooking the sea, soft blue shadows and a terracotta pot",
+  ],
+  "Tropical Jungle": [
+    "a top-down view with the product surrounded by a dense jungle of glossy monstera and palm leaves",
+    "a lush greenhouse with tall tropical plants, warm golden sunlight streaming through glass and soft atmospheric mist",
+  ],
+  "Surreal Seashell": [
+    "a surreal luxury set: a giant white seashell sculpture on a soft beige floor scattered with pearls",
+    "a dreamy pastel set with a giant pearl-white clam shell, soft satin drapery and scattered pearls",
+  ],
+  "Grand Staircase Hall": [
+    "a grand dark-green hall with a sweeping wooden staircase, a chequered marble floor and a glowing crystal chandelier",
+    "a heritage library hall with tall bookshelves, a curved brass staircase and warm lamp light",
+  ],
+  "Golden Meadow": [
+    "a golden dry-grass field under a soft overcast sky",
+    "a lush green meadow full of wildflowers under a huge billowing translucent fabric sky",
+  ],
+};
+
 // ── Home-textile scenes per product (from the Home textile boards) ──
 type Scene = { text: string; model?: boolean };
 const HOME_SCENES: Record<string, Scene[]> = {
@@ -437,10 +583,14 @@ const POSE_LOCK: Record<string, string> = {
   "sitting pose":
     "genuinely SEATED on a chair, stool or bench that suits the scene, relaxed posture, the whole garment visible including the lower half, legs and shoes in frame.",
   "half body":
-    "a half-body frame from the top of the head to just below the waist — the entire upper garment inside the frame, never cropped into a close-up.",
+    "a STANDING half-body (waist-up) portrait — the model stands upright (never seated), shoulders relaxed, arms natural. Camera at chest height with an 85mm lens. Frame from a clear gap of empty background ABOVE the top of the head (the whole head and hair fully inside the frame — never cut the head) down to the hips, just below the hem of the top. Nothing below the upper thigh: no knees, no legs, no shoes; the lower garment is at most a thin sliver at the bottom edge. The whole upper garment — collar, both sleeves and hem — is visible and fills most of the frame. Do not crop at the elbows or wrists.",
   "full body":
     "a true full-body frame from the top of the head to the shoes with a little space above and below — the entire outfit visible.",
 };
+
+// ── 2026 trending look (the viral ChatGPT / Pinterest editorial aesthetic) ──
+const TREND_LOOK =
+  "2026 TRENDING EDITORIAL LOOK (the viral ChatGPT-image / Pinterest aesthetic): quiet-luxury, old-money styling; soft natural window or golden-hour light with gentle shadows; a subtle 35mm film feel — fine grain and a warm, soft Kodak-Portra-style colour grade with muted earth tones; clean composition with generous negative space; candid, relaxed confidence; real skin and real fabric texture. It must look like a real high-end campaign photograph, never a CGI render — but the product's own colours stay exactly true.";
 
 // ── Public entry point ──
 export type ShootInput = {
@@ -452,6 +602,7 @@ export type ShootInput = {
   shootStyle: string; // resolved shoot style
   customShootStyle: boolean; // user typed their own shoot style
   outdoorBackground: string; // "" when not applicable
+  studioBackground?: string; // Studio Professional background option ("" = trending mix)
   accessories: string; // "None" when nothing picked
   hasReferenceScene: boolean;
   designUrl: string;
@@ -497,6 +648,10 @@ export async function buildShootHints(o: ShootInput): Promise<string[]> {
       hints.push(
         `STUDIO SETUP VIEW (premium product-photography set, NOT a real room): the ${o.product} is styled as the hero of a trending photo-studio vignette — a seamless backdrop and floor in a soft tone that contrasts with the design, one or two sculptural podiums or blocks, a few minimal curated props (a vase with dried stems, a ceramic piece, soft drapery) kept well away from the product, and soft directional light with gentle natural shadows. The product is shown complete, crisp and true to colour; the uploaded design appears ONLY on the ${o.product}. ${noEquipment}`,
       );
+    } else if (o.studioBackground && HOME_STUDIO_BACKGROUNDS[o.studioBackground] && !o.hasReferenceScene) {
+      hints.push(
+        `STUDIO SET DESIGN (Studio Professional — ${o.studioBackground}, premium trending campaign set): style the ${o.product} as the hero in ${pickOne(HOME_STUDIO_BACKGROUNDS[o.studioBackground])}. The product is shown complete, crisp and true to colour, styled exactly as it is used in real life; the uploaded design appears ONLY on the ${o.product} and never on walls, floor or props. ${noEquipment}`,
+      );
     } else if (key && !o.hasReferenceScene && !o.customShootStyle && !o.outdoorBackground && !isWhiteEcom) {
       const pool = HOME_SCENES[key].filter((s) => (withModel ? true : !s.model));
       const scene = pickOne(pool.length ? pool : HOME_SCENES[key]);
@@ -504,19 +659,20 @@ export async function buildShootHints(o: ShootInput): Promise<string[]> {
         `SCENE DESIGN (premium trending campaign, overrides any default room): style the ${o.product} in ${scene.text}. Keep the selected view / framing and model interaction; the uploaded design appears ONLY on the ${o.product} and never on walls, floor or props. ${noEquipment}`,
       );
     }
+    if (!isWhiteEcom) hints.push(TREND_LOOK);
     return hints;
   }
 
   // ── Apparel (men / ladies / kids) ──
   const isMannequin = /mannequin/i.test(o.modelUsage);
   // A pose the user picked must fit the set, so skip the pose-bound sets.
-  const look = pickOne(
-    looksFor(cat).filter(
-      (l) =>
-        (!chosenPose || !/canoe|glass cube|bench inside/i.test(l.set)) &&
-        (!/mannequin/i.test(o.modelUsage) || !/canoe/i.test(l.set)),
-    ),
-  );
+  const fits = (l: Look) =>
+    (!l.who || l.who === cat) &&
+    (!chosenPose || !/canoe|glass cube|bench inside/i.test(l.set)) &&
+    (!/mannequin/i.test(o.modelUsage) || !/canoe/i.test(l.set));
+  const themed = (cat === "kids" ? KIDS_STUDIO_BACKGROUNDS : STUDIO_BACKGROUNDS)[o.studioBackground || ""];
+  const themedFit = themed ? themed.filter(fits) : [];
+  const look = pickOne(themedFit.length ? themedFit : looksFor(cat).filter(fits));
   if (isStudio) {
     hints.push(
       `STUDIO SET DESIGN (Studio Professional — premium trending editorial set from the reference board; replaces any plain seamless-paper backdrop): shoot in ${look.set}. Real campaign photography — natural skin, real fabric drape, cinematic but true colour grade. ${noEquipment}`,
@@ -529,7 +685,7 @@ export async function buildShootHints(o: ShootInput): Promise<string[]> {
     );
     if (isHalfBody) {
       hints.push(
-        "HALF-BODY MANNEQUIN FRAME (CRITICAL — overrides any full-body wording): use an UPPER-BODY torso / bust display form only — it has NO legs. Frame the shot from just above the neck (or the top of the mannequin head) down to the hips, like a tight catalogue crop. NO trousers, pants, legs, feet, shoes, floor or stand base anywhere in the frame; only the upper garment is shown and it fills most of the frame, completely visible from collar to hem. A result that shows the lower half is a FAILED result.",
+        "HALF-BODY MANNEQUIN FRAME (CRITICAL — overrides any full-body or seated wording): use an UPRIGHT, STANDING upper-body torso / bust display form only — it has NO legs and is NEVER seated; there is NO chair, stool, bench or seat in the image. Frame from a clear gap of background above the top of the mannequin (the neck post or head fully inside the frame, never cut) down to the hips, like a tight waist-up catalogue crop. NO trousers, pants, legs, feet, shoes, floor or stand base anywhere in the frame; only the upper garment is shown, filling most of the frame and completely visible from collar to hem. A result that shows a seated mannequin or the lower half is a FAILED result.",
       );
     }
   } else if (chosenPose && !/family|couple/i.test(o.modelUsage)) {
@@ -582,5 +738,8 @@ export async function buildShootHints(o: ShootInput): Promise<string[]> {
       );
     }
   }
-  return hints;
+  if (!isWhiteEcom) hints.push(TREND_LOOK);
+  // Framing rules go FIRST so the image model gives them the most weight.
+  const isFrame = (h: string) => /^(SELECTED POSE|HALF-BODY MANNEQUIN FRAME)/.test(h);
+  return [...hints.filter(isFrame), ...hints.filter((h) => !isFrame(h))];
 }

@@ -45,6 +45,7 @@ const sofaSeater        = clean(input.sofa_seater, '');
 const towelType         = clean(input.towel_type, '');
 const studioPose        = clean(input.studio_pose, '');
 const outdoorBackground = clean(input.outdoor_background, '');
+const studioBackground  = clean(input.studio_background, '');
 const otherDesc         = clean(input.other_product_description, '');
 const autoDetect        = (input.auto_detect_product === true) || (String(input.auto_detect_product).toLowerCase() === 'true') || (lower(input.product_type || input.product) === 'other');
 
@@ -107,7 +108,7 @@ const isStudio  = styleKey.includes('studio')  || styleKey.includes('catalogue')
 const printForensicRule = `
 =====================================================================
 RULE #0A - MANDATORY MODESTY & ANTI-NUDITY (ABSOLUTE, HIGHEST PRIORITY, OVERRIDES EVERYTHING INCLUDING POSE, FRAMING AND ANY UPLOADED PHOTO):
-The human model is ALWAYS fully and decently clothed across the whole body - shoulders, torso and legs covered to at least below the knee. If the selected product is an UPPER / top-only garment (kurti, kurta, shirt, t-shirt, top, blouse, choli, hoodie, sweatshirt, waistcoat, blazer, jacket, dupatta, stole, scarf), the model MUST ALSO wear a complete, fully-covering, well-fitted LOWER garment appropriate to the look (leggings, churidar, palazzo, salwar, trousers, jeans, or a skirt) in a clean complementary SOLID colour pulled from the print palette. LOWER COLOUR STYLING: if the user instruction gives a LOWER GARMENT COLOUR, use exactly that colour. Otherwise study the uploaded print first and choose a classic solid lower that makes the print look its best - contrasting in tone (light / pastel print -> navy, charcoal or deep olive; dark / rich print -> stone beige, khaki, light grey or off-white), never the same colour as the print's ground, never loud or neon, never printed or patterned. The uploaded design appears ONLY on the main garment. The model is NEVER bare-legged, NEVER in underwear/lingerie only, NEVER partially undressed, NEVER topless and NEVER nude. There must be ZERO nudity and ZERO exposure of buttocks, genitals, female breasts or undergarments - in ANY pose, including full-body. This rule applies EQUALLY when a user-uploaded model photo is provided: dress that person fully and decently and NEVER remove or omit their lower clothing. If any other instruction or input would lead to an unclothed or under-clothed body, OVERRIDE it and add proper modest clothing. A model shown without a lower garment, or with exposed private areas, is a STRICTLY FORBIDDEN, FAILED result.
+The human model is ALWAYS fully and decently clothed across the whole body - shoulders, torso and legs covered to at least below the knee. If the selected product is an UPPER / top-only garment (kurti, kurta, shirt, t-shirt, top, blouse, choli, hoodie, sweatshirt, waistcoat, blazer, jacket, dupatta, stole, scarf), the model MUST ALSO wear a complete, fully-covering, well-fitted LOWER garment appropriate to the look (leggings, churidar, palazzo, salwar, trousers, jeans, or a skirt) in a clean complementary SOLID colour pulled from the print palette. LOWER COLOUR STYLING: if the user instruction gives a LOWER GARMENT COLOUR, use exactly that colour. Otherwise study the uploaded print first and choose a classic solid lower that makes the print look its best - contrasting in tone (light / pastel print -> navy, charcoal or deep olive; dark / rich print -> stone beige, khaki, light grey or off-white), never the same colour as the print's ground, never loud or neon, never printed or patterned. The uploaded design appears ONLY on the main garment. The model is NEVER bare-legged, NEVER in underwear/lingerie only, NEVER partially undressed, NEVER topless and NEVER nude. There must be ZERO nudity and ZERO exposure of buttocks, genitals, female breasts or undergarments - in ANY pose, including full-body. This rule applies EQUALLY when a user-uploaded model photo is provided: dress that person fully and decently and NEVER remove or omit their lower clothing. If any other instruction or input would lead to an unclothed or under-clothed body, OVERRIDE it and add proper modest clothing. A model shown without a lower garment, or with exposed private areas, is a STRICTLY FORBIDDEN, FAILED result. This modesty rule governs what the model WEARS, never the framing: in a HALF-BODY / waist-up shot the lower garment is still worn but simply stays outside the frame.
 =====================================================================
   RULE #0 - PRINT FORENSIC LOCK (ABSOLUTE, OVERRIDES EVERYTHING)
 =====================================================================
@@ -260,8 +261,10 @@ else if (poseKey.includes('walking'))      poseInstruction = 'Pose: a single mid
 else if (poseKey.includes('sitting'))      poseInstruction = 'Pose: seated naturally on a neutral bench, stool or low ledge. Spine relaxed, never ramrod-straight. Hands rested. The fabric drape falls realistically across the lap with believable gravity creases.';
 else if (poseKey.includes('close'))        poseInstruction = 'Composition: tight torso-to-thigh crop showing weave detail, stitching, button placket and fabric drape. Model partially in frame - head and shoes cut off intentionally, magazine-style.';
 else if (poseKey.includes('back'))         poseInstruction = 'Pose: model turned slightly over the shoulder, looking back at the lens. Hair falls naturally on one side. Garment back panel fully visible.';
-else if (poseKey.includes('half body'))    poseInstruction = 'Composition: a HALF-BODY crop from the top of the head down to roughly the waist / hips. The ENTIRE upper half of the garment must sit fully inside the frame and be clearly visible. Natural standing posture. Do NOT crop into the garment and do NOT switch to a tight close-up.';
-else if (poseKey.includes('full body'))    poseInstruction = 'Composition: a true FULL-BODY shot framing the model from the top of the head down to the shoes, with a little headroom above and floor visible below the feet. The ENTIRE garment from collar to hem must be visible. Do NOT crop the head or feet and do NOT zoom into a half-body crop.';
+else if (poseKey.includes('half body'))    poseInstruction = (isMannequin
+  ? 'FRAMING - HALF BODY (MANNEQUIN, CRITICAL): an UPRIGHT STANDING upper-body bust / torso display form with NO legs and NO seat - never seated, no chair, stool or bench. Waist-up catalogue crop from a clear gap of background above the top of the form (never cut) down to the hips. No trousers, legs, feet or stand base in frame; the whole upper garment from collar to hem fills most of the frame.'
+  : 'FRAMING - HALF BODY (CRITICAL): a STANDING waist-up portrait - the model stands upright (never seated). Camera at chest height, 85mm lens. Leave a clear gap of empty background ABOVE the head: the WHOLE head and hair are fully inside the frame and are NEVER cut. Crop at the hips, just below the hem of the top - nothing below the upper thigh (no knees, legs or shoes; the lower garment at most a thin sliver at the bottom edge). The entire upper garment - collar, both sleeves and hem - is visible and fills most of the frame. Never crop at the elbows or wrists.');
+else if (poseKey.includes('full body'))    poseInstruction = 'Composition: a true FULL-BODY shot framing the model from the top of the head down to the shoes (the head is NEVER cut), with a little headroom above and floor visible below the feet. The ENTIRE garment from collar to hem must be visible. Do NOT crop the head or feet and do NOT zoom into a half-body crop.';
 else if (poseKey.includes('auto'))         poseInstruction = 'Pose: choose the most flattering catalogue pose for this garment so that the printed pattern is maximally visible and the silhouette reads cleanly.';
 else if (poseKey.includes('top'))          poseInstruction = 'Composition: directly overhead flat-lay, camera perfectly parallel to the surface. Product laid flat with natural soft creases, fabric edges aligned but not surgically straight.';
 else if (poseKey.includes('folded'))       poseInstruction = 'Composition: product neatly folded as it would arrive in a premium retail box. Visible fold lines, soft fabric edges, one corner gently lifted to reveal the pattern repeat.';
@@ -303,7 +306,12 @@ if (isNoModel) {
     'a small white CHILD dress form on a turned wooden stand',
     'a polished chrome faceless CHILD full-body mannequin seated on a small wooden bench'
   ];
-  const __mqVariants = isKidsProduct ? __mqKids : (isFemaleProduct ? __mqLadies : __mqMen);
+  const __mqBust = isKidsProduct
+    ? ['a small white CHILD upper-body dress form on a turned wooden stand, framed waist-up']
+    : (isFemaleProduct
+      ? ['a vintage ivory linen female upper-body dress form, framed waist-up', 'a matte-white abstract faceless female upper-body bust mannequin (no legs), framed waist-up']
+      : ['a headless tailor\'s upper-body dress form with a slim chrome neck post, framed waist-up', 'a glossy black upper-body bust mannequin (no legs) with a mirror-chrome faceless head, framed waist-up']);
+  const __mqVariants = poseKey.includes('half body') ? __mqBust : (isKidsProduct ? __mqKids : (isFemaleProduct ? __mqLadies : __mqMen));
   const __mqPick = __mqVariants[Math.floor(Math.random() * __mqVariants.length)];
   modelInstruction = /MANNEQUIN SHOOT/i.test(customInstruction)
     ? 'MANNEQUIN PRESENTATION: follow the MANNEQUIN SHOOT brief in the user instruction exactly (mannequin type, finish, pose and backdrop). The mannequin is faceless with no human skin and no hair. The garment fits it like a tailored catalogue display and the print stays clearly visible and unchanged.'
@@ -682,8 +690,150 @@ const outdoorSceneInstruction = 'SCENE: a premium outdoor setting - ' + outdoorT
 // =====================================================================
 //  BACKGROUND / SCENE
 // =====================================================================
+// v25: Studio Professional background picker (website sends studio_background).
+// Same sets as the website shoot library; a fresh trending variant per run.
+const __studioBgThemes = {
+  "warm minimal studio": [
+    "a warm beige seamless studio with sculptural ceramic vases, dried pampas stems and soft window light casting long gentle shadows",
+    "a soft sand-toned studio with rounded plaster plinths, a single olive branch in a stone vase and diffused daylight",
+  ],
+  "velvet lounge": [
+    "a luxe lounge with deep burgundy walls, a green velvet sofa, brass lamps glowing and botanical art",
+    "a moody emerald-green room with gold wall sconces, a velvet armchair, lit candles and blossom branches in a vase",
+  ],
+  "forest glade": [
+    "a misty ancient forest with a mossy floor and shafts of soft morning light",
+    "an outdoor forest-glade setting under a canopy of sheer white fabric on a wooden frame, a jute rug on the grass and warm lanterns",
+  ],
+  "desert canyon": [
+    "a dramatic red sandstone canyon at golden hour with warm raking light",
+    "an open desert landscape under a clear blue sky with soft rolling dunes and a single vintage carved chair",
+  ],
+  "mirror lake": [
+    "a still mirror-water lake reflecting the product under a soft pastel sky",
+    "snowy pink-lit mountain peaks at dusk over a frozen mirror lake with a glowing floor lamp",
+  ],
+  "stone arch view": [
+    "a weathered stone arch framing a calm blue lake and distant mountains, warm sunlight on the stone floor",
+    "a white-washed Mediterranean terrace arch overlooking the sea, soft blue shadows and a terracotta pot",
+  ],
+  "tropical jungle": [
+    "a top-down view with the product surrounded by a dense jungle of glossy monstera and palm leaves",
+    "a lush greenhouse with tall tropical plants, warm golden sunlight streaming through glass and soft atmospheric mist",
+  ],
+  "surreal seashell": [
+    "a surreal luxury set: a giant white seashell sculpture on a soft beige floor scattered with pearls",
+    "a dreamy pastel set with a giant pearl-white clam shell, soft satin drapery and scattered pearls",
+  ],
+  "grand staircase hall": [
+    "a grand dark-green hall with a sweeping wooden staircase, a chequered marble floor and a glowing crystal chandelier",
+    "a heritage library hall with tall bookshelves, a curved brass staircase and warm lamp light",
+  ],
+  "golden meadow": [
+    "a golden dry-grass field under a soft overcast sky",
+    "a lush green meadow full of wildflowers under a huge billowing translucent fabric sky",
+  ],
+  "spotlight plinth": [
+    "a dark teal-blue studio lit by a single hard spotlight from above, a low glowing white rectangular plinth, deep moody vignette and a long soft shadow",
+    "a deep midnight-navy studio with a single overhead spotlight pooling on a glossy black round plinth",
+    "a warm terracotta seamless studio with a hard spotlight circle on the floor and a low white box plinth",
+  ],
+  "retro red room": [
+    "a rich crimson-red retro room: a mid-century walnut sideboard with a vintage television and record player, a round brass wall clock and a warm glowing table lamp",
+    "a mustard-and-olive 1970s lounge set with a walnut record console, a sunburst mirror and a tall ribbed table lamp",
+    "a deep emerald retro study with wood-panelled walls, a leather club chair and a brass floor lamp",
+  ],
+  "crate stack": [
+    "a clean light-grey cyclorama with a sculptural stack of black plastic crates built up behind like a throne",
+    "a pale-grey cyclorama with a tall stepped stack of white concrete breeze blocks",
+    "a sand-coloured studio with a stepped pyramid of natural wooden pallets",
+  ],
+  "rope installation": [
+    "a minimal warm-beige set with dozens of taut cream ropes hanging from the ceiling to the floor around a round linen-draped podium, soft diffused light",
+    "a blush-pink set with long sheer fabric strips hanging from the ceiling around a round white podium",
+    "a stone-grey set with hundreds of fine gold threads hanging floor to ceiling around a round plinth",
+  ],
+  "velvet club": [
+    "a deep olive-green velvet curtain backdrop over an artificial-grass floor with a white court line, scattered tennis balls, a vintage leather holdall and a wooden racket \u2014 preppy country-club editorial",
+    "a deep burgundy velvet curtain backdrop with a vintage gramophone, a velvet pouf and a patterned rug",
+    "a navy velvet curtain backdrop over a polished wooden floor with a vintage trunk and a brass floor lamp",
+  ],
+  "wood slice set": [
+    "a warm ivory seamless studio with irregular natural tree-trunk wood slices scattered across the floor like stepping stones",
+    "a warm ivory studio with smooth river stones and dried pampas grass scattered across the floor",
+    "a beige set with raw tree stumps of different heights and a single dried branch",
+  ],
+  "stone boulders": [
+    "a moody warm-grey studio framed by giant pale sculptural boulders, a single soft directional light",
+    "a giant hollow driftwood arch standing in snowy mountains, a warm-lit wooden bench inside the arch glowing against the cold blue light",
+    "a sand-toned set with a monumental smooth sandstone rock formation and soft side light",
+  ],
+  "arched corridor": [
+    "a long sandstone corridor of repeating arches with golden sunlight streaming in and deep one-point perspective",
+    "a warm plaster room with a tall pointed arch and a carved jaali lattice window casting dappled patterned light across the floor",
+    "a sunlit sculptural ivory interior with a sweeping curved staircase and a long flowing red silk ribbon swirling through the air",
+    "a white-washed Mediterranean arcade with soft blue shadows and pink bougainvillea spilling over the arches",
+  ],
+  "mirror sky": [
+    "a surreal sky set of tall glossy mirror panels reflecting drifting white clouds, standing on a still mirror-water floor",
+    "a calm pastel pink-and-peach sunset sea with perfectly still water",
+    "a twilight rocky seashore with a large glass display cube and polished chrome spheres on the dark sand",
+    "snowy pink-lit mountain peaks at dusk over a frozen mirror lake, a lone cream sofa and a glowing floor lamp standing on the ice",
+  ],
+  "desert dunes": [
+    "soft cream desert dunes with a huge sheer ivory fabric billowing in the wind behind the subject",
+    "sun-bleached white adobe desert architecture under a deep blue sky, handwoven kilim rugs laid on the ground and hung on the walls",
+    "a monumental curved concrete arch framing a clear deep-blue sky with the sun flaring softly behind the head",
+    "a luxury resort poolside with cream parasols, sage-green loungers and lush tropical palms",
+    "a top-down view of a narrow wooden canoe on dark still water among giant round green lily pads",
+  ],
+  "red stool studio": [
+    "a soft warm-grey studio with a small red-painted wooden step stool",
+    "a soft powder-blue studio with a small yellow wooden step stool",
+  ],
+  "flower cabinet": [
+    "a sage-green wall with floating flower heads and a small white cabinet overflowing with fresh flowers",
+    "a blush-pink wall with floating paper butterflies and a small white shelf of potted flowers",
+  ],
+  "boho rattan": [
+    "a boho corner with a rattan flower-shaped chair, tall potted palms, a cream curtain and a patterned jute rug",
+    "a boho nook with a hanging rattan egg chair, pampas grass and a round jute rug",
+  ],
+  "white bow dream": [
+    "a dreamy all-white set with a giant satin bow, clouds of white hydrangeas and a soft teddy bear",
+    "a dreamy pastel-pink set with a giant satin bow, pink peonies and a small vintage white armchair",
+  ],
+  "wildflower bench": [
+    "a warm beige set with tall wildflowers, a small wooden bench and a wicker picnic basket",
+    "a soft cream set with tall white poppies, a tiny wooden bench and a lace-lined picnic basket",
+  ],
+  "daisy rain boots": [
+    "a teal painted backdrop with giant white paper daisies, a mossy grass floor and little yellow rain boots",
+    "a sky-blue painted backdrop with giant paper tulips, a grassy floor and a tiny watering can",
+  ],
+  "marigold white": [
+    "a bright white set with a tiny white chair, buckets of orange marigolds and falling petals",
+    "a bright white set with a tiny white chair, buckets of sunflowers and falling yellow petals",
+  ],
+  "sage table room": [
+    "a soft beige room with a whitewashed wooden floor and a small sage table with a watering can of daisies",
+    "a soft cream room with a small wooden table set for a tiny tea party with teddy bears",
+  ],
+  "meadow butterfly": [
+    "a sunny wildflower meadow with rolling green hills and a soft blue sky",
+    "a rustic wooden garden fence covered in morning-glory flowers with a small wicker basket on the grass",
+  ],
+  "bubble window": [
+    "a cosy room with a large arched garden window, floating soap bubbles and a little wooden stool with potted blossoms",
+    "a sunny playroom with a round window, floating soap bubbles and a small rocking horse",
+  ],
+};
+const __studioBgPool = studioBackground ? (__studioBgThemes[lower(studioBackground)] || []) : [];
+
 let backgroundInstruction = '';
-if (isHomeTextile) {
+if (isHomeTextile && __studioBgPool.length) {
+  backgroundInstruction = 'SCENE: a premium trending campaign set (' + studioBackground + ') - style the product as the hero in ' + __pick(__studioBgPool) + '. The product is shown complete and true to colour; the print appears ONLY on the product. NO studio equipment visible.';
+} else if (isHomeTextile) {
   if      (p.includes('curtain'))                       backgroundInstruction = 'SCENE: a contemporary Indian living room or bedroom corner with a window. Daylight streaming through the curtain. Minimal but warm decor - a chair, a side table with a book, perhaps a potted plant.';
   else if (p.includes('bedsheet') || p.includes('blanket') || p.includes('quilt') || p.includes('luxury bedroom'))
                                                         backgroundInstruction = 'SCENE: a styled bedroom - wooden bed frame, soft headboard, bedside lamps switched on for warm glow, a window with sheer curtains in the background. Lived-in but tidy.';
@@ -697,6 +847,7 @@ if (isHomeTextile) {
 else if (isOutdoor)          backgroundInstruction = outdoorSceneInstruction;
 else if (isLuxury)           backgroundInstruction = outdoorBackground ? (outdoorSceneInstruction + ' Treat it as a high-end EDITORIAL outdoor scene - refined cinematic mood lighting, but the model and the printed garment stay clearly visible with no crushed blacks over the fabric.') : 'SCENE: ' + __pick(__luxeInterior) + ', restrained editorial styling. Soft directional mood lighting that still keeps the model and the printed garment clearly visible, with no crushed blacks over the fabric.';
 else if (isTraditional)      backgroundInstruction = 'SCENE: a tasteful traditional Indian setting - a wooden jharokha window, a courtyard wall with natural texture, brass diyas softly lit, a curtain edge in frame. Culturally accurate but never stereotyped.';
+else if (__studioBgPool.length) backgroundInstruction = 'SCENE: a premium trending studio / editorial set (' + studioBackground + ') - ' + __pick(__studioBgPool) + '. Campaign-quality lighting with NO studio equipment (softboxes, stands, umbrellas) visible in the frame.';
 else                         backgroundInstruction = 'SCENE: a premium trending editorial set - ' + __pick(__editorialIndoor) + '. Campaign-quality lighting with NO studio equipment (softboxes, stands, umbrellas) visible in the frame.';
 if (isWhiteBg) {
   // e-commerce: background must stay pure white, no harmony re-colouring
@@ -891,7 +1042,7 @@ const aspectLabel = (() => {
 })();
 
 const prompt = `
-${printForensicRule} GARMENT-ONLY PRINT RULE (CRITICAL, NON-NEGOTIABLE): The uploaded textile print appears ONLY on the actual textile product itself - the garment worn by the model, OR the curtain / bedsheet / cushion / sofa cover / table cloth / towel / the specific fabric item being shown. For home textiles (curtains, bedsheets, cushions, etc.) the print is ONLY on that fabric item and NEVER on the walls, window, furniture or room surfaces. The background, scene, walls, floor and surroundings MUST be a real photographic location as described in the SCENE section - they must NEVER show, repeat, echo, tile or contain the textile pattern. Do NOT fill the background with the print. Do NOT place a giant version of the pattern behind the model. Do NOT use the design as wallpaper or scenery. Only the clothes carry the print; everything else is a normal real-world photographic environment. \n\nDESIGN STUDY & THEME COHERENCE (do this FIRST): Before composing, visually STUDY the uploaded print - its dominant colours, motif style (floral / geometric / traditional / contemporary / festive) and overall mood. Then build a scene, styling and colour story that genuinely COMPLEMENT this specific design - backdrop, props and model styling must feel intentionally matched to the print, never random or a repeated default. Match the cultural / regional context to the selected model look (Indian model -> Indian setting & styling, Western model -> Western, and likewise for Asian / Middle-Eastern / African / Latin). For any wedding or festive theme, derive the celebration style from BOTH the design and the model's region, and vary it - do not reuse the same decor every time. 
+${printForensicRule} GARMENT-ONLY PRINT RULE (CRITICAL, NON-NEGOTIABLE): The uploaded textile print appears ONLY on the actual textile product itself - the garment worn by the model, OR the curtain / bedsheet / cushion / sofa cover / table cloth / towel / the specific fabric item being shown. For home textiles (curtains, bedsheets, cushions, etc.) the print is ONLY on that fabric item and NEVER on the walls, window, furniture or room surfaces. The background, scene, walls, floor and surroundings MUST be a real photographic location as described in the SCENE section - they must NEVER show, repeat, echo, tile or contain the textile pattern. Do NOT fill the background with the print. Do NOT place a giant version of the pattern behind the model. Do NOT use the design as wallpaper or scenery. Only the clothes carry the print; everything else is a normal real-world photographic environment. \n\nDESIGN STUDY & THEME COHERENCE (do this FIRST): Before composing, visually STUDY the uploaded print - its dominant colours, motif style (floral / geometric / traditional / contemporary / festive) and overall mood. Then build a scene, styling and colour story that genuinely COMPLEMENT this specific design - backdrop, props and model styling must feel intentionally matched to the print, never random or a repeated default. Match the cultural / regional context to the selected model look (Indian model -> Indian setting & styling, Western model -> Western, and likewise for Asian / Middle-Eastern / African / Latin). For any wedding or festive theme, derive the celebration style from BOTH the design and the model's region, and vary it - do not reuse the same decor every time. ${customLine}
 
 SHOOT BRIEF - INDIAN TEXTILE CATALOGUE MOCKUP
 QUALITY BENCHMARK: this must look like a high-budget national brand campaign shoot (Raymond / Sabyasachi / Manyavar level) that cost lakhs to produce - flawless clarity, razor-sharp focus, premium lighting and finish, with ZERO compromise on sharpness or detail. The uploaded design/print must remain EXACTLY as provided (see RULE #0) and must never be redrawn, recoloured or altered in any way.
@@ -941,7 +1092,7 @@ ${logoInstruction}
   print wins.
 
 DO NOT:
-${negativePrompt}${customLine}
+${negativePrompt}
 `.trim();
 
 // ===== AgentForge face/scene lock injection (v20) =====
@@ -952,6 +1103,10 @@ var __SCENE_LOCK = "=== CRITICAL — USER-UPLOADED SCENE COMPOSITE (HIGHEST PRIO
 var __modelPhotoUrl = clean(input.model_photo_url || input.model_image_url, '');
 var __referenceSceneUrl = clean(input.reference_scene_url, '');
 var __finalPrompt = prompt;
+// v25: framing lock at the very top so the image model never ignores it.
+if (poseKey.includes('half body')) {
+  __finalPrompt = '=== FRAMING LOCK (CRITICAL, READ FIRST) === ' + poseInstruction + __NL + __NL + __finalPrompt;
+}
 if (__modelPhotoUrl) { __finalPrompt = (isHomeTextile ? __HOME_MODEL_LOCK : __FACE_LOCK) + __NL + __NL + __finalPrompt; }
 if (__referenceSceneUrl) { __finalPrompt = __SCENE_LOCK + __NL + __NL + __finalPrompt; }
 
@@ -983,4 +1138,4 @@ return [
       user_id: meta.user_id
     }
   }
-];
+];

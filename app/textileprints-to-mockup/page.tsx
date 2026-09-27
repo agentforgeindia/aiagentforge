@@ -9,7 +9,12 @@ import { useAuth } from "@/app/components/AuthProvider";
 import { Crown, Sparkles, Upload, UploadCloud, X } from "lucide-react";
 import { track } from "@/lib/analytics";
 import StickyMobileCTA from "@/app/components/StickyMobileCTA";
-import { buildShootHints } from "@/lib/textileShootLibrary";
+import {
+  buildShootHints,
+  STUDIO_BACKGROUNDS,
+  KIDS_STUDIO_BACKGROUNDS,
+  HOME_STUDIO_BACKGROUNDS,
+} from "@/lib/textileShootLibrary";
 import TeamCreditToggle from "@/app/components/TeamCreditToggle";
 import { canGenerate } from "@/lib/checkCredits";
 import { shouldDeductCredits } from "@/lib/deductCredits";
@@ -1000,6 +1005,43 @@ const STUDIO_POSE_ICONS: Record<string, string> = {
   "Leaning Pose": UI("sp-leaning-pose"),
   "Walking Toward Camera": UI("sp-walking-toward-camera"),
 };
+// Studio Professional → "Select Studio Background" (from the reference boards;
+// Kids get their own kids-studio sets).
+const studioBackgroundOptions = Object.keys(STUDIO_BACKGROUNDS);
+const kidsStudioBackgroundOptions = Object.keys(KIDS_STUDIO_BACKGROUNDS);
+const homeStudioBackgroundOptions = Object.keys(HOME_STUDIO_BACKGROUNDS);
+const STUDIO_BG_ICONS: Record<string, string> = {
+  "Warm Minimal Studio": UI("hs-warm-minimal"),
+  "Velvet Lounge": UI("hs-velvet-lounge"),
+  "Forest Glade": UI("hs-forest-glade"),
+  "Desert Canyon": UI("hs-desert-canyon"),
+  "Mirror Lake": UI("hs-mirror-lake"),
+  "Stone Arch View": UI("hs-stone-arch"),
+  "Tropical Jungle": UI("hs-tropical-jungle"),
+  "Surreal Seashell": UI("hs-seashell"),
+  "Grand Staircase Hall": UI("hs-grand-staircase"),
+  "Golden Meadow": UI("hs-golden-meadow"),
+  "Spotlight Plinth": UI("ss-spotlight-plinth"),
+  "Retro Red Room": UI("ss-retro-red-room"),
+  "Crate Stack": UI("ss-crate-stack"),
+  "Rope Installation": UI("ss-rope-installation"),
+  "Velvet Club": UI("ss-velvet-club"),
+  "Wood Slice Set": UI("ss-wood-slice-set"),
+  "Stone Boulders": UI("ss-stone-boulders"),
+  "Arched Corridor": UI("ss-arched-corridor"),
+  "Mirror Sky": UI("ss-mirror-sky"),
+  "Desert Dunes": UI("ss-desert-dunes"),
+  "Red Stool Studio": UI("ks-red-stool"),
+  "Flower Cabinet": UI("ks-flower-cabinet"),
+  "Boho Rattan": UI("ks-boho-rattan"),
+  "White Bow Dream": UI("ks-white-bow"),
+  "Wildflower Bench": UI("ks-wildflower-bench"),
+  "Daisy Rain Boots": UI("ks-daisy-boots"),
+  "Marigold White": UI("ks-marigold-white"),
+  "Sage Table Room": UI("ks-sage-table"),
+  "Meadow Butterfly": UI("ks-meadow-butterfly"),
+  "Bubble Window": UI("ks-bubble-window"),
+};
 const BG_THEME_ICONS: Record<string, string> = {
   "Royal Palace": UI("bg-royal-palace"),
   "Wedding Theme": UI("bg-wedding-theme"),
@@ -1023,6 +1065,17 @@ const FACE_EXPR_ICONS: Record<string, string> = {
 // Shoot styles offered on the textile page. Studio Professional picks a
 // trending studio / editorial set in the backend (reference boards).
 const SHOOT_STYLES = ["Outdoor Premium", "Studio Professional", "White Background", "Upload Your Scene"];
+// Home / Universal step 5: one merged list, Outdoor + Studio first.
+const HOME_STEP5_ORDER = [
+  "Outdoor Premium",
+  "Studio Professional",
+  "Room Corner Setup",
+  "Hotel Room Setup",
+  "Lifestyle Room View",
+  "Front View",
+  "White Background",
+  "Upload Your Scene",
+];
 const SHOOT_STYLE_ICONS: Record<string, string> = {
   "Outdoor Premium": UI("ss-outdoor-premium"),
   "Studio Professional": UI("ss-studio-professional"),
@@ -1212,7 +1265,6 @@ const textileCategories: {
   { title: "Ladies Wear", icon: "dress", hint: "Suits, saree, kurti" },
   { title: "Kids Wear", icon: "tshirt", hint: "Kids fashion mockups" },
   { title: "Home Textile", icon: "pattern", hint: "Bedsheets, bags, rugs" },
-  { title: "Universal Fabric", icon: "pattern", hint: "Flat fabric preview" },
 ];
 
 const productOptionsByCategory: Record<TextileCategory, string[]> = {
@@ -1583,6 +1635,17 @@ export default function Home() {
   const [otherProductDesc, setOtherProductDesc] = useState("");
   // Shoot-style sub-selectors.
   const [outdoorBackground, setOutdoorBackground] = useState("Royal Palace");
+  const [studioBackground, setStudioBackground] = useState(studioBackgroundOptions[0]);
+  const studioBgList =
+    textileCategory === "Kids Wear"
+      ? kidsStudioBackgroundOptions
+      : textileCategory === "Home Textile" || textileCategory === "Universal Fabric"
+        ? homeStudioBackgroundOptions
+        : studioBackgroundOptions;
+  // Keep the studio background valid when switching Kids ⇄ Men/Ladies.
+  useEffect(() => {
+    if (!studioBgList.includes(studioBackground)) setStudioBackground(studioBgList[0]);
+  }, [studioBgList, studioBackground]);
   const [studioPose, setStudioPose] = useState("Auto");
   // User-uploaded reference scene — when set, the product is composited
   // INTO this photo (e.g. a styled Pinterest room) instead of a preset BG.
@@ -2739,6 +2802,10 @@ export default function Home() {
         : "";
     // Studio-pose sub-tabs removed — the main Pose picker drives the pose.
     const resolvedStudioPose = "";
+    const resolvedStudioBackground =
+      shootStyle === "Studio Professional" && (!isHomeLikeCategory || homePick === "style")
+        ? studioBackground
+        : "";
 
     // Extra prompt hints folded into custom_instruction so the n8n
     // prompt builder honours them even before reading the new fields.
@@ -2753,6 +2820,7 @@ export default function Home() {
       shootStyle: resolvedShootStyle,
       customShootStyle: !!customShootStyle.trim(),
       outdoorBackground: resolvedOutdoorBackground,
+      studioBackground: resolvedStudioBackground,
       accessories: resolveAccessories(),
       hasReferenceScene: !!activeSceneUrl,
       designUrl: item.url,
@@ -2919,6 +2987,7 @@ export default function Home() {
         auto_detect_product: isOtherProduct,
         other_product_description: resolvedOtherDesc,
         outdoor_background: resolvedOutdoorBackground,
+        studio_background: resolvedStudioBackground,
         studio_pose: resolvedStudioPose,
 
         face_expression: resolvedFaceExpression,
@@ -4467,8 +4536,10 @@ export default function Home() {
                                 item.title === "Home Textile" ||
                                 item.title === "Universal Fabric"
                               ) {
-                                setHomePick("scene");
-                                setShootStyle("Studio Professional");
+                                // Home: Outdoor Premium is selected by default.
+                                setHomePick("style");
+                                setShootStyle("Outdoor Premium");
+                                setPose("Front View");
                               }
                               setFaceExpression("Happy");
                               setCustomFaceExpression("");
@@ -4824,6 +4895,32 @@ export default function Home() {
                         </div>
                       )}
 
+                      {/* Studio Professional → studio background selector (all categories) */}
+                      {styleActive("Studio Professional") && (
+                        <div className="mt-5 rounded-2xl border border-cyan-400/30 bg-cyan-400/5 p-4">
+                          <p className="text-xs font-black uppercase tracking-widest text-cyan-600">
+                            Select Studio Background
+                          </p>
+                          <p className={`mt-1 text-xs ${muted}`}>
+                            Premium trending studio sets — a fresh variation of
+                            the chosen set on every generation.
+                          </p>
+                          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+                            {studioBgList.map((item) => (
+                              <OptionCard
+                                key={item}
+                                title={item}
+                                active={studioBackground === item}
+                                onClick={() => setStudioBackground(item)}
+                                darkMode={darkMode}
+                                useGlyph
+                                imgSrc={STUDIO_BG_ICONS[item]}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {styleActive("Upload Your Scene") && (
                         <p className={`mt-3 text-xs ${muted}`}>
                           {referenceSceneUrl
@@ -4841,7 +4938,15 @@ export default function Home() {
                       </p>
 
                       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
-                        {dynamicPoseOptions.map((item) => (
+                        {(isHomeLikeCategory
+                          ? HOME_STEP5_ORDER.filter(
+                              (n) => SHOOT_STYLES.includes(n) || dynamicPoseOptions.includes(n),
+                            )
+                          : dynamicPoseOptions
+                        ).map((item) =>
+                          SHOOT_STYLES.includes(item) ? (
+                            styleCards[SHOOT_STYLES.indexOf(item)]
+                          ) : (
                           <OptionCard
                             key={item}
                             title={item}
@@ -4861,8 +4966,8 @@ export default function Home() {
                             darkMode={darkMode}
                             imgSrc={POSE_ICONS[item]}
                           />
-                        ))}
-                        {isHomeLikeCategory && styleCards}
+                          ),
+                        )}
                       </div>
 
                       {isHomeLikeCategory
@@ -4999,6 +5104,9 @@ export default function Home() {
                         <SummaryRow label="Shoot Style" value={customShootStyle.trim() || shootStyle} />
                         {shootStyle === "Outdoor Premium" && (
                           <SummaryRow label="Background" value={outdoorBackground} />
+                        )}
+                        {shootStyle === "Studio Professional" && (!isHomeLikeCategory || homePick === "style") && (
+                          <SummaryRow label="Studio Background" value={studioBackground} />
                         )}
                         <SummaryRow label="Accessories" value={accessories.length ? accessories.join(", ") : "None"} />
                         <SummaryRow label="Frame" value={`${customOutputSize.trim() || outputSize} / ${customQuality.trim() || quality}`} />
