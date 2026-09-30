@@ -14,30 +14,29 @@ const GEMINI_VISION_URL =
 
 // Whitelisted values the frontend understands. AI must pick from these only.
 const ALLOWED = {
-  jewellery_type: ["Ring", "Earrings", "Necklace", "Bracelet", "More Options"],
-  more_jewellery: [
+  jewellery_type: [
+    "Ring",
+    "Earrings",
+    "Necklace",
     "Jewellery Set",
-    "Payal",
-    "Tikka",
-    "Mangalsutra",
-    "Bangles",
-    "Nose Pin",
+    "Choker",
     "Pendant",
     "Chain",
-    "Anklet",
+    "Mangalsutra",
+    "Bracelet",
+    "Bangles",
     "Kada",
+    "Hathphool",
+    "Maang Tikka",
+    "Nose Pin / Nath",
+    "Anklet / Payal",
+    "Kamarbandh",
+    "Brooch",
+    "Other",
   ],
-  shoot_style: [
-    "Luxury Studio",
-    "White Catalogue",
-    "Bridal Editorial",
-    "Macro Detail",
-    "Lifestyle Campaign",
-    "Indian Model",
-    "Bridal Look",
-    "Luxury Editorial",
-    "Minimal Modern",
-  ],
+  // Legacy field — the page no longer has a "More Options" sub-menu.
+  more_jewellery: [] as string[],
+  shoot_style: ["Studio Professional", "Outdoor Premium", "White Background"],
   accessories: [
     "No Accessories",
     "Flat Lay",
@@ -106,8 +105,8 @@ You MUST return a strict JSON object using ONLY values from this whitelist:
 ${JSON.stringify(ALLOWED, null, 2)}
 
 Rules:
-1. Pick exactly ONE value from each list (except more_jewellery which is an array — leave [] unless jewellery_type is "More Options").
-2. Recommend based on what the jewellery actually IS (bridal kundan → Bridal Editorial + Bridal Model; simple silver studs → Minimal Modern + Ear Close-up; etc.).
+1. Pick exactly ONE value from each list. Always return "more_jewellery": [] (legacy field). Use "Other" for jewellery_type only if the piece fits none of the listed types.
+2. Recommend based on what the jewellery actually IS (bridal kundan set → Studio Professional or Outdoor Premium with a model; diamond solitaire → Studio Professional; simple catalogue piece → White Background; etc.).
 3. "reason" must be 1 short sentence in friendly Hinglish (mixed Hindi + English) explaining WHY you picked these — natural, like talking to a shop owner. Max 22 words.
 4. "detected_piece" must be a 2–4 word description of what you see (e.g. "Polki bridal necklace", "Diamond solitaire ring").
 5. Return ONLY the JSON object, no markdown fences, no preamble.
@@ -171,10 +170,8 @@ function normaliseSuggestion(raw: any) {
   return {
     detected_piece: typeof raw?.detected_piece === "string" ? raw.detected_piece.slice(0, 60) : "Jewellery piece",
     jewellery_type: coerceToWhitelist(raw?.jewellery_type, ALLOWED.jewellery_type, "Ring"),
-    more_jewellery: Array.isArray(raw?.more_jewellery)
-      ? raw.more_jewellery.filter((x: any): x is string => ALLOWED.more_jewellery.includes(x))
-      : [],
-    shoot_style: coerceToWhitelist(raw?.shoot_style, ALLOWED.shoot_style, "Luxury Studio"),
+    more_jewellery: [] as string[],
+    shoot_style: coerceToWhitelist(raw?.shoot_style, ALLOWED.shoot_style, "Studio Professional"),
     accessories: coerceToWhitelist(raw?.accessories, ALLOWED.accessories, "No Accessories"),
     model_type: coerceToWhitelist(raw?.model_type, ALLOWED.model_type, "No Model"),
     pose: coerceToWhitelist(raw?.pose, ALLOWED.pose, "Auto Pose"),

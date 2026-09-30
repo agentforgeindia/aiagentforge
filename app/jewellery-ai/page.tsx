@@ -134,31 +134,60 @@ type UploadItem = {
 
 type OptionItem = {
   label: string;
+  /** Optional display text when it differs from the value sent to n8n. */
+  title?: string;
   icon: LucideIcon;
   hint?: string;
   iconFile?: string;
 };
 
+// All jewellery types in ONE grid (no "More Options" sub-menu). Icons are the
+// matching gold + gem set in /public/jewellery-icon/jt-*.svg.
+const JT = (f: string) => `/jewellery-icon/jt-${f}.svg`;
 const JEWELLERY_TYPES: OptionItem[] = [
-  { label: "Ring", icon: Diamond, hint: "Hero product", iconFile: "ring" },
-  { label: "Earrings", icon: Sparkles, hint: "Pair styling", iconFile: "earrings" },
-  { label: "Necklace", icon: Gem, hint: "Neck focus", iconFile: "necklace" },
-  { label: "Bracelet", icon: Hand, hint: "Wrist detail", iconFile: "bracelet" },
-  { label: "More Options", icon: Crown, hint: "Payal, tikka, set", iconFile: "more-options" },
+  { label: "Ring", icon: Diamond, hint: "Hero product", iconFile: JT("ring") },
+  { label: "Earrings", icon: Sparkles, hint: "Studs, jhumka, drops", iconFile: JT("earrings") },
+  { label: "Necklace", icon: Gem, hint: "Neck focus", iconFile: JT("necklace") },
+  { label: "Jewellery Set", icon: Crown, hint: "Necklace + earrings", iconFile: JT("jewellery-set") },
+  { label: "Choker", icon: Gem, hint: "Close-fit neckpiece", iconFile: JT("choker") },
+  { label: "Pendant", icon: Gem, hint: "Pendant on chain", iconFile: JT("pendant") },
+  { label: "Chain", icon: Gem, hint: "Gold / silver chain", iconFile: JT("chain") },
+  { label: "Mangalsutra", icon: Gem, hint: "Black-bead classic", iconFile: JT("mangalsutra") },
+  { label: "Bracelet", icon: Hand, hint: "Wrist detail", iconFile: JT("bracelet") },
+  { label: "Bangles", icon: Hand, hint: "Stack / pair", iconFile: JT("bangles") },
+  { label: "Kada", icon: Hand, hint: "Bold single cuff", iconFile: JT("kada") },
+  { label: "Hathphool", icon: Hand, hint: "Hand harness", iconFile: JT("hathphool") },
+  { label: "Maang Tikka", icon: Crown, hint: "Forehead piece", iconFile: JT("maang-tikka") },
+  { label: "Nose Pin / Nath", icon: Sparkles, hint: "Stud or nath", iconFile: JT("nose-pin") },
+  { label: "Anklet / Payal", icon: Sparkles, hint: "Ankle piece", iconFile: JT("anklet") },
+  { label: "Kamarbandh", icon: Crown, hint: "Waist belt", iconFile: JT("kamarbandh") },
+  { label: "Brooch", icon: Sparkles, hint: "Pin / saree brooch", iconFile: JT("brooch") },
+  { label: "Other", icon: ScanSearch, hint: "AI detects from upload", iconFile: JT("other") },
 ];
-
-const MORE_JEWELLERY_OPTIONS = [
-  "Jewellery Set",
-  "Payal",
-  "Tikka",
-  "Mangalsutra",
-  "Bangles",
-  "Nose Pin",
-  "Pendant",
-  "Chain",
-  "Anklet",
-  "Other",
-];
+const JEWELLERY_TYPE_LABELS = JEWELLERY_TYPES.map((t) => t.label);
+// Old saved values / AI suggestions ("More Options", "Payal", "Tikka"…) → new labels.
+const JEWELLERY_TYPE_ALIASES: Record<string, string> = {
+  payal: "Anklet / Payal",
+  anklet: "Anklet / Payal",
+  tikka: "Maang Tikka",
+  "maang tikka": "Maang Tikka",
+  "nose pin": "Nose Pin / Nath",
+  nath: "Nose Pin / Nath",
+  "jewellery set": "Jewellery Set",
+};
+function normaliseJewelleryType(type?: string, more?: unknown): string {
+  const candidates = [type, ...(Array.isArray(more) ? more : [])].filter(
+    (x): x is string => typeof x === "string" && x.trim() !== "" && x !== "More Options",
+  );
+  for (const c of candidates) {
+    if (JEWELLERY_TYPE_LABELS.includes(c)) return c;
+    const alias = JEWELLERY_TYPE_ALIASES[c.toLowerCase().trim()];
+    if (alias) return alias;
+    const ci = JEWELLERY_TYPE_LABELS.find((l) => l.toLowerCase() === c.toLowerCase().trim());
+    if (ci) return ci;
+  }
+  return type === "More Options" ? "Other" : "Ring";
+}
 
 const MODEL_USAGE_BY_JEWELLERY: Record<string, OptionItem[]> = {
   Ring: [
@@ -252,26 +281,102 @@ const CAMERA_ANGLE_OPTIONS: OptionItem[] = [
 // SHOOT STYLE = only the scene / background / lighting (deduped).
 // Model ethnicity now lives in its own "Model Look" box (Step 3).
 const SHOOT_STYLE_OPTIONS: OptionItem[] = [
-  { label: "Luxury Studio", icon: Crown, hint: "Dark velvet premium studio", iconFile: "/jewellery-icon/js-luxury-studio.png" },
-  { label: "White Background", icon: Square, hint: "Clean seamless white catalogue BG", iconFile: "/jewellery-icon/js-white-background.png" },
-  { label: "Bridal Editorial", icon: Sparkles, hint: "Bridal / festive rich styling", iconFile: "/jewellery-icon/js-bridal-editorial.png" },
-  { label: "Luxury Editorial", icon: BadgeCheck, hint: "Fashion / cinematic editorial", iconFile: "/jewellery-icon/js-luxury-editorial.png" },
-  { label: "Macro Detail", icon: ScanSearch, hint: "Diamond / kundan stone focus", iconFile: "/jewellery-icon/js-macro-detail.png" },
-  { label: "Outdoor Premium", icon: ImageIcon, hint: "Premium outdoor backdrop — pick a theme", iconFile: "/jewellery-icon/js-outdoor-premium.png" },
-  { label: "Studio Professional", icon: Camera, hint: "Pro studio shoot — pick a pose", iconFile: "/jewellery-icon/js-studio-professional.png" },
+  { label: "Studio Professional", icon: Camera, hint: "Pro studio shoot — pick a studio set", iconFile: "/ui-icons/ss-studio-professional.png" },
+  { label: "Outdoor Premium", icon: ImageIcon, hint: "Premium outdoor backdrop — pick a theme", iconFile: "/ui-icons/ss-outdoor-premium.png" },
+  { label: "White Background", title: "White BG", icon: Square, hint: "Clean seamless white catalogue BG", iconFile: "/ui-icons/ss-white-background.png" },
+  { label: "Upload Your Scene", icon: ImageIcon, hint: "Your own backdrop photo (+2 credits)", iconFile: "/ui-icons/ss-luxury-editorial.png" },
 ];
+const SHOOT_STYLE_LABELS = SHOOT_STYLE_OPTIONS.map((o) => o.label);
+const DEFAULT_SHOOT_STYLE = "Studio Professional";
+// Old saved values / AI suggestions ("Luxury Studio", "Bridal Editorial"…) → a style that still exists.
+// Studio Professional → "Select Studio Background": jewellery-specific sets from
+// the AF "Jewellery Agent" reference boards. Each set has a product-only version
+// (No Model) and a model version. Icons: /public/jewellery-icon/jb-*.svg.
+const JEWEL_STUDIO_SETS: { name: string; icon: string; product: string; model: string }[] = [
+  { name: "Velvet Bust — Maroon", icon: "velvet-bust-maroon",
+    product: "a deep maroon velvet neck-bust display form on a matching maroon set, a single soft spotlight making the metal and stones sparkle, rich dark vignette",
+    model: "a deep maroon seamless studio with a soft spotlight halo and a draped maroon velvet backdrop" },
+  { name: "Royal Navy Velvet", icon: "royal-navy-velvet",
+    product: "a royal-navy velvet neck-bust with navy velvet drapery flowing around its base, one soft top spotlight",
+    model: "a royal-navy studio with flowing navy velvet drapery behind the model and a soft top spotlight" },
+  { name: "Emerald Marble Cube", icon: "emerald-marble-cube",
+    product: "a polished dark-green marble cube on a deep emerald set, lit by a single narrow beam of light, the piece resting on the top edge",
+    model: "a deep emerald studio backdrop with a single narrow beam of light across the model's neckline and face" },
+  { name: "Driftwood Branch", icon: "driftwood-branch",
+    product: "a sculptural weathered driftwood branch against a warm brown backdrop, the piece hung or draped along the wood",
+    model: "a warm chocolate-brown studio with a sculptural driftwood branch beside the model, soft warm key light" },
+  { name: "Travertine Arch", icon: "travertine-arch",
+    product: "a smooth travertine arch / pedestal on a warm sand-beige set with soft golden light and a gentle shadow",
+    model: "a warm sand-beige plaster set with a travertine arch behind the model and soft golden light" },
+  { name: "Festive Diya & Marigold", icon: "festive-diya-marigold",
+    product: "an Indian festive still-life: a carved wooden jewellery box, folded plum silk, a few marigold flowers and a glowing brass diya in warm candle light",
+    model: "a festive Indian set with brass diyas, marigold garlands and warm candle light behind the model" },
+  { name: "Ivory Silk Drape", icon: "ivory-silk-drape",
+    product: "soft folds of ivory silk / satin with the piece resting in the folds, warm side light",
+    model: "a soft ivory silk-draped backdrop with gentle window light" },
+  { name: "Brass Tray & Velvet", icon: "brass-tray-velvet",
+    product: "a brushed brass tray on deep green velvet with a loose ivory ribbon, the piece laid on the tray",
+    model: "a deep green velvet backdrop with a few brass accents and warm light" },
+  { name: "Stone & Dried Flowers", icon: "stone-dried-flowers",
+    product: "a flat natural stone slab on a pale beige set with a few dried flowers and a hard sunlight shadow",
+    model: "a pale beige set with dried flower stems and a hard diagonal window shadow" },
+  { name: "Olive Leaf Shadow", icon: "olive-leaf-shadow",
+    product: "a slim olive branch across a warm neutral wall with soft dappled leaf shadows, the piece hanging from the branch or resting below",
+    model: "a warm neutral wall with soft dappled olive-leaf shadows falling across the model" },
+  { name: "Amber Spotlight", icon: "amber-spotlight-pebble",
+    product: "a dark river pebble in a hard diagonal sunbeam on a deep amber set, the piece resting on the pebble",
+    model: "a warm amber backdrop with a hard diagonal sunbeam, the face half-lit and half in soft shadow" },
+  { name: "Crimson & White Blossoms", icon: "crimson-white-blossoms",
+    product: "a crimson backdrop with delicate sprays of white baby's-breath, the piece on a small plinth in front",
+    model: "a crimson backdrop with delicate sprays of white baby's-breath around the model's hands and shoulders" },
+];
+const JEWEL_STUDIO_SET_NAMES = JEWEL_STUDIO_SETS.map((x) => x.name);
+function resolveJewelStudioSet(name: string, noModel: boolean): string {
+  const set = JEWEL_STUDIO_SETS.find((x) => x.name === name);
+  if (!set) return "";
+  return noModel ? set.product : set.model;
+}
+// Accessories & Props: shown only in Step 2 for No Model (product-only).
 
-// Model Look (textile-parity) — which kind of model wears the jewellery.
-const JEWEL_MODEL_LOOK_OPTIONS: OptionItem[] = [
-  { label: "No Model", icon: Package, hint: "Product-only, no human", iconFile: "/jewellery-icon/js-no-model.png" },
-  { label: "Indian Model", icon: UserRound, hint: "Indian / South-Asian", iconFile: "/model-faces/women-indian.png" },
-  { label: "Western Model", icon: UserRound, hint: "European / American look", iconFile: "/model-faces/women-western.png" },
-  { label: "Asian Model", icon: UserRound, hint: "East-Asian look", iconFile: "/model-faces/women-asian.png" },
-  { label: "Middle Eastern Model", icon: UserRound, hint: "Middle-Eastern look", iconFile: "/model-faces/women-middle-eastern.png" },
-  { label: "African Model", icon: UserRound, hint: "African look", iconFile: "/model-faces/women-african.png" },
-  { label: "European Model", icon: UserRound, hint: "European look", iconFile: "/model-faces/women-western.png" },
-  { label: "Upload Your Model", icon: Upload, hint: "Your own photo (+2)" },
+function normaliseShootStyle(v?: string): string {
+  if (v && SHOOT_STYLE_LABELS.includes(v)) return v;
+  if (v === "White Catalogue") return "White Background";
+  return DEFAULT_SHOOT_STYLE;
+}
+
+// Model Look (textile-parity) — Female / Male tabs, Indian first, No Model last.
+// Female values keep the old labels ("Indian Model") so saved settings still work;
+// male values add "Male" ("Indian Male Model") so n8n gets the gender.
+type ModelGender = "Female" | "Male";
+const MODEL_GENDERS: ModelGender[] = ["Female", "Male"];
+const JEWEL_MODEL_ETHNICITIES: { name: string; hint: string; face: string }[] = [
+  { name: "Indian", hint: "Indian / South-Asian", face: "indian" },
+  { name: "Western", hint: "European / American look", face: "western" },
+  { name: "Asian", hint: "East-Asian look", face: "asian" },
+  { name: "Middle Eastern", hint: "Middle-Eastern look", face: "middle-eastern" },
+  { name: "African", hint: "African look", face: "african" },
+  { name: "European", hint: "European look", face: "western" },
 ];
+const lookValue = (ethnicity: string, gender: ModelGender) =>
+  gender === "Male" ? `${ethnicity} Male Model` : `${ethnicity} Model`;
+function jewelModelLookOptions(gender: ModelGender): OptionItem[] {
+  return [
+    ...JEWEL_MODEL_ETHNICITIES.map((e) => ({
+      label: lookValue(e.name, gender),
+      title: `${e.name} Model`,
+      icon: UserRound,
+      hint: e.hint,
+      iconFile: `/model-faces/${gender === "Male" ? "men" : "women"}-${e.face}.png`,
+    })),
+    { label: "No Model", icon: Package, hint: "Product-only, no human", iconFile: "/jewellery-icon/js-no-model.png" },
+    { label: "Upload Your Model", icon: Upload, hint: "Your own photo (+2)" },
+  ];
+}
+// Same ethnicity in the other gender (keeps No Model / Upload Your Model as-is).
+function switchLookGender(look: string, gender: ModelGender): string {
+  const e = JEWEL_MODEL_ETHNICITIES.find((x) => look === lookValue(x.name, "Female") || look === lookValue(x.name, "Male"));
+  return e ? lookValue(e.name, gender) : look;
+}
 
 // Background-theme + studio-pose sub-options (textile-parity), shown only
 // when the matching shoot style is selected.
@@ -287,30 +392,6 @@ const JEWEL_OUTDOOR_BG_OPTIONS = [
   "Mountains",
   "Garden",
 ];
-const JEWEL_STUDIO_POSE_OPTIONS = [
-  "Auto",
-  "Standing Front",
-  "Three-Quarter Turn",
-  "Hand in Pocket",
-  "Looking Away",
-  "Seated Stool",
-  "Leaning Pose",
-  "Walking Toward Camera",
-];
-
-// Cropped jewellery PNG icons for the "More Jewellery Options" sub-grid.
-const MORE_JEWELLERY_ICONS: Record<string, string> = {
-  "Jewellery Set": "/jewellery-icon/jm-jewellery-set.png",
-  Payal: "/jewellery-icon/jm-payal.png",
-  Tikka: "/jewellery-icon/jm-tikka.png",
-  Mangalsutra: "/jewellery-icon/jm-mangalsutra.png",
-  Bangles: "/jewellery-icon/jm-bangles.png",
-  "Nose Pin": "/jewellery-icon/jm-nose-pin.png",
-  Pendant: "/jewellery-icon/jm-pendant.png",
-  Chain: "/jewellery-icon/jm-chain.png",
-  Anklet: "/jewellery-icon/jm-anklet.png",
-  Other: "/jewellery-icon/jm-other.png",
-};
 
 // Universal background-theme + studio-pose icons (shared with the textile agent).
 const JEWEL_BG_THEME_ICONS: Record<string, string> = {
@@ -324,16 +405,6 @@ const JEWEL_BG_THEME_ICONS: Record<string, string> = {
   Waterfall: "/ui-icons/bg-waterfall.png",
   Mountains: "/ui-icons/bg-mountains.png",
   Garden: "/ui-icons/bg-garden.png",
-};
-const JEWEL_STUDIO_POSE_ICONS: Record<string, string> = {
-  Auto: "/ui-icons/sp-auto.png",
-  "Standing Front": "/ui-icons/sp-standing-front.png",
-  "Three-Quarter Turn": "/ui-icons/sp-three-quarter-turn.png",
-  "Hand in Pocket": "/ui-icons/sp-hand-in-pocket.png",
-  "Looking Away": "/ui-icons/sp-looking-away.png",
-  "Seated Stool": "/ui-icons/sp-seated-stool.png",
-  "Leaning Pose": "/ui-icons/sp-leaning-pose.png",
-  "Walking Toward Camera": "/ui-icons/sp-walking-toward-camera.png",
 };
 
 // 10 props covering temple, diamond, bridal and luxury flat-lay use cases.
@@ -363,8 +434,8 @@ const FRAME_OUTPUT_OPTIONS: OptionItem[] = [
 
 const builderStepMeta = [
   { id: 1 as BuilderStep, title: "Product", sub: "Type + protection" },
-  { id: 2 as BuilderStep, title: "Style", sub: "Output + props" },
-  { id: 3 as BuilderStep, title: "Model", sub: "Model + frame" },
+  { id: 2 as BuilderStep, title: "Model", sub: "Model + pose" },
+  { id: 3 as BuilderStep, title: "Style", sub: "Shoot style + set" },
   { id: 4 as BuilderStep, title: "Final", sub: "Upload + generate" },
 ];
 
@@ -716,15 +787,18 @@ function OptionCard({
   option,
   active,
   onClick,
+  large,
 }: {
   option: OptionItem;
   active: boolean;
   onClick: () => void;
+  /** Textile-size icon (64px → 80px) used by the Select Shoot Style grid. */
+  large?: boolean;
 }) {
   const Icon = option.icon;
   const [iconFailed, setIconFailed] = useState(false);
   const iconSrc = option.iconFile
-    ? option.iconFile.startsWith("/")
+    ? option.iconFile.startsWith("/") || /^https?:\/\//i.test(option.iconFile)
       ? option.iconFile
       : `/jewellery-icon/${option.iconFile}.svg`
     : "";
@@ -741,7 +815,11 @@ function OptionCard({
       )}
     >
       <div
-        className="mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-[22px] bg-white text-cyan-700 transition sm:h-[76px] sm:w-[76px] sm:rounded-[26px]"
+        className={
+          large
+            ? clsx("mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white text-cyan-700 transition sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px]", active ? "shadow-lg shadow-cyan-400/25" : "shadow-sm")
+            : "mb-3 flex h-16 w-16 items-center justify-center overflow-hidden rounded-[22px] bg-white text-cyan-700 transition sm:h-[76px] sm:w-[76px] sm:rounded-[26px]"
+        }
       >
         {iconSrc && !iconFailed ? (
           <img
@@ -754,7 +832,7 @@ function OptionCard({
           <Icon className="h-8 w-8" />
         )}
       </div>
-      <p className={clsx("text-[12px] font-black leading-4 sm:text-sm", active ? "text-cyan-700 dark:text-cyan-200" : "text-slate-700 dark:text-white/75")}>{option.label}</p>
+      <p className={clsx("text-[12px] font-black leading-4 sm:text-sm", active ? "text-cyan-700 dark:text-cyan-200" : "text-slate-700 dark:text-white/75")}>{option.title ?? option.label}</p>
     </button>
   );
 }
@@ -766,6 +844,8 @@ function SelectionGrid({
   value,
   onChange,
   footer,
+  header,
+  large,
 }: {
   title: string;
   subtitle: string;
@@ -773,6 +853,9 @@ function SelectionGrid({
   value: string;
   onChange: (value: string) => void;
   footer?: React.ReactNode;
+  header?: React.ReactNode;
+  /** Textile layout: bigger icons, 4 cards per row on desktop. */
+  large?: boolean;
 }) {
   return (
     <div className="rounded-[1.35rem] border border-black/10 bg-white/70 p-4 dark:border-white/10 dark:bg-white/[0.045] sm:p-5">
@@ -780,40 +863,16 @@ function SelectionGrid({
         <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">{title}</p>
         <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/50">{subtitle}</p>
       </div>
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+      {header ? <div className="mb-4">{header}</div> : null}
+      <div className={large ? "grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4" : "grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5"}>
         {options.map((option) => (
-          <OptionCard key={option.label} option={option} active={value === option.label} onClick={() => onChange(option.label)} />
+          <OptionCard key={`${option.label}-${option.iconFile ?? ""}`} option={option} active={value === option.label} onClick={() => onChange(option.label)} large={large} />
         ))}
       </div>
       {footer ? <div className="mt-4 border-t border-black/5 pt-4 dark:border-white/10">{footer}</div> : null}
     </div>
   );
 }
-
-function TextInputBox({
-  label,
-  value,
-  onChange,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-}) {
-  return (
-    <label className="block rounded-[1.35rem] border border-black/10 bg-white/70 p-4 dark:border-white/10 dark:bg-white/[0.045]">
-      <span className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">{label}</span>
-      <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="mt-3 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-cyan-400 dark:border-white/10 dark:bg-black/20"
-      />
-    </label>
-  );
-}
-
 
 function FrameQualityGrid({
   outputSize,
@@ -1079,11 +1138,13 @@ export default function JewelleryAIPage() {
   // Upload Your Model
   const [modelPhotoUrl, setModelPhotoUrl] = useState("");
   const [modelPhotoUploading, setModelPhotoUploading] = useState(false);
+  const modelPhotoInputRef = useRef<HTMLInputElement | null>(null);
   const [tryOnConsent, setTryOnConsent] = useState(false);
 
   // Upload Your Scene (background scene the jewellery is composited into)
   const [referenceSceneUrl, setReferenceSceneUrl] = useState("");
   const [sceneUploading, setSceneUploading] = useState(false);
+  const sceneInputRef = useRef<HTMLInputElement | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [loadingFactIndex, setLoadingFactIndex] = useState(0);
   const [generationProgress, setGenerationProgress] = useState(8);
@@ -1118,25 +1179,25 @@ export default function JewelleryAIPage() {
   }, []);
 
   const [jewelleryType, setJewelleryType] = useState("Ring");
-  const [moreJewellery, setMoreJewellery] = useState<string[]>([]);
+  // Kept (always empty) so the n8n payload keeps its `more_jewellery` field.
+  const [moreJewellery] = useState<string[]>([]);
   const [customJewellery, setCustomJewellery] = useState("");
   const [modelType, setModelType] = useState("No Model");
   const [pose, setPose] = useState("Auto Pose");
   const [modelLook, setModelLook] = useState("Indian Model");
+  const [modelGender, setModelGender] = useState<ModelGender>("Female");
   const faceExpression = NATURAL_FACE_EXPRESSION;
-  const [shootStyle, setShootStyle] = useState("Luxury Studio");
+  const [shootStyle, setShootStyle] = useState(DEFAULT_SHOOT_STYLE);
   const [jewelOutdoorBg, setJewelOutdoorBg] = useState("Royal Palace");
-  const [jewelStudioPose, setJewelStudioPose] = useState("Auto");
+  const [jewelStudioBg, setJewelStudioBg] = useState(JEWEL_STUDIO_SET_NAMES[0]);
   const [accessory, setAccessory] = useState("No Accessories");
   const [cameraAngle, setCameraAngle] = useState("Auto Angle");
   const [customCameraAngle, setCustomCameraAngle] = useState("");
   const [outputSize, setOutputSize] = useState("Square 1080x1080");
   const [quality, setQuality] = useState("Premium");
 
-  const [customPose, setCustomPose] = useState("");
   const [customModelLook, setCustomModelLook] = useState("");
   const [customShootStyle, setCustomShootStyle] = useState("");
-  const [customAccessory, setCustomAccessory] = useState("");
 
   const [jewelleryDetails, setJewelleryDetails] = useState("");
   const [modelNotes, setModelNotes] = useState("");
@@ -1278,22 +1339,21 @@ export default function JewelleryAIPage() {
       if (savedSettings) {
         const settings = JSON.parse(savedSettings);
         setGenerationMode(settings.generationMode || "single");
-        setJewelleryType(settings.jewelleryType || "Ring");
-        setMoreJewellery(Array.isArray(settings.moreJewellery) ? settings.moreJewellery : []);
+        setJewelleryType(normaliseJewelleryType(settings.jewelleryType, settings.moreJewellery));
         setCustomJewellery(settings.customJewellery || "");
         setModelType(settings.modelType || "No Model");
         setPose(settings.pose || "Auto Pose");
+        const savedGender: ModelGender = settings.modelGender === "Male" ? "Male" : "Female";
+        setModelGender(savedGender);
         setModelLook(settings.modelLook || "Indian Model");
-        setShootStyle(settings.shootStyle || "Luxury Studio");
+        setShootStyle(normaliseShootStyle(settings.shootStyle));
         setAccessory(settings.accessory || "No Accessories");
         setCameraAngle(settings.cameraAngle || "Auto Angle");
         setCustomCameraAngle(settings.customCameraAngle || "");
         setOutputSize(settings.outputSize || "Square 1080x1080");
         setQuality(settings.quality || "Premium");
-        setCustomPose(settings.customPose || "");
         setCustomModelLook(settings.customModelLook || "");
         setCustomShootStyle(settings.customShootStyle || "");
-        setCustomAccessory(settings.customAccessory || "");
         setJewelleryDetails(settings.jewelleryDetails || "");
         setModelNotes(settings.modelNotes || "");
         setCustomInstruction(settings.customInstruction || "");
@@ -1329,6 +1389,7 @@ export default function JewelleryAIPage() {
           modelType,
           pose,
           modelLook,
+          modelGender,
           faceExpression,
           shootStyle,
           accessory,
@@ -1336,10 +1397,8 @@ export default function JewelleryAIPage() {
           customCameraAngle,
           outputSize,
           quality,
-          customPose,
           customModelLook,
           customShootStyle,
-          customAccessory,
           jewelleryDetails,
           modelNotes,
           customInstruction,
@@ -1361,6 +1420,7 @@ export default function JewelleryAIPage() {
     modelType,
     pose,
     modelLook,
+    modelGender,
     faceExpression,
     shootStyle,
     accessory,
@@ -1368,10 +1428,8 @@ export default function JewelleryAIPage() {
     customCameraAngle,
     outputSize,
     quality,
-    customPose,
     customModelLook,
     customShootStyle,
-    customAccessory,
     jewelleryDetails,
     modelNotes,
     customInstruction,
@@ -1424,11 +1482,9 @@ export default function JewelleryAIPage() {
   }, [isGenerating]);
 
   const selectedJewelleryLabel = useMemo(() => {
-    if (jewelleryType !== "More Options") return customJewellery.trim() || jewelleryType;
-    const selected = moreJewellery.join(", ");
-    const custom = customJewellery.trim();
-    return [selected, custom].filter(Boolean).join(", ") || "More Options";
-  }, [customJewellery, jewelleryType, moreJewellery]);
+    if (customJewellery.trim()) return customJewellery.trim();
+    return jewelleryType === "Other" ? "Other (auto-detect the piece from the uploaded image)" : jewelleryType;
+  }, [customJewellery, jewelleryType]);
 
   const credits = useMemo(() => {
     const base = quality === "Ultra HD" ? 30 : outputSize.includes("Mobile") ? 17 : 15;
@@ -1442,7 +1498,7 @@ export default function JewelleryAIPage() {
         (useCompanyAddress && companyAddress.trim() ? 1 : 0);
 
     const modelUploadCredits = modelPhotoUrl ? 2 : 0;
-    const sceneUploadCredits = referenceSceneUrl ? 2 : 0;
+    const sceneUploadCredits = shootStyle === "Upload Your Scene" && referenceSceneUrl ? 2 : 0;
     const perImageCredits = base + brandingCredits + modelUploadCredits + sceneUploadCredits;
     return generationMode === "single" ? perImageCredits : Math.max(uploads.length, 1) * perImageCredits;
   }, [
@@ -1463,13 +1519,10 @@ export default function JewelleryAIPage() {
     profile,
     modelPhotoUrl,
     referenceSceneUrl,
+    shootStyle,
   ]);
 
   const previewImage = uploads[0]?.preview || null;
-
-  const toggleMoreJewellery = (item: string) => {
-    setMoreJewellery((prev) => (prev.includes(item) ? prev.filter((x) => x !== item) : [...prev, item]));
-  };
 
   const handleLogoUpload = async (files: FileList | null) => {
     const file = files?.[0];
@@ -1488,11 +1541,8 @@ export default function JewelleryAIPage() {
 
   const applySuggestion = (s: JewellerySuggestion) => {
     // Auto-fill best 3+ recommendations. User can still change anything.
-    setJewelleryType(s.jewellery_type);
-    if (s.jewellery_type === "More Options" && Array.isArray(s.more_jewellery)) {
-      setMoreJewellery(s.more_jewellery);
-    }
-    setShootStyle(s.shoot_style);
+    setJewelleryType(normaliseJewelleryType(s.jewellery_type, s.more_jewellery));
+    setShootStyle(normaliseShootStyle(s.shoot_style));
     setAccessory(s.accessories);
     setModelType(s.model_type);
     setPose(s.pose);
@@ -1592,9 +1642,9 @@ export default function JewelleryAIPage() {
     builderStep === 1
       ? Boolean(selectedJewelleryLabel)
       : builderStep === 2
-        ? Boolean(shootStyle && accessory)
+        ? Boolean(modelType && pose && modelLook && outputSize && quality)
         : builderStep === 3
-          ? Boolean(modelType && pose && modelLook && outputSize && quality)
+          ? Boolean(shootStyle && accessory && (shootStyle !== "Upload Your Scene" || referenceSceneUrl))
           : true;
 
   const scrollToStepTop = () => {
@@ -2142,7 +2192,8 @@ const WEBHOOK_URL =
     // The user's free-text custom_instruction stays clean.
     // ────────────────────────────────────────────────────────────
     const resolvedShootStyle = customShootStyle || shootStyle;
-    const resolvedAccessory = customAccessory || accessory;
+    const accessoriesShown = modelLook === "No Model";
+    const resolvedAccessory = accessoriesShown ? accessory : "No Accessories";
     const resolvedModelLook =
       modelLook === "Custom-Look"
         ? customModelLook.trim() || "Indian Model"
@@ -2150,6 +2201,9 @@ const WEBHOOK_URL =
           ? "Uploaded Model"
           : modelLook;
     const isNoModelLook = modelLook === "No Model";
+    const genderWord = modelGender === "Male" ? "male" : "female";
+    // The uploaded scene is used (and charged) only for the "Upload Your Scene" style.
+    const sceneActive = resolvedShootStyle === "Upload Your Scene" && Boolean(referenceSceneUrl);
 
     // Map selected size → actual output dimensions
     const resolveJewelleryOutputSize = (sz: string): string => {
@@ -2161,7 +2215,7 @@ const WEBHOOK_URL =
 
     const styleDirectives: string[] = [];
 
-    if (resolvedAccessory === "No Accessories") {
+    if (accessoriesShown && resolvedAccessory === "No Accessories") {
       styleDirectives.push(
         "STRICT_ISOLATION: Only the uploaded jewellery piece is visible on the model or in the frame. Do NOT add any other jewellery, no display tray contents, no extra props, no decorative items in the scene. The model wears ONLY the uploaded jewellery — nothing else.",
       );
@@ -2189,21 +2243,27 @@ const WEBHOOK_URL =
       );
     }
 
-    if (!modelPhotoUrl && resolvedShootStyle === "Outdoor Premium") {
+    if (!modelPhotoUrl && !isNoModelLook && resolvedShootStyle === "Outdoor Premium") {
       styleDirectives.push(
-        "OUTDOOR_PREMIUM: Premium outdoor jewellery campaign. Include a YOUNG (20-28 yr) Indian female model wearing the uploaded jewellery, shot in a real premium outdoor location (see BACKGROUND_THEME). Natural golden-hour light, shallow depth of field, jewellery sharp and hero. Never an old, broken or rundown backdrop.",
+        `OUTDOOR_PREMIUM: Premium outdoor jewellery campaign. Include a YOUNG (20-28 yr) Indian ${genderWord} model wearing the uploaded jewellery, shot in a real premium outdoor location (see BACKGROUND_THEME). Natural golden-hour light, shallow depth of field, jewellery sharp and hero. Never an old, broken or rundown backdrop.`,
       );
     }
 
-    if (!modelPhotoUrl && resolvedShootStyle === "Studio Professional") {
+    if (!modelPhotoUrl && !isNoModelLook && resolvedShootStyle === "Studio Professional") {
       styleDirectives.push(
-        "STUDIO_PROFESSIONAL: Professional studio jewellery shoot with a YOUNG (20-28 yr) Indian female model wearing the uploaded jewellery. Clean seamless studio backdrop, softbox + key + rim lighting, controlled metal reflections and stone brilliance. Use the selected STUDIO_POSE.",
+        `STUDIO_PROFESSIONAL: Professional studio jewellery shoot with a YOUNG (20-28 yr) Indian ${genderWord} model wearing the uploaded jewellery. Premium studio set (see STUDIO_SET), campaign lighting with controlled metal reflections and stone brilliance.`,
       );
     }
 
-    if (!modelPhotoUrl && resolvedShootStyle === "White Background") {
+    if (!modelPhotoUrl && !isNoModelLook && resolvedShootStyle === "White Background") {
       styleDirectives.push(
-        "WHITE_BACKGROUND: Pure plain white seamless studio background with even shadowless ecommerce catalogue lighting and a clean simple neutral-styled young model wearing the uploaded jewellery. Never dark, coloured, textured, prop-heavy or editorial.",
+        `WHITE_BACKGROUND: Pure plain white seamless studio background with even shadowless ecommerce catalogue lighting and a clean simple neutral-styled young ${genderWord} model wearing the uploaded jewellery. Never dark, coloured, textured, prop-heavy or editorial.`,
+      );
+    }
+
+    if (sceneActive) {
+      styleDirectives.push(
+        "UPLOADED_SCENE: The user's own uploaded scene photo is the background. Place the uploaded jewellery (and the model, if any) naturally INTO that exact scene at a believable scale, matching its light direction, perspective, colour temperature, shadows and reflections. Do NOT redraw or restyle the scene and do not add a new backdrop.",
       );
     }
 
@@ -2218,14 +2278,12 @@ const WEBHOOK_URL =
       );
     }
 
-    // Studio pose box (Studio Professional)
-    if (
-      resolvedShootStyle === "Studio Professional" &&
-      jewelStudioPose &&
-      jewelStudioPose !== "Auto"
-    ) {
+    // Studio set box (Studio Professional) — same textile studio sets as Productography.
+    const jewelStudioSet =
+      resolvedShootStyle === "Studio Professional" ? resolveJewelStudioSet(jewelStudioBg, isNoModelLook) : "";
+    if (jewelStudioSet) {
       styleDirectives.push(
-        `STUDIO_POSE (${jewelStudioPose}): Direct the model into a clean, professional "${jewelStudioPose}" studio pose while keeping the uploaded jewellery clearly visible and the hero of the frame.`,
+        `STUDIO_SET (${jewelStudioBg}): Shoot on this premium jewellery studio set — ${jewelStudioSet}. The set IS the background (replaces any plain seamless backdrop); ${isNoModelLook ? "place the uploaded jewellery on a plinth, stand or surface of the set" : "the model wears the uploaded jewellery on the set"}; keep the jewellery the sharp hero and never let a prop overlap it. No softboxes, light stands or studio equipment visible.`,
       );
     }
 
@@ -2258,7 +2316,7 @@ const WEBHOOK_URL =
       );
     } else {
       styleDirectives.push(
-        `MODEL_LOOK (${resolvedModelLook}): The model wearing the jewellery must clearly have ${resolvedModelLook} features and skin tone, rendered naturally and realistically. Style, makeup and outfit still adapt to suit the jewellery, but the model ethnicity/look matches this selection.`,
+        `MODEL_LOOK (${resolvedModelLook}): The model wearing the jewellery is a ${genderWord === "male" ? "MAN" : "WOMAN"} and must clearly have ${resolvedModelLook} features and skin tone, rendered naturally and realistically. Style, makeup and outfit still adapt to suit the jewellery, but the model ethnicity/look matches this selection.`,
       );
     }
 
@@ -2267,8 +2325,8 @@ const WEBHOOK_URL =
       model_image_url: modelPhotoUrl || "",
       model_photo_url: modelPhotoUrl || "",
       has_uploaded_model: Boolean(modelPhotoUrl),
-      reference_scene_url: referenceSceneUrl || "",
-      has_uploaded_scene: Boolean(referenceSceneUrl),
+      reference_scene_url: sceneActive ? referenceSceneUrl : "",
+      has_uploaded_scene: sceneActive,
       plan: String(profile.plan || "starter").toLowerCase(),
       is_pro: String(profile.plan || "").toLowerCase().includes("pro"),
       is_empire: String(profile.plan || "").toLowerCase().includes("empire"),
@@ -2277,8 +2335,9 @@ const WEBHOOK_URL =
       output_type: resolvedShootStyle,
       // Model usage is driven by the Model Look box now: No Model = product-only,
       // anything else = a human model wearing the jewellery.
-      model_type: isNoModelLook ? "No Model" : "Female Model",
-      pose: customPose || pose,
+      model_type: isNoModelLook ? "No Model" : modelGender === "Male" ? "Male Model" : "Female Model",
+      model_gender: isNoModelLook ? "" : modelGender,
+      pose: modelLook === "No Model" ? "" : pose,
       model_look: resolvedModelLook,
       face_expression: faceExpression,
       shoot_style: resolvedShootStyle,
@@ -2287,8 +2346,9 @@ const WEBHOOK_URL =
         resolvedShootStyle === "Luxury Editorial"
           ? jewelOutdoorBg
           : "",
-      studio_pose:
-        resolvedShootStyle === "Studio Professional" ? jewelStudioPose : "",
+      studio_pose: "",
+      studio_background: resolvedShootStyle === "Studio Professional" ? jewelStudioBg : "",
+      studio_set: jewelStudioSet,
       accessories: resolvedAccessory,
       camera_angle: customCameraAngle || cameraAngle,
       output_size: resolvedOutputSize,
@@ -2347,7 +2407,7 @@ const WEBHOOK_URL =
     source_image_url: item.source_image_url,
     model_image_url: modelPhotoUrl || "",
     model_photo_url: modelPhotoUrl || "",
-    reference_scene_url: referenceSceneUrl || "",
+    reference_scene_url: sceneActive ? referenceSceneUrl : "",
     original_name: item.original_name,
   })),
 
@@ -3399,45 +3459,15 @@ if (!response.ok) {
 
                 {builderStep === 1 && (
                   <div className="space-y-4">
-                    <SelectionGrid title="Jewellery Type" subtitle="Choose the main jewellery category first." options={JEWELLERY_TYPES} value={jewelleryType} onChange={setJewelleryType} />
-
-                    {jewelleryType === "More Options" && (
-                      <div className="rounded-[1.35rem] border border-cyan-300/40 bg-cyan-400/10 p-4 dark:border-cyan-400/20">
-                        <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">More Jewellery Options</p>
-                        <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/50">Tap to select one or more. Pick &quot;Other&quot; and the AI will auto-detect the piece from your upload.</p>
-                        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                          {MORE_JEWELLERY_OPTIONS.map((item) => {
-                            const isActive = moreJewellery.includes(item);
-                            return (
-                              <button
-                                key={item}
-                                type="button"
-                                onClick={() => toggleMoreJewellery(item)}
-                                className={clsx(
-                                  "group relative flex min-h-[110px] flex-col items-center justify-center rounded-[22px] border p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[128px] sm:rounded-[24px]",
-                                  isActive
-                                    ? "scale-[1.025] border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/60"
-                                    : "border-slate-200 bg-white/90 hover:-translate-y-1 hover:border-cyan-300 hover:bg-white hover:shadow-lg dark:border-white/10 dark:bg-white/[0.045] dark:hover:bg-white/[0.08]",
-                                )}
-                              >
-                                <div className="mb-2 flex h-14 w-14 items-center justify-center overflow-hidden rounded-[18px] bg-white sm:h-16 sm:w-16">
-                                  <img src={MORE_JEWELLERY_ICONS[item]} alt="" className="block h-full w-full object-contain transition duration-300 group-hover:scale-105" />
-                                </div>
-                                <p className={clsx("text-[12px] font-black leading-4 sm:text-sm", isActive ? "text-cyan-700 dark:text-cyan-200" : "text-slate-700 dark:text-white/75")}>{item}</p>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
+                    <SelectionGrid title="Jewellery Type" subtitle="Pick the piece you are shooting — pick Other and AI will detect it from your upload." options={JEWELLERY_TYPES} value={jewelleryType} onChange={setJewelleryType} />
 
                     <div className="rounded-[1.35rem] border border-black/10 bg-white/70 p-4 dark:border-white/10 dark:bg-white/[0.045]">
-                      <p className="text-xs font-black uppercase tracking-widest text-cyan-600">Jewellery Protection Notes</p>
-                      <textarea
-                        rows={4}
+                      <p className="text-xs font-black uppercase tracking-widest text-cyan-600">Jewellery Protection Notes <span className="normal-case tracking-normal text-slate-400 dark:text-white/40">(Optional)</span></p>
+                      <input
+                        type="text"
                         value={jewelleryDetails}
                         onChange={(e) => setJewelleryDetails(e.target.value)}
-                        placeholder="Mention stone color, cut, metal tone, polish, pattern, shape, and anything that must not change."
+                        placeholder="Stone colour, cut, metal tone, polish, pattern — anything that must not change."
                         className="mt-3 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-cyan-400 dark:border-white/10 dark:bg-black/20"
                       />
                     </div>
@@ -3446,81 +3476,192 @@ if (!response.ok) {
 
                 {builderStep === 2 && (
                   <div className="space-y-4">
-                    {/* Shoot Style — now includes both shoot atmosphere AND model look.
-                        "Upload Your Scene" lives INSIDE this same box as a footer. */}
+                    {/* Model Look — "Upload Your Model" is a card; tapping it opens the
+                        gallery / file picker straight away (no extra box). */}
                     <SelectionGrid
-                      title="Shoot Style &amp; Model Look"
-                      subtitle="One unified pick — lighting, background, presentation, plus Indian/bridal/luxury model aesthetic."
-                      options={SHOOT_STYLE_OPTIONS}
-                      value={shootStyle}
-                      onChange={setShootStyle}
-                      footer={
-                        <>
-                          <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">Upload Your Scene <span className="ml-2 rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-black text-cyan-700 dark:bg-cyan-400/20 dark:text-cyan-300">+2 Credits</span></p>
-                          <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/50">Upload your own background scene — AI will place the jewellery naturally into it, matching the scene&apos;s lighting and perspective.</p>
-                          <div className="mt-3">
-                            <label
-                              className={`group relative flex min-h-[116px] min-w-0 max-w-[160px] cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
-                                referenceSceneUrl
-                                  ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
-                                  : "bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10 dark:bg-white/[0.045] dark:hover:bg-white/[0.08]"
-                              } ${sceneUploading ? "pointer-events-none opacity-60" : ""}`}
-                            >
-                              <div className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${referenceSceneUrl ? "shadow-lg shadow-cyan-400/25" : "shadow-sm"}`}>
-                                {referenceSceneUrl ? (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img src={referenceSceneUrl} alt="" className="block h-full w-full object-cover" />
-                                ) : (
-                                  <span className="text-3xl" aria-hidden="true">📷</span>
-                                )}
-                              </div>
-                              <p className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${referenceSceneUrl ? "text-[#0077b6]" : "text-black/70 dark:text-white/70"}`}>
-                                {sceneUploading ? "Uploading…" : referenceSceneUrl ? "Scene Ready ✓" : "Upload Your Scene"}
-                              </p>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                disabled={sceneUploading}
-                                onChange={async (e) => {
-                                  const f = e.target.files?.[0];
-                                  if (!f) return;
-                                  if (!f.type.startsWith("image/")) {
-                                    alert("Please upload an image file.");
-                                    e.target.value = "";
-                                    return;
-                                  }
-                                  setSceneUploading(true);
-                                  try {
-                                    const url = await uploadFileToSupabase(f, "jewellery-scenes");
-                                    setReferenceSceneUrl(url);
-                                  } catch {
-                                    alert("Scene upload failed. Please try again.");
-                                  } finally {
-                                    setSceneUploading(false);
-                                    e.target.value = "";
-                                  }
-                                }}
-                              />
-                              {referenceSceneUrl && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setReferenceSceneUrl("");
-                                  }}
-                                  className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow"
-                                  aria-label="Remove scene"
-                                >
-                                  ✕
-                                </button>
+                      title="Model Look"
+                      subtitle="Pick Female or Male, then the look — Upload Your Model for your own photo, No Model for product-only."
+                      options={jewelModelLookOptions(modelGender).map((o) =>
+                        o.label === "Upload Your Model"
+                          ? {
+                              ...o,
+                              title: modelPhotoUploading ? "Uploading…" : modelPhotoUrl ? "Your Photo ✓" : o.label,
+                              iconFile: modelPhotoUrl || o.iconFile,
+                            }
+                          : o,
+                      )}
+                      value={modelLook}
+                      onChange={(v) => {
+                        setModelLook(v);
+                        if (v === "Upload Your Model" && !modelPhotoUploading) modelPhotoInputRef.current?.click();
+                      }}
+                      header={
+                        <div className="flex flex-wrap gap-3">
+                          {MODEL_GENDERS.map((g) => (
+                            <button
+                              key={g}
+                              type="button"
+                              onClick={() => {
+                                setModelGender(g);
+                                setModelLook((prev) => switchLookGender(prev, g));
+                              }}
+                              className={clsx(
+                                "rounded-2xl border px-6 py-3 text-sm font-black transition-all active:scale-[0.97]",
+                                modelGender === g
+                                  ? "border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 text-cyan-700 ring-2 ring-cyan-300/60 dark:text-cyan-200"
+                                  : "border-slate-200 bg-white/90 text-slate-700 hover:border-cyan-300 hover:shadow-lg hover:shadow-cyan-500/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/75",
                               )}
-                            </label>
-                          </div>
-                        </>
+                            >
+                              {g}
+                            </button>
+                          ))}
+                        </div>
+                      }
+                      footer={
+                        modelLook === "Upload Your Model" && !modelPhotoUrl ? (
+                          <p className="text-xs leading-5 text-slate-500 dark:text-white/50">
+                            {modelPhotoUploading ? "Uploading your photo…" : "Tap “Upload Your Model” to pick your own photo — the jewellery will be rendered on that exact person (+2 credits)."}
+                          </p>
+                        ) : modelLook === "Upload Your Model" && modelPhotoUrl ? (
+                          <>
+                            <div className="flex flex-wrap items-center gap-3">
+                              <p className="text-xs leading-5 text-slate-500 dark:text-white/50">Your photo is ready — the jewellery will be rendered on this exact person (+2 credits). Tap the card to change it.</p>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setModelPhotoUrl("");
+                                  setTryOnConsent(false);
+                                }}
+                                className="rounded-full bg-rose-600 px-3 py-1 text-[11px] font-black text-white shadow"
+                              >
+                                Remove photo
+                              </button>
+                            </div>
+                            {modelPhotoUrl && (
+                              <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-50/60 p-3 text-xs text-slate-600 dark:border-white/15 dark:bg-white/[0.03] dark:text-white/75">
+                                <input
+                                  type="checkbox"
+                                  checked={tryOnConsent}
+                                  onChange={(e) => setTryOnConsent(e.target.checked)}
+                                  className="mt-0.5 h-4 w-4 shrink-0 accent-cyan-600"
+                                />
+                                <span>
+                                  This is my own photo (or I have permission to use it), and I will use it only for this jewellery preview. AgentForge will delete it after the result is generated.
+                                </span>
+                              </label>
+                            )}
+                          </>
+                        ) : undefined
                       }
                     />
+                    <input
+                      ref={modelPhotoInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={modelPhotoUploading}
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        if (!f.type.startsWith("image/")) {
+                          alert("Please upload an image file.");
+                          e.target.value = "";
+                          return;
+                        }
+                        setModelPhotoUploading(true);
+                        try {
+                          const url = await uploadFileToSupabase(f, "jewellery-model-photos");
+                          setModelPhotoUrl(url);
+                          setTryOnConsent(false);
+                        } catch {
+                          alert("Photo upload failed. Please try again.");
+                        } finally {
+                          setModelPhotoUploading(false);
+                          e.target.value = "";
+                        }
+                      }}
+                    />
+
+                    {modelLook === "No Model" ? (
+                      <SelectionGrid title="Accessories &amp; Props" subtitle="Product-only shot — pick the props / surface around your jewellery." options={ACCESSORY_OPTIONS} value={accessory} onChange={setAccessory} />
+                    ) : (
+                      <>
+                        {/* Pose */}
+                        <SelectionGrid title="Pose" subtitle="Body, hand, neck or ear pose for jewellery presentation." options={POSE_OPTIONS} value={pose} onChange={setPose} />
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {builderStep === 3 && (
+                  <div className="space-y-4">
+                    {/* Shoot Style — "Upload Your Scene" is one of the style cards;
+                        tapping it opens the file picker straight away. */}
+                    <SelectionGrid
+                      title="Select Shoot Style"
+                      large
+                      subtitle="Pick the look of the shoot — or upload your own scene."
+                      options={SHOOT_STYLE_OPTIONS.map((o) =>
+                        o.label === "Upload Your Scene"
+                          ? {
+                              ...o,
+                              title: sceneUploading ? "Uploading…" : referenceSceneUrl ? "Scene Ready ✓" : o.label,
+                              iconFile: referenceSceneUrl || o.iconFile,
+                            }
+                          : o,
+                      )}
+                      value={shootStyle}
+                      onChange={(v) => {
+                        setShootStyle(v);
+                        if (v === "Upload Your Scene" && !sceneUploading) sceneInputRef.current?.click();
+                      }}
+                      footer={
+                        shootStyle === "Upload Your Scene" ? (
+                          <div className="flex flex-wrap items-center gap-3">
+                            <p className="text-xs leading-5 text-slate-500 dark:text-white/50">
+                              {referenceSceneUrl
+                                ? "Your scene is ready — the jewellery will be placed naturally into it (+2 credits). Tap the card to change it."
+                                : "Tap “Upload Your Scene” to pick a photo of your own backdrop (+2 credits)."}
+                            </p>
+                            {referenceSceneUrl && (
+                              <button
+                                type="button"
+                                onClick={() => setReferenceSceneUrl("")}
+                                className="rounded-full bg-rose-600 px-3 py-1 text-[11px] font-black text-white shadow"
+                              >
+                                Remove scene
+                              </button>
+                            )}
+                          </div>
+                        ) : undefined
+                      }
+                    />
+                        <input
+                          ref={sceneInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={sceneUploading}
+                          onChange={async (e) => {
+                            const f = e.target.files?.[0];
+                            if (!f) return;
+                            if (!f.type.startsWith("image/")) {
+                              alert("Please upload an image file.");
+                              e.target.value = "";
+                              return;
+                            }
+                            setSceneUploading(true);
+                            try {
+                              const url = await uploadFileToSupabase(f, "jewellery-scenes");
+                              setReferenceSceneUrl(url);
+                            } catch {
+                              alert("Scene upload failed. Please try again.");
+                            } finally {
+                              setSceneUploading(false);
+                              e.target.value = "";
+                            }
+                          }}
+                        />
 
                     {/* Outdoor Premium / Luxury Editorial → background theme box */}
                     {(shootStyle === "Outdoor Premium" || shootStyle === "Luxury Editorial") && (
@@ -3545,22 +3686,22 @@ if (!response.ok) {
                       </div>
                     )}
 
-                    {/* Studio Professional → studio pose box */}
+                    {/* Studio Professional → studio set picker (same as Productography Luxury Studio) */}
                     {shootStyle === "Studio Professional" && (
                       <div className="rounded-[1.35rem] border border-cyan-300/40 bg-cyan-400/10 p-4 dark:border-cyan-400/20">
-                        <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">Select Studio Pose</p>
-                        <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/50">How the model is posed in the studio jewellery shot.</p>
-                        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-                          {JEWEL_STUDIO_POSE_OPTIONS.map((item) => {
-                            const isActive = jewelStudioPose === item;
+                        <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">Select Studio Background</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/50">Jeweller-favourite studio sets — velvet busts, marble, silk, festive and more.</p>
+                        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                          {JEWEL_STUDIO_SET_NAMES.map((item) => {
+                            const isActive = jewelStudioBg === item;
                             return (
-                              <button key={item} type="button" onClick={() => setJewelStudioPose(item)}
+                              <button key={item} type="button" onClick={() => setJewelStudioBg(item)}
                                 className={clsx(
-                                  "group flex min-h-[108px] flex-col items-center justify-center rounded-[20px] border p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[124px]",
+                                  "group flex flex-col items-center rounded-[20px] border p-2 text-center transition-all duration-300 active:scale-[0.97]",
                                   isActive ? "scale-[1.02] border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/60" : "border-slate-200 bg-white/90 hover:-translate-y-1 hover:border-cyan-300 hover:bg-white hover:shadow-lg dark:border-white/10 dark:bg-white/[0.045] dark:hover:bg-white/[0.08]",
                                 )}>
-                                <div className="mb-2 flex h-14 w-14 items-center justify-center overflow-hidden rounded-[18px] bg-white sm:h-16 sm:w-16"><img src={JEWEL_STUDIO_POSE_ICONS[item]} alt="" className="block h-full w-full object-contain transition duration-300 group-hover:scale-105" /></div>
-                                <p className={clsx("text-[12px] font-black leading-4 sm:text-sm", isActive ? "text-cyan-700 dark:text-cyan-200" : "text-slate-700 dark:text-white/75")}>{item}</p>
+                                <div className="mb-2 aspect-[4/3] w-full overflow-hidden rounded-[14px]"><img src={`/jewellery-icon/jb-${JEWEL_STUDIO_SETS.find((x) => x.name === item)?.icon}.svg`} alt="" className="block h-full w-full object-cover transition duration-300 group-hover:scale-105" /></div>
+                                <p className={clsx("px-1 pb-1 text-[12px] font-black leading-4 sm:text-sm", isActive ? "text-cyan-700 dark:text-cyan-200" : "text-slate-700 dark:text-white/75")}>{item}</p>
                               </button>
                             );
                           })}
@@ -3569,109 +3710,6 @@ if (!response.ok) {
                     )}
 
                     {/* Accessories & Props (10 options after removing Bridal Red Pillow) */}
-                    <SelectionGrid title="Accessories &amp; Props" subtitle="Background props — temple, diamond, bridal, flat-lay setups." options={ACCESSORY_OPTIONS} value={accessory} onChange={setAccessory} />
-                    <TextInputBox label="Custom Accessories" value={customAccessory} onChange={setCustomAccessory} placeholder="Example: silk cloth, jewellery box, flowers, diya, mirror, brass bell..." />
-                  </div>
-                )}
-
-                {builderStep === 3 && (
-                  <div className="space-y-4">
-                    {/* Model Look — Upload Your Model upload UI lives INSIDE this
-                        same box (footer), shown only when that card is picked. */}
-                    <SelectionGrid
-                      title="Model Look"
-                      subtitle="Which model wears your jewellery — No Model for product-only, or Upload Your Model for your own photo."
-                      options={JEWEL_MODEL_LOOK_OPTIONS}
-                      value={modelLook}
-                      onChange={setModelLook}
-                      footer={
-                        modelLook === "Upload Your Model" ? (
-                          <>
-                            <p className="text-xs font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">Upload Your Model <span className="ml-2 rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-black text-cyan-700 dark:bg-cyan-400/20 dark:text-cyan-300">+2 Credits</span></p>
-                            <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-white/50">Upload your own model photo — the AI will render the jewellery on the exact person in your photo. Face and identity preserved.</p>
-                            <div className="mt-3">
-                              <label
-                                className={`group relative flex min-h-[116px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
-                                  modelPhotoUrl
-                                    ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
-                                    : "bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10 dark:bg-white/[0.045] dark:hover:bg-white/[0.08]"
-                                } ${modelPhotoUploading ? "pointer-events-none opacity-60" : ""} max-w-[160px]`}
-                              >
-                                <div className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${modelPhotoUrl ? "shadow-lg shadow-cyan-400/25" : "shadow-sm"}`}>
-                                  {modelPhotoUrl ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={modelPhotoUrl} alt="" className="block h-full w-full object-cover" />
-                                  ) : (
-                                    <Upload className="h-9 w-9 text-cyan-500" aria-hidden="true" />
-                                  )}
-                                </div>
-                                <p className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${modelPhotoUrl ? "text-[#0077b6]" : "text-black/70 dark:text-white/70"}`}>
-                                  {modelPhotoUploading ? "Uploading…" : modelPhotoUrl ? "Your Photo ✓" : "Upload Your Model"}
-                                </p>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  disabled={modelPhotoUploading}
-                                  onChange={async (e) => {
-                                    const f = e.target.files?.[0];
-                                    if (!f) return;
-                                    if (!f.type.startsWith("image/")) {
-                                      alert("Please upload an image file.");
-                                      e.target.value = "";
-                                      return;
-                                    }
-                                    setModelPhotoUploading(true);
-                                    try {
-                                      const url = await uploadFileToSupabase(f, "jewellery-model-photos");
-                                      setModelPhotoUrl(url);
-                                      setTryOnConsent(false);
-                                    } catch {
-                                      alert("Photo upload failed. Please try again.");
-                                    } finally {
-                                      setModelPhotoUploading(false);
-                                      e.target.value = "";
-                                    }
-                                  }}
-                                />
-                                {modelPhotoUrl && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      setModelPhotoUrl("");
-                                      setTryOnConsent(false);
-                                    }}
-                                    className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow"
-                                    aria-label="Remove photo"
-                                  >
-                                    ✕
-                                  </button>
-                                )}
-                              </label>
-                            </div>
-                            {modelPhotoUrl && (
-                              <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-50/60 p-3 text-xs text-slate-600 dark:border-white/15 dark:bg-white/[0.03] dark:text-white/75">
-                                <input
-                                  type="checkbox"
-                                  checked={tryOnConsent}
-                                  onChange={(e) => setTryOnConsent(e.target.checked)}
-                                  className="mt-0.5 h-4 w-4 shrink-0 accent-cyan-600"
-                                />
-                                <span>
-                                  This is my own photo (or I have permission to use it), and I will use it only for this jewellery preview. AgentForge will delete it after the result is generated.
-                                </span>
-                              </label>
-                            )}
-                          </>
-                        ) : null
-                      }
-                    />
-
-                    {/* Pose */}
-                    <SelectionGrid title="Pose" subtitle="Body, hand, neck or ear pose for jewellery presentation." options={POSE_OPTIONS} value={pose} onChange={setPose} />
-                    <TextInputBox label="Custom Pose" value={customPose} onChange={setCustomPose} placeholder="Example: hand near face, neck close-up, bride looking side..." />
                   </div>
                 )}
 
@@ -3711,16 +3749,16 @@ if (!response.ok) {
                     <div className="rounded-[1.35rem] border border-cyan-300/40 bg-gradient-to-br from-cyan-400/10 via-blue-500/10 to-purple-500/10 p-5">
                       <div className="grid gap-3 sm:grid-cols-2">
                         <SummaryRow label="Jewellery" value={selectedJewelleryLabel} />
-                        <SummaryRow label="Shoot Style" value={customShootStyle || shootStyle} />
-                        <SummaryRow label="Model Look" value={modelLook === "Upload Your Model" ? "Your Photo" : modelLook} />
-                        <SummaryRow label="Pose" value={customPose || pose} />
-                        <SummaryRow label="Accessories" value={customAccessory || accessory} />
+                        <SummaryRow label="Shoot Style" value={customShootStyle || (shootStyle === "White Background" ? "White BG" : shootStyle)} />
+                        <SummaryRow label="Model Look" value={modelLook === "Upload Your Model" ? "Your Photo" : modelLook === "No Model" ? "No Model" : `${modelGender} · ${modelLook.replace(" Male Model", " Model")}`} />
+                        {modelLook !== "No Model" && <SummaryRow label="Pose" value={pose} />}
+                        {modelLook === "No Model" && <SummaryRow label="Accessories" value={accessory} />}
                         <SummaryRow label="Frame" value={`${outputSize} / ${quality}`} />
                         <SummaryRow label="Uploads" value={String(uploads.length)} />
                         {modelPhotoUrl && (
                           <SummaryRow label="Upload Your Model" value="+2 credits" />
                         )}
-                        {referenceSceneUrl && (
+                        {shootStyle === "Upload Your Scene" && referenceSceneUrl && (
                           <SummaryRow label="Upload Your Scene" value="+2 credits" />
                         )}
                         {teamId && (

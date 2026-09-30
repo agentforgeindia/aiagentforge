@@ -195,14 +195,10 @@ const productCategories: Option[] = [
 ];
 
 const shootStyleOptions: Option[] = [
-  { title: "Ecommerce White BG", hint: "Amazon/Flipkart style", icon: <ImageIcon />, iconFile: "/Productography-icons/pss-ecommerce-white.png" },
   { title: "Luxury Studio", hint: "Premium catalogue lighting", icon: <Camera />, iconFile: "/Productography-icons/pss-luxury-studio.png" },
   { title: "Outdoor Lifestyle", hint: "Natural brand shoot", icon: <Camera />, iconFile: "/Productography-icons/pss-outdoor-lifestyle.png" },
-  { title: "Ad Creative", hint: "Poster/ad-ready image", icon: <Sparkles />, iconFile: "/Productography-icons/pss-ad-creative.png" },
-  { title: "Cinematic Dark", hint: "Dramatic premium shadows", icon: <Palette />, iconFile: "/Productography-icons/pss-cinematic-dark.png" },
-  { title: "Instagram Viral", hint: "Trendy social post", icon: <Wand2 />, iconFile: "/Productography-icons/pss-instagram-viral.png" },
-  { title: "Festival Theme", hint: "Diwali/Eid/seasonal", icon: <Sparkles />, iconFile: "/Productography-icons/pss-festival.png" },
-  { title: "Custom Shoot", hint: "Write exact direction", icon: <Wand2 />, iconFile: "/Productography-icons/pss-custom.png" },
+  { title: "Ecommerce White BG", hint: "Amazon/Flipkart style", icon: <ImageIcon />, iconFile: "/Productography-icons/pss-ecommerce-white.png" },
+  { title: "Upload Your Scene", hint: "Your own backdrop photo", icon: <UploadCloud />, iconFile: "/ui-icons/ss-luxury-editorial.png" },
 ];
 
 const backgroundOptions: Option[] = [
@@ -231,10 +227,10 @@ const USAGE_ICONS: Record<string, string> = {
   "Couple With Product": UI("u-couple"),
 };
 const productModelUsageOptions: Option[] = [
-  { title: "No Model", hint: "Product-only premium shoot", icon: <Package />, iconFile: USAGE_ICONS["No Model"] },
   { title: "Single Model", hint: "One model with the product", icon: <UserRound />, iconFile: USAGE_ICONS["Single Model"] },
   { title: "Model Holding Product", hint: "Hand / in-use shot", icon: <UserRound />, iconFile: USAGE_ICONS["Model Holding Product"] },
   { title: "Couple With Product", hint: "Lifestyle pair scene", icon: <UserRound />, iconFile: USAGE_ICONS["Couple With Product"] },
+  { title: "No Model", hint: "Product-only premium shoot", icon: <Package />, iconFile: USAGE_ICONS["No Model"] },
 ];
 
 const POSE_ICONS: Record<string, string> = {
@@ -519,6 +515,8 @@ function OptionCard({
     if (raw.startsWith("/") && /\.(png|jpe?g|svg|webp|avif)$/i.test(raw)) {
       return [raw];
     }
+    // Absolute URL (e.g. an uploaded scene photo) → use as-is.
+    if (/^https?:\/\//i.test(raw)) return [raw];
     // If raw is /icons/foo.svg → also try /Productography-icons/foo.svg
     if (raw.startsWith("/icons/")) {
       const name = raw.replace("/icons/", "");
@@ -678,6 +676,7 @@ export default function ProductographyPage() {
   // Upload Your Scene (Luxury Studio)
   const [referenceSceneUrl, setReferenceSceneUrl] = useState("");
   const [sceneUploading, setSceneUploading] = useState(false);
+  const sceneInputRef = useRef<HTMLInputElement | null>(null);
 
   // Upload Your Photo (virtual try-on with user's own model photo)
   const [modelPhotoUrl, setModelPhotoUrl] = useState("");
@@ -697,7 +696,6 @@ export default function ProductographyPage() {
   const [quality, setQuality] = useState("Premium");
 
   const [customCategory, setCustomCategory] = useState("");
-  const [customPose, setCustomPose] = useState("");
   const [customBackground, setCustomBackground] = useState("");
   const [customOutputSize, setCustomOutputSize] = useState("");
   const [customQuality, setCustomQuality] = useState("");
@@ -709,6 +707,9 @@ export default function ProductographyPage() {
   const modelLookDisabled = modelLookMode_ === "none";
   // Gender/age selector only matters for a single-person model scene.
   const showModelGroup = modelLookMode_ === "single";
+  // The uploaded scene counts (and costs +2 credits) only for the
+  // "Upload Your Scene" shoot style.
+  const sceneActive = Boolean(referenceSceneUrl) && shootStyle === "Upload Your Scene";
   const studioBgList = modelLookDisabled
     ? productStudioBackgroundOptions
     : showModelGroup && modelGroup === "Kids"
@@ -785,7 +786,7 @@ export default function ProductographyPage() {
       if (useCompanyAddress && companyAddress.trim()) base += 1;
     }
     // Upload Your Scene add-on: +2 credits.
-    if (referenceSceneUrl) base += 2;
+    if (sceneActive) base += 2;
     // Upload Your Photo (virtual try-on) add-on: +2 credits.
     if (modelPhotoUrl) base += 2;
     return base;
@@ -865,14 +866,13 @@ export default function ProductographyPage() {
       setModelGroup(s.modelGroup || "Female");
       setModelLook(s.modelLook || "Indian Woman");
       setPose(s.pose || "Auto");
-      setShootStyle(s.shootStyle || "Luxury Studio");
+      setShootStyle(shootStyleOptions.some((o) => o.title === s.shootStyle) ? s.shootStyle : "Luxury Studio");
       setBackground(s.background || "Plain White");
       setBackgroundTheme(s.backgroundTheme || "Royal Palace");
       if (s.studioBackground) setStudioBackground(s.studioBackground);
       setOutputSize(s.outputSize || "1080x1080");
       setQuality(s.quality || "Premium");
       setCustomCategory(s.customCategory || "");
-      setCustomPose(s.customPose || "");
       setCustomBackground(s.customBackground || "");
       setCustomOutputSize(s.customOutputSize || "");
       setCustomQuality(s.customQuality || "");
@@ -897,7 +897,7 @@ export default function ProductographyPage() {
       JSON.stringify({
         productCategory, modelUsage, modelGroup, modelLook, pose, shootStyle, background, backgroundTheme, studioBackground,
         outputSize, quality, customCategory,
-        customPose, customBackground, customOutputSize, customQuality, customInstruction,
+        customBackground, customOutputSize, customQuality, customInstruction,
         companyName, companyPhone, companyWebsite, companyAddress, companyLogoUrl,
         useCompanyName, useCompanyPhone, useCompanyWebsite, useCompanyAddress,
         useCompanyLogo, productTextEnabled,
@@ -906,7 +906,7 @@ export default function ProductographyPage() {
   }, [
     productCategory, modelUsage, modelGroup, modelLook, pose, shootStyle, background, backgroundTheme, studioBackground,
     outputSize, quality, customCategory,
-    customPose, customBackground, customOutputSize, customQuality, customInstruction,
+    customBackground, customOutputSize, customQuality, customInstruction,
     companyName, companyPhone, companyWebsite, companyAddress, companyLogoUrl,
     useCompanyName, useCompanyPhone, useCompanyWebsite, useCompanyAddress,
     useCompanyLogo, productTextEnabled,
@@ -1361,10 +1361,10 @@ export default function ProductographyPage() {
     const resolvedModelUsage = modelUsage;
     const resolvedModelLook = modelLookDisabled ? "" : modelLook;
     const resolvedShootStyle = shootStyle;
-    const resolvedBackground = shootStyle === "Ecommerce White BG" ? "Plain White" : (customBackground.trim() || background);
-    const sceneUploaded = shootStyle === "Luxury Studio" && !modelLookDisabled && Boolean(referenceSceneUrl);
-    const resolvedStudioBackground = shootStyle === "Luxury Studio" && !sceneUploaded ? studioBackground : "";
-    const resolvedPose = modelLookDisabled ? "" : (customPose.trim() || pose);
+    const resolvedStudioBackground = shootStyle === "Luxury Studio" ? studioBackground : "";
+    // Luxury Studio: the studio set (or the uploaded scene) is the background.
+    const resolvedBackground = shootStyle === "Ecommerce White BG" ? "Plain White" : shootStyle === "Outdoor Lifestyle" ? "Nature Outdoor" : shootStyle === "Upload Your Scene" ? "User Uploaded Scene" : shootStyle === "Luxury Studio" ? studioBackground : (customBackground.trim() || background);
+    const resolvedPose = modelLookDisabled ? "" : pose;
     const resolvedQuality = customQuality.trim() || quality;
     const resolvedOutputSize = resolveProductOutputSize(customOutputSize.trim() || outputSize);
 
@@ -1451,7 +1451,7 @@ export default function ProductographyPage() {
         studio_pose: "",
         studio_background: resolvedStudioBackground,
         studio_set: resolveStudioSet(resolvedStudioBackground, modelLookDisabled, showModelGroup ? modelGroup : ""),
-        reference_scene_url: shootStyle === "Luxury Studio" ? (referenceSceneUrl || "") : "",
+        reference_scene_url: sceneActive ? referenceSceneUrl : "",
         model_photo_url: modelPhotoUrl || "",
         model_image_url: modelPhotoUrl || "",
         has_uploaded_model: Boolean(modelPhotoUrl),
@@ -1542,6 +1542,11 @@ export default function ProductographyPage() {
     }
     if (!readyItems.length) {
       alert("Please upload at least one product image.");
+      return;
+    }
+
+    if (shootStyle === "Upload Your Scene" && !referenceSceneUrl) {
+      alert("Please upload your scene photo for 'Upload Your Scene'.");
       return;
     }
 
@@ -2350,41 +2355,38 @@ export default function ProductographyPage() {
                       </div>
                     </div>
 
-                    {showModelGroup && (
-                      <div>
-                        <h4 className="text-xl font-black">Model Gender / Age</h4>
-                        <p className={`mt-1 text-sm ${muted}`}>Pick who the model is — the looks below update to match.</p>
-                        <div className="mt-4 flex flex-wrap gap-3">
-                          {MODEL_GROUP_OPTIONS.map((g) => {
-                            const gActive = modelGroup === g;
-                            return (
-                              <button
-                                key={g}
-                                type="button"
-                                onClick={() => {
-                                  setModelGroup(g);
-                                  const list = buildModelLookList(modelUsage, g);
-                                  if (list.length) setModelLook(list[0].value);
-                                }}
-                                className={`rounded-2xl border px-6 py-3 text-sm font-black transition-all active:scale-[0.97] ${
-                                  gActive
-                                    ? "border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 text-cyan-700 ring-2 ring-cyan-300/60 dark:text-cyan-200"
-                                    : darkMode
-                                      ? "border-white/10 bg-white/[0.04] text-white/75 hover:bg-white/[0.08]"
-                                      : "border-slate-200 bg-white/90 text-slate-700 hover:border-cyan-300 hover:shadow-lg hover:shadow-cyan-500/10"
-                                }`}
-                              >
-                                {g}
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                      </div>
-                    )}
-
                     <div>
                       <h4 className="text-xl font-black">Model Look</h4>
+                      {showModelGroup && (
+                        <>
+                          <p className={`mt-1 text-sm ${muted}`}>Pick who the model is — the looks below update to match.</p>
+                          <div className="mt-4 flex flex-wrap gap-3">
+                            {MODEL_GROUP_OPTIONS.map((g) => {
+                              const gActive = modelGroup === g;
+                              return (
+                                <button
+                                  key={g}
+                                  type="button"
+                                  onClick={() => {
+                                    setModelGroup(g);
+                                    const list = buildModelLookList(modelUsage, g);
+                                    if (list.length) setModelLook(list[0].value);
+                                  }}
+                                  className={`rounded-2xl border px-6 py-3 text-sm font-black transition-all active:scale-[0.97] ${
+                                    gActive
+                                      ? "border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 text-cyan-700 ring-2 ring-cyan-300/60 dark:text-cyan-200"
+                                      : darkMode
+                                        ? "border-white/10 bg-white/[0.04] text-white/75 hover:bg-white/[0.08]"
+                                        : "border-slate-200 bg-white/90 text-slate-700 hover:border-cyan-300 hover:shadow-lg hover:shadow-cyan-500/10"
+                                  }`}
+                                >
+                                  {g}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
                       {modelLookDisabled ? (
                         <div className={`mt-4 rounded-2xl border border-dashed p-5 text-center text-sm ${darkMode ? "border-white/15 bg-white/[0.03] text-white/55" : "border-black/15 bg-black/[0.02] text-slate-500"}`}>
                           Model Look is not applicable for <span className="font-bold">{modelUsage}</span> — no human model is used here.
@@ -2499,6 +2501,24 @@ export default function ProductographyPage() {
                         </>
                       )}
                     </div>
+
+                    {!modelLookDisabled && (
+                      <div>
+                        <h4 className="text-xl font-black">Pose</h4>
+                        <p className={`mt-1 text-sm ${muted}`}>How the model is posed with the product.</p>
+                        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+                          {productPoseOptions.map((item) => (
+                            <OptionCard
+                              key={item}
+                              option={{ title: item, icon: <Camera />, iconFile: POSE_ICONS[item] }}
+                              active={pose === item}
+                              onClick={() => setPose(item)}
+                              darkMode={darkMode}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -2507,8 +2527,73 @@ export default function ProductographyPage() {
                     <div>
                       <h4 className="text-xl font-black">Shoot Style</h4>
                       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-                        {shootStyleOptions.map((item) => <OptionCard key={item.title} option={item} active={shootStyle === item.title} onClick={() => setShootStyle(item.title)} darkMode={darkMode} />)}
+                        {shootStyleOptions.map((item) =>
+                          item.title === "Upload Your Scene" ? (
+                            <div key={item.title} className="relative min-w-0">
+                              <OptionCard
+                                key={referenceSceneUrl || "scene-empty"}
+                                option={{
+                                  ...item,
+                                  title: sceneUploading ? "Uploading…" : referenceSceneUrl ? "Scene Ready ✓" : item.title,
+                                  iconFile: referenceSceneUrl || item.iconFile,
+                                }}
+                                active={shootStyle === item.title}
+                                onClick={() => {
+                                  setShootStyle(item.title);
+                                  // Upload Your Scene opens the file picker straight away.
+                                  if (!sceneUploading) sceneInputRef.current?.click();
+                                }}
+                                darkMode={darkMode}
+                              />
+                              {referenceSceneUrl && (
+                                <button
+                                  type="button"
+                                  onClick={() => setReferenceSceneUrl("")}
+                                  className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-rose-600 text-[11px] font-black text-white shadow"
+                                  aria-label="Remove scene"
+                                >
+                                  ✕
+                                </button>
+                              )}
+                              <input
+                                ref={sceneInputRef}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                disabled={sceneUploading}
+                                onChange={async (e) => {
+                                  const f = e.target.files?.[0];
+                                  if (!f) return;
+                                  if (!f.type.startsWith("image/")) {
+                                    alert("Please upload an image file.");
+                                    e.target.value = "";
+                                    return;
+                                  }
+                                  setSceneUploading(true);
+                                  try {
+                                    const url = await uploadFile(f);
+                                    setReferenceSceneUrl(url);
+                                  } catch {
+                                    alert("Scene upload failed. Please try again.");
+                                  } finally {
+                                    setSceneUploading(false);
+                                    e.target.value = "";
+                                  }
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            <OptionCard key={item.title} option={item} active={shootStyle === item.title} onClick={() => setShootStyle(item.title)} darkMode={darkMode} />
+                          ),
+                        )}
                       </div>
+                      {shootStyle === "Upload Your Scene" && (
+                        <p className={`mt-3 text-xs ${muted}`}>
+                          {referenceSceneUrl
+                            ? "Your scene is ready — the product will be placed naturally into it (+2 credits). Tap the card to change it."
+                            : "Tap “Upload Your Scene” to pick a photo of your own space or backdrop (+2 credits)."}
+                        </p>
+                      )}
                     </div>
 
                     {SHOOT_STYLES_WITH_BG_THEME.includes(shootStyle) && (
@@ -2529,7 +2614,7 @@ export default function ProductographyPage() {
                       </div>
                     )}
 
-                    {/* Luxury Studio → studio set picker (textile studio sets) + Upload Your Scene */}
+                    {/* Luxury Studio → studio set picker (textile studio sets) */}
                     {shootStyle === "Luxury Studio" && (
                       <div className="rounded-2xl border border-cyan-300/40 bg-cyan-400/5 p-4 dark:border-cyan-400/20">
                         <h4 className="text-sm font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">Select Studio Background</h4>
@@ -2539,82 +2624,16 @@ export default function ProductographyPage() {
                             <OptionCard
                               key={item}
                               option={{ title: item, icon: <Camera />, iconFile: STUDIO_BG_ICONS[item] }}
-                              active={!(referenceSceneUrl && !modelLookDisabled) && studioBackground === item}
+                              active={studioBackground === item}
                               onClick={() => setStudioBackground(item)}
                               darkMode={darkMode}
                             />
                           ))}
-                          {!modelLookDisabled && (
-                              <label
-                                className={`group relative flex min-h-[116px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
-                                  referenceSceneUrl
-                                    ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
-                                    : darkMode
-                                      ? "bg-white/[0.045] hover:-translate-y-1 hover:bg-white/[0.08]"
-                                      : "bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10"
-                                } ${sceneUploading ? "pointer-events-none opacity-60" : ""}`}
-                              >
-                                <div className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${referenceSceneUrl ? "shadow-lg shadow-cyan-400/25" : "shadow-sm"}`}>
-                                  {referenceSceneUrl ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={referenceSceneUrl} alt="" className="block h-full w-full object-cover" />
-                                  ) : (
-                                    <span className="text-3xl" aria-hidden="true">📷</span>
-                                  )}
-                                </div>
-                                <p className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${referenceSceneUrl ? "text-[#0077b6]" : darkMode ? "text-white/70" : "text-black/70"}`}>
-                                  {sceneUploading ? "Uploading…" : referenceSceneUrl ? "Scene Ready ✓" : "Upload Your Scene"}
-                                </p>
-                                <span className="mt-1 rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-black text-cyan-700 dark:bg-cyan-400/20 dark:text-cyan-300">+2 Credits</span>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  disabled={sceneUploading}
-                                  onChange={async (e) => {
-                                    const f = e.target.files?.[0];
-                                    if (!f) return;
-                                    if (!f.type.startsWith("image/")) {
-                                      alert("Please upload an image file.");
-                                      e.target.value = "";
-                                      return;
-                                    }
-                                    setSceneUploading(true);
-                                    try {
-                                      const url = await uploadFile(f);
-                                      setReferenceSceneUrl(url);
-                                    } catch {
-                                      alert("Scene upload failed. Please try again.");
-                                    } finally {
-                                      setSceneUploading(false);
-                                      e.target.value = "";
-                                    }
-                                  }}
-                                />
-                                {referenceSceneUrl && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      setReferenceSceneUrl("");
-                                    }}
-                                    className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow"
-                                    aria-label="Remove scene"
-                                  >
-                                    ✕
-                                  </button>
-                                )}
-                              </label>
-                          )}
                         </div>
-                        {!modelLookDisabled && referenceSceneUrl && (
-                          <p className={`mt-3 text-xs ${muted}`}>Your scene is ready — the product will be placed naturally into it (+2 credits). Remove it to use a studio set instead.</p>
-                        )}
                       </div>
                     )}
 
-                    {shootStyle !== "Ecommerce White BG" && (
+                    {shootStyle !== "Ecommerce White BG" && shootStyle !== "Outdoor Lifestyle" && shootStyle !== "Luxury Studio" && shootStyle !== "Upload Your Scene" && (
                     <div>
                       <h4 className="text-xl font-black">Background</h4>
                       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
@@ -2628,24 +2647,6 @@ export default function ProductographyPage() {
 
                 {builderStep === 4 && (
                   <div className="space-y-7">
-                    {!modelLookDisabled && (
-                      <div>
-                        <h4 className="text-xl font-black">Pose</h4>
-                        <p className={`mt-1 text-sm ${muted}`}>How the model is posed with the product.</p>
-                        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-                          {productPoseOptions.map((item) => (
-                            <OptionCard
-                              key={item}
-                              option={{ title: item, icon: <Camera />, iconFile: POSE_ICONS[item] }}
-                              active={!customPose.trim() && pose === item}
-                              onClick={() => { setPose(item); setCustomPose(""); }}
-                              darkMode={darkMode}
-                            />
-                          ))}
-                        </div>
-                        <CustomTextBox label="Custom Pose" value={customPose} onChange={setCustomPose} placeholder="Example: model holding product near face, looking at camera, soft natural pose..." darkMode={darkMode} />
-                      </div>
-                    )}
                     <div>
                       <h4 className="text-xl font-black">Output &amp; Quality</h4>
                       <div className="mt-4 grid gap-5 lg:grid-cols-2">
@@ -2696,18 +2697,20 @@ export default function ProductographyPage() {
                           <SummaryRow label="Product" value={customCategory.trim() || productCategory} />
                           <SummaryRow label="Model Usage" value={modelUsage} />
                           <SummaryRow label="Model Look" value={modelLookDisabled ? "No model" : modelLook} />
-                          <SummaryRow label="Pose" value={modelLookDisabled ? "—" : (customPose.trim() || pose)} />
+                          <SummaryRow label="Pose" value={modelLookDisabled ? "—" : pose} />
                           <SummaryRow label="Shoot Style" value={shootStyle} />
                           {SHOOT_STYLES_WITH_BG_THEME.includes(shootStyle) && (
                             <SummaryRow label="Background Theme" value={backgroundTheme} />
                           )}
-                          {shootStyle === "Luxury Studio" && !(referenceSceneUrl && !modelLookDisabled) && (
+                          {shootStyle === "Luxury Studio" && (
                             <SummaryRow label="Studio Background" value={studioBackground} />
                           )}
-                          <SummaryRow label="Background" value={shootStyle === "Ecommerce White BG" ? "Plain White" : (customBackground.trim() || background)} />
+                          {shootStyle !== "Outdoor Lifestyle" && shootStyle !== "Luxury Studio" && shootStyle !== "Upload Your Scene" && (
+                            <SummaryRow label="Background" value={shootStyle === "Ecommerce White BG" ? "Plain White" : (customBackground.trim() || background)} />
+                          )}
                           <SummaryRow label="Frame" value={`${customOutputSize.trim() || outputSize} / ${customQuality.trim() || quality}`} />
                           <SummaryRow label="Uploads" value={String(readyItems.length)} />
-                          {shootStyle === "Luxury Studio" && referenceSceneUrl && (
+                          {sceneActive && (
                             <SummaryRow label="Upload Your Scene" value="+2 credits" />
                           )}
                           {modelPhotoUrl && (
