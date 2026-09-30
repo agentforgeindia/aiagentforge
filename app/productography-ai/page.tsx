@@ -36,6 +36,12 @@ import {
   SiMeta,
   SiShopify,
 } from "react-icons/si";
+import {
+  STUDIO_BACKGROUNDS,
+  KIDS_STUDIO_BACKGROUNDS,
+  HOME_STUDIO_BACKGROUNDS,
+  pickOne,
+} from "@/lib/textileShootLibrary";
 import { canGenerate } from "@/lib/checkCredits";
 import { shouldDeductCredits } from "@/lib/deductCredits";
 import { hasBulkAccess } from "@/lib/plans";
@@ -223,14 +229,12 @@ const USAGE_ICONS: Record<string, string> = {
   "Single Model": UI("u-single"),
   "Model Holding Product": "/Productography-icons/model holding product.svg",
   "Couple With Product": UI("u-couple"),
-  "Family Lifestyle Scene": UI("u-family"),
 };
 const productModelUsageOptions: Option[] = [
   { title: "No Model", hint: "Product-only premium shoot", icon: <Package />, iconFile: USAGE_ICONS["No Model"] },
   { title: "Single Model", hint: "One model with the product", icon: <UserRound />, iconFile: USAGE_ICONS["Single Model"] },
   { title: "Model Holding Product", hint: "Hand / in-use shot", icon: <UserRound />, iconFile: USAGE_ICONS["Model Holding Product"] },
   { title: "Couple With Product", hint: "Lifestyle pair scene", icon: <UserRound />, iconFile: USAGE_ICONS["Couple With Product"] },
-  { title: "Family Lifestyle Scene", hint: "Family usage scene", icon: <UserRound />, iconFile: USAGE_ICONS["Family Lifestyle Scene"] },
 ];
 
 const POSE_ICONS: Record<string, string> = {
@@ -288,31 +292,64 @@ const backgroundThemeOptions = [
   "Garden",
 ];
 
-// Studio-pose sub-selector (shared universal sp-* icons) — opens under the
-// Luxury Studio shoot style (how the model is posed in the studio shot).
-const STUDIO_POSE_ICONS: Record<string, string> = {
-  Auto: UI("sp-auto"),
-  "Standing Front": UI("sp-standing-front"),
-  "Three-Quarter Turn": UI("sp-three-quarter-turn"),
-  "Hand in Pocket": UI("sp-hand-in-pocket"),
-  "Looking Away": UI("sp-looking-away"),
-  "Seated Stool": UI("sp-seated-stool"),
-  "Leaning Pose": UI("sp-leaning-pose"),
-  "Walking Toward Camera": UI("sp-walking-toward-camera"),
+// Luxury Studio → "Select Studio Background" (textile studio sets, shared
+// ss-/ks-/hs- icons). No Model → product-only sets, Kids → kids sets,
+// everything else → editorial model sets.
+const studioBackgroundOptions = Object.keys(STUDIO_BACKGROUNDS);
+const kidsStudioBackgroundOptions = Object.keys(KIDS_STUDIO_BACKGROUNDS);
+const productStudioBackgroundOptions = Object.keys(HOME_STUDIO_BACKGROUNDS);
+const STUDIO_BG_ICONS: Record<string, string> = {
+  "Warm Minimal Studio": UI("hs-warm-minimal"),
+  "Velvet Lounge": UI("hs-velvet-lounge"),
+  "Forest Glade": UI("hs-forest-glade"),
+  "Desert Canyon": UI("hs-desert-canyon"),
+  "Mirror Lake": UI("hs-mirror-lake"),
+  "Stone Arch View": UI("hs-stone-arch"),
+  "Tropical Jungle": UI("hs-tropical-jungle"),
+  "Surreal Seashell": UI("hs-seashell"),
+  "Grand Staircase Hall": UI("hs-grand-staircase"),
+  "Golden Meadow": UI("hs-golden-meadow"),
+  "Spotlight Plinth": UI("ss-spotlight-plinth"),
+  "Retro Red Room": UI("ss-retro-red-room"),
+  "Crate Stack": UI("ss-crate-stack"),
+  "Rope Installation": UI("ss-rope-installation"),
+  "Velvet Club": UI("ss-velvet-club"),
+  "Wood Slice Set": UI("ss-wood-slice-set"),
+  "Stone Boulders": UI("ss-stone-boulders"),
+  "Arched Corridor": UI("ss-arched-corridor"),
+  "Mirror Sky": UI("ss-mirror-sky"),
+  "Desert Dunes": UI("ss-desert-dunes"),
+  "Red Stool Studio": UI("ks-red-stool"),
+  "Flower Cabinet": UI("ks-flower-cabinet"),
+  "Boho Rattan": UI("ks-boho-rattan"),
+  "White Bow Dream": UI("ks-white-bow"),
+  "Wildflower Bench": UI("ks-wildflower-bench"),
+  "Daisy Rain Boots": UI("ks-daisy-boots"),
+  "Marigold White": UI("ks-marigold-white"),
+  "Sage Table Room": UI("ks-sage-table"),
+  "Meadow Butterfly": UI("ks-meadow-butterfly"),
+  "Bubble Window": UI("ks-bubble-window"),
 };
-const studioPoseOptions = [
-  "Standing Front",
-  "Three-Quarter Turn",
-  "Hand in Pocket",
-  "Looking Away",
-  "Seated Stool",
-  "Leaning Pose",
-  "Walking Toward Camera",
-];
+// Resolve the chosen studio set to a fresh scene description per generation.
+function resolveStudioSet(name: string, noModel: boolean, group: string): string {
+  if (!name) return "";
+  if (noModel) {
+    const sets = HOME_STUDIO_BACKGROUNDS[name];
+    return sets ? pickOne(sets) : "";
+  }
+  if (group === "Kids") {
+    const looks = KIDS_STUDIO_BACKGROUNDS[name];
+    return looks ? pickOne(looks).set : "";
+  }
+  const looks = STUDIO_BACKGROUNDS[name];
+  if (!looks) return "";
+  const who = group === "Male" ? "men" : group === "Female" ? "ladies" : "";
+  const fit = looks.filter((l) => !l.who || l.who === who);
+  return pickOne(fit.length ? fit : looks).set;
+}
 
 // Shoot styles that reveal each conditional sub-selector (jewellery parity).
 const SHOOT_STYLES_WITH_BG_THEME = ["Outdoor Lifestyle"];
-const SHOOT_STYLES_WITH_STUDIO_POSE = ["Luxury Studio"];
 
 // ── Gender/age-aware Model Look faces (shared with textile) ──
 const MODEL_ETHNICITIES: { key: string; label: string }[] = [
@@ -655,26 +692,32 @@ export default function ProductographyPage() {
   const [shootStyle, setShootStyle] = useState("Luxury Studio");
   const [background, setBackground] = useState("Plain White");
   const [backgroundTheme, setBackgroundTheme] = useState("Royal Palace");
-  const [studioPose, setStudioPose] = useState("Standing Front");
+  const [studioBackground, setStudioBackground] = useState(productStudioBackgroundOptions[0]);
   const [outputSize, setOutputSize] = useState("1080x1080");
   const [quality, setQuality] = useState("Premium");
 
   const [customCategory, setCustomCategory] = useState("");
-  const [customModelUsage, setCustomModelUsage] = useState("");
-  const [customModelLook, setCustomModelLook] = useState("");
   const [customPose, setCustomPose] = useState("");
-  const [customShootStyle, setCustomShootStyle] = useState("");
   const [customBackground, setCustomBackground] = useState("");
   const [customOutputSize, setCustomOutputSize] = useState("");
   const [customQuality, setCustomQuality] = useState("");
   const [customInstruction, setCustomInstruction] = useState("");
 
   // Gender/age-aware Model Look list (textile parity) — reacts to usage + group.
-  const modelLookMode_ = modelLookMode(customModelUsage.trim() || modelUsage);
-  const modelLookList = buildModelLookList(customModelUsage.trim() || modelUsage, modelGroup);
+  const modelLookMode_ = modelLookMode(modelUsage);
+  const modelLookList = buildModelLookList(modelUsage, modelGroup);
   const modelLookDisabled = modelLookMode_ === "none";
   // Gender/age selector only matters for a single-person model scene.
   const showModelGroup = modelLookMode_ === "single";
+  const studioBgList = modelLookDisabled
+    ? productStudioBackgroundOptions
+    : showModelGroup && modelGroup === "Kids"
+      ? kidsStudioBackgroundOptions
+      : studioBackgroundOptions;
+  // Keep the studio set valid when switching No Model / Kids / adult models.
+  useEffect(() => {
+    if (!studioBgList.includes(studioBackground)) setStudioBackground(studioBgList[0]);
+  }, [studioBgList, studioBackground]);
 
   // Brand details
   const [companyName, setCompanyName] = useState("");
@@ -818,21 +861,18 @@ export default function ProductographyPage() {
     try {
       const s = JSON.parse(saved);
       setProductCategory(s.productCategory || "Cosmetics");
-      setModelUsage(s.modelUsage || "No Model");
+      setModelUsage(s.modelUsage && s.modelUsage !== "Family Lifestyle Scene" ? s.modelUsage : "No Model");
       setModelGroup(s.modelGroup || "Female");
       setModelLook(s.modelLook || "Indian Woman");
       setPose(s.pose || "Auto");
       setShootStyle(s.shootStyle || "Luxury Studio");
       setBackground(s.background || "Plain White");
       setBackgroundTheme(s.backgroundTheme || "Royal Palace");
-      setStudioPose(s.studioPose || "Standing Front");
+      if (s.studioBackground) setStudioBackground(s.studioBackground);
       setOutputSize(s.outputSize || "1080x1080");
       setQuality(s.quality || "Premium");
       setCustomCategory(s.customCategory || "");
-      setCustomModelUsage(s.customModelUsage || "");
-      setCustomModelLook(s.customModelLook || "");
       setCustomPose(s.customPose || "");
-      setCustomShootStyle(s.customShootStyle || "");
       setCustomBackground(s.customBackground || "");
       setCustomOutputSize(s.customOutputSize || "");
       setCustomQuality(s.customQuality || "");
@@ -855,18 +895,18 @@ export default function ProductographyPage() {
     localStorage.setItem(
       "productography_settings",
       JSON.stringify({
-        productCategory, modelUsage, modelGroup, modelLook, pose, shootStyle, background, backgroundTheme, studioPose,
-        outputSize, quality, customCategory, customModelUsage, customModelLook,
-        customPose, customShootStyle, customBackground, customOutputSize, customQuality, customInstruction,
+        productCategory, modelUsage, modelGroup, modelLook, pose, shootStyle, background, backgroundTheme, studioBackground,
+        outputSize, quality, customCategory,
+        customPose, customBackground, customOutputSize, customQuality, customInstruction,
         companyName, companyPhone, companyWebsite, companyAddress, companyLogoUrl,
         useCompanyName, useCompanyPhone, useCompanyWebsite, useCompanyAddress,
         useCompanyLogo, productTextEnabled,
       }),
     );
   }, [
-    productCategory, modelUsage, modelGroup, modelLook, pose, shootStyle, background, backgroundTheme, studioPose,
-    outputSize, quality, customCategory, customModelUsage, customModelLook,
-    customPose, customShootStyle, customBackground, customOutputSize, customQuality, customInstruction,
+    productCategory, modelUsage, modelGroup, modelLook, pose, shootStyle, background, backgroundTheme, studioBackground,
+    outputSize, quality, customCategory,
+    customPose, customBackground, customOutputSize, customQuality, customInstruction,
     companyName, companyPhone, companyWebsite, companyAddress, companyLogoUrl,
     useCompanyName, useCompanyPhone, useCompanyWebsite, useCompanyAddress,
     useCompanyLogo, productTextEnabled,
@@ -1318,10 +1358,12 @@ export default function ProductographyPage() {
   const generateOne = async (item: GenItem, userId: string) => {
     const generationId = newId();
     const resolvedCategory = customCategory.trim() || productCategory;
-    const resolvedModelUsage = customModelUsage.trim() || modelUsage;
-    const resolvedModelLook = modelLookDisabled ? "" : (customModelLook.trim() || modelLook);
-    const resolvedShootStyle = customShootStyle.trim() || shootStyle;
-    const resolvedBackground = customBackground.trim() || background;
+    const resolvedModelUsage = modelUsage;
+    const resolvedModelLook = modelLookDisabled ? "" : modelLook;
+    const resolvedShootStyle = shootStyle;
+    const resolvedBackground = shootStyle === "Ecommerce White BG" ? "Plain White" : (customBackground.trim() || background);
+    const sceneUploaded = shootStyle === "Luxury Studio" && !modelLookDisabled && Boolean(referenceSceneUrl);
+    const resolvedStudioBackground = shootStyle === "Luxury Studio" && !sceneUploaded ? studioBackground : "";
     const resolvedPose = modelLookDisabled ? "" : (customPose.trim() || pose);
     const resolvedQuality = customQuality.trim() || quality;
     const resolvedOutputSize = resolveProductOutputSize(customOutputSize.trim() || outputSize);
@@ -1405,9 +1447,11 @@ export default function ProductographyPage() {
         pose: resolvedPose,
         shoot_style: resolvedShootStyle,
         background_style: resolvedBackground,
-        background_theme: !customShootStyle.trim() && SHOOT_STYLES_WITH_BG_THEME.includes(shootStyle) ? backgroundTheme : "",
-        studio_pose: !customShootStyle.trim() && SHOOT_STYLES_WITH_STUDIO_POSE.includes(shootStyle) && !modelLookDisabled ? studioPose : "",
-        reference_scene_url: !customShootStyle.trim() && shootStyle === "Luxury Studio" ? (referenceSceneUrl || "") : "",
+        background_theme: SHOOT_STYLES_WITH_BG_THEME.includes(shootStyle) ? backgroundTheme : "",
+        studio_pose: "",
+        studio_background: resolvedStudioBackground,
+        studio_set: resolveStudioSet(resolvedStudioBackground, modelLookDisabled, showModelGroup ? modelGroup : ""),
+        reference_scene_url: shootStyle === "Luxury Studio" ? (referenceSceneUrl || "") : "",
         model_photo_url: modelPhotoUrl || "",
         model_image_url: modelPhotoUrl || "",
         has_uploaded_model: Boolean(modelPhotoUrl),
@@ -2304,7 +2348,6 @@ export default function ProductographyPage() {
                           if (list.length && !list.some((l) => l.value === modelLook)) setModelLook(list[0].value);
                         }} darkMode={darkMode} />)}
                       </div>
-                      <CustomTextBox label="Custom Model Usage" value={customModelUsage} onChange={setCustomModelUsage} placeholder="Example: only female hand holding perfume near face, no full face visible..." darkMode={darkMode} />
                     </div>
 
                     {showModelGroup && (
@@ -2320,9 +2363,8 @@ export default function ProductographyPage() {
                                 type="button"
                                 onClick={() => {
                                   setModelGroup(g);
-                                  const list = buildModelLookList(customModelUsage.trim() || modelUsage, g);
+                                  const list = buildModelLookList(modelUsage, g);
                                   if (list.length) setModelLook(list[0].value);
-                                  setCustomModelLook("");
                                 }}
                                 className={`rounded-2xl border px-6 py-3 text-sm font-black transition-all active:scale-[0.97] ${
                                   gActive
@@ -2338,91 +2380,6 @@ export default function ProductographyPage() {
                           })}
                         </div>
 
-                        {/* Upload Your Photo — virtual try-on with user's own model */}
-                        <div className="mt-4 rounded-2xl border border-cyan-300/40 bg-cyan-400/5 p-4 dark:border-cyan-400/20">
-                          <h4 className="text-sm font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">
-                            Upload Your Photo
-                            <span className="ml-2 rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-black text-cyan-700 dark:bg-cyan-400/20 dark:text-cyan-300">+2 Credits</span>
-                          </h4>
-                          <p className={`mt-1 text-xs ${muted}`}>Upload your own model photo — AI will render the product on the exact person. Face and identity preserved.</p>
-                          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-                            <label
-                              className={`group relative flex min-h-[116px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
-                                modelPhotoUrl
-                                  ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
-                                  : darkMode
-                                    ? "bg-white/[0.045] hover:-translate-y-1 hover:bg-white/[0.08]"
-                                    : "bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10"
-                              } ${modelPhotoUploading ? "pointer-events-none opacity-60" : ""}`}
-                            >
-                              <div className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${modelPhotoUrl ? "shadow-lg shadow-cyan-400/25" : "shadow-sm"}`}>
-                                {modelPhotoUrl ? (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img src={modelPhotoUrl} alt="" className="block h-full w-full object-cover" />
-                                ) : (
-                                  <UploadCloud className="h-9 w-9 text-cyan-500" aria-hidden="true" />
-                                )}
-                              </div>
-                              <p className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${modelPhotoUrl ? "text-[#0077b6]" : darkMode ? "text-white/70" : "text-black/70"}`}>
-                                {modelPhotoUploading ? "Uploading…" : modelPhotoUrl ? "Your Photo ✓" : "Upload Your Photo"}
-                              </p>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                disabled={modelPhotoUploading}
-                                onChange={async (e) => {
-                                  const f = e.target.files?.[0];
-                                  if (!f) return;
-                                  if (!f.type.startsWith("image/")) {
-                                    alert("Please upload an image file.");
-                                    e.target.value = "";
-                                    return;
-                                  }
-                                  setModelPhotoUploading(true);
-                                  try {
-                                    const url = await uploadFile(f);
-                                    setModelPhotoUrl(url);
-                                    setTryOnConsent(false);
-                                  } catch {
-                                    alert("Photo upload failed. Please try again.");
-                                  } finally {
-                                    setModelPhotoUploading(false);
-                                    e.target.value = "";
-                                  }
-                                }}
-                              />
-                              {modelPhotoUrl && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setModelPhotoUrl("");
-                                    setTryOnConsent(false);
-                                  }}
-                                  className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow"
-                                  aria-label="Remove photo"
-                                >
-                                  ✕
-                                </button>
-                              )}
-                            </label>
-                          </div>
-                          {modelPhotoUrl && (
-                            <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-50/60 p-3 text-xs text-slate-600 dark:border-white/15 dark:bg-white/[0.03] dark:text-white/75">
-                              <input
-                                type="checkbox"
-                                checked={tryOnConsent}
-                                onChange={(e) => setTryOnConsent(e.target.checked)}
-                                className="mt-0.5 h-4 w-4 shrink-0 accent-cyan-600"
-                              />
-                              <span>
-                                This is my own photo (or I have permission to use it), and I will use it only for this product preview. AgentForge will delete it after the result is generated.
-                              </span>
-                            </label>
-                          )}
-                        </div>
                       </div>
                     )}
 
@@ -2430,18 +2387,18 @@ export default function ProductographyPage() {
                       <h4 className="text-xl font-black">Model Look</h4>
                       {modelLookDisabled ? (
                         <div className={`mt-4 rounded-2xl border border-dashed p-5 text-center text-sm ${darkMode ? "border-white/15 bg-white/[0.03] text-white/55" : "border-black/15 bg-black/[0.02] text-slate-500"}`}>
-                          Model Look is not applicable for <span className="font-bold">{customModelUsage.trim() || modelUsage}</span> — no human model is used here.
+                          Model Look is not applicable for <span className="font-bold">{modelUsage}</span> — no human model is used here.
                         </div>
                       ) : (
                         <>
                           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                             {modelLookList.map((item) => {
-                              const isActive = !customModelLook.trim() && modelLook === item.value;
+                              const isActive = modelLook === item.value;
                               return (
                                 <button
                                   key={item.value}
                                   type="button"
-                                  onClick={() => { setModelLook(item.value); setCustomModelLook(""); }}
+                                  onClick={() => setModelLook(item.value)}
                                   className={`group flex flex-col items-center rounded-[22px] border p-3 text-center transition-all duration-300 active:scale-[0.97] ${
                                     isActive
                                       ? "scale-[1.02] border-cyan-300 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/60"
@@ -2460,8 +2417,85 @@ export default function ProductographyPage() {
                                 </button>
                               );
                             })}
+                            {showModelGroup && (
+                              <label
+                                className={`group relative flex min-h-[116px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
+                                  modelPhotoUrl
+                                    ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
+                                    : darkMode
+                                      ? "bg-white/[0.045] hover:-translate-y-1 hover:bg-white/[0.08]"
+                                      : "bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10"
+                                } ${modelPhotoUploading ? "pointer-events-none opacity-60" : ""}`}
+                              >
+                                <div className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${modelPhotoUrl ? "shadow-lg shadow-cyan-400/25" : "shadow-sm"}`}>
+                                  {modelPhotoUrl ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={modelPhotoUrl} alt="" className="block h-full w-full object-cover" />
+                                  ) : (
+                                    <UploadCloud className="h-9 w-9 text-cyan-500" aria-hidden="true" />
+                                  )}
+                                </div>
+                                <p className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${modelPhotoUrl ? "text-[#0077b6]" : darkMode ? "text-white/70" : "text-black/70"}`}>
+                                  {modelPhotoUploading ? "Uploading…" : modelPhotoUrl ? "Your Photo ✓" : "Upload Your Photo"}
+                                </p>
+                                <span className="mt-1 rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-black text-cyan-700 dark:bg-cyan-400/20 dark:text-cyan-300">+2 Credits</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  disabled={modelPhotoUploading}
+                                  onChange={async (e) => {
+                                    const f = e.target.files?.[0];
+                                    if (!f) return;
+                                    if (!f.type.startsWith("image/")) {
+                                      alert("Please upload an image file.");
+                                      e.target.value = "";
+                                      return;
+                                    }
+                                    setModelPhotoUploading(true);
+                                    try {
+                                      const url = await uploadFile(f);
+                                      setModelPhotoUrl(url);
+                                      setTryOnConsent(false);
+                                    } catch {
+                                      alert("Photo upload failed. Please try again.");
+                                    } finally {
+                                      setModelPhotoUploading(false);
+                                      e.target.value = "";
+                                    }
+                                  }}
+                                />
+                                {modelPhotoUrl && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setModelPhotoUrl("");
+                                      setTryOnConsent(false);
+                                    }}
+                                    className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow"
+                                    aria-label="Remove photo"
+                                  >
+                                    ✕
+                                  </button>
+                                )}
+                              </label>
+                            )}
                           </div>
-                          <CustomTextBox label="Custom Model Look" value={customModelLook} onChange={setCustomModelLook} placeholder="Example: Indian female model, premium skincare ad look, soft smile, clean makeup..." darkMode={darkMode} />
+                          {showModelGroup && modelPhotoUrl && (
+                              <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-50/60 p-3 text-xs text-slate-600 dark:border-white/15 dark:bg-white/[0.03] dark:text-white/75">
+                                <input
+                                  type="checkbox"
+                                  checked={tryOnConsent}
+                                  onChange={(e) => setTryOnConsent(e.target.checked)}
+                                  className="mt-0.5 h-4 w-4 shrink-0 accent-cyan-600"
+                                />
+                                <span>
+                                  This is my own photo (or I have permission to use it), and I will use it only for this product preview. AgentForge will delete it after the result is generated.
+                                </span>
+                              </label>
+                          )}
                         </>
                       )}
                     </div>
@@ -2475,10 +2509,9 @@ export default function ProductographyPage() {
                       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                         {shootStyleOptions.map((item) => <OptionCard key={item.title} option={item} active={shootStyle === item.title} onClick={() => setShootStyle(item.title)} darkMode={darkMode} />)}
                       </div>
-                      <CustomTextBox label="Custom Shoot Style" value={customShootStyle} onChange={setCustomShootStyle} placeholder="Example: premium cosmetic ad, soft shadows, luxury editorial lighting, no text..." darkMode={darkMode} />
                     </div>
 
-                    {!customShootStyle.trim() && SHOOT_STYLES_WITH_BG_THEME.includes(shootStyle) && (
+                    {SHOOT_STYLES_WITH_BG_THEME.includes(shootStyle) && (
                       <div className="rounded-2xl border border-cyan-300/40 bg-cyan-400/5 p-4 dark:border-cyan-400/20">
                         <h4 className="text-sm font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">Select Background Theme</h4>
                         <p className={`mt-1 text-xs ${muted}`}>Premium outdoor backdrop — always upscale, never old or rundown.</p>
@@ -2496,97 +2529,92 @@ export default function ProductographyPage() {
                       </div>
                     )}
 
-                    {!customShootStyle.trim() && SHOOT_STYLES_WITH_STUDIO_POSE.includes(shootStyle) && !modelLookDisabled && (
+                    {/* Luxury Studio → studio set picker (textile studio sets) + Upload Your Scene */}
+                    {shootStyle === "Luxury Studio" && (
                       <div className="rounded-2xl border border-cyan-300/40 bg-cyan-400/5 p-4 dark:border-cyan-400/20">
-                        <h4 className="text-sm font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">Select Studio Pose</h4>
-                        <p className={`mt-1 text-xs ${muted}`}>How the model is posed in the studio shot.</p>
-                        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-                          {studioPoseOptions.map((item) => (
+                        <h4 className="text-sm font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">Select Studio Background</h4>
+                        <p className={`mt-1 text-xs ${muted}`}>Premium trending studio sets — a fresh variation of the chosen set on every generation.</p>
+                        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+                          {studioBgList.map((item) => (
                             <OptionCard
                               key={item}
-                              option={{ title: item, icon: <Camera />, iconFile: STUDIO_POSE_ICONS[item] }}
-                              active={studioPose === item}
-                              onClick={() => setStudioPose(item)}
+                              option={{ title: item, icon: <Camera />, iconFile: STUDIO_BG_ICONS[item] }}
+                              active={!(referenceSceneUrl && !modelLookDisabled) && studioBackground === item}
+                              onClick={() => setStudioBackground(item)}
                               darkMode={darkMode}
                             />
                           ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Upload Your Scene — Luxury Studio only */}
-                    {!customShootStyle.trim() && shootStyle === "Luxury Studio" && !modelLookDisabled && (
-                      <div className="rounded-2xl border border-cyan-300/40 bg-cyan-400/5 p-4 dark:border-cyan-400/20">
-                        <h4 className="text-sm font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-300">
-                          Upload Your Scene
-                          <span className="ml-2 rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-black text-cyan-700 dark:bg-cyan-400/20 dark:text-cyan-300">+2 Credits</span>
-                        </h4>
-                        <p className={`mt-1 text-xs ${muted}`}>Upload your own background scene — AI will composite the product naturally into it, matching the scene&apos;s lighting and perspective.</p>
-                        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-                          <label
-                            className={`group relative flex min-h-[116px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
-                              referenceSceneUrl
-                                ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
-                                : darkMode
-                                  ? "bg-white/[0.045] hover:-translate-y-1 hover:bg-white/[0.08]"
-                                  : "bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10"
-                            } ${sceneUploading ? "pointer-events-none opacity-60" : ""}`}
-                          >
-                            <div className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${referenceSceneUrl ? "shadow-lg shadow-cyan-400/25" : "shadow-sm"}`}>
-                              {referenceSceneUrl ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={referenceSceneUrl} alt="" className="block h-full w-full object-cover" />
-                              ) : (
-                                <span className="text-3xl" aria-hidden="true">📷</span>
-                              )}
-                            </div>
-                            <p className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${referenceSceneUrl ? "text-[#0077b6]" : darkMode ? "text-white/70" : "text-black/70"}`}>
-                              {sceneUploading ? "Uploading…" : referenceSceneUrl ? "Scene Ready ✓" : "Upload Your Scene"}
-                            </p>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              disabled={sceneUploading}
-                              onChange={async (e) => {
-                                const f = e.target.files?.[0];
-                                if (!f) return;
-                                if (!f.type.startsWith("image/")) {
-                                  alert("Please upload an image file.");
-                                  e.target.value = "";
-                                  return;
-                                }
-                                setSceneUploading(true);
-                                try {
-                                  const url = await uploadFile(f);
-                                  setReferenceSceneUrl(url);
-                                } catch {
-                                  alert("Scene upload failed. Please try again.");
-                                } finally {
-                                  setSceneUploading(false);
-                                  e.target.value = "";
-                                }
-                              }}
-                            />
-                            {referenceSceneUrl && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setReferenceSceneUrl("");
-                                }}
-                                className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow"
-                                aria-label="Remove scene"
+                          {!modelLookDisabled && (
+                              <label
+                                className={`group relative flex min-h-[116px] min-w-0 cursor-pointer flex-col items-center justify-center rounded-[22px] p-3 text-center transition-all duration-300 active:scale-[0.97] sm:min-h-[145px] sm:rounded-[28px] sm:p-4 ${
+                                  referenceSceneUrl
+                                    ? "scale-[1.025] bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/15 shadow-xl shadow-cyan-500/20 ring-2 ring-cyan-300/70"
+                                    : darkMode
+                                      ? "bg-white/[0.045] hover:-translate-y-1 hover:bg-white/[0.08]"
+                                      : "bg-gradient-to-br from-cyan-50/80 via-white to-blue-50/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/10"
+                                } ${sceneUploading ? "pointer-events-none opacity-60" : ""}`}
                               >
-                                ✕
-                              </button>
-                            )}
-                          </label>
+                                <div className={`mb-2 flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[20px] bg-white sm:mb-3 sm:h-[80px] sm:w-[80px] sm:rounded-[24px] ${referenceSceneUrl ? "shadow-lg shadow-cyan-400/25" : "shadow-sm"}`}>
+                                  {referenceSceneUrl ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={referenceSceneUrl} alt="" className="block h-full w-full object-cover" />
+                                  ) : (
+                                    <span className="text-3xl" aria-hidden="true">📷</span>
+                                  )}
+                                </div>
+                                <p className={`max-w-full break-words text-center text-[12px] font-black leading-4 sm:text-sm ${referenceSceneUrl ? "text-[#0077b6]" : darkMode ? "text-white/70" : "text-black/70"}`}>
+                                  {sceneUploading ? "Uploading…" : referenceSceneUrl ? "Scene Ready ✓" : "Upload Your Scene"}
+                                </p>
+                                <span className="mt-1 rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-black text-cyan-700 dark:bg-cyan-400/20 dark:text-cyan-300">+2 Credits</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  disabled={sceneUploading}
+                                  onChange={async (e) => {
+                                    const f = e.target.files?.[0];
+                                    if (!f) return;
+                                    if (!f.type.startsWith("image/")) {
+                                      alert("Please upload an image file.");
+                                      e.target.value = "";
+                                      return;
+                                    }
+                                    setSceneUploading(true);
+                                    try {
+                                      const url = await uploadFile(f);
+                                      setReferenceSceneUrl(url);
+                                    } catch {
+                                      alert("Scene upload failed. Please try again.");
+                                    } finally {
+                                      setSceneUploading(false);
+                                      e.target.value = "";
+                                    }
+                                  }}
+                                />
+                                {referenceSceneUrl && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setReferenceSceneUrl("");
+                                    }}
+                                    className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-black text-white shadow"
+                                    aria-label="Remove scene"
+                                  >
+                                    ✕
+                                  </button>
+                                )}
+                              </label>
+                          )}
                         </div>
+                        {!modelLookDisabled && referenceSceneUrl && (
+                          <p className={`mt-3 text-xs ${muted}`}>Your scene is ready — the product will be placed naturally into it (+2 credits). Remove it to use a studio set instead.</p>
+                        )}
                       </div>
                     )}
 
+                    {shootStyle !== "Ecommerce White BG" && (
                     <div>
                       <h4 className="text-xl font-black">Background</h4>
                       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
@@ -2594,6 +2622,7 @@ export default function ProductographyPage() {
                       </div>
                       <CustomTextBox label="Custom Background" value={customBackground} onChange={setCustomBackground} placeholder="Example: luxury marble bathroom counter with morning sunlight and soft reflection..." darkMode={darkMode} />
                     </div>
+                    )}
                   </div>
                 )}
 
@@ -2665,20 +2694,20 @@ export default function ProductographyPage() {
 
                         <div className="mb-5 grid gap-2 sm:grid-cols-2">
                           <SummaryRow label="Product" value={customCategory.trim() || productCategory} />
-                          <SummaryRow label="Model Usage" value={customModelUsage.trim() || modelUsage} />
-                          <SummaryRow label="Model Look" value={modelLookDisabled ? "No model" : (customModelLook.trim() || modelLook)} />
+                          <SummaryRow label="Model Usage" value={modelUsage} />
+                          <SummaryRow label="Model Look" value={modelLookDisabled ? "No model" : modelLook} />
                           <SummaryRow label="Pose" value={modelLookDisabled ? "—" : (customPose.trim() || pose)} />
-                          <SummaryRow label="Shoot Style" value={customShootStyle.trim() || shootStyle} />
-                          {!customShootStyle.trim() && SHOOT_STYLES_WITH_BG_THEME.includes(shootStyle) && (
+                          <SummaryRow label="Shoot Style" value={shootStyle} />
+                          {SHOOT_STYLES_WITH_BG_THEME.includes(shootStyle) && (
                             <SummaryRow label="Background Theme" value={backgroundTheme} />
                           )}
-                          {!customShootStyle.trim() && SHOOT_STYLES_WITH_STUDIO_POSE.includes(shootStyle) && !modelLookDisabled && (
-                            <SummaryRow label="Studio Pose" value={studioPose} />
+                          {shootStyle === "Luxury Studio" && !(referenceSceneUrl && !modelLookDisabled) && (
+                            <SummaryRow label="Studio Background" value={studioBackground} />
                           )}
-                          <SummaryRow label="Background" value={customBackground.trim() || background} />
+                          <SummaryRow label="Background" value={shootStyle === "Ecommerce White BG" ? "Plain White" : (customBackground.trim() || background)} />
                           <SummaryRow label="Frame" value={`${customOutputSize.trim() || outputSize} / ${customQuality.trim() || quality}`} />
                           <SummaryRow label="Uploads" value={String(readyItems.length)} />
-                          {!customShootStyle.trim() && shootStyle === "Luxury Studio" && referenceSceneUrl && (
+                          {shootStyle === "Luxury Studio" && referenceSceneUrl && (
                             <SummaryRow label="Upload Your Scene" value="+2 credits" />
                           )}
                           {modelPhotoUrl && (
