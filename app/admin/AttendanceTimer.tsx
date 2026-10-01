@@ -5,7 +5,7 @@
 // Shows current session time. Click to check in/out.
 // ============================================================
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Clock, LogIn, LogOut, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -14,6 +14,40 @@ type ActiveSession = {
   check_in: string;
   work_notes: string | null;
 };
+
+// ── Shared attendance status ─────────────────────────────────
+// The top-bar timer owns the session; the check-in gate in
+// AdminShell reads this status to lock the panel until the
+// member is checked in (and not on a break).
+export type AttStatus = "unknown" | "in" | "out" | "idle" | "break";
+const STATUS_EVT = "af-att-status";
+let currentStatus: AttStatus = "unknown"; // survives client-side navigation
+
+function publishStatus(s: AttStatus) {
+  if (currentStatus === s) return;
+  currentStatus = s;
+  window.dispatchEvent(new Event(STATUS_EVT));
+}
+
+export function useAttendanceStatus(): AttStatus {
+  return useSyncExternalStore(
+    (cb) => {
+      window.addEventListener(STATUS_EVT, cb);
+      return () => window.removeEventListener(STATUS_EVT, cb);
+    },
+    () => currentStatus,
+    () => "unknown" as AttStatus,
+  );
+}
+
+/** Ask the timer to check in (used by the gate). */
+export function requestCheckIn(notes: string) {
+  window.dispatchEvent(new CustomEvent("af-att-checkin", { detail: notes }));
+}
+/** Ask the timer to end the current break (used by the gate). */
+export function requestEndBreak() {
+  window.dispatchEvent(new Event("af-att-endbreak"));
+}
 
 function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600);
@@ -49,12 +83,18 @@ export default function AttendanceTimer({ email }: { email: string }) {
       if (data) {
         setSession(data as ActiveSession);
         setNotes(data.work_notes ?? "");
+        // Restore an unfinished break (page reload / navigation mid-break).
+        const { data: br } = await supabase
+          .from("attendance_breaks")
+          .select("id, break_type")
+          .eq("log_id", (data as ActiveSession).id)
+          .is("ended_at", null)
+          .order("started_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (br) setOnBreak({ id: br.id as string, type: br.break_type as string });
       } else {
-        // Morning auto-popup — prompt to start session once per day.
-        try {
-          const key = `af_att_prompt_${new Date().toISOString().slice(0,10)}`;
-          if (!localStorage.getItem(key)) { setOpen(true); localStorage.setItem(key, "1"); }
-        } catch { /* ignore */ }
+        // No session: the full-page CheckInGate (AdminShell) asks to check in.
       }
       setInitialLoad(false);
     })();
@@ -83,7 +123,38 @@ export default function AttendanceTimer({ email }: { email: string }) {
       .eq("id", s.id);
     setSession(null);
     try { localStorage.setItem("af_att_autologout", "1"); } catch { /* ignore */ }
+    publishStatus("idle");
   }
+
+  // Publish status for the check-in gate.
+  useEffect(() => {
+    if (initialLoad) return;
+    if (session) {
+      publishStatus(onBreak ? "break" : "in");
+    } else {
+      let idle = false;
+      try { idle = localStorage.getItem("af_att_autologout") === "1"; } catch { /* ignore */ }
+      publishStatus(idle ? "idle" : "out");
+    }
+  }, [initialLoad, session, onBreak]);
+
+  // Gate → timer requests (check in / end break).
+  const checkInRef = useRef(checkIn);
+  const endBreakRef = useRef(endBreak);
+  useEffect(() => {
+    checkInRef.current = checkIn;
+    endBreakRef.current = endBreak;
+  });
+  useEffect(() => {
+    const onIn = (e: Event) => { if (!sessionRef.current) checkInRef.current((e as CustomEvent<string>).detail); };
+    const onEnd = () => { endBreakRef.current(); };
+    window.addEventListener("af-att-checkin", onIn);
+    window.addEventListener("af-att-endbreak", onEnd);
+    return () => {
+      window.removeEventListener("af-att-checkin", onIn);
+      window.removeEventListener("af-att-endbreak", onEnd);
+    };
+  }, []);
 
   // Live timer
   useEffect(() => {
@@ -107,7 +178,7 @@ export default function AttendanceTimer({ email }: { email: string }) {
     return () => document.removeEventListener("mousedown", onDoc);
   }, [open]);
 
-  async function checkIn() {
+  async function checkIn(planNotes?: string) {
     setLoading(true);
     const name = email.split("@")[0];
 
@@ -122,7 +193,7 @@ export default function AttendanceTimer({ email }: { email: string }) {
 
     // Only include relogin_reason when set — so check-in works even if
     // the attendance-breaks.sql migration hasn't been run yet.
-    const payload: Record<string, unknown> = { member_email: email, member_name: name, work_notes: notes || null };
+    const payload: Record<string, unknown> = { member_email: email, member_name: name, work_notes: (planNotes ?? notes) || null };
     if (reloginReason) payload.relogin_reason = reloginReason;
 
     const { data, error } = await supabase
@@ -183,7 +254,7 @@ export default function AttendanceTimer({ email }: { email: string }) {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-bold transition ${
+        className={`inline-flex h-9 items-center gap-1.5 rounded-xl border px-2.5 text-xs font-bold transition ${
           session
             ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-700/50 dark:bg-emerald-500/10 dark:text-emerald-300"
             : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800"
@@ -200,7 +271,7 @@ export default function AttendanceTimer({ email }: { email: string }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-[#11141a]">
+        <div className="fixed inset-x-3 top-full z-50 mt-2 sm:absolute sm:inset-x-auto sm:right-0 overflow-hidden rounded-2xl sm:w-72 border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-[#11141a]">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
             <div>
@@ -292,7 +363,7 @@ export default function AttendanceTimer({ email }: { email: string }) {
             ) : (
               <button
                 type="button"
-                onClick={checkIn}
+                onClick={() => checkIn()}
                 disabled={loading}
                 className="flex w-full items-center justify-center gap-1.5 rounded-md bg-emerald-600 py-2 text-xs font-bold text-white hover:bg-emerald-500 disabled:opacity-50"
               >

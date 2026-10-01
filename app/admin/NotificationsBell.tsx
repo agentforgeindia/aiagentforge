@@ -153,7 +153,7 @@ export default function NotificationsBell() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="relative inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+        className="relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
         aria-label="Notifications"
         aria-expanded={open}
       >
@@ -168,7 +168,7 @@ export default function NotificationsBell() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-[360px] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-[#11141a]"
+          className="fixed inset-x-3 top-full z-50 mt-2 sm:absolute sm:inset-x-auto sm:right-0 overflow-hidden rounded-2xl sm:w-[360px] border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-[#11141a]"
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2.5 dark:border-slate-800">

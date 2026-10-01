@@ -173,3 +173,19 @@ export const TILES: Tile[] = [
   { group: "System", href: "/admin/audit",          label: "Audit Log",      description: "Every sensitive action — refunds, role changes, edits.",icon: <ClipboardList className="h-4 w-4" />,  perm: "audit.view" },
   { group: "System", href: "/admin/help",            label: "Help & Rules",   description: "Your role's rules, backend tips + AI help assistant.",   icon: <HelpCircle className="h-4 w-4" />,      perm: "leads.view" },
 ];
+
+// Soft tinted icon colours per section (light UI — no heavy gradients).
+export const GROUP_TINT: Record<string, { bg: string; fg: string }> = {
+  "Command":         { bg: "bg-violet-50",  fg: "text-violet-600" },
+  "Sales & CRM":     { bg: "bg-blue-50",    fg: "text-blue-600" },
+  "Marketing":       { bg: "bg-orange-50",  fg: "text-orange-600" },
+  "Influencers":     { bg: "bg-pink-50",    fg: "text-pink-600" },
+  "Finance":         { bg: "bg-emerald-50", fg: "text-emerald-600" },
+  "AI":              { bg: "bg-purple-50",  fg: "text-purple-600" },
+  "Support":         { bg: "bg-sky-50",     fg: "text-sky-600" },
+  "People & Hiring": { bg: "bg-amber-50",   fg: "text-amber-600" },
+  "Content":         { bg: "bg-teal-50",    fg: "text-teal-600" },
+  "System":          { bg: "bg-slate-100",  fg: "text-slate-600" },
+};
+export const tintFor = (g: string) =>
+  GROUP_TINT[g] ?? { bg: "bg-violet-50", fg: "text-violet-600" };

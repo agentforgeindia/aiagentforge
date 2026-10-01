@@ -42,7 +42,21 @@ export type AdminPermissionsState = {
   has: (perm: string) => boolean;
   /** Forcibly re-fetch from Supabase (e.g. after a role change). */
   refresh: () => Promise<void>;
+  /** The signed-in user's own role, ignoring any "view as". */
+  realRole: string | null;
+  /** True when the signed-in user is the founder (role founder or "*"). */
+  isFounder: boolean;
+  /** Role id the founder is currently previewing, or null. */
+  viewAs: string | null;
+  /** Founder only — preview the backend as another role (null = back to founder). */
+  setViewAs: (roleId: string | null) => void;
+  /** Roles the founder can switch to (empty for non-founders). */
+  availableRoles: AdminRoleOption[];
 };
+
+export type AdminRoleOption = { id: string; label: string; permissions: string[] };
+
+const VIEW_AS_KEY = "af_admin_view_as";
 
 const PermissionsCtx = createContext<AdminPermissionsState | null>(null);
 
@@ -65,6 +79,8 @@ export function AdminPermissionsProvider({
   const [email, setEmail] = useState<string | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const [permissions, setPermissions] = useState<string[]>([]);
+  const [availableRoles, setAvailableRoles] = useState<AdminRoleOption[]>([]);
+  const [viewAs, setViewAsState] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -90,8 +106,33 @@ export function AdminPermissionsProvider({
       setRole(null);
       setPermissions([]);
     } else {
-      setRole((r as string | null) ?? null);
-      setPermissions(Array.isArray(perms) ? (perms as string[]) : []);
+      const realRole = (r as string | null) ?? null;
+      const realPerms = Array.isArray(perms) ? (perms as string[]) : [];
+      setRole(realRole);
+      setPermissions(realPerms);
+
+      // Founder: load every role so the "View as" switcher can use it.
+      if (realRole === "founder" || realPerms.includes("*")) {
+        const { data: rows } = await supabase
+          .from("admin_roles")
+          .select("id, label, permissions")
+          .order("id");
+        setAvailableRoles(
+          ((rows as AdminRoleOption[] | null) ?? []).map((x) => ({
+            id: x.id,
+            label: x.label || x.id,
+            permissions: Array.isArray(x.permissions) ? x.permissions : [],
+          })),
+        );
+        try {
+          setViewAsState(window.localStorage.getItem(VIEW_AS_KEY));
+        } catch {
+          setViewAsState(null);
+        }
+      } else {
+        setAvailableRoles([]);
+        setViewAsState(null);
+      }
     }
     setLoading(false);
   }
@@ -106,19 +147,42 @@ export function AdminPermissionsProvider({
   }, []);
 
   const value = useMemo<AdminPermissionsState>(() => {
-    const isAdmin = !!role;
+    const isFounder = role === "founder" || permissions.includes("*");
+    const preview =
+      isFounder && viewAs && viewAs !== "founder"
+        ? availableRoles.find((r) => r.id === viewAs) ?? null
+        : null;
+    const effRole = preview ? preview.id : role;
+    const effPerms = preview ? preview.permissions : permissions;
+
+    const setViewAs = (roleId: string | null) => {
+      const next = roleId && roleId !== "founder" ? roleId : null;
+      try {
+        if (next) window.localStorage.setItem(VIEW_AS_KEY, next);
+        else window.localStorage.removeItem(VIEW_AS_KEY);
+      } catch {
+        /* storage blocked */
+      }
+      setViewAsState(next);
+    };
+
     return {
       loading,
       ready: !loading,
-      isAdmin,
-      role,
-      permissions,
+      isAdmin: !!role,
+      role: effRole,
+      permissions: effPerms,
       email,
-      has: (p: string) => matchesPermission(p, permissions),
+      has: (p: string) => matchesPermission(p, effPerms),
       refresh: load,
+      realRole: role,
+      isFounder,
+      viewAs: preview ? preview.id : null,
+      setViewAs,
+      availableRoles,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, role, permissions, email]);
+  }, [loading, role, permissions, email, viewAs, availableRoles]);
 
   return (
     <PermissionsCtx.Provider value={value}>{children}</PermissionsCtx.Provider>
@@ -139,6 +203,11 @@ export function useAdminPermissions(): AdminPermissionsState {
       email: null,
       has: () => false,
       refresh: async () => {},
+      realRole: null,
+      isFounder: false,
+      viewAs: null,
+      setViewAs: () => {},
+      availableRoles: [],
     };
   }
   return ctx;

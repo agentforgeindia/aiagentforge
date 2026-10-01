@@ -212,7 +212,7 @@ export default function AdminAnnouncementsPage() {
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Welcome notification reach
           </p>
-          <div className="mt-3 grid grid-cols-3 gap-3">
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="rounded-lg bg-slate-100 p-3 text-center dark:bg-white/[0.04]">
               <p className="text-2xl font-black">{welcomeStats.sent}</p>
               <p className={`mt-0.5 text-[11px] ${adminMutedCls}`}>Sent · of {welcomeStats.signups} signups</p>

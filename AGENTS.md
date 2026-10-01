@@ -6,6 +6,19 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ---
 
+# Admin training rule (MANDATORY for every backend change)
+
+The admin panel has a role-wise self-training course at `/admin/training`.
+**Any new admin module, tab, workflow or important button must be added to the
+training in the same change.**
+
+1. New page → add it to a hub in `app/admin/adminHubs.tsx` (existing hub tab or a new hub, with EN + Hinglish label/description). New page not in `adminNav.tsx` TILES → add its permission to `EXTRA_PERM`.
+2. Write/extend the lesson in `app/admin/training/lessons.ts` (EN + Hinglish): intro, steps, at least one quiz question. Spread correct answers across A/B/C/D — never always the same letter.
+3. Changed how an existing screen works → update that hub's lesson steps/quiz too.
+4. A hub without a written lesson gets an automatic basic lesson, and the founder sees it under Training → Team progress as "Needs a written lesson". That is a safety net, not a substitute.
+
+---
+
 # Adding a new AgentForge agent
 
 Every generate endpoint on this site MUST go through the secure factory at

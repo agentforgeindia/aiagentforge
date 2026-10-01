@@ -203,7 +203,7 @@ export default function AdminDemoRequestsPage() {
       }
     >
       {counts && (
-        <div className="mb-4 grid grid-cols-3 gap-3">
+        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className={`${adminCardCls} p-3 text-center`}>
             <p className="text-2xl font-black">{counts.total}</p>
             <p className={`text-[11px] ${adminMutedCls}`}>Total requests</p>

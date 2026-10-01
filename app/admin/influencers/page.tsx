@@ -510,8 +510,8 @@ export default function InfluencerAdminPage() {
                       ) : infSignups[inf.candidate_id].length === 0 ? (
                         <p className={`text-xs ${adminMutedCls}`}>No signups yet via this referral link.</p>
                       ) : (
-                        <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
-                          <table className="w-full text-xs">
+                        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                          <table className="w-full min-w-[480px] text-xs">
                             <thead>
                               <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40">
                                 <th className={`px-3 py-2 text-left text-[10px] font-black uppercase tracking-wider ${adminMutedCls}`}>#</th>

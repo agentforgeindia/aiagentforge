@@ -102,19 +102,42 @@ export default function SalesCommandPage() {
     setCalling(lead);
     setCallNote(""); setCallOutcome("interested");
     // Load call history from notes
-    const { data } = await supabase.from("lead_notes").select("*").eq("user_id", lead.id).order("created_at", { ascending: false }).limit(10);
-    setCallLogs((data as unknown as CallLog[]) ?? []);
+    // Same timeline the Lead detail page shows (lead_activities).
+    const { data } = await supabase
+      .from("lead_activities")
+      .select("lead_id, summary, outcome, created_at, created_by")
+      .eq("lead_id", lead.id)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    setCallLogs(
+      ((data as { lead_id: string; summary: string; outcome: string | null; created_at: string; created_by: string | null }[] | null) ?? []).map((r) => ({
+        lead_id: r.lead_id,
+        note: r.summary,
+        outcome: r.outcome ?? "",
+        called_at: r.created_at,
+        called_by: r.created_by ?? "",
+      })),
+    );
   }
 
   async function saveCallLog() {
     if (!calling || !callNote.trim()) return;
     setSavingCall(true);
     const tag = `[${callOutcome.toUpperCase().replace("_", " ")}]`;
-    await supabase.from("lead_notes").insert({
-      user_id: calling.id,
-      note:    `ðŸ“ž ${tag} ${callNote}`,
-      tag:     callOutcome,
+    const { data: sess } = await supabase.auth.getSession();
+    const { error: logErr } = await supabase.from("lead_activities").insert({
+      lead_id: calling.id,
+      type: "call",
+      direction: "outbound",
+      summary: `${tag} ${callNote.trim()}`,
+      outcome: callOutcome,
+      created_by: sess.session?.user?.id ?? null,
     });
+    if (logErr) {
+      alert(`Call log save nahi hua: ${logErr.message}`);
+      setSavingCall(false);
+      return;
+    }
     // Update lead status if demo scheduled
     if (callOutcome === "demo_scheduled") {
       await supabase.from("leads").update({ status: "demo" }).eq("id", calling.id);
