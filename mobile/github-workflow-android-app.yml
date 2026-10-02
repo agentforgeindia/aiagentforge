@@ -1,0 +1,88 @@
+# TEMPLATE — to switch it on, copy this file to:
+#   .github/workflows/android-app.yml   (in the repo root)
+# and push. Until then it does nothing.
+#
+# Builds the AgentForge Android app (the /mobile Capacitor project).
+#
+# • Runs when anything in /mobile changes on main, or manually:
+#   GitHub → Actions → "Android app" → Run workflow.
+# • Always produces a test APK (install it directly on a phone).
+# • Also produces a signed .aab for Play Store when these repository
+#   secrets exist (Settings → Secrets and variables → Actions):
+#     ANDROID_KEYSTORE_BASE64   base64 of the upload keystore (.jks)
+#     ANDROID_KEYSTORE_PASSWORD
+#     ANDROID_KEY_ALIAS
+#     ANDROID_KEY_PASSWORD
+name: Android app
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/android-app.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install Capacitor
+        run: npm ci
+
+      - name: Sync Android project
+        run: npx cap sync android
+
+      - name: Build test APK
+        working-directory: mobile/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Upload test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: agentforge-test-apk
+          path: mobile/android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Prepare release signing
+        if: env.HAS_KEYSTORE == 'true'
+        working-directory: mobile/android
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > upload-keystore.jks
+          cat > keystore.properties <<PROPS
+          storeFile=upload-keystore.jks
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          PROPS
+
+      - name: Build Play Store bundle
+        if: env.HAS_KEYSTORE == 'true'
+        working-directory: mobile/android
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: Upload Play Store bundle
+        if: env.HAS_KEYSTORE == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: agentforge-play-bundle
+          path: mobile/android/app/build/outputs/bundle/release/app-release.aab

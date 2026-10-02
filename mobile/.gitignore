@@ -1,0 +1,10 @@
+node_modules/
+# release signing — never commit
+*.jks
+*.keystore
+keystore.properties
+android/keystore.properties
+# local test builds (build-test-apk.bat)
+build-log.txt
+*.apk
+*.aab

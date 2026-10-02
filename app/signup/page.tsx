@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { startNativeGoogleLogin } from "@/lib/native";
 import { useTheme } from "@/app/components/ThemeProvider";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 import { getStoredUtm, clearStoredUtm } from "@/lib/utmAttribution";
@@ -191,6 +192,15 @@ export default function SignupPage() {
     setLoading(true);
     setMessage("");
 
+    // Inside the Android app, Google login opens in the phone's browser
+    // and comes back through the app link (see lib/native.ts).
+    const native = await startNativeGoogleLogin();
+    if (native.handled) {
+      if (native.error) setMessage(native.error);
+      setLoading(false);
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
@@ -256,8 +266,8 @@ export default function SignupPage() {
       </div>
 
       <section className="relative z-10 mx-auto grid min-h-[calc(100vh-180px)] max-w-6xl items-center gap-10 px-5 py-12 lg:grid-cols-[1fr_0.95fr] lg:py-16">
-        {/* ───────── Left: hero ───────── */}
-        <div className="relative">
+        {/* ───────── Left: hero (hidden inside the Android app) ───────── */}
+        <div className="af-web-only relative">
           {/* Glow aura */}
           <div
             aria-hidden="true"

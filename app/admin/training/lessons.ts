@@ -313,11 +313,15 @@ export const LESSONS: Lesson[] = [
       l("Invoices: search by email/plan and open any bill.", "Invoices: email/plan se search karo aur koi bhi bill kholo."),
       l("Subscriptions: 'Expiring this week' is your renewal call list — create a renewal task or extend +30 days.", "Subscriptions: 'Expiring this week' renewal ki call list hai — renewal task banao ya +30 din extend karo."),
       l("Credits: the ledger is like a bank statement; Manual Adjustment adds credits (approval first).", "Credits: ledger bank statement jaisa hai; Manual Adjustment se credit judta hai (pehle approval)."),
+      l("Android app payments come through Google Play, not Razorpay — their payment id starts with 'gplay:'. To refund one, refund it in Google Play Console first, then record it here with the 'Manual' option (never 'Via Razorpay').", "Android app ke andar hui payment Google Play se aati hai, Razorpay se nahi — uski payment id 'gplay:' se shuru hoti hai. Aisi payment ka refund pehle Google Play Console se karo, phir yahan 'Manual' option se record karo ('Via Razorpay' kabhi nahi)."),
     ],
     quiz: [
       { q: l("Where do you find customers to call for renewal?", "Renewal ke liye kise call karna hai, kahan milega?"),
         options: [l("Subscriptions → Expiring this week", "Subscriptions → Expiring this week"), l("Invoices", "Invoices"), l("Credits ledger", "Credits ledger"), l("Logs", "Logs")],
         correct: 0, why: l("That bucket lists plans about to expire.", "Usme jaldi expire hone wale plan hote hain.") },
+      { q: l("A payment id starts with 'gplay:'. How do you refund it?", "Kisi payment ki id 'gplay:' se shuru hoti hai. Uska refund kaise karoge?"),
+        options: [l("Choose 'Via Razorpay'", "'Via Razorpay' chuno"), l("Delete the payment row", "Payment row delete kar do"), l("Refund in Google Play Console, then record it as 'Manual'", "Google Play Console se refund karo, phir 'Manual' se record karo"), l("It cannot be refunded", "Iska refund nahi ho sakta")],
+        correct: 2, why: l("It was paid through Google Play, so the money goes back from there.", "Payment Google Play se hui thi, isliye paise wahin se wapas jate hain.") },
     ],
   },
 

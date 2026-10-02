@@ -5,6 +5,7 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import { AuthProvider } from "./components/AuthProvider";
 import Script from "next/script";
 import LayoutClient from "./components/LayoutClient";
+import { APP_MODE_BOOT_SCRIPT } from "@/lib/appMode";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -139,7 +140,11 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        
+        {/* App mode: adds the "af-app" class before first paint when the
+            site runs inside the AgentForge Android app (lib/appMode.ts).
+            Does nothing in a normal browser. */}
+        <script dangerouslySetInnerHTML={{ __html: APP_MODE_BOOT_SCRIPT }} />
+
       <link rel="manifest" href="/manifest.json"></link>
         {/* Facebook ownership — kept here because the metadata API
             doesn't have a typed slot for this specific FB verification */}

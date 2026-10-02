@@ -1,0 +1,33 @@
+{
+  "appId": "in.aiagentforge.mobile",
+  "appName": "AgentForge AI",
+  "webDir": "www",
+  "backgroundColor": "#fff8e8",
+  "appendUserAgent": "AgentForgeApp/1.0",
+  "server": {
+    "url": "https://www.aiagentforge.in",
+    "cleartext": false,
+    "androidScheme": "https",
+    "allowNavigation": [
+      "www.aiagentforge.in",
+      "aiagentforge.in"
+    ],
+    "errorPath": "offline.html"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "launchAutoHide": true,
+      "backgroundColor": "#fff8e8",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_INSIDE"
+    },
+    "SystemBars": {
+      "style": "LIGHT"
+    }
+  }
+}

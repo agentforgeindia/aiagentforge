@@ -9,6 +9,8 @@ import Footer from "./Footer";
 import AnalyticsRouteTracker from "./AnalyticsRouteTracker";
 import UtmCapture from "./UtmCapture";
 import LaunchOfferPopup from "./LaunchOfferPopup";
+import AppShell from "./appshell/AppShell";
+import { useAppMode } from "@/lib/useAppMode";
 
 const PhonePromptPopup = dynamic(() => import("./PhonePromptPopup"), {
   ssr: false,
@@ -47,6 +49,10 @@ export default function LayoutClient({
   const hideChrome =
     isWorkshopPage || isOnsiteTrainingPage || isAuthPage || isInvoicePage || isAdminPage;
 
+  // True only inside the AgentForge Android app (lib/appMode.ts).
+  const appMode = useAppMode();
+  const showSiteChrome = !hideChrome && !appMode;
+
   return (
     <>
       {/* Route-change page_view tracker. useSearchParams must be
@@ -62,14 +68,26 @@ export default function LayoutClient({
         <UtmCapture />
       </Suspense>
 
-      {!hideChrome && <Navbar />}
+      {/* Website chrome. Inside the Android app it is hidden by CSS before
+          first paint (.af-app .af-web-only) and then removed — AppShell
+          shows the app's own top bar and bottom tabs instead.
+          "contents" = the wrapper adds no layout box on the website. */}
+      {showSiteChrome && (
+        <div className="af-web-only contents">
+          <Navbar />
+        </div>
+      )}
 
-      {children}
+      <AppShell active={appMode}>{children}</AppShell>
 
-      {!hideChrome && <Footer />}
-      {!hideChrome && <AgentForgeAI />}
-      {!hideChrome && <LaunchOfferPopup />}
-      {!hideChrome && <PhonePromptPopup />}
+      {showSiteChrome && (
+        <div className="af-web-only contents">
+          <Footer />
+          <AgentForgeAI />
+          <LaunchOfferPopup />
+          <PhonePromptPopup />
+        </div>
+      )}
     </>
   );
 }

@@ -2869,7 +2869,7 @@ if (!response.ok) {
           `}</style>
         </div>
 
-        <section className="mx-auto grid w-full max-w-7xl items-start gap-5 px-3 py-5 sm:px-4 lg:grid-cols-[0.95fr_1.05fr] lg:py-8">
+        <section className="af-web-only mx-auto grid w-full max-w-7xl items-start gap-5 px-3 py-5 sm:px-4 lg:grid-cols-[0.95fr_1.05fr] lg:py-8">
           {/* ───────── Left: jewellery hero text ───────── */}
           <div>
             {/* Category eyebrow pill */}

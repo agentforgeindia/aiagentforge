@@ -3745,7 +3745,7 @@ export default function Home() {
           </div>
         )}
 
-        <section className="mx-auto grid w-full max-w-7xl items-start gap-5 px-3 py-5 sm:px-4 lg:grid-cols-[0.9fr_1.1fr] lg:py-8">
+        <section className="af-web-only mx-auto grid w-full max-w-7xl items-start gap-5 px-3 py-5 sm:px-4 lg:grid-cols-[0.9fr_1.1fr] lg:py-8">
           <div>
             <div
               className={`mb-5 inline-flex rounded-full px-4 py-2 text-sm font-semibold ${darkMode ? "border border-cyan-400/30 bg-cyan-400/10 text-cyan-200" : "border border-cyan-700/20 bg-cyan-500/15 text-cyan-900"}`}

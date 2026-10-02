@@ -313,7 +313,7 @@ export default function TestimonialsSlider({
     "border-black/10 bg-white text-black placeholder:text-black/35 dark:border-white/10 dark:bg-black/25 dark:text-white dark:placeholder:text-white/35";
 
   return (
-    <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-5 sm:pb-16">
+    <section className="af-web-only mx-auto max-w-7xl px-4 pb-12 sm:px-5 sm:pb-16">
       {/* Header row */}
       <div className="mb-5 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>

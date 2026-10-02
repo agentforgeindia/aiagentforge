@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* The Android app shell project is not part of the website styles. */
+@source not "../mobile";
 @variant dark (&:where(.dark, .dark *));
 
 :root {
@@ -54,6 +56,22 @@ body {
 }
 .float-fast {
   animation: floatSlow 3s ease-in-out infinite;
+}
+
+/* ============================================================
+   ANDROID APP MODE (lib/appMode.ts)
+   ============================================================
+   <html class="af-app"> is set only inside the AgentForge Android
+   app. Anything marked .af-web-only (website navbar, footer,
+   marketing sections) is hidden there. Normal browsers never get
+   the af-app class, so nothing changes on the website.
+   ============================================================ */
+.af-app .af-web-only {
+  display: none !important;
+}
+.af-app body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
