@@ -52,6 +52,33 @@ export const APP_AGENTS: AppAgent[] = [
   },
 ];
 
+export type ShowcaseItem = {
+  src: string;
+  label: string;
+  agent: AppAgent["slug"];
+};
+
+/**
+ * "Made with AgentForge" — showcase outputs on the app home screen.
+ * Each one is a real before → after board from /public/gallery.
+ * Home shows the first 6 under "All" (two per agent), so keep the
+ * order mixed and keep 4 per agent (the grid has two columns).
+ */
+export const APP_SHOWCASE: ShowcaseItem[] = [
+  { src: "/gallery/textile/design-27.png", label: "Silk saree", agent: "textile" },
+  { src: "/gallery/jewellery/design-2.png", label: "Necklace set", agent: "jewellery" },
+  { src: "/gallery/productography/design-1.png", label: "Perfume", agent: "productography" },
+  { src: "/gallery/textile/design-6.png", label: "Shirt", agent: "textile" },
+  { src: "/gallery/jewellery/design-14.png", label: "Gold bangles", agent: "jewellery" },
+  { src: "/gallery/productography/design-10.png", label: "Sunglasses", agent: "productography" },
+  { src: "/gallery/textile/design-21.png", label: "Ladies suit", agent: "textile" },
+  { src: "/gallery/jewellery/design-12.png", label: "Temple set", agent: "jewellery" },
+  { src: "/gallery/productography/design-8.png", label: "Earrings", agent: "productography" },
+  { src: "/gallery/textile/design-9.png", label: "Kurta", agent: "textile" },
+  { src: "/gallery/jewellery/design-4.png", label: "Ring", agent: "jewellery" },
+  { src: "/gallery/productography/design-5.png", label: "Toy", agent: "productography" },
+];
+
 /** Full-screen create flows: no bottom tabs here (they have their own bottom action button). */
 export const FLOW_ROUTES = [
   "/textileprints-to-mockup",

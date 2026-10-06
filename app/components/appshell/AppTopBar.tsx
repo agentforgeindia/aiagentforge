@@ -11,7 +11,7 @@ import { useAuth } from "@/app/components/AuthProvider";
 import NotificationBell from "@/app/components/NotificationBell";
 import { appTitleFor } from "./appData";
 
-const ROOT_TABS = ["/", "/agents", "/my-creations"];
+const ROOT_TABS = ["/", "/agents", "/my-creations", "/billing"];
 const AUTH_SCREENS = ["/login", "/signup"];
 
 export default function AppTopBar() {

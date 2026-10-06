@@ -1,23 +1,26 @@
 "use client";
 
-// Bottom tabs, sheets (Create / Account / Camera-or-Gallery), toast
-// and the native bridge wiring. Only rendered inside the Android app.
+// Bottom tabs, sheets (Account / Camera-or-Gallery), toast and the
+// native bridge wiring. Only rendered inside the Android app.
+//
+// Tabs: Home · Creations · [Agents] · Credits · Account. The raised
+// centre button is the one way into the agents list (/agents) — there
+// is no separate "create" sheet, so agents are never listed twice.
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Bot,
   Camera,
   ChevronRight,
   Gift,
   Home,
   Images,
-  LayoutGrid,
   LifeBuoy,
   LogOut,
   Moon,
   PlayCircle,
-  Plus,
   Settings,
   Sun,
   User,
@@ -45,13 +48,14 @@ import {
   takePhotoWithCamera,
 } from "@/lib/native";
 import { supabase } from "@/lib/supabase";
-import { APP_AGENTS, FLOW_ROUTES, matchesRoute } from "./appData";
+import { FLOW_ROUTES, matchesRoute } from "./appData";
 import { appToast, pushBackHandler, runBackHandlers, setToastListener } from "./appBus";
 
-type Sheet = "create" | "account" | null;
+type Sheet = "account" | null;
 
 const NO_TAB_ROUTES = [...FLOW_ROUTES, "/login", "/signup", "/complete-profile"];
-const ACCOUNT_ROUTES = ["/profile", "/team", "/billing", "/pricing", "/settings", "/rewards", "/support"];
+const ACCOUNT_ROUTES = ["/profile", "/team", "/settings", "/rewards", "/support"];
+const CREDIT_ROUTES = ["/billing", "/pricing"];
 
 export default function AppBottom() {
   const pathname = usePathname();
@@ -134,7 +138,7 @@ export default function AppBottom() {
         }
         return;
       }
-      if (path === "/agents" || path === "/my-creations") {
+      if (path === "/agents" || path === "/my-creations" || path === "/billing") {
         router.replace("/");
         return;
       }
@@ -326,6 +330,7 @@ export default function AppBottom() {
   const avatarUrl: string | undefined = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
 
   const accountActive = sheet === "account" || (sheet === null && matchesRoute(pathname, ACCOUNT_ROUTES));
+  const agentsActive = sheet === null && pathname === "/agents";
   const tabClass = (active: boolean) =>
     `flex h-full flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-black transition active:scale-95 ${
       active ? "text-cyan-600 dark:text-cyan-300" : "text-black/45 dark:text-white/45"
@@ -334,7 +339,6 @@ export default function AppBottom() {
   const accountLinks: { href: string; label: string; Icon: LucideIcon; needsUser?: boolean }[] = [
     { href: "/profile", label: "My Profile", Icon: User, needsUser: true },
     { href: "/team", label: "My Team", Icon: Users, needsUser: true },
-    { href: "/billing", label: "Credits", Icon: Zap, needsUser: true },
     { href: "/rewards", label: "Refer & Earn", Icon: Gift, needsUser: true },
     { href: "/gallery", label: "Gallery", Icon: Images },
     { href: "/tutorials", label: "Tutorials", Icon: PlayCircle },
@@ -363,23 +367,27 @@ export default function AppBottom() {
               <Home className="h-5 w-5" />
               Home
             </Link>
-            <Link href="/agents" className={tabClass(sheet === null && pathname === "/agents")}>
-              <LayoutGrid className="h-5 w-5" />
-              Agents
-            </Link>
-            <div className="flex flex-1 items-center justify-center">
-              <button
-                type="button"
-                onClick={() => setSheet(sheet === "create" ? null : "create")}
-                aria-label="Create"
-                className="-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 text-white shadow-xl shadow-cyan-500/40 ring-4 ring-white transition active:scale-95 dark:ring-[#0b1220]"
-              >
-                <Plus className={`h-7 w-7 transition-transform ${sheet === "create" ? "rotate-45" : ""}`} />
-              </button>
-            </div>
             <Link href="/my-creations" className={tabClass(sheet === null && pathname === "/my-creations")}>
               <Images className="h-5 w-5" />
               Creations
+            </Link>
+            <Link
+              href="/agents"
+              aria-label="Agents"
+              className="group flex flex-1 flex-col items-center justify-end gap-0.5 pb-[7px] text-[10px] font-black"
+            >
+              <span
+                className={`-mt-7 flex h-[58px] w-[58px] items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 text-white shadow-xl shadow-blue-500/40 ring-4 transition group-active:scale-95 ${
+                  agentsActive ? "ring-cyan-300 dark:ring-cyan-400" : "ring-white dark:ring-[#0b1220]"
+                }`}
+              >
+                <Bot className="h-7 w-7" />
+              </span>
+              <span className={agentsActive ? "text-cyan-600 dark:text-cyan-300" : "text-[#111827] dark:text-white"}>Agents</span>
+            </Link>
+            <Link href="/billing" className={tabClass(sheet === null && matchesRoute(pathname, CREDIT_ROUTES))}>
+              <Zap className="h-5 w-5" />
+              Credits
             </Link>
             <button
               type="button"
@@ -391,36 +399,6 @@ export default function AppBottom() {
             </button>
           </div>
         </nav>
-      )}
-
-      {/* ───────── Create sheet ───────── */}
-      {sheet === "create" && (
-        <div className="fixed inset-0 z-[45] flex items-end justify-center">
-          <button type="button" aria-label="Close" onClick={() => setSheet(null)} className="absolute inset-0 bg-black/45" />
-          <div className={`${sheetPanel} px-4 pt-3`} style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}>
-            <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-black/15 dark:bg-white/20" />
-            <h2 className="text-lg font-black">What do you want to create?</h2>
-            <div className="mt-3 grid gap-2.5">
-              {APP_AGENTS.map((agent) => (
-                <Link
-                  key={agent.slug}
-                  href={agent.link}
-                  onClick={() => setSheet(null)}
-                  className="flex items-center gap-3 rounded-2xl border border-black/8 bg-black/[0.02] p-3 transition active:scale-[0.99] dark:border-white/10 dark:bg-white/[0.05]"
-                >
-                  <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${agent.tint} text-white shadow-md`}>
-                    <agent.Icon className="h-6 w-6" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[15px] font-black leading-tight">{agent.title}</span>
-                    <span className="mt-0.5 block text-[13px] text-black/55 dark:text-white/55">{agent.desc}</span>
-                  </span>
-                  <ChevronRight className="h-5 w-5 shrink-0 text-black/35 dark:text-white/35" />
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
       )}
 
       {/* ───────── Account sheet ───────── */}
