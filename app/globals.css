@@ -123,6 +123,89 @@ body {
   animation: afPop 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* ============================================================
+   APP MOTION — used only by the in-app screens
+   (app/components/appshell). Short, transform/opacity only, so
+   it stays smooth on mid-range phones.
+   ============================================================ */
+/* Section slides up into place. Stagger with style={{ "--i": n }}. */
+@keyframes afRise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+.af-rise {
+  animation: afRise 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+@keyframes afFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.af-fade {
+  animation: afFade 0.25s ease both;
+  animation-delay: var(--d, 0s);
+}
+/* Bottom sheet slides up. */
+@keyframes afSheetUp {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+.af-sheet-up {
+  animation: afSheetUp 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+/* Doodle line draws itself. Needs pathLength="1" on the SVG shape. */
+@keyframes afDraw {
+  to { stroke-dashoffset: 0; }
+}
+.af-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: afDraw var(--dur, 0.9s) ease-out forwards;
+  animation-delay: var(--d, 0s);
+}
+/* Small thing pops in (sparkles, chips, pictures). */
+@keyframes afPopIn {
+  0% { opacity: 0; transform: scale(0.4) rotate(var(--r, 0deg)); }
+  70% { opacity: 1; transform: scale(1.1) rotate(var(--r, 0deg)); }
+  100% { opacity: 1; transform: scale(1) rotate(var(--r, 0deg)); }
+}
+.af-pop-in {
+  animation: afPopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: var(--d, 0s);
+}
+/* Gentle float for intro doodles (the intro is on screen only briefly). */
+@keyframes afBob {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -6px; }
+}
+.af-bob {
+  animation: afBob 3.2s ease-in-out infinite;
+  animation-delay: var(--d, 0s);
+}
+/* Ring that pulses out from the Agents button a few times, then stops. */
+@keyframes afPing {
+  0% { opacity: 0.55; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.7); }
+}
+.af-ping {
+  opacity: 0;
+  animation: afPing 1.6s ease-out 1.2s 3;
+}
+/* Picture tiles rise as they scroll into view (browsers without
+   scroll-driven animations simply show them). */
+@supports (animation-timeline: view()) {
+  .af-reveal {
+    animation: afRise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 40%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .af-reveal {
+    animation: none;
+  }
+}
+
 /* Honour OS-level reduced-motion preference. Critical for
    accessibility AND saves battery on every device that opts in. */
 @media (prefers-reduced-motion: reduce) {

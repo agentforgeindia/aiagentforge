@@ -347,7 +347,7 @@ export default function AppBottom() {
   ];
 
   const sheetPanel =
-    "relative w-full max-w-xl rounded-t-[1.75rem] border-t border-black/8 bg-white text-[#111827] shadow-2xl dark:border-white/10 dark:bg-[#0b1220] dark:text-white";
+    "af-sheet-up relative w-full max-w-xl rounded-t-[1.75rem] border-t border-black/8 bg-white text-[#111827] shadow-2xl dark:border-white/10 dark:bg-[#0b1220] dark:text-white";
   const safeBottom = { paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" };
 
   return (
@@ -377,11 +377,13 @@ export default function AppBottom() {
               className="group flex flex-1 flex-col items-center justify-end gap-0.5 pb-[7px] text-[10px] font-black"
             >
               <span
-                className={`-mt-7 flex h-[58px] w-[58px] items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 text-white shadow-xl shadow-blue-500/40 ring-4 transition group-active:scale-95 ${
+                className={`relative -mt-7 flex h-[58px] w-[58px] items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 text-white shadow-xl shadow-blue-500/40 ring-4 transition group-active:scale-95 ${
                   agentsActive ? "ring-cyan-300 dark:ring-cyan-400" : "ring-white dark:ring-[#0b1220]"
                 }`}
               >
-                <Bot className="h-7 w-7" />
+                {/* pulses three times when the bar appears, then rests */}
+                <span aria-hidden className="af-ping pointer-events-none absolute inset-0 rounded-full bg-blue-500" />
+                <Bot className="relative h-7 w-7" />
               </span>
               <span className={agentsActive ? "text-cyan-600 dark:text-cyan-300" : "text-[#111827] dark:text-white"}>Agents</span>
             </Link>
@@ -404,7 +406,7 @@ export default function AppBottom() {
       {/* ───────── Account sheet ───────── */}
       {sheet === "account" && (
         <div className="fixed inset-0 z-[45] flex items-end justify-center">
-          <button type="button" aria-label="Close" onClick={() => setSheet(null)} className="absolute inset-0 bg-black/45" />
+          <button type="button" aria-label="Close" onClick={() => setSheet(null)} className="af-fade absolute inset-0 bg-black/45" />
           <div
             className={`${sheetPanel} flex max-h-[86dvh] flex-col px-4 pt-3`}
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" }}
@@ -499,7 +501,7 @@ export default function AppBottom() {
       {/* ───────── Camera / Gallery sheet ───────── */}
       {pickerInput && (
         <div className="fixed inset-0 z-[120] flex items-end justify-center">
-          <button type="button" aria-label="Close" onClick={() => setPickerInput(null)} className="absolute inset-0 bg-black/45" />
+          <button type="button" aria-label="Close" onClick={() => setPickerInput(null)} className="af-fade absolute inset-0 bg-black/45" />
           <div className={`${sheetPanel} px-4 pt-3`} style={safeBottom}>
             <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-black/15 dark:bg-white/20" />
             <div className="flex items-center justify-between">

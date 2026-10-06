@@ -21,6 +21,7 @@ import { matchesRoute } from "./appData";
 const AppTopBar = dynamic(() => import("./AppTopBar"), { ssr: false, loading: () => null });
 const AppBottom = dynamic(() => import("./AppBottom"), { ssr: false, loading: () => null });
 const AppScreen = dynamic(() => import("./AppScreen"), { ssr: false, loading: () => null });
+const AppIntro = dynamic(() => import("./AppIntro"), { ssr: false, loading: () => null });
 
 /** Pages that keep their own full-screen layout even inside the app. */
 const BARE_ROUTES = ["/admin", "/workshop", "/onsite-training", "/invoice", "/auth"];
@@ -60,6 +61,8 @@ export default function AppShell({
         children
       )}
       {on ? <AppBottom /> : null}
+      {/* First-launch intro (shows itself only once, on the home screen). */}
+      {on ? <AppIntro /> : null}
     </>
   );
 }

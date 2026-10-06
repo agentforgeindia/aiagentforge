@@ -4,6 +4,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { ArrowRight } from "lucide-react";
 
 import { APP_AGENTS } from "./appData";
@@ -11,15 +12,16 @@ import { APP_AGENTS } from "./appData";
 export default function AppAgents() {
   return (
     <main className="relative mx-auto w-full max-w-xl flex-1 px-4 pb-6 pt-4 text-[#111827] dark:text-white">
-      <p className="text-sm leading-6 text-black/55 dark:text-white/55">
+      <p className="af-rise text-sm leading-6 text-black/55 dark:text-white/55">
         Pick what you want to create. Each one takes a photo and returns a finished visual.
       </p>
 
       <div className="mt-4 grid gap-4">
-        {APP_AGENTS.map((agent) => (
+        {APP_AGENTS.map((agent, i) => (
           <article
             key={agent.slug}
-            className="overflow-hidden rounded-3xl border border-black/8 bg-white/85 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.06]"
+            style={{ "--i": i + 1 } as CSSProperties}
+            className="af-rise overflow-hidden rounded-3xl border border-black/8 bg-white/85 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.06]"
           >
             <div className="flex items-start gap-3 p-4 pb-3">
               <span
