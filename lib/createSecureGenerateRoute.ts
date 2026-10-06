@@ -26,6 +26,7 @@
 //   4. Atomic credit deduction (if creditMode === "server")
 //      — 402 on insufficient.
 //   5. Insert generations row server-side with verified user_id
+//      and client_source (app / mobile_web / web, from the request)
 //      — 500 on DB error, refund credits if any were deducted.
 //   6. POST to n8n with user_id overwritten to the verified value
 //      — 502 / refund on n8n unreachable, refund on n8n 4xx/5xx.
@@ -48,6 +49,7 @@ import {
   isAgentForgeHostedUrl,
   firstUntrustedUrl,
 } from "@/lib/uploadValidation";
+import { detectClientSource } from "@/lib/clientSource";
 
 // ────────────────────────────────────────────────────────────
 // Types
@@ -266,8 +268,15 @@ export function createSecureGenerateRoute<TBody>(
     }
 
     // 7. Generations row(s) — server holds the source of truth.
+    // client_source = where the request came from (app / phone browser /
+    // desktop), detected here so no agent can forget it.
+    const clientSource = detectClientSource(request);
     try {
-      await insertGenerationRows(cfg.buildGenerationRows(body, user.id));
+      await insertGenerationRows(
+        cfg
+          .buildGenerationRows(body, user.id)
+          .map((row) => ({ ...row, client_source: clientSource })),
+      );
     } catch (err: any) {
       if (cfg.creditMode === "server") {
         await refundCredits(

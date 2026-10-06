@@ -32,6 +32,7 @@ import { requireUser } from "@/lib/serverAuth";
 import { isAgentEnabled } from "@/lib/agentEnabled";
 import { deductCredits, refundCredits, deductTeamCredits, refundTeamCredits } from "@/lib/creditsServer";
 import { getTeamMembership, teamHasBulkAccess } from "@/lib/teamAuth";
+import { detectClientSource, type ClientSource } from "@/lib/clientSource";
 import {
   firstUntrustedUrl,
   isAgentForgeHostedUrl,
@@ -144,7 +145,13 @@ function validateBody(body: any): { ok: true; body: Body } | { ok: false; error:
 // Generations row insert — uses service role (RLS bypass).
 // ────────────────────────────────────────────────────────────
 
-async function createGenerationRows(body: Body, userId: string, teamId?: string | null) {
+async function createGenerationRows(
+  body: Body,
+  userId: string,
+  teamId: string | null | undefined,
+  /** Where the request came from — app / phone browser / desktop. */
+  clientSource: ClientSource,
+) {
   if (!supabaseUrl || !serviceRoleKey) {
     throw new Error("Supabase service-role env vars missing.");
   }
@@ -158,6 +165,7 @@ async function createGenerationRows(body: Body, userId: string, teamId?: string 
             status: "pending",
             agent_type: "jewellery",
             team_id: teamId ?? null,
+            client_source: clientSource,
           },
         ]
       : body.items.map((item) => ({
@@ -167,6 +175,7 @@ async function createGenerationRows(body: Body, userId: string, teamId?: string 
           batch_id: body.batch_id ?? null,
           agent_type: "jewellery",
           team_id: teamId ?? null,
+          client_source: clientSource,
         }));
 
   const response = await fetch(`${supabaseUrl}/rest/v1/generations`, {
@@ -259,7 +268,7 @@ export async function POST(request: NextRequest) {
 
   // 5. Insert generations row(s) with verified user_id + team_id.
   try {
-    await createGenerationRows(body, user.id, teamId);
+    await createGenerationRows(body, user.id, teamId, detectClientSource(request));
   } catch (err: any) {
     // Refund to correct pool
     if (teamId) {

@@ -30,6 +30,8 @@ import AdminShell, {
 import AddPastPaymentModal from "./AddPastPaymentModal";
 import RefundPaymentModal, { type RefundablePayment } from "./RefundPaymentModal";
 import QuickContactButtons from "../../QuickContactButtons";
+import { SourceSplit, useSourceStats } from "../../generationSource";
+import { useAdminLang } from "../../i18n";
 
 type Profile = {
   id: string;
@@ -444,6 +446,9 @@ export default function AdminCustomerDetailPage() {
             </div>
           </section>
 
+          {/* Where this customer generates from — app / phone browser / desktop */}
+          <GenerationSourceCard userId={userId ?? null} />
+
           {/* Lead linkage — Promote to lead button OR View linked lead */}
           {canAddLead && (
             <section className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-[#11141a]">
@@ -843,6 +848,20 @@ const TIMELINE_COLORS: Record<string, string> = {
   support:    "border-amber-400 bg-amber-50 dark:bg-amber-500/10",
   generation: "border-indigo-400 bg-indigo-50 dark:bg-indigo-500/10",
 };
+
+function GenerationSourceCard({ userId }: { userId: string | null }) {
+  const { lang } = useAdminLang();
+  const { stats, loading } = useSourceStats(userId, null);
+  if (!userId) return null;
+  return (
+    <section className={`${adminCardCls} p-4`}>
+      <SectionTitle>
+        {lang === "hi" ? "Generations kahan se karta hai" : "Where they generate from"}
+      </SectionTitle>
+      <SourceSplit stats={stats} loading={loading} />
+    </section>
+  );
+}
 
 function CustomerTimeline({ userId }: { userId: string | null }) {
   const [events, setEvents] = useState<TimelineEvent[]>([]);

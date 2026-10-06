@@ -139,12 +139,17 @@ export const LESSONS: Lesson[] = [
     steps: [
       l("Search by name, email or phone.", "Naam, email ya phone se search karo."),
       l("Open a customer to see generation history, payments and notes.", "Customer kholo — generation history, payments aur notes dikhenge."),
+      l("'Where they generate from' on the customer page shows how many generations came from the Mobile app, a Mobile browser or the Desktop website, and when each was last used. The Customer Timeline shows it next to every generation.",
+        "Customer page par 'Generations kahan se karta hai' batata hai kitni generations Mobile app, Mobile browser ya Desktop website se hui, aur har ek aakhri baar kab use hua. Customer Timeline mein har generation ke saath bhi ye likha aata hai."),
       l("Credit top-ups and refunds need approval — don't promise them before that.", "Credit top-up aur refund ke liye approval chahiye — usse pehle promise mat karo."),
     ],
     quiz: [
       { q: l("A customer says their generation failed. Where do you check first?", "Customer bolta hai generation fail hui. Pehle kahan check karoge?"),
         options: [l("Finance", "Finance"), l("Their customer page → generation history", "Uske customer page → generation history"), l("Announcements", "Announcements"), l("Hiring", "Hiring")],
         correct: 1, why: l("The customer page shows every generation and its status.", "Customer page par har generation aur uska status dikhta hai.") },
+      { q: l("A customer says “the app is not working”. How do you confirm they really use the mobile app?", "Customer bolta hai “app nahi chal raha”. Kaise pakka karoge ki wo sach mein mobile app use karta hai?"),
+        options: [l("Ask them for a screenshot of their phone settings", "Unse phone settings ka screenshot maango"), l("Check Finance", "Finance check karo"), l("It cannot be known", "Ye pata nahi chal sakta"), l("Their customer page → 'Where they generate from'", "Uske customer page → 'Generations kahan se karta hai'")],
+        correct: 3, why: l("It shows Mobile app / Mobile browser / Desktop website counts for that customer.", "Wahan us customer ke Mobile app / Mobile browser / Desktop website ke count dikhte hain.") },
     ],
   },
   {
@@ -348,12 +353,17 @@ export const LESSONS: Lesson[] = [
     steps: [
       l("Overview: 🟢/🟡/🔴 health per agent and failed jobs — check daily.", "Overview: har agent ki 🟢/🟡/🔴 health aur failed jobs — roz check karo."),
       l("Generation Log: filter by agent or status to investigate a customer complaint.", "Generation Log: customer complaint ke liye agent ya status se filter karo."),
+      l("Generation Log also shows the Source of every generation — Mobile app, Mobile browser or Desktop website — with a 30-day split on top and a Source filter. A dash (—) means it was made before tracking started.",
+        "Generation Log mein har generation ka Source bhi dikhta hai — Mobile app, Mobile browser ya Desktop website — upar 30 din ka split aur ek Source filter ke saath. Dash (—) ka matlab hai wo tracking shuru hone se pehle bani thi."),
       l("Costs: API spend per agent and margin per customer.", "Cost: har agent ka API kharcha aur har customer ka margin."),
     ],
     quiz: [
       { q: l("An agent shows 🔴. What does it mean?", "Kisi agent par 🔴 hai. Matlab?"),
         options: [l("It is the most popular", "Sabse popular hai"), l("It is free today", "Aaj free hai"), l("It has problems — check failed jobs", "Dikkat hai — failed jobs check karo"), l("It is archived", "Archive ho gaya")],
         correct: 2, why: l("Red health means failures — investigate.", "Laal matlab failure — jaanch karo.") },
+      { q: l("Where do you see how many generations came from the mobile app versus the website?", "Mobile app se kitni generations hui aur website se kitni — ye kahan dikhta hai?"),
+        options: [l("Generation Log → Source split and Source column", "Generation Log → Source split aur Source column"), l("Billing → Invoices", "Billing → Invoices"), l("Team → Attendance", "Team → Attendance"), l("Settings → Integrations", "Settings → Integrations")],
+        correct: 0, why: l("The Generation Log shows the source of every generation and a 30-day split.", "Generation Log har generation ka source aur 30 din ka split dikhata hai.") },
     ],
   },
   {

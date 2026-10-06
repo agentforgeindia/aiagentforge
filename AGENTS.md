@@ -121,6 +121,7 @@ directly, bypassing all factory protections.
 | `400` if credits > cap | `maxCreditsPerCall` |
 | `402` on insufficient credits | atomic `deduct_credits()` (server mode) |
 | Server-side generations row | `buildGenerationRows` + service-role insert |
+| `client_source` on every row (app / mobile_web / web) | `detectClientSource(request)` from `lib/clientSource.ts` — the admin panel shows it |
 | `user_id` always trustworthy in n8n | factory overwrites from JWT before forward |
 | Auto-refund on any failure path | factory tracks `creditMode === "server"` deductions |
 | Uniform response shape | `{ success, agent, generation_id, new_balance, webhook_response }` |
@@ -142,6 +143,7 @@ When in doubt, copy the closest reference, then strip what doesn't apply.
   where tgname = 'profiles_block_credit_tampering';
   ```
   `tgenabled = 'O'` = enabled, `'D'` = disabled.
+- `generations.client_source` (`app` / `mobile_web` / `web`, NULL = before tracking) must be set by every route that inserts a generations row: `client_source: detectClientSource(request)` (`lib/clientSource.ts`). The factory does it automatically; the hand-written textile / jewellery / productography routes do it themselves. Admin reads it through `generation_log_v2` and `generation_source_stats`.
 - `credit_transactions` columns: `id`, `user_id`, `delta` (bigint), `reason` (text), `generation_id` (text), `balance_after` (integer/bigint). The legacy `type` and `amount` columns are nullable and populated for backward compat.
 
 ## Common mistakes (caught in code review)

@@ -175,9 +175,10 @@ const TIPS: Record<string, Tip> = {
     ],
   },
   "Generation Log": {
-    what: "A detailed record of every AI generation — who ran it, which agent, status and cost.",
+    what: "A detailed record of every AI generation — who ran it, which agent, where from (mobile app / mobile browser / desktop website), status and cost.",
     steps: [
-      "Filter by Agent or Status to narrow down.",
+      "Filter by Agent, Status or Source to narrow down.",
+      "The card on top shows the last 30 days split by Mobile app, Mobile browser and Desktop website.",
       "Total estimated cost is shown in the top-right.",
       "Find failed generations quickly to diagnose issues.",
     ],

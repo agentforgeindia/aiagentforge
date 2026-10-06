@@ -21,6 +21,7 @@ import { isAgentEnabled } from "@/lib/agentEnabled";
 import { isAgentForgeHostedUrl } from "@/lib/uploadValidation";
 import { getTeamMembership } from "@/lib/teamAuth";
 import { deductTeamCredits, refundTeamCredits } from "@/lib/creditsServer";
+import { detectClientSource, type ClientSource } from "@/lib/clientSource";
 
 export const runtime = "nodejs";
 
@@ -55,6 +56,8 @@ async function insertGenerationRow(row: {
   quality?: string;
   article_number?: string | null;
   custom_instruction?: string | null;
+  /** Where the request came from — app / phone browser / desktop. */
+  client_source: ClientSource;
 }) {
   if (!supabaseUrl || !serviceRoleKey) {
     throw new Error("Supabase service-role env vars missing.");
@@ -161,6 +164,7 @@ export async function POST(request: Request) {
       quality: body.quality,
       article_number: body.product_code ?? body.article_number ?? null,
       custom_instruction: body.custom_instruction ?? null,
+      client_source: detectClientSource(request),
     });
   } catch (err: any) {
     if (teamDeducted) {
