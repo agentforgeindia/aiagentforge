@@ -11,7 +11,7 @@ import { supabase } from "@/lib/supabase";
 type Data = { code: string; link: string; referred_count: number; credits_earned: number; error?: string };
 
 const REWARD_RULES = [
-  { icon: "🎁", title: "Refer a friend",     reward: "50 credits", note: "When someone signs up using your referral link." },
+  { icon: "🎁", title: "Refer a friend",     reward: "50 credits", note: "When someone signs up using your referral link, or types your code when signing up in the app." },
   { icon: "🎉", title: "Your friend's bonus", reward: "25 credits", note: "Your friend also gets a welcome bonus on signup." },
   { icon: "⭐", title: "Rate your result",    reward: "+1 credit",  note: "Rate each generation after it completes." },
   { icon: "✍️", title: "Write feedback",      reward: "+2 credits", note: "Write feedback along with your result rating." },
@@ -40,7 +40,9 @@ export default function RewardsPage() {
 
   async function share() {
     if (navigator.share && data) {
-      try { await navigator.share({ title: "AgentForge AI", text: "Join AgentForge AI — banao professional product images with AI! Use my link for bonus credits:", url: data.link }); } catch { /* ignore */ }
+      // The code is in the text too: a friend who installs the Android app
+      // types it on the sign-up screen (a link cannot carry it into the app).
+      try { await navigator.share({ title: "AgentForge AI", text: `Join AgentForge AI — banao professional product images with AI! Use my link for bonus credits, or enter my code ${data.code} when you sign up in the app:`, url: data.link }); } catch { /* ignore */ }
     } else if (data) { copy("link", data.link); }
   }
 
@@ -129,7 +131,15 @@ export default function RewardsPage() {
                 </button>
               </div>
               <div className="mt-3 flex items-center justify-between">
-                <p className="text-[11px] font-bold text-black/50 dark:text-white/50">Code: <span className="font-mono text-cyan-700 dark:text-cyan-300">{data?.code}</span></p>
+                <button
+                  type="button"
+                  onClick={() => data && copy("code", data.code)}
+                  aria-label="Copy your referral code"
+                  className="flex items-center gap-1.5 text-[11px] font-bold text-black/50 dark:text-white/50"
+                >
+                  Code: <span className="font-mono text-cyan-700 dark:text-cyan-300">{data?.code}</span>
+                  {copied === "code" ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                </button>
                 <button type="button" onClick={share} className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-blue-600 px-5 py-2 text-xs font-black text-white shadow-lg shadow-cyan-500/30">
                   <Share2 className="h-3.5 w-3.5" />Share &amp; Earn
                 </button>

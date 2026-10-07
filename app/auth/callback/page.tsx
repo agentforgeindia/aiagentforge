@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { getStoredUtm, clearStoredUtm } from "@/lib/utmAttribution";
+import { claimPendingReferral } from "@/lib/referralClient";
 
 export default function AuthCallback() {
   const router = useRouter();
@@ -36,7 +37,6 @@ export default function AuthCallback() {
               // Pick up the first-touch attribution captured by
               // UtmCapture on the visitor's landing page.
               const utm = getStoredUtm();
-              const refCode = localStorage.getItem("af_ref_code");
 
               await supabase.from("profiles").upsert(
                 {
@@ -56,8 +56,8 @@ export default function AuthCallback() {
                   referrer: utm.referrer ?? null,
                   landing_path: utm.landing_path ?? null,
                   first_seen_at: utm.first_seen_at ?? null,
-                  // Direct referral attribution — always write so dashboard tracks
-                  ...(refCode ? { referred_by: refCode.trim().toUpperCase() } : {}),
+                  // referred_by is NOT written here: process_referral() gives
+                  // the referral credits only while it is still empty.
                 },
                 { onConflict: "id" },
               );
@@ -67,17 +67,12 @@ export default function AuthCallback() {
               clearStoredUtm();
             }
 
-            // Referral reward — process regardless of whether the profile
-            // was just created here or already existed (email/password flow
-            // creates the profile in ensureUserProfile before this callback
-            // fires). process_referral() is idempotent — duplicate-safe.
-            try {
-              const refCode = localStorage.getItem("af_ref_code");
-              if (refCode) {
-                await supabase.rpc("process_referral", { p_ref_code: refCode });
-                localStorage.removeItem("af_ref_code");
-              }
-            } catch { /* ignore referral errors */ }
+            // Referral reward — for a code from a referral link (website) or
+            // typed on the app sign-up screen. Runs whether the profile was
+            // just created here or already existed. The database rewards an
+            // account only once; if the code matches no customer account the
+            // attribution is still saved on the profile. Never throws.
+            await claimPendingReferral();
 
             subscription.unsubscribe();
             router.replace("/");

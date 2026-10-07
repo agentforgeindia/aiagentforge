@@ -22,6 +22,7 @@ export const FEATURE_CATALOG: Feature[] = [
 
   // Sales & CRM
   { group: "Sales & CRM", href: "/admin/customers",      label: "Customers",         perm: "customers.view" },
+  { group: "Sales & CRM", href: "/admin/rewards",        label: "Refer & Rewards",   perm: "customers.view" },
   { group: "Sales & CRM", href: "/admin/leads",          label: "Leads",             perm: "leads.view" },
   { group: "Sales & CRM", href: "/admin/sales",          label: "Sales Command",     perm: "leads.view" },
   { group: "Sales & CRM", href: "/admin/caller-reports", label: "Caller Reports",    perm: "leads.view" },

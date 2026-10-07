@@ -6,6 +6,8 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { startNativeGoogleLogin } from "@/lib/native";
+import { isAppMode } from "@/lib/appMode";
+import { claimPendingReferral } from "@/lib/referralClient";
 import { useTheme } from "@/app/components/ThemeProvider";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 import {
@@ -64,6 +66,11 @@ export default function LoginPage() {
       });
 
       if (error) throw error;
+
+      // Android app: a referral code typed on the sign-up screen waits
+      // while the person verifies their email (that link opens in the
+      // phone's browser, not in the app). Their first login here applies it.
+      if (isAppMode()) await claimPendingReferral();
 
       router.replace("/");
       router.refresh();

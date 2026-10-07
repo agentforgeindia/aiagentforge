@@ -9,6 +9,9 @@ import { startNativeGoogleLogin } from "@/lib/native";
 import { useTheme } from "@/app/components/ThemeProvider";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 import { getStoredUtm, clearStoredUtm } from "@/lib/utmAttribution";
+import { claimPendingReferral } from "@/lib/referralClient";
+import { useAppMode } from "@/lib/useAppMode";
+import ReferralCodeField from "@/app/components/ReferralCodeField";
 import {
   BadgeCheck,
   ChevronRight,
@@ -33,6 +36,8 @@ function isEmail(value: string) {
 export default function SignupPage() {
   const router = useRouter();
   const { darkMode } = useTheme();
+  // Inside the Android app there is no referral link, so the code is typed.
+  const inApp = useAppMode();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -66,11 +71,6 @@ export default function SignupPage() {
     // Pick up first-touch attribution captured by UtmCapture.
     const utm = getStoredUtm();
 
-    // Read referral code BEFORE profile upsert so we can embed it directly.
-    // This is the guaranteed path — process_referral() is a bonus for credits
-    // but can fail if the referrer's profile code isn't synced yet.
-    const refCode = typeof window !== "undefined" ? localStorage.getItem("af_ref_code") : null;
-
     const { error } = await supabase.from("profiles").upsert(
       {
         id: userId,
@@ -87,8 +87,8 @@ export default function SignupPage() {
         referrer: utm.referrer ?? null,
         landing_path: utm.landing_path ?? null,
         first_seen_at: utm.first_seen_at ?? null,
-        // ── Referral attribution — write directly so dashboard always tracks ──
-        ...(refCode ? { referred_by: refCode.trim().toUpperCase() } : {}),
+        // referred_by is NOT written here: process_referral() gives the
+        // referral credits only while it is still empty. See below.
       },
       { onConflict: "id" },
     );
@@ -102,14 +102,10 @@ export default function SignupPage() {
     // One-shot — don't attribute the next user on the same device.
     clearStoredUtm();
 
-    // Also call process_referral() for credit rewards (idempotent, best-effort).
-    // May fail if referrer's profile code isn't synced — that's fine, referred_by is already set above.
-    try {
-      if (refCode) {
-        await supabase.rpc("process_referral", { p_ref_code: refCode });
-        localStorage.removeItem("af_ref_code");
-      }
-    } catch { /* ignore — attribution already written above */ }
+    // Referral code (from a referral link, or typed on this screen in the
+    // app): gives the credits to both people. If the code matches no
+    // customer account, the attribution is still saved on the profile.
+    await claimPendingReferral();
 
     return true;
   }
@@ -452,6 +448,9 @@ export default function SignupPage() {
                   inputMode="tel"
                 />
               </div>
+
+              {/* Referral code — typed in the app (the website uses the link) */}
+              {inApp && <ReferralCodeField inputClass={inputClass} mutedClass={muted} disabled={loading} />}
 
               {message && (
                 <div
