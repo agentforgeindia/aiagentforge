@@ -58,7 +58,7 @@ create table af_backup_20261008.function_defs as
 
 revoke all on all tables in schema af_backup_20261008 from public, anon, authenticated;
 
--- Check (should list 17 tables with their row counts):
+-- Check (should list 16 tables with their row counts):
 --   select relname, n_live_tup from pg_stat_user_tables where schemaname = 'af_backup_20261008' order by 1;
 --
 -- Put ONE user's balance back (example):
