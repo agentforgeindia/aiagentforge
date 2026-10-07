@@ -31,10 +31,18 @@ npx cap sync android
 npx cap open android
 ```
 
+## Build the Play Store bundle (.aab)
+
+On this PC: double-click `mobile/build-play-bundle.bat`.
+
+- First run asks you to choose a password and creates the upload key: `android/upload-keystore.jks` and `android/keystore.properties`. **Keep a copy of both files and the password somewhere safe** — every later update must be signed with the same key. They are never sent to git.
+- Result: `AgentForge-play.aab` in this folder (log in `build-log.txt`). Upload it in Play Console → Test and release.
+- Every run gets a new version code from the date and hour (for example `26100711`), because Play Store refuses a version code it has already seen. Two builds in the same hour share a number — wait for the next hour before building a second upload.
+
 ## One-time setup outside the code
 
 1. **Supabase → Authentication → URL Configuration → Redirect URLs**: add `agentforge://auth/callback` (needed for Google login inside the app).
-2. **Play Store bundle**: create an upload keystore and add the four `ANDROID_*` secrets listed at the top of the workflow file. The workflow then also produces `agentforge-play-bundle` (.aab).
+2. **Play Store bundle from GitHub Actions (optional — the .bat above does the same on the PC)**: add the four `ANDROID_*` secrets listed at the top of the workflow file. The workflow then also produces `agentforge-play-bundle` (.aab).
 
 ## Buying credits inside the app (Google Play Billing)
 
@@ -74,7 +82,7 @@ Notes:
 ## Settings you may change
 
 - `capacitor.config.json` → `appId` (Play Store package name; cannot change after first upload), `server.url`.
-- `android/app/build.gradle` → `versionCode` / `versionName` (raise `versionCode` for every Play upload).
+- `android/app/build.gradle` → `versionName` (shown to users). `versionCode` is passed in by `build-play-bundle.bat`.
 - `lib/appMode.ts` → `APP_PURCHASES_ENABLED` (website Razorpay checkout inside the app — keep off for a Play Store build), `APP_CAMERA_CHOOSER`.
 
 After changing anything in this folder run `npx cap sync android` (the GitHub workflow does this itself).

@@ -9,6 +9,10 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
+// Play Store needs a higher versionCode for every upload. build-play-bundle.bat
+// passes one with -PafVersionCode=...; other builds (test APK, Android Studio) use 1.
+def afVersionCode = (project.findProperty('afVersionCode') ?: '1').toString().toInteger()
+
 android {
     namespace = "in.aiagentforge.mobile"
     signingConfigs {
@@ -26,7 +30,7 @@ android {
         applicationId "in.aiagentforge.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
+        versionCode afVersionCode
         versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
