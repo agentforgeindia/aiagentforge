@@ -3,11 +3,11 @@ rem ============================================================
 rem  AgentForge Android app - build the PLAY STORE bundle (.aab)
 rem  Double-click this file. It needs Node.js and Android Studio.
 rem
-rem  First run: asks you to choose a password and creates the
-rem  upload key  android\upload-keystore.jks  (plus
-rem  android\keystore.properties). KEEP A COPY of both files and
-rem  the password somewhere safe - every later update of the app
-rem  must be signed with the same key. They are never sent to git.
+rem  First run: creates the upload key  android\upload-keystore.jks
+rem  and  android\keystore.properties  (its password, made up
+rem  automatically). KEEP A COPY of both files somewhere safe -
+rem  every later update of the app must be signed with the same
+rem  key. They are never sent to git.
 rem
 rem  Log: build-log.txt        Result: AgentForge-play.aab
 rem  Upload the .aab in Play Console - Test and release.
@@ -47,22 +47,13 @@ if exist "android\upload-keystore.jks" (
   echo keystore.properties wapas rakhiye ^(backup se^), phir dobara chalaiye.
   goto failed
 )
-echo.
-echo Pehli baar: app ki upload key banegi.
-echo Ek password chuniye: kam se kam 6 akshar, sirf A-Z a-z 0-9.
-echo Ise likh kar rakh lijiye, aage har update mein yahi key lagegi.
-echo.
+rem     The password is made up here (random) and saved in keystore.properties,
+rem     so nobody has to type or remember one. Whoever has the two files has the key.
+echo Pehli baar: app ki upload key ban rahi hai ...
 set "KSPASS="
-set /p "KSPASS=Password: "
+for /f "usebackq delims=" %%i in (`powershell -NoProfile -Command "[guid]::NewGuid().ToString('N')"`) do set "KSPASS=%%i"
 if not defined KSPASS (
-  echo STEP FAILED: no password entered>> "%LOG%"
-  echo Password khali tha.
-  goto failed
-)
-echo %KSPASS%| findstr /r "^[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9][A-Za-z0-9][A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]*$" >nul
-if errorlevel 1 (
-  echo STEP FAILED: password not accepted>> "%LOG%"
-  echo Password mein sirf A-Z a-z 0-9 ho aur kam se kam 6 akshar. Dobara chalaiye.
+  echo STEP FAILED: could not make a key password>> "%LOG%"
   goto failed
 )
 echo === STEP 0: create upload key>> "%LOG%"
@@ -79,6 +70,7 @@ if errorlevel 1 (
 )> "android\keystore.properties"
 set "KSPASS="
 echo Upload key ban gayi: android\upload-keystore.jks
+echo upload key created>> "%LOG%"
 echo.
 :key_done
 

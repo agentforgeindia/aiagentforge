@@ -35,7 +35,7 @@ npx cap open android
 
 On this PC: double-click `mobile/build-play-bundle.bat`.
 
-- First run asks you to choose a password and creates the upload key: `android/upload-keystore.jks` and `android/keystore.properties`. **Keep a copy of both files and the password somewhere safe** — every later update must be signed with the same key. They are never sent to git.
+- First run creates the upload key: `android/upload-keystore.jks` and `android/keystore.properties` (the key's password, made up automatically — nothing to type). **Keep a copy of both files somewhere safe** — every later update must be signed with the same key. They are never sent to git.
 - Result: `AgentForge-play.aab` in this folder (log in `build-log.txt`). Upload it in Play Console → Test and release.
 - Every run gets a new version code from the date and hour (for example `26100711`), because Play Store refuses a version code it has already seen. Two builds in the same hour share a number — wait for the next hour before building a second upload.
 
