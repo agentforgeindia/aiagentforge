@@ -79,13 +79,10 @@ const productSchemas = PLAN_PRODUCTS.map((plan) => ({
     availability: "https://schema.org/InStock",
     seller: { "@type": "Organization", name: "AgentForge AI" },
   },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.9",
-    ratingCount: "412",
-    bestRating: "5",
-    worstRating: "1",
-  },
+  // NOTE: aggregateRating / review were removed on purpose. The values
+  // were hardcoded, not taken from real customer reviews, which breaks
+  // Google's review-snippet rules. Add them back only when they are
+  // computed from approved testimonials in the database.
 }));
 
 const breadcrumbSchema = {

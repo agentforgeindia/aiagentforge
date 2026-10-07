@@ -30,11 +30,14 @@ import { isAgentEnabled } from "@/lib/agentEnabled";
 import { getTeamMembership } from "@/lib/teamAuth";
 import { deductTeamCredits, refundTeamCredits } from "@/lib/creditsServer";
 import { detectClientSource, type ClientSource } from "@/lib/clientSource";
+import { clampCredits, textileCreditRange } from "@/lib/creditPricing";
+import {
+  DuplicateGenerationIdError,
+  insertGenerationRowsStrict,
+  n8nHeaders,
+} from "@/lib/generationRows";
 
 export const runtime = "nodejs";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Server-side webhook URL — must NOT be NEXT_PUBLIC_* once this
 // route is the only caller. We accept the legacy public env var
@@ -74,34 +77,22 @@ async function insertGenerationRow(row: {
   custom_instruction?: string | null;
   /** Where the request came from — app / phone browser / desktop. */
   client_source: ClientSource;
+  /** Set only when this route charged the credits (team pool). */
+  credit_cost?: number;
+  credits_used?: number;
 }) {
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Supabase service-role env vars missing.");
-  }
-  const response = await fetch(`${supabaseUrl}/rest/v1/generations`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: serviceRoleKey,
-      Authorization: `Bearer ${serviceRoleKey}`,
-      Prefer: "resolution=merge-duplicates",
+  // Plain insert — an id that already exists is rejected instead of
+  // overwriting that row (see lib/generationRows.ts).
+  await insertGenerationRowsStrict([
+    {
+      ...row,
+      input_image_url: row.design_url,
+      status: "pending",
+      agent_type: "textile",
+      category: "textile",
+      team_id: row.team_id ?? null,
     },
-    body: JSON.stringify([
-      {
-        ...row,
-        input_image_url: row.design_url,
-        status: "pending",
-        agent_type: "textile",
-        category: "textile",
-        team_id: row.team_id ?? null,
-      },
-    ]),
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`generations insert failed: ${text}`);
-  }
+  ]);
 }
 
 // ────────────────────────────────────────────────────────────
@@ -140,12 +131,15 @@ export async function POST(request: Request) {
     return bad("design_url must be an AgentForge-hosted URL.");
   }
 
-  const credits = Number(body?.required_credits ?? body?.credits_required ?? 0);
-  if (!Number.isFinite(credits) || credits < 0 || credits > MAX_CREDITS_PER_CALL) {
+  const clientCredits = Number(body?.required_credits ?? body?.credits_required ?? 0);
+  if (!Number.isFinite(clientCredits) || clientCredits < 0 || clientCredits > MAX_CREDITS_PER_CALL) {
     return bad(
       `required_credits must be a non-negative integer ≤ ${MAX_CREDITS_PER_CALL}.`,
     );
   }
+  // Price on the SERVER — the browser's number is only accepted inside
+  // the range the selected options allow (see lib/creditPricing.ts).
+  const credits = clampCredits(clientCredits, textileCreditRange(body));
 
   // 3. Resolve team context — if team_id present, deduct here (not in n8n).
   const teamId = typeof body?.team_id === "string" && body.team_id ? body.team_id : null;
@@ -188,6 +182,7 @@ export async function POST(request: Request) {
       article_number: body.article_number ?? body.design_number ?? null,
       custom_instruction: body.custom_instruction ?? null,
       client_source: detectClientSource(request),
+      ...(teamDeducted ? { credit_cost: credits, credits_used: credits } : {}),
     });
   } catch (err: any) {
     if (teamDeducted) {
@@ -195,7 +190,7 @@ export async function POST(request: Request) {
     }
     return NextResponse.json(
       { error: err?.message || "Failed to register generation." },
-      { status: 500 },
+      { status: err instanceof DuplicateGenerationIdError ? 409 : 500 },
     );
   }
 
@@ -207,6 +202,10 @@ export async function POST(request: Request) {
   //    skip its own deduction and zero the credit fields so personal is NOT
   //    touched. (Toggle ON → team only.)  Requires the n8n workflow to honour
   //    skip_credit_deduction — see the IF-node note in the deploy docs.
+  //
+  // SECURITY: `skip_credit_deduction` is decided HERE. A value sent by the
+  // browser is always overwritten — otherwise a personal generation could
+  // ask n8n to skip charging.
   const forwarded = teamDeducted
     ? {
         ...body,
@@ -216,11 +215,16 @@ export async function POST(request: Request) {
         required_credits: 0,
         credits_required: 0,
       }
-    : { ...body, user_id: user.id, team_id: teamId ?? undefined };
+    : {
+        ...body,
+        user_id: user.id,
+        team_id: undefined,
+        skip_credit_deduction: false,
+      };
 
   fetch(webhookUrl, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: n8nHeaders(),
     body: JSON.stringify(forwarded),
     cache: "no-store",
   }).catch((err) => {

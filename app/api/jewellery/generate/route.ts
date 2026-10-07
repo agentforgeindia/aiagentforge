@@ -30,8 +30,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/serverAuth";
 import { isAgentEnabled } from "@/lib/agentEnabled";
-import { deductCredits, refundCredits, deductTeamCredits, refundTeamCredits } from "@/lib/creditsServer";
+import { deductCredits, refundCredits, deductTeamCredits, refundTeamCredits, readCredits } from "@/lib/creditsServer";
 import { getTeamMembership, teamHasBulkAccess } from "@/lib/teamAuth";
+import { hasBulkAccess } from "@/lib/plans";
+import { clampCredits, jewelleryCreditRange, scaleRange } from "@/lib/creditPricing";
+import {
+  DuplicateGenerationIdError,
+  insertGenerationRowsStrict,
+  n8nHeaders,
+} from "@/lib/generationRows";
 import { detectClientSource, type ClientSource } from "@/lib/clientSource";
 import {
   firstUntrustedUrl,
@@ -49,9 +56,6 @@ const MAX_BULK_ITEMS = 100;
 const webhookUrl =
   process.env.N8N_JEWELLERY_WEBHOOK_URL ||
   "https://n8n.aiagentforge.in/webhook/generate-jewellery";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // ────────────────────────────────────────────────────────────
 // Body shape — narrow what we accept.
@@ -151,49 +155,38 @@ async function createGenerationRows(
   teamId: string | null | undefined,
   /** Where the request came from — app / phone browser / desktop. */
   clientSource: ClientSource,
+  /** Credits charged for EACH image — the refund route reads this back. */
+  creditsPerItem: number,
 ) {
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Supabase service-role env vars missing.");
-  }
-
   const rows =
     body.generation_mode === "single"
       ? [
           {
             id: body.generation_id,
             user_id: userId,
-            status: "pending",
+            status: "pending" as const,
             agent_type: "jewellery",
             team_id: teamId ?? null,
             client_source: clientSource,
+            credit_cost: creditsPerItem,
+            credits_used: creditsPerItem,
           },
         ]
       : body.items.map((item) => ({
           id: item.generation_id,
           user_id: userId,
-          status: "pending",
+          status: "pending" as const,
           batch_id: body.batch_id ?? null,
           agent_type: "jewellery",
           team_id: teamId ?? null,
           client_source: clientSource,
+          credit_cost: creditsPerItem,
+          credits_used: creditsPerItem,
         }));
 
-  const response = await fetch(`${supabaseUrl}/rest/v1/generations`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: serviceRoleKey,
-      Authorization: `Bearer ${serviceRoleKey}`,
-      Prefer: "resolution=merge-duplicates,return=representation",
-    },
-    body: JSON.stringify(rows),
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Failed to create generation rows: ${text}`);
-  }
+  // Plain insert — a generation id that already exists is rejected
+  // instead of overwriting that row (see lib/generationRows.ts).
+  await insertGenerationRowsStrict(rows);
 }
 
 // ────────────────────────────────────────────────────────────
@@ -222,6 +215,17 @@ export async function POST(request: NextRequest) {
   if (!v.ok) return bad(v.error);
   const body = v.body;
 
+  // 2b. Price on the SERVER. The browser's required_credits is only
+  // accepted inside the range the selected options allow — it can no
+  // longer be set to 1 for an Ultra HD or 100-image job.
+  const itemCount = body.generation_mode === "bulk" ? body.items.length : 1;
+  const perItemRange = jewelleryCreditRange(body as Record<string, unknown>);
+  const requiredCredits = clampCredits(
+    body.required_credits,
+    scaleRange(perItemRange, itemCount),
+  );
+  const creditsPerItem = Math.ceil(requiredCredits / itemCount);
+
   // Anchor generation_id for audit log.
   const auditGenerationId =
     body.generation_mode === "single" ? body.generation_id : body.batch_id ?? null;
@@ -243,10 +247,22 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // 3b. Bulk on a personal account needs a plan that includes it. The
+  // page already hides bulk for other plans; this stops a direct API call.
+  if (!teamId && body.generation_mode === "bulk") {
+    const account = await readCredits(user.id);
+    if (!hasBulkAccess(account?.plan ?? undefined)) {
+      return NextResponse.json(
+        { error: "Bulk generation is available on Pro and Empire plans.", code: "PLAN_REQUIRED" },
+        { status: 403 },
+      );
+    }
+  }
+
   // 4. Atomic credit deduction (team pool or personal).
   const deduct = teamId
-    ? await deductTeamCredits(teamId, user.id, body.required_credits, "jewellery_generate", auditGenerationId ?? undefined)
-    : await deductCredits(user.id, body.required_credits, "jewellery_generate", auditGenerationId ?? undefined);
+    ? await deductTeamCredits(teamId, user.id, requiredCredits, "jewellery_generate", auditGenerationId ?? undefined)
+    : await deductCredits(user.id, requiredCredits, "jewellery_generate", auditGenerationId ?? undefined);
 
   if (!deduct.ok) {
     if (deduct.reason === "insufficient") {
@@ -268,36 +284,47 @@ export async function POST(request: NextRequest) {
 
   // 5. Insert generations row(s) with verified user_id + team_id.
   try {
-    await createGenerationRows(body, user.id, teamId, detectClientSource(request));
+    await createGenerationRows(body, user.id, teamId, detectClientSource(request), creditsPerItem);
   } catch (err: any) {
     // Refund to correct pool
     if (teamId) {
-      await refundTeamCredits(teamId, user.id, body.required_credits, "refund:generation_row_insert_failed", auditGenerationId ?? undefined);
+      await refundTeamCredits(teamId, user.id, requiredCredits, "refund:generation_row_insert_failed", auditGenerationId ?? undefined);
     } else {
-      await refundCredits(user.id, body.required_credits, "refund:generation_row_insert_failed", auditGenerationId ?? undefined);
+      await refundCredits(user.id, requiredCredits, "refund:generation_row_insert_failed", auditGenerationId ?? undefined);
     }
     return NextResponse.json(
       { error: err?.message || "Failed to register generation." },
-      { status: 500 },
+      { status: err instanceof DuplicateGenerationIdError ? 409 : 500 },
     );
   }
 
-  // 6. Forward to n8n with the verified user_id.
-  const forwardedPayload = { ...body, user_id: user.id, team_id: teamId ?? undefined };
+  // 6. Forward to n8n with the verified user_id and the server price.
+  const forwardedPayload: Record<string, unknown> = {
+    ...body,
+    user_id: user.id,
+    team_id: teamId ?? undefined,
+    required_credits: requiredCredits,
+  };
+  if (body.shared_settings && typeof body.shared_settings === "object") {
+    forwardedPayload.shared_settings = {
+      ...(body.shared_settings as Record<string, unknown>),
+      required_credits: requiredCredits,
+    };
+  }
 
   let webhookResponse: Response;
   try {
     webhookResponse = await fetch(webhookUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: n8nHeaders(),
       body: JSON.stringify(forwardedPayload),
       cache: "no-store",
     });
   } catch (err: any) {
     if (teamId) {
-      await refundTeamCredits(teamId, user.id, body.required_credits, "refund:n8n_network_error", auditGenerationId ?? undefined);
+      await refundTeamCredits(teamId, user.id, requiredCredits, "refund:n8n_network_error", auditGenerationId ?? undefined);
     } else {
-      await refundCredits(user.id, body.required_credits, "refund:n8n_network_error", auditGenerationId ?? undefined);
+      await refundCredits(user.id, requiredCredits, "refund:n8n_network_error", auditGenerationId ?? undefined);
     }
     return NextResponse.json(
       { error: err?.message || "n8n unreachable." },
@@ -315,9 +342,9 @@ export async function POST(request: NextRequest) {
 
   if (!webhookResponse.ok) {
     if (teamId) {
-      await refundTeamCredits(teamId, user.id, body.required_credits, "refund:n8n_error", auditGenerationId ?? undefined);
+      await refundTeamCredits(teamId, user.id, requiredCredits, "refund:n8n_error", auditGenerationId ?? undefined);
     } else {
-      await refundCredits(user.id, body.required_credits, "refund:n8n_error", auditGenerationId ?? undefined);
+      await refundCredits(user.id, requiredCredits, "refund:n8n_error", auditGenerationId ?? undefined);
     }
     return NextResponse.json(
       {
@@ -340,6 +367,7 @@ export async function POST(request: NextRequest) {
         : undefined,
     batch_id: body.generation_mode === "bulk" ? body.batch_id ?? null : undefined,
     new_balance: deduct.newBalance,
+    credits_charged: requiredCredits,
     team_id: teamId ?? undefined,
     message:
       body.generation_mode === "single"

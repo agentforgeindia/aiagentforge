@@ -62,31 +62,10 @@ const serviceSchema = {
     url: `${SITE}/pricing`,
     availability: "https://schema.org/InStock",
   },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.8",
-    ratingCount: "64",
-    bestRating: "5",
-    worstRating: "1",
-  },
-  review: [
-    {
-      "@type": "Review",
-      author: { "@type": "Person", name: "Kavita R." },
-      reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
-      reviewBody:
-        "Made Diwali festival ads in Hindi in 2 minutes. Text was perfect — no spelling mistakes. Saved me 3 hours of design work.",
-      datePublished: "2026-05-22",
-    },
-    {
-      "@type": "Review",
-      author: { "@type": "Person", name: "Suresh M." },
-      reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
-      reviewBody:
-        "Bulk ad creatives for 5 products in 10 minutes. Facebook and Instagram both covered. Huge time saver for our agency.",
-      datePublished: "2026-05-19",
-    },
-  ],
+  // NOTE: aggregateRating / review were removed on purpose. The values
+  // were hardcoded, not taken from real customer reviews, which breaks
+  // Google's review-snippet rules. Add them back only when they are
+  // computed from approved testimonials in the database.
 };
 
 const breadcrumbSchema = {

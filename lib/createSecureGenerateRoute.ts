@@ -50,6 +50,11 @@ import {
   firstUntrustedUrl,
 } from "@/lib/uploadValidation";
 import { detectClientSource } from "@/lib/clientSource";
+import {
+  DuplicateGenerationIdError,
+  insertGenerationRowsStrict,
+  n8nHeaders,
+} from "@/lib/generationRows";
 
 // ────────────────────────────────────────────────────────────
 // Types
@@ -141,34 +146,6 @@ export type SecureRouteConfig<TBody> = {
     n8nResponse: unknown,
   ) => Record<string, unknown>;
 };
-
-// ────────────────────────────────────────────────────────────
-// Service-role REST insert (no @supabase/supabase-js dependency).
-// Keeps the factory leaf-light.
-// ────────────────────────────────────────────────────────────
-
-async function insertGenerationRows(rows: GenerationRow[]): Promise<void> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) {
-    throw new Error("Supabase service-role env vars missing.");
-  }
-  const response = await fetch(`${url}/rest/v1/generations`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: key,
-      Authorization: `Bearer ${key}`,
-      Prefer: "resolution=merge-duplicates",
-    },
-    body: JSON.stringify(rows),
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`generations insert failed: ${text}`);
-  }
-}
 
 // ────────────────────────────────────────────────────────────
 // Factory
@@ -272,7 +249,9 @@ export function createSecureGenerateRoute<TBody>(
     // desktop), detected here so no agent can forget it.
     const clientSource = detectClientSource(request);
     try {
-      await insertGenerationRows(
+      // Plain insert — an id that already exists is rejected, never
+      // overwritten (see lib/generationRows.ts).
+      await insertGenerationRowsStrict(
         cfg
           .buildGenerationRows(body, user.id)
           .map((row) => ({ ...row, client_source: clientSource })),
@@ -288,7 +267,7 @@ export function createSecureGenerateRoute<TBody>(
       }
       return NextResponse.json(
         { error: err?.message || "Failed to register generation." },
-        { status: 500 },
+        { status: err instanceof DuplicateGenerationIdError ? 409 : 500 },
       );
     }
 
@@ -303,7 +282,7 @@ export function createSecureGenerateRoute<TBody>(
     try {
       response = await fetch(webhookUrl as string, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: n8nHeaders(),
         body: JSON.stringify(forwarded),
         cache: "no-store",
       });

@@ -180,10 +180,16 @@ export default function PricingPage() {
         value: plan.amount,
       });
 
+      // Send the session token so the server ties the order to the
+      // signed-in user (the order's notes decide who gets the credits).
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+
       const orderResponse = await fetch("/api/razorpay/create-order", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         },
         body: JSON.stringify({
           planName: plan.name,

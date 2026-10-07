@@ -56,10 +56,55 @@ export async function deductCredits(
   if (error) {
     return { ok: false, reason: "error", message: error.message };
   }
+  return parseDeductResult(data);
+}
+
+/**
+ * Normalise what `deduct_credits()` returned.
+ *
+ * The live database function returns JSON —
+ *   { success: true,  remaining_credits: 85 }
+ *   { success: false, error: "Insufficient credits" }
+ * — while the older version in sql/credits.sql returned a bare number
+ * (new balance) or NULL (not enough credits). Both shapes are handled.
+ *
+ * SECURITY: this used to treat every non-NULL answer as "deducted",
+ * so the JSON failure object let users with too few credits generate
+ * for free. Anything that is not a clear success is now a failure.
+ */
+export function parseDeductResult(data: unknown): DeductResult {
   if (data === null || data === undefined) {
     return { ok: false, reason: "insufficient" };
   }
-  return { ok: true, newBalance: Number(data) };
+
+  if (typeof data === "number" || typeof data === "string") {
+    const balance = Number(data);
+    return Number.isFinite(balance)
+      ? { ok: true, newBalance: balance }
+      : { ok: false, reason: "error", message: "Unexpected credit response." };
+  }
+
+  // PostgREST may wrap a jsonb result in a one-element array.
+  const row = (Array.isArray(data) ? data[0] : data) as
+    | { success?: unknown; remaining_credits?: unknown; error?: unknown }
+    | null
+    | undefined;
+
+  if (!row || typeof row !== "object") {
+    return { ok: false, reason: "error", message: "Unexpected credit response." };
+  }
+
+  if (row.success === true) {
+    // The deduction DID happen — report success even if the balance is
+    // missing, otherwise the caller would stop without refunding.
+    return { ok: true, newBalance: Number(row.remaining_credits) };
+  }
+
+  const message = typeof row.error === "string" ? row.error : "Credit deduction failed.";
+  if (/insufficient/i.test(message)) {
+    return { ok: false, reason: "insufficient" };
+  }
+  return { ok: false, reason: "error", message };
 }
 
 /**

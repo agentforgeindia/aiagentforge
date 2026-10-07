@@ -159,6 +159,18 @@ When in doubt, copy the closest reference, then strip what doesn't apply.
 | Forgetting `Authorization` header on client fetch | 401 from factory | Always send `Bearer ${session.access_token}` |
 | Adding `NEXT_PUBLIC_*` for webhook URL | Leaks URL to browser | Server-side env var only |
 
+## Credits, payments and storage — rules added 2026-10-07 (P0 security fixes)
+
+- **Price is decided on the server.** `lib/creditPricing.ts` recomputes the credits from the request options and clamps the browser's `required_credits` into that range. If you change a price on an agent page, change it there in the same commit.
+- **`deduct_credits()` returns JSON** (`{ success, remaining_credits | error }`), not a number. Always go through `deductCredits()` / `parseDeductResult()` in `lib/creditsServer.ts`. The n8n workflows read `.success` from the same JSON — do not change the return shape.
+- **Every deduction is in `credit_transactions`** (the function writes the ledger row). `/api/credits/refund` decides the refund amount from `generations.credits_used` or the ledger — never from the browser. Set `credits_used` on the generations row only when the ROUTE charged the credits.
+- **Generation rows are inserted with `insertGenerationRowsStrict()`** (`lib/generationRows.ts`): a re-used id is a 409, never an overwrite. Browsers cannot insert or update `generations`; to save a branded/composite image or make a provider image permanent, call `finalizeGeneration()` (`lib/finalizeGeneration.ts` → `/api/generations/finalize`).
+- **`skip_credit_deduction` is set by the route only.** Never forward the browser's value.
+- **Razorpay:** the plan, buyer and amount come from the ORDER fetched back from Razorpay (`verifyPlanOrder()` in `lib/razorpayPlans.ts`) — never from the request body or `payment.notes`. Plans live in `PLAN_CONFIG` there.
+- **Admin routes that move money** must call `requireAdminPermission(req, "<permission>")` before doing anything else.
+- **n8n webhooks:** send `n8nHeaders()` (adds `x-af-webhook-secret` when `N8N_WEBHOOK_SECRET` is set).
+- **Database:** the live changes are in `sql/2026-10-07-p0-security.sql`. `profiles` columns other than contact/company/UTM fields cannot be changed from the browser; `referred_by` can be set once.
+
 ## Existing security primitives (don't reinvent)
 
 - `lib/serverAuth.ts` — `requireUser(req)`, `getUserFromRequest(req)`

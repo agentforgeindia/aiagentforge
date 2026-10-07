@@ -43,6 +43,8 @@ import {
   pickOne,
 } from "@/lib/textileShootLibrary";
 import { canGenerate } from "@/lib/checkCredits";
+import { finalizeGeneration } from "@/lib/finalizeGeneration";
+import { findOversizedSourceImage, SOURCE_IMAGE_TOO_LARGE_MESSAGE } from "@/lib/uploadValidation";
 import { shouldDeductCredits } from "@/lib/deductCredits";
 import { hasBulkAccess } from "@/lib/plans";
 import SignupPromptPopup from "@/app/components/SignupPromptPopup";
@@ -442,7 +444,8 @@ const facts = [
   },
 ];
 
-// Free account check (Empire / Founder / Unlimited / Pro / Growth / Creator = paid)
+// Free account check. Every paid plan is watermark-free — Starter included
+// (pricing page: "Watermark-free business outputs").
 const isFreeAccountFromProfile = (profile: any): boolean => {
   const planText = String(
     profile?.plan ||
@@ -453,6 +456,7 @@ const isFreeAccountFromProfile = (profile: any): boolean => {
       "",
   ).toLowerCase();
   const paid =
+    planText.includes("starter") ||
     planText.includes("empire") ||
     planText.includes("founder") ||
     planText.includes("unlimited") ||
@@ -1009,6 +1013,12 @@ export default function ProductographyPage() {
       return;
     }
 
+    if (findOversizedSourceImage(files)) {
+      alert(SOURCE_IMAGE_TOO_LARGE_MESSAGE);
+      e.target.value = "";
+      return;
+    }
+
     // Fresh upload → reset to Step 1 so the user configures the new product
     // from scratch (category, model usage, shoot, final).
     setBuilderStep(1);
@@ -1317,14 +1327,9 @@ export default function ProductographyPage() {
         "productography-outputs",
       );
 
-      await supabase
-        .from("generations")
-        .update({
-          output_url: compositeUrl,
-          output_image_url: compositeUrl,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", generationId);
+      // Browsers cannot update `generations` (RLS), so the branded image
+      // is saved through the server route.
+      await finalizeGeneration(generationId, compositeUrl);
 
       return compositeUrl;
     } catch (error) {
@@ -1502,7 +1507,7 @@ export default function ProductographyPage() {
     const rawFinalImage = immediateImage || (await pollGenerationResult(generationId));
 
     // Apply Canvas logo overlay (company top-right + AF bottom-right for free)
-    const finalImage = rawFinalImage
+    const overlaidImage = rawFinalImage
       ? await applyLogoOverlay(rawFinalImage, {
           companyLogoUrl: useCompanyLogo ? companyLogoUrl : undefined,
           afWatermark: isFreeAccount,
@@ -1520,6 +1525,14 @@ export default function ProductographyPage() {
           },
         })
       : rawFinalImage;
+
+    // No overlay was applied → the output may still be the AI provider's
+    // temporary link. Copy it into AgentForge storage so it stays in
+    // My Creations (no-op when it is already stored).
+    const finalImage =
+      overlaidImage && overlaidImage === rawFinalImage
+        ? (await finalizeGeneration(generationId)) || overlaidImage
+        : overlaidImage;
 
     track({
       name: "generation_completed",

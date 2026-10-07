@@ -27,6 +27,18 @@ export const ALLOWED_IMAGE_MIME = new Set<string>([
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB — generation inputs
 export const MAX_HERO_BYTES = 5 * 1024 * 1024;    //  5 MB — post hero image
 
+// Largest design / product / jewellery photo a customer may upload from
+// the agent pages. (The storage bucket itself allows more, because the
+// generated Ultra HD outputs are stored there too.)
+export const MAX_SOURCE_IMAGE_BYTES = 20 * 1024 * 1024; // 20 MB
+export const SOURCE_IMAGE_TOO_LARGE_MESSAGE =
+  "This image is larger than 20 MB. Please upload a smaller JPG or PNG (a phone photo or a 2000–3000 px export works best).";
+
+/** First file that is too large to upload as a generation input, if any. */
+export function findOversizedSourceImage(files: File[]): File | null {
+  return files.find((file) => file.size > MAX_SOURCE_IMAGE_BYTES) ?? null;
+}
+
 export function isAllowedImageMime(mime: string | null | undefined): boolean {
   return !!mime && ALLOWED_IMAGE_MIME.has(mime.toLowerCase());
 }

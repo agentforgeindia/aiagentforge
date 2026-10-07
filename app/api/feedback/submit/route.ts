@@ -4,11 +4,17 @@
 //   - Star rating only  → +1 credit
 //   - Written feedback  → +2 credits
 //   - Both              → +3 credits total
+//
+// SECURITY: the reward is paid only once per generation, and only
+// for a COMPLETED generation that belongs to the caller. Feedback
+// without a matching generation is still saved, but earns nothing
+// — otherwise this endpoint could be called in a loop for credits.
 // ============================================================
 
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/serverAuth";
 import { createClient } from "@supabase/supabase-js";
+import { refundCredits } from "@/lib/creditsServer";
 
 export const runtime = "nodejs";
 
@@ -63,18 +69,23 @@ export async function POST(req: Request) {
   // granted (neither to personal nor team). Feedback/testimonial is still
   // saved; only the credit award is suppressed.
   let isTeamGeneration = false;
+  // Reward only for the caller's OWN, COMPLETED generation.
+  let isRewardable = false;
   if (generation_id) {
     const { data: genRow } = await supabase
       .from("generations")
-      .select("team_id")
+      .select("team_id, user_id, status")
       .eq("id", generation_id)
       .maybeSingle();
     isTeamGeneration = Boolean(genRow?.team_id);
+    isRewardable =
+      Boolean(genRow) && genRow?.user_id === user.id && genRow?.status === "completed";
   }
 
-  const creditsToAdd = isTeamGeneration
-    ? 0
-    : (rating ? 1 : 0) + (hasFeedback ? 2 : 0);
+  const creditsToAdd =
+    isTeamGeneration || !isRewardable
+      ? 0
+      : (rating ? 1 : 0) + (hasFeedback ? 2 : 0);
 
   // Save feedback row
   const { error: insertError } = await supabase.from("feedback").insert({
@@ -141,42 +152,35 @@ export async function POST(req: Request) {
     });
   }
 
-  // Personal reward — add credits atomically to the logged-in user.
-  const { data: profileData, error: profileError } = await supabase
-    .from("profiles")
-    .select("credits")
-    .eq("id", user.id)
-    .single();
-
-  if (profileError || !profileData) {
-    return NextResponse.json({ error: "Profile not found." }, { status: 404 });
+  // No matching completed generation of the caller → feedback is saved,
+  // no credits.
+  if (creditsToAdd <= 0) {
+    return NextResponse.json({
+      ok: true,
+      creditsAwarded: 0,
+      credited_to: "none",
+      reason: "no_eligible_generation",
+    });
   }
 
-  const newBalance = (Number(profileData.credits) || 0) + creditsToAdd;
+  // Personal reward — added atomically (and written to the credit ledger)
+  // by the refund_credits() database function.
+  const reward = await refundCredits(
+    user.id,
+    creditsToAdd,
+    "feedback_reward",
+    generation_id || undefined,
+  );
 
-  const { error: updateError } = await supabase
-    .from("profiles")
-    .update({ credits: newBalance })
-    .eq("id", user.id);
-
-  if (updateError) {
-    console.error("[feedback/submit] credits update error:", updateError.message);
+  if (!reward.ok) {
+    console.error("[feedback/submit] credits update error:", reward.message);
     return NextResponse.json({ error: "Credits update failed." }, { status: 500 });
   }
-
-  // Audit log
-  await supabase.from("credit_transactions").insert({
-    user_id: user.id,
-    delta: creditsToAdd,
-    reason: "feedback_reward",
-    generation_id: generation_id || null,
-    balance_after: newBalance,
-  });
 
   return NextResponse.json({
     ok: true,
     creditsAwarded: creditsToAdd,
-    newBalance,
+    newBalance: reward.newBalance,
     credited_to: "personal",
   });
 }

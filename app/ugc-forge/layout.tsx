@@ -62,31 +62,10 @@ const serviceSchema = {
     url: `${SITE}/pricing`,
     availability: "https://schema.org/InStock",
   },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.9",
-    ratingCount: "51",
-    bestRating: "5",
-    worstRating: "1",
-  },
-  review: [
-    {
-      "@type": "Review",
-      author: { "@type": "Person", name: "Divya K." },
-      reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
-      reviewBody:
-        "Used my own photo with the product — the brand shoot looks completely real. My Instagram engagement jumped after posting.",
-      datePublished: "2026-05-24",
-    },
-    {
-      "@type": "Review",
-      author: { "@type": "Person", name: "Rahul T." },
-      reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
-      reviewBody:
-        "No need to hire an influencer for a one-off collaboration. Generate the UGC content in seconds and ship to Meta Ads.",
-      datePublished: "2026-05-21",
-    },
-  ],
+  // NOTE: aggregateRating / review were removed on purpose. The values
+  // were hardcoded, not taken from real customer reviews, which breaks
+  // Google's review-snippet rules. Add them back only when they are
+  // computed from approved testimonials in the database.
 };
 
 const breadcrumbSchema = {

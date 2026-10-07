@@ -7,6 +7,8 @@ import { useAuth } from "@/app/components/AuthProvider";
 import StickyMobileCTA from "@/app/components/StickyMobileCTA";
 import TeamCreditToggle from "@/app/components/TeamCreditToggle";
 import { track } from "@/lib/analytics";
+import { finalizeGeneration } from "@/lib/finalizeGeneration";
+import { findOversizedSourceImage, SOURCE_IMAGE_TOO_LARGE_MESSAGE } from "@/lib/uploadValidation";
 import {
   ArrowRight,
   BadgeCheck,
@@ -1060,7 +1062,10 @@ const isFreeAccountFromProfile = (profile: any): boolean => {
       profile?.plan_name ||
       "",
   ).toLowerCase();
+  // Every paid plan is watermark-free — Starter included (pricing page:
+  // "Watermark-free business outputs").
   const paid =
+    planText.includes("starter") ||
     planText.includes("empire") ||
     planText.includes("founder") ||
     planText.includes("unlimited") ||
@@ -1604,6 +1609,11 @@ export default function JewelleryAIPage() {
   const handleFiles = (files: FileList | null) => {
     if (!files?.length) return;
 
+    if (findOversizedSourceImage(Array.from(files))) {
+      alert(SOURCE_IMAGE_TOO_LARGE_MESSAGE);
+      return;
+    }
+
     const nextUploads: UploadItem[] = Array.from(files)
       .filter((file) => file.type.startsWith("image/"))
       .map((file) => ({
@@ -1999,14 +2009,10 @@ const applyLogoOverlay = async (
       "jewellery-outputs",
     );
 
-    // Persist composite URL — My Creations + downloads see the branded version
-    await supabase
-      .from("generations")
-      .update({
-        output_url: compositeUrl,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", generationId);
+    // Persist composite URL — My Creations + downloads see the branded
+    // version. Browsers cannot update `generations` (RLS), so this goes
+    // through the server route.
+    await finalizeGeneration(generationId, compositeUrl);
 
     return compositeUrl;
   } catch (error) {

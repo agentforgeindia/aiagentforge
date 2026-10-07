@@ -61,31 +61,10 @@ const serviceSchema = {
     url: `${SITE}/pricing`,
     availability: "https://schema.org/InStock",
   },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.8",
-    ratingCount: "43",
-    bestRating: "5",
-    worstRating: "1",
-  },
-  review: [
-    {
-      "@type": "Review",
-      author: { "@type": "Person", name: "Ananya P." },
-      reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
-      reviewBody:
-        "Picked the trending AI Ghibli style, uploaded my photo and got 4 variations in under a minute. Posted on Instagram and got 3× the usual reach.",
-      datePublished: "2026-05-23",
-    },
-    {
-      "@type": "Review",
-      author: { "@type": "Person", name: "Vikram S." },
-      reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
-      reviewBody:
-        "No prompt needed — just select the trend and upload. Perfect for brands that want to stay on social trends without a designer.",
-      datePublished: "2026-05-20",
-    },
-  ],
+  // NOTE: aggregateRating / review were removed on purpose. The values
+  // were hardcoded, not taken from real customer reviews, which breaks
+  // Google's review-snippet rules. Add them back only when they are
+  // computed from approved testimonials in the database.
 };
 
 const breadcrumbSchema = {

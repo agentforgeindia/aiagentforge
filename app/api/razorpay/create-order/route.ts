@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
 
-export const runtime = "nodejs";
+import { PLAN_CONFIG, isUuid } from "@/lib/razorpayPlans";
+import { getUserFromRequest } from "@/lib/serverAuth";
 
-const PLAN_CONFIG: Record<string, { amount: number; credits: number }> = {
-  Starter: { amount: 1999, credits: 1800 },
-"Pro Creator": { amount: 9999, credits: 9000 },
-Empire: { amount: 39999, credits: 36000 },
-};
+export const runtime = "nodejs";
 
 function getRazorpay() {
   const keyId = process.env.RAZORPAY_KEY_ID;
@@ -26,13 +23,23 @@ function getRazorpay() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { planName, amount, credits, userId } = body;
+    const { planName, amount, credits } = body;
 
-    if (!userId || !planName) {
+    // The buyer is the signed-in user when a session token is sent
+    // (billing + pricing pages). Older clients that send no token fall
+    // back to the user id in the body — the order is unpaid at this
+    // point, and credits only ever go to the id stored in the order's
+    // server-set notes, so this cannot be used to take credits.
+    const sessionUser = await getUserFromRequest(request);
+    const userId = sessionUser?.id ?? body.userId;
+
+    if (!isUuid(userId) || typeof planName !== "string" || !planName) {
       return NextResponse.json({ error: "Missing user or plan details." }, { status: 400 });
     }
 
-    const plan = PLAN_CONFIG[planName];
+    const plan = Object.prototype.hasOwnProperty.call(PLAN_CONFIG, planName)
+      ? PLAN_CONFIG[planName]
+      : null;
 
     if (!plan) {
       return NextResponse.json({ error: "Invalid plan selected." }, { status: 400 });
@@ -44,11 +51,14 @@ export async function POST(request: Request) {
 
     const razorpay = getRazorpay();
 
+    // The notes below are the ONLY record verify-payment and the webhook
+    // trust for "who bought which plan". They are set here, on the server.
     const order = await razorpay.orders.create({
       amount: plan.amount * 100,
       currency: "INR",
       receipt: `af_${Date.now()}`,
       notes: {
+        type: "credit_plan",
         userId,
         planName,
         credits: String(plan.credits),

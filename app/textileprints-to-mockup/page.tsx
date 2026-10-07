@@ -17,6 +17,8 @@ import {
 } from "@/lib/textileShootLibrary";
 import TeamCreditToggle from "@/app/components/TeamCreditToggle";
 import { canGenerate } from "@/lib/checkCredits";
+import { finalizeGeneration } from "@/lib/finalizeGeneration";
+import { findOversizedSourceImage, SOURCE_IMAGE_TOO_LARGE_MESSAGE } from "@/lib/uploadValidation";
 import { shouldDeductCredits } from "@/lib/deductCredits";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 import SignupPromptPopup from "@/app/components/SignupPromptPopup";
@@ -2569,15 +2571,9 @@ export default function Home() {
         "textile-outputs",
       );
 
-      // Persist composite URL in generations row
-      await supabase
-        .from("generations")
-        .update({
-          output_url: compositeUrl,
-          output_image_url: compositeUrl,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", generationId);
+      // Persist composite URL in generations row. Browsers cannot update
+      // `generations` (RLS), so this goes through the server route.
+      await finalizeGeneration(generationId, compositeUrl);
 
       return compositeUrl;
     } catch (error) {
@@ -2663,6 +2659,12 @@ export default function Home() {
 
     if (invalidFile) {
       alert("Please upload image files only.");
+      e.target.value = "";
+      return;
+    }
+
+    if (findOversizedSourceImage(files)) {
+      alert(SOURCE_IMAGE_TOO_LARGE_MESSAGE);
       e.target.value = "";
       return;
     }
@@ -3057,7 +3059,10 @@ export default function Home() {
         profile?.plan_name ||
         "",
     ).toLowerCase();
+    // Every paid plan is watermark-free — Starter included (pricing page:
+    // "Watermark-free business outputs").
     const isPaidAccount =
+      planText.includes("starter") ||
       planText.includes("empire") ||
       planText.includes("founder") ||
       planText.includes("unlimited") ||

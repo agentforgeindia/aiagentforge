@@ -74,39 +74,10 @@ const serviceSchema = {
     url: `${SITE}/pricing`,
     availability: "https://schema.org/InStock",
   },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.8",
-    ratingCount: "82",
-    bestRating: "5",
-    worstRating: "1",
-  },
-  review: [
-    {
-      "@type": "Review",
-      author: { "@type": "Person", name: "Tushar V." },
-      reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
-      reviewBody:
-        "The perfume bottle shot turned out perfect for Amazon. Swapped the hero image and CTR jumped right away.",
-      datePublished: "2026-05-23",
-    },
-    {
-      "@type": "Review",
-      author: { "@type": "Person", name: "Sneha B." },
-      reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
-      reviewBody:
-        "Made lifestyle shots for our skincare brand. Catalogue + Instagram both covered in one go. Huge time saver!",
-      datePublished: "2026-05-21",
-    },
-    {
-      "@type": "Review",
-      author: { "@type": "Person", name: "Arjun S." },
-      reviewRating: { "@type": "Rating", ratingValue: "4", bestRating: "5" },
-      reviewBody:
-        "A watch shoot used to cost ₹8k at the studio. Got 10 angles here for 100 credits. Quality is at the same level.",
-      datePublished: "2026-05-19",
-    },
-  ],
+  // NOTE: aggregateRating / review were removed on purpose. The values
+  // were hardcoded, not taken from real customer reviews, which breaks
+  // Google's review-snippet rules. Add them back only when they are
+  // computed from approved testimonials in the database.
 };
 
 const breadcrumbSchema = {
