@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/app/components/ThemeProvider";
 import PageDoodles from "@/app/components/PageDoodles";
+import { clearInfluencerSession, hasInfluencerSession, influencerHeaders, saveInfluencerSession } from "@/lib/influencerClient";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type Influencer = {
@@ -135,6 +136,7 @@ export default function InfluencerHubPage() {
   // Dashboard
   const [dashCid, setDashCid]       = useState<string>("");
   const [dashEmail, setDashEmail]   = useState<string>("");
+  const [dashMobile, setDashMobile] = useState<string>("");
   const [dashData, setDashData]     = useState<DashData | null>(null);
   const [dashLoading, setDashLoading] = useState(false);
   const [dashError, setDashError]   = useState<string | null>(null);
@@ -167,7 +169,8 @@ export default function InfluencerHubPage() {
   useEffect(() => {
     loadHub();
     const stored = getStoredCid();
-    if (stored) {
+    // Only when a signed session is saved — the id alone opens nothing.
+    if (stored && hasInfluencerSession()) {
       setDashCid(stored);
       loadDashboard(stored);
     }
@@ -179,13 +182,21 @@ export default function InfluencerHubPage() {
     if (!cid.trim()) return;
     setDashLoading(true);
     setDashError(null);
-    const r = await fetch(`/api/careers/influencer/dashboard?cid=${cid.trim()}`);
+    const r = await fetch(`/api/careers/influencer/dashboard?cid=${cid.trim()}`, {
+      headers: await influencerHeaders(false),
+    });
     const d = await r.json();
     setDashLoading(false);
     if (d.ok) {
       setDashData(d);
       storeCid(cid.trim());
       setActiveTab("dashboard");
+    } else if (r.status === 401) {
+      // Session missing or expired — show the login form again.
+      clearCid();
+      clearInfluencerSession();
+      setDashCid("");
+      setDashError(null);
     } else {
       setDashError(d.error ?? "Not found");
     }
@@ -193,29 +204,32 @@ export default function InfluencerHubPage() {
 
   async function loginByEmail(e: React.FormEvent) {
     e.preventDefault();
-    if (!dashEmail.trim()) return;
+    if (!dashEmail.trim() || !dashMobile.trim()) return;
     setDashLoading(true);
     setDashError(null);
     const r = await fetch("/api/careers/influencer/lookup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: dashEmail.trim() }),
+      body: JSON.stringify({ email: dashEmail.trim(), mobile: dashMobile.trim() }),
     });
     const d = await r.json();
     setDashLoading(false);
     if (d.ok) {
+      saveInfluencerSession(d.token, d.cid);
       setDashCid(d.cid);
       await loadDashboard(d.cid);
     } else {
-      setDashError(d.error ?? "Not found. Check your email.");
+      setDashError(d.error ?? "Not found. Check your email and mobile number.");
     }
   }
 
   function logoutDashboard() {
     clearCid();
+    clearInfluencerSession();
     setDashData(null);
     setDashCid("");
     setDashEmail("");
+    setDashMobile("");
     setActiveTab("feed");
     setDashLoginMode(false);
   }
@@ -487,12 +501,14 @@ export default function InfluencerHubPage() {
             <div className="text-center">
               <p className="text-5xl">🌟</p>
               <h2 className="mt-3 text-xl font-black">Creator Dashboard</h2>
-              <p className={`mt-1 text-sm ${muted}`}>Enter your registered email to access your dashboard.</p>
+              <p className={`mt-1 text-sm ${muted}`}>Enter your registered email and mobile number to access your dashboard.</p>
             </div>
             {dashError && <p className="mt-3 rounded-xl border border-rose-400/30 bg-rose-50 px-4 py-2 text-sm font-bold text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">{dashError}</p>}
             <form onSubmit={loginByEmail} className="mt-6 space-y-3">
               <input type="email" required value={dashEmail} onChange={e => setDashEmail(e.target.value)}
                 placeholder="your@email.com" className={inputCls} />
+              <input type="tel" required inputMode="numeric" autoComplete="tel" value={dashMobile} onChange={e => setDashMobile(e.target.value)}
+                placeholder="Registered mobile number" className={inputCls} />
               <button type="submit" disabled={dashLoading}
                 className="w-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500 py-3 text-sm font-black text-white shadow-lg transition hover:scale-[1.02] disabled:opacity-50">
                 {dashLoading ? "Checking…" : "Access My Dashboard →"}

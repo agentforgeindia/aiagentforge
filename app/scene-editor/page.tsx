@@ -11,6 +11,7 @@
 import { useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/components/AuthProvider";
+import { storageSafeName } from "@/lib/uploadValidation";
 
 // Built-in sample scenes for the 2-credit "Use your scene" option.
 // Drop a few room photos into /public/scene-samples/ to enable these.
@@ -80,7 +81,7 @@ export default function SceneEditorPage() {
     setWork(null);
     setUploading(true);
     try {
-      const safe = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
+      const safe = storageSafeName(file);
       const filePath = `scene-editor/${user?.id || "guest"}/${Date.now()}-${newId()}-${safe}`;
       const { error: upErr } = await supabase.storage
         .from("designs")
@@ -136,7 +137,7 @@ export default function SceneEditorPage() {
     setError("");
     setRefUploading(el.id);
     try {
-      const safe = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
+      const safe = storageSafeName(file);
       const filePath = `scene-editor/${user?.id || "guest"}/refs/${Date.now()}-${newId()}-${safe}`;
       const { error: upErr } = await supabase.storage
         .from("designs")

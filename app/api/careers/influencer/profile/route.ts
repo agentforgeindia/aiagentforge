@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { authorizeInfluencer, influencerDenied } from "@/lib/influencerSession";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,6 +13,8 @@ export async function PATCH(req: NextRequest) {
   try {
     const { cid, bio, instagram_url, youtube_url, twitter_url, tiktok_url, website_url, profile_photo_url } = await req.json();
     if (!cid) return NextResponse.json({ ok: false, error: "Missing cid." }, { status: 400 });
+    // Only the creator themselves can edit their public profile.
+    if ((await authorizeInfluencer(req, cid)) !== "self") return influencerDenied();
 
     const { error } = await admin
       .from("content_creator_social")

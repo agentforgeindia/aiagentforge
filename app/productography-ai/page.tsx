@@ -44,7 +44,14 @@ import {
 } from "@/lib/textileShootLibrary";
 import { canGenerate } from "@/lib/checkCredits";
 import { finalizeGeneration } from "@/lib/finalizeGeneration";
-import { findOversizedSourceImage, SOURCE_IMAGE_TOO_LARGE_MESSAGE } from "@/lib/uploadValidation";
+import { GENERATION_FAILED_MESSAGE, requestGenerationRefund } from "@/lib/requestGenerationRefund";
+import {
+  findOversizedSourceImage,
+  findUnsupportedSourceImage,
+  SOURCE_IMAGE_TOO_LARGE_MESSAGE,
+  SOURCE_IMAGE_UNSUPPORTED_MESSAGE,
+  storageSafeName,
+} from "@/lib/uploadValidation";
 import { shouldDeductCredits } from "@/lib/deductCredits";
 import { hasBulkAccess } from "@/lib/plans";
 import SignupPromptPopup from "@/app/components/SignupPromptPopup";
@@ -131,16 +138,7 @@ const PRODUCTOGRAPHY_SEED_TESTIMONIALS: Testimonial[] = [
   },
 ];
 
-const WEBHOOK_URL =
-  process.env.NEXT_PUBLIC_PRODUCTOGRAPHY_WEBHOOK_URL ||
-  process.env.NEXT_PUBLIC_N8N_PRODUCTOGRAPHY_WEBHOOK_URL ||
-  "";
-
-// Guard: if the env var wasn't set at build time, fail loudly instead of
-// silently posting to the current origin (which returns the Next.js 404 HTML
-// and produces a confusing "n8n error 404 <!DOCTYPE html>" downstream).
-const WEBHOOK_URL_IS_VALID =
-  typeof WEBHOOK_URL === "string" && /^https?:\/\//i.test(WEBHOOK_URL);
+// (The n8n webhook address is server-only — see /api/productography/generate.)
 
 const AF_LOGO_PATH = "/af-logo.png";
 
@@ -957,7 +955,7 @@ export default function ProductographyPage() {
   // FILE UPLOAD HELPERS
   // ============================================================
   const uploadFile = async (file: File) => {
-    const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
+    const safeFileName = storageSafeName(file);
     const filePath = `productography-inputs/${authUser?.id || "guest"}/${Date.now()}-${newId().slice(0, 6)}-${safeFileName}`;
     const { error } = await supabase.storage.from("designs").upload(filePath, file, {
       cacheControl: "3600",
@@ -969,7 +967,7 @@ export default function ProductographyPage() {
   };
 
   const uploadBrandLogo = async (file: File): Promise<string> => {
-    const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
+    const safeFileName = storageSafeName(file);
     const filePath = `brand-logos/${authUser?.id || "guest"}/${Date.now()}-${newId().slice(0, 6)}-${safeFileName}`;
     const { error } = await supabase.storage.from("designs").upload(filePath, file, {
       cacheControl: "3600",
@@ -1015,6 +1013,11 @@ export default function ProductographyPage() {
 
     if (findOversizedSourceImage(files)) {
       alert(SOURCE_IMAGE_TOO_LARGE_MESSAGE);
+      e.target.value = "";
+      return;
+    }
+    if (findUnsupportedSourceImage(files)) {
+      alert(SOURCE_IMAGE_UNSUPPORTED_MESSAGE);
       e.target.value = "";
       return;
     }
@@ -1348,7 +1351,11 @@ export default function ProductographyPage() {
       const row = data as any;
       const finalImage = row?.output_image_url || row?.output_url || row?.image_url || row?.result_url;
       if (row?.status === "completed" && finalImage) return finalImage as string;
-      if (row?.status === "failed") throw new Error("Generation failed in n8n.");
+      if (row?.status === "failed") {
+        // The server works out what was charged and gives it back.
+        await requestGenerationRefund(id);
+        throw new Error(GENERATION_FAILED_MESSAGE);
+      }
       await new Promise((resolve) => window.setTimeout(resolve, 5000));
     }
     throw new Error("Generation is taking longer than expected. Please check n8n execution.");

@@ -30,7 +30,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/serverAuth";
 import { isAgentEnabled } from "@/lib/agentEnabled";
-import { deductCredits, refundCredits, deductTeamCredits, refundTeamCredits, readCredits } from "@/lib/creditsServer";
+import { deductCredits, refundCredits, deductTeamCredits, refundTeamCredits, readCredits, serviceDb } from "@/lib/creditsServer";
+import { closeRefundedGenerations } from "@/lib/generationRefund";
 import { getTeamMembership, teamHasBulkAccess } from "@/lib/teamAuth";
 import { hasBulkAccess } from "@/lib/plans";
 import { clampCredits, jewelleryCreditRange, scaleRange } from "@/lib/creditPricing";
@@ -298,6 +299,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Every row of this request — closed together when the route itself
+  // refunds the whole job, so nothing is refunded a second time.
+  const allGenerationIds =
+    body.generation_mode === "single"
+      ? [body.generation_id]
+      : body.items.map((item) => item.generation_id);
+
   // 6. Forward to n8n with the verified user_id and the server price.
   const forwardedPayload: Record<string, unknown> = {
     ...body,
@@ -326,6 +334,7 @@ export async function POST(request: NextRequest) {
     } else {
       await refundCredits(user.id, requiredCredits, "refund:n8n_network_error", auditGenerationId ?? undefined);
     }
+    await closeRefundedGenerations(serviceDb(), allGenerationIds, "The image service could not be reached.");
     return NextResponse.json(
       { error: err?.message || "n8n unreachable." },
       { status: 502 },
@@ -346,6 +355,11 @@ export async function POST(request: NextRequest) {
     } else {
       await refundCredits(user.id, requiredCredits, "refund:n8n_error", auditGenerationId ?? undefined);
     }
+    await closeRefundedGenerations(
+      serviceDb(),
+      allGenerationIds,
+      `The image service returned an error (${webhookResponse.status}).`,
+    );
     return NextResponse.json(
       {
         error: n8nData?.error || n8nData?.message || "n8n webhook request failed",

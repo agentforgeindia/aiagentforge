@@ -194,8 +194,8 @@ export default function AdminRewardsPage() {
       {/* The rules, so nobody has to remember them */}
       <p className={`max-w-3xl text-[13px] leading-6 ${adminMutedCls}`}>
         {t(
-          `Rules now: the referrer gets ${REWARD_RULES.referrer} credits and the friend gets ${REWARD_RULES.friend} when the friend signs up with the referral link, or types the code on the app sign-up screen. Rating a result gives +${REWARD_RULES.rating}; written feedback gives +${REWARD_RULES.feedback} more. All of it happens automatically.`,
-          `Abhi ke rules: dost referral link se signup kare, ya app ke signup screen par code daale, to refer karne wale ko ${REWARD_RULES.referrer} credits aur dost ko ${REWARD_RULES.friend} milte hain. Result ko rating dene par +${REWARD_RULES.rating}; likha hua feedback dene par +${REWARD_RULES.feedback} aur. Ye sab apne aap hota hai.`,
+          `Rules now: the referrer gets ${REWARD_RULES.referrer} credits and the friend gets ${REWARD_RULES.friend} when the friend signs up with the referral link, or types the code on the app sign-up screen. Rating a completed result gives +${REWARD_RULES.rating} credit, once per result; written feedback gives no extra credit. All of it happens automatically.`,
+          `Abhi ke rules: dost referral link se signup kare, ya app ke signup screen par code daale, to refer karne wale ko ${REWARD_RULES.referrer} credits aur dost ko ${REWARD_RULES.friend} milte hain. Complete hue result ko rating dene par +${REWARD_RULES.rating} credit, har result par ek baar; likhe hue feedback par koi extra credit nahi. Ye sab apne aap hota hai.`,
         )}
       </p>
 
@@ -237,7 +237,7 @@ export default function AdminRewardsPage() {
         <Stat
           title={t("Credits given for feedback", "Feedback par diye credits")}
           value={data ? num(shown.stats.feedbackCredits) : "…"}
-          sub={t(`+${REWARD_RULES.rating} rating, +${REWARD_RULES.feedback} written`, `+${REWARD_RULES.rating} rating, +${REWARD_RULES.feedback} likha hua`)}
+          sub={t(`+${REWARD_RULES.rating} per rated result`, `Har rated result par +${REWARD_RULES.rating}`)}
         />
       </div>
 

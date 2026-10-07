@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { useTheme } from "../components/ThemeProvider";
 import RatingFeedbackModal from "@/app/components/RatingFeedbackModal";
 import CongratulationsPopup from "@/app/components/CongratulationsPopup";
+import { storageSafeName } from "@/lib/uploadValidation";
 
 type Trend = {
   id: string;
@@ -129,7 +130,8 @@ export default function TrendForgePage() {
   async function uploadImage(userId: string) {
     if (!file) throw new Error("Please upload your photo first.");
 
-    const fileExt = file.name.split(".").pop() || "jpg";
+    // An accepted image extension, taken from the file type when the name has none.
+    const fileExt = storageSafeName(file).split(".").pop() || "jpg";
     const filePath = `trendforge/${userId}/${Date.now()}-${selectedTrend.id}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage

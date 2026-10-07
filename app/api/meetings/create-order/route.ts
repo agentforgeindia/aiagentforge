@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
 import { isValidSlotTime, isWorkingDay, slotIso } from "@/lib/meetingSlots";
+import { rateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,6 +12,10 @@ export const dynamic = "force-dynamic";
 const MEETING_PRICE = 99; // rupees
 
 export async function POST(req: Request) {
+  // Public endpoint that creates Razorpay orders — keep it from being hammered.
+  const limited = rateLimit(req, { name: "meetings-create-order", limit: 10, windowMs: 10 * 60_000 });
+  if (limited) return limited;
+
   try {
     const { date, time } = await req.json().catch(() => ({}));
 

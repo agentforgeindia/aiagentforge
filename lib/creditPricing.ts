@@ -31,9 +31,14 @@ export type CreditRange = { floor: number; ceiling: number };
 /** A request body — every field is untrusted until checked. */
 type Bag = Record<string, unknown>;
 
-const PREMIUM = 15;
-const ULTRA = 30;
-const MOBILE_EXTRA = 2;
+// ── The price list (same for Textile, Jewellery, Productography) ──
+//   Premium  · square / 1080px ............ 15
+//   Premium  · mobile 1080x1920 ........... 17
+//   Ultra HD · square / 1080px ............ 30
+//   Ultra HD · mobile 1080x1920 ........... 32
+export const PREMIUM = 15;
+export const ULTRA = 30;
+export const MOBILE_EXTRA = 2;
 const UPLOADED_MODEL = 2;
 const UPLOADED_SCENE = 2;
 
@@ -54,8 +59,8 @@ export function scaleRange(range: CreditRange, count: number): CreditRange {
 }
 
 // ── Jewellery ───────────────────────────────────────────────
-// Ultra HD 30 · Mobile 17 · otherwise 15, +2 own model, +2 own scene,
-// +1 per branding item (logo, name, website, phone, address).
+// Premium 15 · Ultra HD 30, +2 mobile (so 17 / 32), +2 own model,
+// +2 own scene, +1 per branding item (logo, name, website, phone, address).
 export function jewelleryCreditRange(body: Bag): CreditRange {
   const shared = (body?.shared_settings && typeof body.shared_settings === "object"
     ? body.shared_settings
@@ -63,9 +68,8 @@ export function jewelleryCreditRange(body: Bag): CreditRange {
   const quality = str(shared.output_quality ?? body?.output_quality);
   const size = str(shared.output_size ?? body?.output_size).toLowerCase();
 
-  let floor = PREMIUM;
-  if (quality === "Ultra HD") floor = ULTRA;
-  else if (size.includes("1080x1920") || size.includes("mobile")) floor = PREMIUM + MOBILE_EXTRA;
+  let floor = quality.toLowerCase() === "ultra hd" ? ULTRA : PREMIUM;
+  if (size.includes("1080x1920") || size.includes("mobile")) floor += MOBILE_EXTRA;
 
   if (has(shared.model_photo_url ?? body?.model_photo_url)) floor += UPLOADED_MODEL;
   if (
@@ -95,8 +99,8 @@ export function productographyCreditRange(body: Bag): CreditRange {
 }
 
 // ── Textile ─────────────────────────────────────────────────
-// Used when the SERVER charges (team pool). Personal textile
-// generations are still charged inside the n8n workflow.
+// The route charges this amount itself (personal balance or team
+// pool) and tells n8n to skip its own deduction.
 // Ultra HD 30 · otherwise 15, +2 mobile, +2 own scene, +2 own model,
 // +1 per branding text item (name, phone, website, address).
 export function textileCreditRange(body: Bag): CreditRange {

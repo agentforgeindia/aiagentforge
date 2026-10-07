@@ -1,9 +1,9 @@
 // ============================================================
 // /api/feedback/submit
 // Saves user rating/feedback and awards credits:
-//   - Star rating only  → +1 credit
-//   - Written feedback  → +2 credits
-//   - Both              → +3 credits total
+//   - Star rating (with or without written feedback) → +1 credit
+//   - Written feedback earns nothing extra.
+//   (Until 2026-10-07 this was 1 + 2 = 3 credits.)
 //
 // SECURITY: the reward is paid only once per generation, and only
 // for a COMPLETED generation that belongs to the caller. Feedback
@@ -15,6 +15,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/serverAuth";
 import { createClient } from "@supabase/supabase-js";
 import { refundCredits } from "@/lib/creditsServer";
+import { REWARD_RULES } from "@/lib/referral";
 
 export const runtime = "nodejs";
 
@@ -85,7 +86,7 @@ export async function POST(req: Request) {
   const creditsToAdd =
     isTeamGeneration || !isRewardable
       ? 0
-      : (rating ? 1 : 0) + (hasFeedback ? 2 : 0);
+      : REWARD_RULES.rating + (hasFeedback ? REWARD_RULES.feedback : 0);
 
   // Save feedback row
   const { error: insertError } = await supabase.from("feedback").insert({

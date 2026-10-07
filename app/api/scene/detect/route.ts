@@ -6,6 +6,7 @@
 
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/serverAuth";
+import { rateLimit } from "@/lib/rateLimit";
 import { deductCredits, refundCredits } from "@/lib/creditsServer";
 import { detectElements, SCENE_CREDIT_COST, type SceneSource } from "@/lib/sceneEditor";
 
@@ -18,6 +19,10 @@ export async function POST(req: Request) {
   const userOrResp = await requireUser(req);
   if (userOrResp instanceof Response) return userOrResp;
   const user = userOrResp;
+
+  // Each call runs a paid AI model — cap how fast one account can call it.
+  const limited = rateLimit(req, { name: "scene-detect", limit: 30, windowMs: 10 * 60_000, userId: user.id });
+  if (limited) return limited;
 
   const body = await req.json().catch(() => ({}));
   const imageUrl: string = body?.image_url || "";

@@ -16,6 +16,8 @@
 // are added.
 // ============================================================
 
+import { createHmac, timingSafeEqual } from "node:crypto";
+
 export type PlanConfig = { amount: number; credits: number };
 
 export const PLAN_CONFIG: Record<string, PlanConfig> = {
@@ -111,4 +113,48 @@ export function verifyPlanOrder(
   if (status !== "captured" && status !== "authorized") return null;
 
   return { userId, planName, plan };
+}
+
+/**
+ * Same idea for the small fixed-price orders (₹99 meeting, workshop…):
+ * the ORDER must have been created by our server for this purpose
+ * (`notes.type`), for exactly this price, and the payment must belong
+ * to it and be authorised/captured. Returns the order's notes, or null.
+ * A checkout signature alone only proves that a payment belongs to an
+ * order — not what the order was for or how much it was.
+ */
+export function verifyFixedPriceOrder(
+  order: RazorpayEntity,
+  payment: RazorpayEntity,
+  expected: { type: string; amountRupees: number },
+): Record<string, unknown> | null {
+  if (!order || !payment) return null;
+  const notes = (order.notes ?? {}) as Record<string, unknown>;
+  if (notes.type !== expected.type) return null;
+
+  const expectedPaise = Math.round(expected.amountRupees * 100);
+  if (Number(order.amount) !== expectedPaise) return null;
+  if (String(order.currency ?? "INR").toUpperCase() !== "INR") return null;
+
+  if (!payment.order_id || payment.order_id !== order.id) return null;
+  if (Number(payment.amount) !== expectedPaise) return null;
+
+  const status = String(payment.status ?? "");
+  if (status !== "captured" && status !== "authorized") return null;
+
+  return notes;
+}
+
+/** Constant-time check of a Razorpay checkout signature. */
+export function checkoutSignatureValid(
+  orderId: string,
+  paymentId: string,
+  signature: string,
+  keySecret: string,
+): boolean {
+  const expected = Buffer.from(
+    createHmac("sha256", keySecret).update(`${orderId}|${paymentId}`).digest("hex"),
+  );
+  const given = Buffer.from(String(signature));
+  return expected.length === given.length && timingSafeEqual(expected, given);
 }

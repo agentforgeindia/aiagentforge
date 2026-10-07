@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { callLLM } from "@/lib/llm";
+import { adminFromAuthHeader } from "@/lib/adminAuth";
 
 export const runtime = "nodejs";
 
@@ -11,12 +12,10 @@ async function getContext(token: string): Promise<{ ok: boolean; ctx?: any }> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return { ok: false };
-  const admin = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { data: u } = await admin.auth.getUser(token);
-  const email = u.user?.email?.toLowerCase();
-  if (!email) return { ok: false };
-  const { data: row } = await admin.from("admin_users").select("email").eq("email", email).maybeSingle();
-  if (!row) return { ok: false };
+  // Valid login + ACTIVE admin (any role) — lib/adminAuth.ts.
+  const caller = await adminFromAuthHeader(`Bearer ${token}`, "any");
+  if (!caller) return { ok: false };
+  const email = caller.email;
   // Build context via an admin-scoped client using the user's token
   const userClient = createClient(url, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? key, {
     auth: { persistSession: false, autoRefreshToken: false },

@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { hasInfluencerSession, influencerHeaders } from "@/lib/influencerClient";
 import { Search, TrendingUp, Clock, CheckCircle2, IndianRupee, Copy, Share2 } from "lucide-react";
 import PageDoodles from "@/app/components/PageDoodles";
 
@@ -33,26 +33,41 @@ function ReferralInner() {
 
   // Auto-lookup if code comes from URL
   useEffect(() => {
-    if (params.get("code")) lookup(params.get("code")!.toUpperCase());
+    if (params.get("code") || hasInfluencerSession()) lookup();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Earnings are private to the creator: they are read through the
+  // creator's signed session, never by typing a referral code (codes
+  // are public — they are in every referral link).
   async function lookup(overrideCode?: string) {
-    const c = (overrideCode ?? code).trim().toUpperCase();
-    if (!c) return;
+    void overrideCode;
     setLoading(true); setError(null); setEarnings(null);
-    const { data, error: err } = await supabase
-      .from("referral_earnings")
-      .select("*")
-      .eq("referral_code", c)
-      .order("created_at", { ascending: false });
-
-    setLoading(false);
-    if (err) { setError("Something went wrong. Please try again."); return; }
-    if (!data || data.length === 0) {
-      setError("No earnings found for this code. Please check your referral code and try again."); return;
+    if (!hasInfluencerSession()) {
+      setLoading(false);
+      setError("Please log in from the Creator page (email + mobile number) to see your earnings.");
+      return;
     }
-    setEarnings(data as Earning[]);
+    try {
+      const res = await fetch("/api/careers/influencer/dashboard", { headers: await influencerHeaders(false) });
+      const d = await res.json();
+      setLoading(false);
+      if (!d.ok) {
+        setError(res.status === 401
+          ? "Your session has expired. Please log in again from the Creator page."
+          : "Something went wrong. Please try again.");
+        return;
+      }
+      if (d.social?.referral_code) setCode(String(d.social.referral_code).toUpperCase());
+      const list = (d.purchase_list ?? []) as Earning[];
+      if (list.length === 0) {
+        setError("No earnings yet. They appear here when someone you referred buys a plan."); return;
+      }
+      setEarnings(list.map((e, index) => ({ ...e, id: e.id ?? `${e.order_id}-${index}` })));
+    } catch {
+      setLoading(false);
+      setError("Something went wrong. Please try again.");
+    }
   }
 
   const totalEarned  = earnings?.reduce((s, e) => s + (e.commission_amount ?? 0), 0) ?? 0;
@@ -89,7 +104,8 @@ function ReferralInner() {
           Your <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Earnings</span>
         </h1>
         <p className="mt-2 text-sm font-medium text-black/55 dark:text-white/55">
-          Enter your referral code to see how many purchases were made through your link.
+          See how many purchases were made through your link. Your earnings are private —
+          log in from the Creator page (email + mobile number) first.
           Earn <b>10% reward</b> on every sale. 48-hour clearing period applies.
         </p>
 
@@ -97,15 +113,14 @@ function ReferralInner() {
         <div className="mt-8 flex gap-2">
           <input
             value={code}
-            onChange={(e) => setCode(e.target.value.toUpperCase())}
-            onKeyDown={(e) => e.key === "Enter" && lookup()}
-            placeholder="Your referral code (e.g. AFRAHUL1234)"
+            readOnly
+            placeholder="Your referral code appears here after you log in"
             className="flex-1 rounded-xl border border-cyan-200/50 bg-white px-4 py-3 text-sm font-medium text-slate-800 shadow-sm transition focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-400/25 dark:border-white/10 dark:bg-[#0f1a2e] dark:text-white"
           />
           <button onClick={() => lookup()} disabled={loading}
             className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 px-5 py-3 text-sm font-black text-white shadow-lg transition hover:scale-[1.02] disabled:opacity-50">
             <Search className="h-4 w-4" />
-            {loading ? "…" : "Check"}
+            {loading ? "…" : "Show my earnings"}
           </button>
         </div>
 

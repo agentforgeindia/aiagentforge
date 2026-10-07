@@ -44,7 +44,8 @@
 import { NextResponse } from "next/server";
 
 import { requireUser, type AuthedUser } from "@/lib/serverAuth";
-import { deductCredits, refundCredits } from "@/lib/creditsServer";
+import { deductCredits, refundCredits, serviceDb } from "@/lib/creditsServer";
+import { closeRefundedGenerations } from "@/lib/generationRefund";
 import {
   isAgentForgeHostedUrl,
   firstUntrustedUrl,
@@ -248,14 +249,14 @@ export function createSecureGenerateRoute<TBody>(
     // client_source = where the request came from (app / phone browser /
     // desktop), detected here so no agent can forget it.
     const clientSource = detectClientSource(request);
+    const generationRows = cfg
+      .buildGenerationRows(body, user.id)
+      .map((row) => ({ ...row, client_source: clientSource }));
+    const generationIds = generationRows.map((row) => row.id);
     try {
       // Plain insert — an id that already exists is rejected, never
       // overwritten (see lib/generationRows.ts).
-      await insertGenerationRowsStrict(
-        cfg
-          .buildGenerationRows(body, user.id)
-          .map((row) => ({ ...row, client_source: clientSource })),
-      );
+      await insertGenerationRowsStrict(generationRows);
     } catch (err: any) {
       if (cfg.creditMode === "server") {
         await refundCredits(
@@ -294,6 +295,9 @@ export function createSecureGenerateRoute<TBody>(
           `refund:${cfg.agentSlug}_n8n_network_error`,
           auditId ?? undefined,
         );
+        // Refunded here — close the rows so the sweeper / refund route
+        // never pays them back a second time.
+        await closeRefundedGenerations(serviceDb(), generationIds, "The image service could not be reached.");
       }
       return NextResponse.json(
         { error: err?.message || "n8n unreachable." },
@@ -316,6 +320,11 @@ export function createSecureGenerateRoute<TBody>(
           requiredCredits,
           `refund:${cfg.agentSlug}_n8n_error`,
           auditId ?? undefined,
+        );
+        await closeRefundedGenerations(
+          serviceDb(),
+          generationIds,
+          `The image service returned an error (${response.status}).`,
         );
       }
       return NextResponse.json(

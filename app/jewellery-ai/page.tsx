@@ -8,7 +8,13 @@ import StickyMobileCTA from "@/app/components/StickyMobileCTA";
 import TeamCreditToggle from "@/app/components/TeamCreditToggle";
 import { track } from "@/lib/analytics";
 import { finalizeGeneration } from "@/lib/finalizeGeneration";
-import { findOversizedSourceImage, SOURCE_IMAGE_TOO_LARGE_MESSAGE } from "@/lib/uploadValidation";
+import {
+  findOversizedSourceImage,
+  findUnsupportedSourceImage,
+  SOURCE_IMAGE_TOO_LARGE_MESSAGE,
+  SOURCE_IMAGE_UNSUPPORTED_MESSAGE,
+  storageSafeName,
+} from "@/lib/uploadValidation";
 import {
   ArrowRight,
   BadgeCheck,
@@ -1492,7 +1498,9 @@ export default function JewelleryAIPage() {
   }, [customJewellery, jewelleryType]);
 
   const credits = useMemo(() => {
-    const base = quality === "Ultra HD" ? 30 : outputSize.includes("Mobile") ? 17 : 15;
+    // Premium 15 · Ultra HD 30 · mobile 1080x1920 = +2 (17 / 32).
+    // Keep in step with lib/creditPricing.ts (the server charges from there).
+    const base = (quality === "Ultra HD" ? 30 : 15) + (outputSize.includes("Mobile") ? 2 : 0);
     // Branding overlays: +1 each — FREE for Empire users.
     const brandingCredits = isEmpireFromProfile(profile)
       ? 0
@@ -1613,6 +1621,10 @@ export default function JewelleryAIPage() {
       alert(SOURCE_IMAGE_TOO_LARGE_MESSAGE);
       return;
     }
+    if (findUnsupportedSourceImage(Array.from(files).filter((file) => file.type.startsWith("image/")))) {
+      alert(SOURCE_IMAGE_UNSUPPORTED_MESSAGE);
+      return;
+    }
 
     const nextUploads: UploadItem[] = Array.from(files)
       .filter((file) => file.type.startsWith("image/"))
@@ -1679,7 +1691,7 @@ export default function JewelleryAIPage() {
 };
 
 const uploadFileToSupabase = async (file: File, folder: string) => {
-  const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
+  const safeFileName = storageSafeName(file);
   const filePath = `${folder}/${authUser?.id || "guest"}/${Date.now()}-${newId()}-${safeFileName}`;
 
   const { error } = await supabase.storage.from("designs").upload(filePath, file, {
@@ -2118,9 +2130,7 @@ const handleGenerate = async () => {
       return;
     }
 
-const WEBHOOK_URL =
-  process.env.NEXT_PUBLIC_N8N_JEWELLERY_WEBHOOK_URL ||
-  "https://n8n.aiagentforge.in/webhook/generate-jewellery";
+// (The n8n webhook address is server-only — see /api/jewellery/generate.)
 
 
     setIsGenerating(true);

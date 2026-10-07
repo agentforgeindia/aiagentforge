@@ -1,39 +1,63 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 // POST /api/careers/influencer/lookup
-// Body: { email }
-// Returns: { ok, cid, name } — used by content creators to access their dashboard
+// Creator login. Body: { email, mobile }
+//
+// The person gives the email AND the mobile number they registered
+// with; on a match they get a signed session token
+// (lib/influencerSession.ts), which is what the creator APIs check.
+// Attempts are rate-limited and a miss never says which of the two
+// was wrong.
+
+import { NextRequest, NextResponse } from "next/server";
+
+import { serviceDb } from "@/lib/creditsServer";
+import { rateLimit } from "@/lib/rateLimit";
+import { issueInfluencerToken, mobileKey } from "@/lib/influencerSession";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const NO_MATCH =
+  "We could not match these details. Use the email and mobile number you applied with, or apply first.";
+
+/** Escape % and _ so the email is matched literally by ILIKE. */
+const likeLiteral = (value: string) => value.replace(/[\\%_]/g, (ch) => `\\${ch}`);
+
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, { name: "influencer-login", limit: 8, windowMs: 10 * 60_000 });
+  if (limited) return limited;
+
   try {
-    const { email } = await req.json();
-    if (!email || typeof email !== "string") {
-      return NextResponse.json({ ok: false, error: "Email required." }, { status: 400 });
+    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+    const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+    const mobile = mobileKey(body?.mobile);
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 200) {
+      return NextResponse.json({ ok: false, error: "Please enter your registered email." }, { status: 400 });
+    }
+    if (!mobile) {
+      return NextResponse.json(
+        { ok: false, error: "Please enter your registered 10-digit mobile number." },
+        { status: 400 },
+      );
     }
 
-    // Find by email + role_slug = content-creator (any stage is fine)
-    const { data: candidate, error } = await admin
+    const { data: rows, error } = await serviceDb()
       .from("candidates")
-      .select("id, name, stage, role_slug")
-      .ilike("email", email.trim())
+      .select("id, name, stage, mobile, created_at")
+      .ilike("email", likeLiteral(email))
       .eq("role_slug", "content-creator")
       .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(5);
 
-    if (error || !candidate) {
-      return NextResponse.json({
-        ok: false,
-        error: "No content creator account found with this email. Please check and try again, or apply first.",
-      }, { status: 404 });
+    if (error) {
+      return NextResponse.json({ ok: false, error: "Server error. Please try again." }, { status: 500 });
     }
 
-    // Rejected candidates — show a helpful message
+    const candidate = (rows ?? []).find((row) => mobileKey(row.mobile) === mobile);
+    if (!candidate) {
+      return NextResponse.json({ ok: false, error: NO_MATCH }, { status: 404 });
+    }
+
     if (candidate.stage === "rejected") {
       return NextResponse.json({
         ok: false,
@@ -41,7 +65,12 @@ export async function POST(req: NextRequest) {
       }, { status: 403 });
     }
 
-    return NextResponse.json({ ok: true, cid: candidate.id, name: candidate.name });
+    const token = issueInfluencerToken(candidate.id);
+    if (!token) {
+      return NextResponse.json({ ok: false, error: "Server is not configured." }, { status: 500 });
+    }
+
+    return NextResponse.json({ ok: true, cid: candidate.id, name: candidate.name, token });
   } catch {
     return NextResponse.json({ ok: false, error: "Server error. Please try again." }, { status: 500 });
   }

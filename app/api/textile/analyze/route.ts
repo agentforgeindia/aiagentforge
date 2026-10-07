@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/lib/rateLimit";
+import { fetchTrustedImage, UntrustedImageError } from "@/lib/fetchTrustedImage";
 
 // ============================================================
 // AgentForge — Textile DESIGN READOUT (vision)
@@ -15,7 +17,6 @@ const GEMINI_API_KEY =
   process.env.GOOGLE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || "";
 const GEMINI_VISION_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 
 const PROMPT = (product: string) =>
   `
@@ -66,27 +67,39 @@ function safeJsonParse(raw: string): Record<string, unknown> | null {
 }
 
 export async function POST(req: NextRequest) {
+  // Open to visitors, so it is protected by a per-visitor limit.
+  const limited = rateLimit(req, { name: "textile-analyze", limit: 40, windowMs: 10 * 60_000 });
+  if (limited) return limited;
+
   try {
     const { image_url, product } = await req.json();
     if (!image_url || typeof image_url !== "string") {
       return NextResponse.json({ error: "image_url required" }, { status: 400 });
     }
     // Only analyse designs stored in our own Supabase bucket.
-    if (SUPABASE_URL && !image_url.startsWith(SUPABASE_URL)) {
-      return NextResponse.json({ error: "invalid image_url" }, { status: 400 });
-    }
     if (!GEMINI_API_KEY) {
       return NextResponse.json({ readout: null, reason: "no_api_key" }, { status: 200 });
     }
 
-    const img = await fetch(image_url, { cache: "no-store" });
-    if (!img.ok) throw new Error(`Image fetch failed: ${img.status}`);
-    const mime = img.headers.get("content-type") || "image/png";
-    const b64 = Buffer.from(await img.arrayBuffer()).toString("base64");
+    // Only images hosted by AgentForge are fetched, with a size and type
+    // cap — see lib/fetchTrustedImage.ts.
+    let mime: string;
+    let b64: string;
+    try {
+      const image = await fetchTrustedImage(image_url);
+      mime = image.mime;
+      b64 = image.base64;
+    } catch (e) {
+      if (e instanceof UntrustedImageError) {
+        return NextResponse.json({ error: e.message }, { status: e.status });
+      }
+      throw e;
+    }
 
-    const resp = await fetch(`${GEMINI_VISION_URL}?key=${GEMINI_API_KEY}`, {
+    const resp = await fetch(GEMINI_VISION_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      // Key in a header, not in the URL — URLs end up in logs.
+      headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI_API_KEY },
       body: JSON.stringify({
         contents: [
           {

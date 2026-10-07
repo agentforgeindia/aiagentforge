@@ -166,11 +166,15 @@ export default function InfluencerAdminPage() {
   // ── Approve / Reject CC applicant ─────────────────────────────
   async function approveApplicant(candidateId: string, action: "approve" | "reject") {
     setAppActing(candidateId);
+    const stageHeaders = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${await getToken()}`,
+    };
     if (action === "approve") {
       // Set stage → selected + referral_status → active via our stage API (auto-creates social record if needed)
       await fetch("/api/admin/candidates/stage", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: stageHeaders,
         body: JSON.stringify({ candidate_id: candidateId, stage: "selected", changed_by: "admin" }),
       });
       // Also ensure referral_status = active in social table
@@ -178,7 +182,7 @@ export default function InfluencerAdminPage() {
     } else {
       await fetch("/api/admin/candidates/stage", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: stageHeaders,
         body: JSON.stringify({ candidate_id: candidateId, stage: "rejected", changed_by: "admin" }),
       });
       await supabase.from("content_creator_social").update({ referral_status: "inactive" }).eq("candidate_id", candidateId);

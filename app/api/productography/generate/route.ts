@@ -20,7 +20,8 @@ import { requireUser } from "@/lib/serverAuth";
 import { isAgentEnabled } from "@/lib/agentEnabled";
 import { isAgentForgeHostedUrl } from "@/lib/uploadValidation";
 import { getTeamMembership } from "@/lib/teamAuth";
-import { deductTeamCredits, refundTeamCredits } from "@/lib/creditsServer";
+import { deductTeamCredits, refundTeamCredits, serviceDb } from "@/lib/creditsServer";
+import { failAndRefundGeneration } from "@/lib/generationRefund";
 import { detectClientSource, type ClientSource } from "@/lib/clientSource";
 import { clampCredits, productographyCreditRange } from "@/lib/creditPricing";
 import {
@@ -217,6 +218,14 @@ export async function POST(request: Request) {
       cache: "no-store",
     });
   } catch (err: any) {
+    // n8n never took the job: close the row and give back whatever
+    // was charged for it (team pool here, or n8n's own deduction).
+    await failAndRefundGeneration(
+      serviceDb(),
+      body.generation_id,
+      "The image service could not be reached.",
+      "productography_n8n_unreachable",
+    );
     return NextResponse.json(
       { error: err?.message || "n8n unreachable." },
       { status: 502 },
@@ -232,6 +241,15 @@ export async function POST(request: Request) {
   }
 
   if (!response.ok) {
+    // If the workflow already marked the row failed it has handled its
+    // own refund and this is a no-op; otherwise the row is closed here
+    // and the ledger decides what (if anything) goes back.
+    await failAndRefundGeneration(
+      serviceDb(),
+      body.generation_id,
+      `The image service returned an error (${response.status}).`,
+      "productography_n8n_error",
+    );
     return NextResponse.json(
       {
         error:

@@ -129,8 +129,8 @@ directly, bypassing all factory protections.
 ## Reference implementations
 
 - `app/api/jewellery/generate/route.ts` — `creditMode: "server"`, single + bulk
-- `app/api/textile/generate/route.ts` — `creditMode: "n8n"`, single per-item
-- `app/api/productography/generate/route.ts` — `creditMode: "n8n"`, single per-item
+- `app/api/textile/generate/route.ts` — the ROUTE charges (personal or team) and tells n8n to skip (`skip_credit_deduction: true`), single per-item
+- `app/api/productography/generate/route.ts` — team: route charges; personal: n8n charges the server-computed amount, single per-item
 
 When in doubt, copy the closest reference, then strip what doesn't apply.
 
@@ -161,20 +161,32 @@ When in doubt, copy the closest reference, then strip what doesn't apply.
 
 ## Credits, payments and storage — rules added 2026-10-07 (P0 security fixes)
 
-- **Price is decided on the server.** `lib/creditPricing.ts` recomputes the credits from the request options and clamps the browser's `required_credits` into that range. If you change a price on an agent page, change it there in the same commit.
+- **Price list (Textile, Jewellery, Productography):** Premium 15 · Premium mobile 1080x1920 17 · Ultra HD 30 · Ultra HD mobile 32, +2 own scene, +2 own model, +1 per branding item. **Price is decided on the server:** `lib/creditPricing.ts` recomputes it from the request options and clamps the browser's `required_credits` into that range. If you change a price on an agent page, change it there in the same commit.
 - **`deduct_credits()` returns JSON** (`{ success, remaining_credits | error }`), not a number. Always go through `deductCredits()` / `parseDeductResult()` in `lib/creditsServer.ts`. The n8n workflows read `.success` from the same JSON — do not change the return shape.
-- **Every deduction is in `credit_transactions`** (the function writes the ledger row). `/api/credits/refund` decides the refund amount from `generations.credits_used` or the ledger — never from the browser. Set `credits_used` on the generations row only when the ROUTE charged the credits.
+- **Every charge and refund is in the ledger** (`credit_transactions` / `team_credit_transactions`; the database functions write the rows). Set `credits_used` on the generations row only when the ROUTE charged the credits.
+- **Refunds have ONE implementation: `lib/generationRefund.ts`.** The amount is what the ledger says is still charged (charged − already refunded), a generation is refunded once (atomic claim on `credits_refunded`), team generations go back to the team pool. It is used by `/api/credits/refund` (page asks), `/api/cron/generation-sweeper` (nobody asked) and the generate routes (`failAndRefundGeneration`, `closeRefundedGenerations`). Never write another refund path, and never take a refund amount from the browser. A route that refunds a whole request itself must call `closeRefundedGenerations()` for its rows.
+- **Sweeper:** `/api/cron/generation-sweeper` (CRON_SECRET) closes generations stuck in pending/processing/queued, refunds failed ones from the ledger, and copies images that still sit on the provider's temporary link into storage.
 - **Generation rows are inserted with `insertGenerationRowsStrict()`** (`lib/generationRows.ts`): a re-used id is a 409, never an overwrite. Browsers cannot insert or update `generations`; to save a branded/composite image or make a provider image permanent, call `finalizeGeneration()` (`lib/finalizeGeneration.ts` → `/api/generations/finalize`).
 - **`skip_credit_deduction` is set by the route only.** Never forward the browser's value.
-- **Razorpay:** the plan, buyer and amount come from the ORDER fetched back from Razorpay (`verifyPlanOrder()` in `lib/razorpayPlans.ts`) — never from the request body or `payment.notes`. Plans live in `PLAN_CONFIG` there.
-- **Admin routes that move money** must call `requireAdminPermission(req, "<permission>")` before doing anything else.
-- **n8n webhooks:** send `n8nHeaders()` (adds `x-af-webhook-secret` when `N8N_WEBHOOK_SECRET` is set).
-- **Database:** the live changes are in `sql/2026-10-07-p0-security.sql`. `profiles` columns other than contact/company/UTM fields cannot be changed from the browser; `referred_by` can be set once.
+- **Rewards:** amounts live in `REWARD_RULES` (`lib/referral.ts`) — rating a completed generation = 1 credit, once, no extra for written feedback. Referral credits are given by `/api/referral/claim` (server), never by a browser RPC.
+- **Razorpay:** the plan, buyer and amount come from the ORDER fetched back from Razorpay (`verifyPlanOrder()` / `verifyFixedPriceOrder()` in `lib/razorpayPlans.ts`) — never from the request body or `payment.notes`. A checkout signature alone is not proof of what was paid. One payment may create one thing (plan credits, one meeting).
+- **Admin routes:** EVERY `/api/admin/*` route calls `requireAdminPermission(req, "<permission>")` (or `adminFromAuthHeader`) from `lib/adminAuth.ts` before doing anything else — valid login + ACTIVE `admin_users` row + the role permission. "Is in admin_users" alone is not a check. Use the screen's permission for reads and the stricter one for money / destructive actions (`affiliates.manage`, `credits.grant`, `payments.manual_entry`, `invoices.refund`, `hr.manage`, `support.manage`). Admin pages must send `Authorization: Bearer <jwt>`.
+- **Public endpoints that cost money or send messages** (AI analysis, OCR, chat, order creation, logins) call `rateLimit()` from `lib/rateLimit.ts`. `proxy.ts` adds a coarse per-IP limit to all of `/api/*`.
+- **Never fetch a URL from a request directly.** Use `fetchTrustedImage()` (`lib/fetchTrustedImage.ts`) — own hosts only, redirects checked, size/type capped. `isAgentForgeHostedUrl()` trusts only our own Supabase project host and `aiagentforge.in`.
+- **n8n webhooks:** send `n8nHeaders()` (adds `x-af-webhook-secret` when `N8N_WEBHOOK_SECRET` is set). Webhook URLs are server-only env vars — never reference them (or any `NEXT_PUBLIC_*N8N*` var) in a page.
+- **Creator (influencer) portal:** a creator's record id is NOT a secret. Every creator API checks the signed session from `lib/influencerSession.ts` (`authorizeInfluencer`); the browser side is `lib/influencerClient.ts`. Payouts are only ever sent from the admin withdrawals route after approval.
+- **Uploads from the browser** go to `<folder>/<user id | "guest">/<file>` with `storageSafeName(file)`; accepted formats are `ALLOWED_SOURCE_IMAGE_EXTENSIONS` in `lib/uploadValidation.ts` (the storage rules use the same list).
+- **Database:** live changes are in `sql/2026-10-07-p0-security.sql`; migrations waiting for go-live are in `sql/pending/` (run `00-backup-snapshot.sql` first), each with a rollback in `sql/rollback/`. `profiles` columns other than contact/company/UTM fields cannot be changed from the browser; `referred_by` can be set once.
 
 ## Existing security primitives (don't reinvent)
 
 - `lib/serverAuth.ts` — `requireUser(req)`, `getUserFromRequest(req)`
-- `lib/creditsServer.ts` — `deductCredits`, `refundCredits`, `readCredits`
+- `lib/adminAuth.ts` — `requireAdminPermission`, `adminFromAuthHeader`, `auditAdminAction`
+- `lib/creditsServer.ts` — `deductCredits`, `refundCredits`, `readCredits`, `serviceDb`
+- `lib/generationRefund.ts` — `refundFailedGeneration`, `failAndRefundGeneration`, `closeRefundedGenerations`
+- `lib/rateLimit.ts` — `rateLimit`, `clientIp` · `lib/cronAuth.ts` — `authorizedCron`
+- `lib/fetchTrustedImage.ts` — `fetchTrustedImage` · `lib/mirrorProviderImage.ts` — `mirrorProviderImage`
+- `lib/influencerSession.ts` — `authorizeInfluencer`, `issueInfluencerToken`
 - `lib/uploadValidation.ts` — `isAllowedImageMime`, `isAgentForgeHostedUrl`, `firstUntrustedUrl`, `validateImageFile`
 - `lib/analytics.ts` — `track`, `identify`, `reportAdsConversion`
 - `lib/posts.ts` — typed CMS data layer (for content pages, not agents)

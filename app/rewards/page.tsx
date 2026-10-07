@@ -13,8 +13,7 @@ type Data = { code: string; link: string; referred_count: number; credits_earned
 const REWARD_RULES = [
   { icon: "🎁", title: "Refer a friend",     reward: "50 credits", note: "When someone signs up using your referral link, or types your code when signing up in the app." },
   { icon: "🎉", title: "Your friend's bonus", reward: "25 credits", note: "Your friend also gets a welcome bonus on signup." },
-  { icon: "⭐", title: "Rate your result",    reward: "+1 credit",  note: "Rate each generation after it completes." },
-  { icon: "✍️", title: "Write feedback",      reward: "+2 credits", note: "Write feedback along with your result rating." },
+  { icon: "⭐", title: "Rate your result",    reward: "+1 credit",  note: "Rate each generation after it completes. One reward per result; written feedback is welcome but earns no extra credit." },
 ];
 
 export default function RewardsPage() {

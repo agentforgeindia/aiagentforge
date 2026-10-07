@@ -18,7 +18,14 @@ import {
 import TeamCreditToggle from "@/app/components/TeamCreditToggle";
 import { canGenerate } from "@/lib/checkCredits";
 import { finalizeGeneration } from "@/lib/finalizeGeneration";
-import { findOversizedSourceImage, SOURCE_IMAGE_TOO_LARGE_MESSAGE } from "@/lib/uploadValidation";
+import { GENERATION_FAILED_MESSAGE, requestGenerationRefund } from "@/lib/requestGenerationRefund";
+import {
+  findOversizedSourceImage,
+  findUnsupportedSourceImage,
+  SOURCE_IMAGE_TOO_LARGE_MESSAGE,
+  SOURCE_IMAGE_UNSUPPORTED_MESSAGE,
+  storageSafeName,
+} from "@/lib/uploadValidation";
 import { shouldDeductCredits } from "@/lib/deductCredits";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 import SignupPromptPopup from "@/app/components/SignupPromptPopup";
@@ -104,8 +111,7 @@ const TEXTILE_SEED_TESTIMONIALS: Testimonial[] = [
   },
 ];
 
-const WEBHOOK_URL =
-  process.env.NEXT_PUBLIC_N8N_PRODUCTION_WEBHOOK || "/api/generate-mockup";
+// (The n8n webhook address is server-only — see /api/textile/generate.)
 
 const isEmpireProfile = (profile: any) => {
   const planText = String(
@@ -2231,8 +2237,9 @@ export default function Home() {
   };
 
   const uploadFile = async (file: File): Promise<string> => {
-    const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
-    const filePath = `textile-designs/${Date.now()}-${newId().slice(0, 6)}-${safeFileName}`;
+    const safeFileName = storageSafeName(file);
+    // Every upload lives in the uploader's own folder (storage rules).
+    const filePath = `textile-designs/${authUser?.id || "guest"}/${Date.now()}-${newId().slice(0, 6)}-${safeFileName}`;
 
     const { error } = await supabase.storage
       .from("designs")
@@ -2251,7 +2258,7 @@ export default function Home() {
   };
 
   const uploadBrandLogo = async (file: File): Promise<string> => {
-    const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
+    const safeFileName = storageSafeName(file);
     const filePath = `brand-logos/${authUser?.id || "guest"}/${Date.now()}-${newId().slice(0, 6)}-${safeFileName}`;
 
     const { error } = await supabase.storage
@@ -2668,6 +2675,11 @@ export default function Home() {
       e.target.value = "";
       return;
     }
+    if (findUnsupportedSourceImage(files)) {
+      alert(SOURCE_IMAGE_UNSUPPORTED_MESSAGE);
+      e.target.value = "";
+      return;
+    }
 
     setUploading(true);
 
@@ -2763,7 +2775,9 @@ export default function Home() {
       }
 
       if (row?.status === "failed") {
-        throw new Error("Generation failed in n8n.");
+        // The server works out what was charged and gives it back.
+        await requestGenerationRefund(id);
+        throw new Error(GENERATION_FAILED_MESSAGE);
       }
 
       await new Promise((resolve) => window.setTimeout(resolve, 5000));
@@ -3031,6 +3045,9 @@ export default function Home() {
         stage: "n8n",
         reason: `status_${response.status}`,
       });
+      if (response.status === 402) {
+        throw new Error("Not enough credits for this mockup. Please recharge to continue.");
+      }
       throw new Error(`Server error ${response.status}: ${text}`);
     }
 

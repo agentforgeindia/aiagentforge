@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/lib/rateLimit";
+import { fetchTrustedImage, UntrustedImageError } from "@/lib/fetchTrustedImage";
 
 // ============================================================
 // AgentForge — Jewellery Vision Guidance
@@ -126,12 +128,11 @@ Output schema:
 }
 `.trim();
 
+// Only images hosted by AgentForge are fetched (no SSRF), with a size
+// and type cap — see lib/fetchTrustedImage.ts.
 async function imageUrlToBase64(url: string): Promise<{ data: string; mime: string }> {
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error(`Image fetch failed: ${res.status}`);
-  const mime = res.headers.get("content-type") || "image/png";
-  const buf = Buffer.from(await res.arrayBuffer());
-  return { data: buf.toString("base64"), mime };
+  const image = await fetchTrustedImage(url);
+  return { data: image.base64, mime: image.mime };
 }
 
 function safeJsonParse(raw: string): any | null {
@@ -182,6 +183,11 @@ function normaliseSuggestion(raw: any) {
 }
 
 export async function POST(req: NextRequest) {
+  // Open to visitors (the guidance runs before sign-up), so it is
+  // protected by a per-visitor limit instead of a login.
+  const limited = rateLimit(req, { name: "jewellery-analyze", limit: 30, windowMs: 10 * 60_000 });
+  if (limited) return limited;
+
   try {
     const { image_url } = await req.json();
     if (!image_url || typeof image_url !== "string") {
@@ -214,9 +220,10 @@ export async function POST(req: NextRequest) {
       },
     };
 
-    const resp = await fetch(`${GEMINI_VISION_URL}?key=${GEMINI_API_KEY}`, {
+    const resp = await fetch(GEMINI_VISION_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      // Key in a header, not in the URL — URLs end up in logs.
+      headers: { "Content-Type": "application/json", "x-goog-api-key": GEMINI_API_KEY },
       body: JSON.stringify(geminiBody),
       cache: "no-store",
     });
@@ -246,6 +253,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, suggestion });
   } catch (err: any) {
+    if (err instanceof UntrustedImageError) {
+      return NextResponse.json({ error: err.message, suggestion: null }, { status: err.status });
+    }
     console.error("analyze route error:", err);
     return NextResponse.json(
       { error: err?.message || "Unexpected server error", suggestion: null },

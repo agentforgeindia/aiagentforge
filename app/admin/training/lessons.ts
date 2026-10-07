@@ -47,6 +47,8 @@ export const LESSONS: Lesson[] = [
         "Module par mouse le jao aur ☆ dabao — wo pin ho jayega aur sidebar ke upar + home par dikhega."),
       l("Use the EN | Hinglish switch in the top bar to change the panel language. The 🔔 bell shows new notifications — opening it marks them read.",
         "Top bar ke EN | Hinglish button se language badlo. 🔔 bell mein nayi notifications aati hain — kholte hi read ho jati hain."),
+      l("Some buttons need an extra permission (paying a creator, adding credits or a manual payment, a WhatsApp broadcast, deleting a candidate). If your role does not have it, the action is refused with 'Your role does not include the … permission' — ask the founder to add it to your role; do not use someone else's login.",
+        "Kuch buttons ke liye alag permission chahiye (creator ko payout, credits ya manual payment add karna, WhatsApp broadcast, candidate delete). Aapke role mein wo na ho to action refuse hota hai aur 'Your role does not include the … permission' dikhta hai — founder se role mein add karwao; kisi aur ka login use mat karo."),
       l("At the end of the day open the timer (top bar) and tap 'Check Out' with a note of what you did.",
         "Din ke end mein top bar ka timer kholo aur kya kaam kiya likh kar 'Check Out' dabao."),
     ],
@@ -60,6 +62,9 @@ export const LESSONS: Lesson[] = [
       { q: l("Where do you switch between related screens of one module (e.g. Workshop registrations and reviews)?", "Ek module ke related screens (jaise Workshop registration aur reviews) ke beech kaise switch karoge?"),
         options: [l("Tabs at the top of the page", "Page ke upar wale tabs se"), l("Settings page", "Settings page se"), l("Notification bell", "Notification bell se"), l("Only by typing the URL", "Sirf URL type karke")],
         correct: 0, why: l("Related screens are grouped as tabs on top of the page.", "Related screens page ke upar tabs mein hote hain.") },
+      { q: l("You tap a button and see 'Your role does not include the … permission'. What do you do?", "Button dabane par 'Your role does not include the … permission' aata hai. Kya karoge?"),
+        options: [l("Log in with a colleague's account", "Kisi colleague ke account se login karo"), l("Keep tapping until it works", "Dabate raho jab tak ho na jaye"), l("Skip the work", "Kaam chhod do"), l("Ask the founder to add that permission to your role", "Founder se wo permission apne role mein add karwao")],
+        correct: 3, why: l("Money and delete actions are checked on the server for every login — only the right role can do them.", "Paise aur delete wale actions har login ke liye server par check hote hain — sirf sahi role hi kar sakta hai.") },
     ],
   },
 
@@ -173,8 +178,8 @@ export const LESSONS: Lesson[] = [
       l("'Where they generate from' on the customer page shows how many generations came from the Mobile app, a Mobile browser or the Desktop website, and when each was last used. The Customer Timeline shows it next to every generation.",
         "Customer page par 'Generations kahan se karta hai' batata hai kitni generations Mobile app, Mobile browser ya Desktop website se hui, aur har ek aakhri baar kab use hua. Customer Timeline mein har generation ke saath bhi ye likha aata hai."),
       l("Credit top-ups and refunds need approval — don't promise them before that.", "Credit top-up aur refund ke liye approval chahiye — usse pehle promise mat karo."),
-      l("How Refer & Earn works: every customer has a referral code (in the app: Account → Refer & Earn). A friend who signs up with their link, or types the code on the app sign-up screen, gets 25 credits and the referrer gets 50. Rating a result gives +1 credit and written feedback +2 more. All of it is automatic — never add these credits by hand.",
-        "Refer & Earn kaise chalta hai: har customer ka ek referral code hota hai (app mein: Account → Refer & Earn). Dost unke link se signup kare, ya app ke signup screen par code daale, to dost ko 25 credits aur refer karne wale ko 50 milte hain. Result ko rating dene par +1 credit aur likha hua feedback dene par +2 aur. Ye sab apne aap hota hai — ye credits kabhi haath se mat daalo."),
+      l("How Refer & Earn works: every customer has a referral code (in the app: Account → Refer & Earn). A friend who signs up with their link, or types the code on the app sign-up screen, gets 25 credits and the referrer gets 50. Rating a completed result gives +1 credit, once per result; written feedback gives no extra credit. All of it is automatic — never add these credits by hand.",
+        "Refer & Earn kaise chalta hai: har customer ka ek referral code hota hai (app mein: Account → Refer & Earn). Dost unke link se signup kare, ya app ke signup screen par code daale, to dost ko 25 credits aur refer karne wale ko 50 milte hain. Complete hue result ko rating dene par +1 credit, har result par ek baar; likhe hue feedback par koi extra credit nahi. Ye sab apne aap hota hai — ye credits kabhi haath se mat daalo."),
       l("Refer & Rewards tab: pick the period on top. 'Referrals' lists who referred whom with the credits given; 'Top referrers' ranks customers by friends brought in; 'Feedback rewards' lists each rating and its credits. A chip shows when the referred friend became a paying customer.",
         "Refer aur Rewards tab: upar period chuno. 'Referrals' mein dikhta hai kisne kisko refer kiya aur kitne credits mile; 'Top referrers' mein customers ki ranking, kitne dost laye; 'Feedback rewards' mein har rating aur uske credits. Refer hua dost paying customer ban jaye to chip dikhta hai."),
       l("'Code used, no reward' lists sign-ups that carry a referral code but got no credits, with the reason: a creator's code, a code that was not found (typo), or a reward that did not run. If a customer says “I referred a friend but got nothing”, search here first.",
@@ -299,12 +304,18 @@ export const LESSONS: Lesson[] = [
     steps: [
       l("Creators: review applications and videos — Approve, Reject or 'Pin to top'.", "Creators: application aur video dekho — Approve, Reject ya 'Pin to top'."),
       l("Use 'New Script' → 'Publish Script' to give creators a ready script.", "'New Script' → 'Publish Script' se creators ko ready script do."),
-      l("Withdrawals: check the creator's earnings, then pay (UPI) or reject with a reason.", "Withdrawal: creator ki earning check karo, phir pay (UPI) ya reason ke saath reject karo."),
+      l("Withdrawals: a creator can only REQUEST a payout — no money moves until the team approves it here. Check the creator's earnings and the UPI ID, then 'Pay via UPI' (or pay by hand and tap 'Mark Paid'), or 'Reject' with a reason. These three buttons need the affiliates.manage permission; each request can be paid only once and every action is saved in the audit log.",
+        "Withdrawal: creator sirf payout REQUEST kar sakta hai — jab tak team yahan approve na kare, paise nahi jate. Creator ki earning aur UPI ID check karo, phir 'Pay via UPI' (ya khud pay karke 'Mark Paid'), ya reason ke saath 'Reject'. In teen buttons ke liye affiliates.manage permission chahiye; ek request sirf ek baar pay hoti hai aur har action audit log mein save hota hai."),
+      l("Creators open their dashboard with their registered email AND mobile number together. If a creator cannot log in, check both on their record — never send them another person's dashboard link.",
+        "Creator apna dashboard registered email AUR mobile number dono se kholta hai. Koi creator login na kar paye to uske record mein dono check karo — kisi aur ka dashboard link kabhi mat bhejo."),
     ],
     quiz: [
       { q: l("Where do you give creators a ready-made script?", "Creators ko ready script kahan se doge?"),
         options: [l("Email tab", "Email tab"), l("New Script in Creators", "Creators mein New Script"), l("Withdrawals", "Withdrawal"), l("App Content", "App Content")],
         correct: 1, why: l("Scripts are created and published from the Creators tab.", "Script Creators tab se banti aur publish hoti hai.") },
+      { q: l("A creator asked for a withdrawal. When does the money actually go?", "Creator ne withdrawal maanga. Paise asal mein kab jate hain?"),
+        options: [l("Only after someone with the payout permission approves it in Withdrawals", "Jab payout permission wala koi Withdrawals mein approve kare, tabhi"), l("Immediately, automatically", "Turant, apne aap"), l("When the creator logs in again", "Jab creator dobara login kare"), l("After 24 hours by itself", "24 ghante baad apne aap")],
+        correct: 0, why: l("A request is only a request — the team checks the earnings and UPI, then pays.", "Request sirf request hai — team earning aur UPI check karke phir pay karti hai.") },
     ],
   },
   {
@@ -360,7 +371,8 @@ export const LESSONS: Lesson[] = [
     steps: [
       l("Invoices: search by email/plan and open any bill.", "Invoices: email/plan se search karo aur koi bhi bill kholo."),
       l("Subscriptions: 'Expiring this week' is your renewal call list — create a renewal task or extend +30 days.", "Subscriptions: 'Expiring this week' renewal ki call list hai — renewal task banao ya +30 din extend karo."),
-      l("Credits: the ledger is like a bank statement; Manual Adjustment adds credits (approval first).", "Credits: ledger bank statement jaisa hai; Manual Adjustment se credit judta hai (pehle approval)."),
+      l("Credits: the ledger is like a bank statement — every charge, refund and reward of every customer is in it. Manual Adjustment adds credits (approval first; needs the credits.grant permission). Recording a past payment needs payments.manual_entry.", "Credits: ledger bank statement jaisa hai — har customer ka har charge, refund aur reward isme hai. Manual Adjustment se credit judta hai (pehle approval; credits.grant permission chahiye). Purani payment record karne ke liye payments.manual_entry chahiye."),
+      l("A failed image is refunded automatically: the system gives back exactly what the ledger shows was charged for it, once. Before adding credits by hand for 'my image failed', look for a 'refund:' line for that generation in the ledger — if it is there, do not add again.", "Fail hui image ka refund apne aap hota hai: system utne hi credit wapas deta hai jitne ledger mein us image ke kate the, ek hi baar. 'Meri image fail ho gayi' par haath se credit daalne se pehle ledger mein us generation ki 'refund:' line dekho — ho to dobara mat daalo."),
       l("Android app payments come through Google Play, not Razorpay — their payment id starts with 'gplay:'. To refund one, refund it in Google Play Console first, then record it here with the 'Manual' option (never 'Via Razorpay').", "Android app ke andar hui payment Google Play se aati hai, Razorpay se nahi — uski payment id 'gplay:' se shuru hoti hai. Aisi payment ka refund pehle Google Play Console se karo, phir yahan 'Manual' option se record karo ('Via Razorpay' kabhi nahi)."),
     ],
     quiz: [
@@ -432,7 +444,7 @@ export const LESSONS: Lesson[] = [
     intro: l("Customer problems: tickets, WhatsApp chats, refunds and disputes.", "Customer ki dikkatein: tickets, WhatsApp chat, refund aur dispute."),
     steps: [
       l("Tickets: 'New Ticket' with priority; move Open → In Progress → Resolved.", "Tickets: priority ke saath 'New Ticket'; Open → In Progress → Resolved karo."),
-      l("WhatsApp: pick a chat; AI drafts a reply — check/edit it, then Send.", "WhatsApp: chat chuno; AI reply draft karta hai — check/edit karke Send."),
+      l("WhatsApp: pick a chat; AI drafts a reply — check/edit it, then Send. A Broadcast (one message to many people) needs the support.manage permission.", "WhatsApp: chat chuno; AI reply draft karta hai — check/edit karke Send. Broadcast (ek message bahut logon ko) ke liye support.manage permission chahiye."),
       l("Refunds: log the request → approve → 'Mark Processed' after money is returned.", "Refund: request daalo → approve → paise wapas jane ke baad 'Mark Processed'."),
     ],
     quiz: [
@@ -462,7 +474,7 @@ export const LESSONS: Lesson[] = [
     intro: l("No-resume hiring: candidates apply, take an MCQ test and get scored automatically. Plus the Learn & Earn Academy.",
       "Bina resume hiring: candidate apply karte hain, MCQ test dete hain aur apne aap score milta hai. Saath mein Learn & Earn Academy."),
     steps: [
-      l("Candidates: move each person through the stages (Applied → Hired); add scores and salary.", "Candidates: har insaan ko stage mein aage badhao (Applied → Hired); score aur salary daalo."),
+      l("Candidates: move each person through the stages (Applied → Hired); add scores and salary. Every stage change is saved with your login in the audit log. Deleting a candidate needs the hr.manage permission.", "Candidates: har insaan ko stage mein aage badhao (Applied → Hired); score aur salary daalo. Har stage change aapke login ke saath audit log mein save hota hai. Candidate delete karne ke liye hr.manage permission chahiye."),
       l("Questions: add MCQs with 4 options and click the green circle on the correct one — keep correct answers spread across A/B/C/D.", "Questions: 4 option wale MCQ daalo aur sahi wale par green circle dabao — sahi answer A/B/C/D mein mix rakho."),
       l("Academy: WFH candidates — registration, training, assessment.", "Academy: WFH candidates — registration, training, assessment."),
     ],

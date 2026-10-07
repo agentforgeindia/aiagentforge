@@ -22,28 +22,18 @@
 // ============================================================
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 
 import { requireUser } from "@/lib/serverAuth";
+import { serviceDb } from "@/lib/creditsServer";
+import {
+  MIRROR_ROW_COLUMNS,
+  OUTPUT_BUCKET as BUCKET,
+  currentOutputUrl,
+  mirrorProviderImage,
+  type MirrorableRow,
+} from "@/lib/mirrorProviderImage";
 
 export const runtime = "nodejs";
-
-const BUCKET = "designs";
-const MAX_MIRROR_BYTES = 40 * 1024 * 1024;
-
-const EXT_BY_MIME: Record<string, string> = {
-  "image/png": "png",
-  "image/jpeg": "jpg",
-  "image/webp": "webp",
-};
-
-function admin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  return createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
 
 function bad(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
@@ -69,24 +59,6 @@ function isOwnDesignsUpload(rawUrl: string, userId: string): boolean {
   return objectPath.split("/").includes(userId);
 }
 
-/** The AI provider's temporary CDN. */
-function isProviderTempUrl(rawUrl: string): boolean {
-  try {
-    const url = new URL(rawUrl);
-    return url.protocol === "https:" && /(^|\.)fal\.media$/i.test(url.hostname);
-  } catch {
-    return false;
-  }
-}
-
-function folderFor(agentType: string | null): string {
-  const agent = (agentType || "").toLowerCase();
-  if (agent === "productography") return "productography-outputs";
-  if (agent === "jewellery") return "jewellery-outputs";
-  if (agent === "textile") return "textile-outputs";
-  return "generation-outputs";
-}
-
 export async function POST(req: Request) {
   const userOrResp = await requireUser(req);
   if (userOrResp instanceof Response) return userOrResp;
@@ -106,13 +78,11 @@ export async function POST(req: Request) {
   const compositeUrl =
     typeof body?.composite_url === "string" && body.composite_url ? body.composite_url : null;
 
-  const db = admin();
+  const db = serviceDb();
 
   const { data: row, error: rowErr } = await db
     .from("generations")
-    .select(
-      "id, user_id, status, agent_type, output_url, output_image_url, image_url, original_provider_url",
-    )
+    .select(`${MIRROR_ROW_COLUMNS}, status`)
     .eq("id", generationId)
     .maybeSingle();
 
@@ -123,8 +93,7 @@ export async function POST(req: Request) {
     return bad(`Generation is '${row.status}', not completed yet.`, 409);
   }
 
-  const currentUrl: string | null =
-    row.output_url || row.output_image_url || row.image_url || null;
+  const currentUrl = currentOutputUrl(row as unknown as MirrorableRow);
 
   // ── 1. Branded composite uploaded by the page ──────────────
   if (compositeUrl) {
@@ -146,50 +115,7 @@ export async function POST(req: Request) {
   }
 
   // ── 2. Copy a temporary provider image into our storage ────
-  if (!currentUrl || !isProviderTempUrl(currentUrl)) {
-    return NextResponse.json({ success: true, output_url: currentUrl, changed: false });
-  }
-
-  let bytes: ArrayBuffer;
-  let mime: string;
-  try {
-    const res = await fetch(currentUrl, { cache: "no-store" });
-    if (!res.ok) {
-      return bad(`The generated image is no longer available (${res.status}).`, 502);
-    }
-    mime = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
-    if (!EXT_BY_MIME[mime]) return bad("Unexpected image type from provider.", 502);
-    const declared = Number(res.headers.get("content-length") || 0);
-    if (declared > MAX_MIRROR_BYTES) return bad("Generated image is too large to store.", 502);
-    bytes = await res.arrayBuffer();
-    if (bytes.byteLength === 0 || bytes.byteLength > MAX_MIRROR_BYTES) {
-      return bad("Generated image is too large to store.", 502);
-    }
-  } catch (e) {
-    return bad(e instanceof Error ? e.message : "Could not download the generated image.", 502);
-  }
-
-  const objectPath = `${folderFor(row.agent_type)}/${user.id}/${generationId}.${EXT_BY_MIME[mime]}`;
-  const { error: upErr } = await db.storage.from(BUCKET).upload(objectPath, bytes, {
-    contentType: mime,
-    cacheControl: "31536000",
-    upsert: true,
-  });
-  if (upErr) return bad(`Could not store the image: ${upErr.message}`, 500);
-
-  const permanentUrl = db.storage.from(BUCKET).getPublicUrl(objectPath).data.publicUrl;
-
-  const { error: updErr } = await db
-    .from("generations")
-    .update({
-      output_url: permanentUrl,
-      output_image_url: permanentUrl,
-      image_url: permanentUrl,
-      original_provider_url: row.original_provider_url || currentUrl,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", generationId);
-  if (updErr) return bad(updErr.message, 500);
-
-  return NextResponse.json({ success: true, output_url: permanentUrl, changed: true });
+  const mirrored = await mirrorProviderImage(db, row as unknown as MirrorableRow);
+  if (!mirrored.ok) return bad(mirrored.message, mirrored.status);
+  return NextResponse.json({ success: true, output_url: mirrored.url, changed: mirrored.changed });
 }

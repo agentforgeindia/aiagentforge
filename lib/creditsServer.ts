@@ -25,6 +25,11 @@ function admin(): SupabaseClient {
   return cachedAdmin;
 }
 
+/** Shared service-role client (bypasses RLS). Server only. */
+export function serviceDb(): SupabaseClient {
+  return admin();
+}
+
 export type DeductResult =
   | { ok: true; newBalance: number }
   | { ok: false; reason: "insufficient" | "error"; message?: string };

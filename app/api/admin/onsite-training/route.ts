@@ -3,6 +3,7 @@
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { adminFromAuthHeader, type PermissionSpec } from "@/lib/adminAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,13 +14,13 @@ const db = createClient(
   { auth: { persistSession: false, autoRefreshToken: false } },
 );
 
-async function isAdmin(authHeader: string | null): Promise<boolean> {
-  if (!authHeader?.startsWith("Bearer ")) return false;
-  const { data } = await db.auth.getUser(authHeader.slice(7).trim());
-  const email = data.user?.email?.toLowerCase();
-  if (!email) return false;
-  const { data: row } = await db.from("admin_users").select("email").eq("email", email).maybeSingle();
-  return !!row;
+// Valid login + ACTIVE admin + the permission for this screen/action
+// (lib/adminAuth.ts). Being listed in admin_users alone is not enough.
+async function isAdmin(
+  authHeader: string | null,
+  perm: PermissionSpec = "leads.view",
+): Promise<boolean> {
+  return Boolean(await adminFromAuthHeader(authHeader, perm));
 }
 
 const SELECT_COLS =
