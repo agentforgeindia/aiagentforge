@@ -98,6 +98,7 @@ export const TILES: Tile[] = [
   // ── Command ──
   { group: "Command", href: "/admin/command",        label: "Command Center", description: "Founder cockpit — live numbers, goals, cash, team output.", icon: <Crosshair className="h-4 w-4" />,      perm: "*" },
   { group: "Command", href: "/admin/dashboard",      label: "War Room",       description: "Revenue, signups, pipeline, alerts — all at a glance.",   icon: <LayoutDashboard className="h-4 w-4" />, perm: "dashboard.view" },
+  { group: "Command", href: "/admin/app-content",    label: "App Banners & Offers", description: "Banners and offers shown on the Android app's Home and Credits screens.", icon: <Megaphone className="h-4 w-4" />, perm: "content.view" },
   { group: "Command", href: "/admin/announcements",  label: "Announcements",  description: "Post updates that show in every user's notification bell.", icon: <Megaphone className="h-4 w-4" />, perm: "customers.view" },
   { group: "Command", href: "/admin/role-access",    label: "Role Access",    description: "Founder view — see exactly which features each role can access.", icon: <ShieldQuestion className="h-4 w-4" />, perm: "*" },
 

@@ -2,7 +2,9 @@
 
 // ============================================================
 // /admin/announcements — post updates that show in the user
-// notification bell.
+// notification bell (website and Android app).
+// Tab "Notifications" of the App Content hub; the other tab is
+// /admin/app-content (banners and offers).
 // ============================================================
 
 import { useEffect, useMemo, useState } from "react";
@@ -12,6 +14,8 @@ import {
   Eye,
   Image as ImageIcon,
   Megaphone,
+  Pause,
+  Play,
   RefreshCw,
   ShieldCheck,
   Trash2,
@@ -157,6 +161,25 @@ export default function AdminAnnouncementsPage() {
     }
   };
 
+  // Pause hides it from every bell without deleting it; Resume shows it again.
+  const togglePause = async (a: Ann) => {
+    const res = await fetch("/api/admin/announcements", {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${await token()}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id: a.id, is_active: !a.is_active }),
+    });
+    if (!res.ok) {
+      alert("Could not change it. Try again.");
+      return;
+    }
+    setRows((all) =>
+      all.map((r) => (r.id === a.id ? { ...r, is_active: !a.is_active } : r)),
+    );
+  };
+
   const remove = async (id: string) => {
     if (!confirm("Delete this announcement?")) return;
     await fetch(`/api/admin/announcements?id=${id}`, {
@@ -191,9 +214,9 @@ export default function AdminAnnouncementsPage() {
   return (
     <AdminShell
       doodleType="customers"
-      breadcrumbs={[{ label: "Announcements" }]}
-      title="Announcements"
-      subtitle="Post updates that appear in every user's notification bell"
+      breadcrumbs={[{ label: "App Content" }, { label: "Notifications" }]}
+      title="Notifications"
+      subtitle="Post updates that appear in every user's notification bell — on the website and in the app"
       email={authEmail}
       actions={
         <button
@@ -340,7 +363,14 @@ export default function AdminAnnouncementsPage() {
                       />
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold">{a.title}</p>
+                      <p className="text-sm font-bold">
+                        {a.title}
+                        {!a.is_active && (
+                          <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 align-middle text-[10px] font-bold text-slate-600 dark:bg-white/10 dark:text-slate-300">
+                            Paused — hidden from the bell
+                          </span>
+                        )}
+                      </p>
                       {a.body && (
                         <p className={`mt-0.5 text-xs ${adminMutedCls}`}>{a.body}</p>
                       )}
@@ -365,6 +395,19 @@ export default function AdminAnnouncementsPage() {
                       <ChevronDown
                         className={`h-3.5 w-3.5 transition ${isOpen ? "rotate-180" : ""}`}
                       />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => togglePause(a)}
+                      className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[11px] font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                      title={a.is_active ? "Hide from the bell without deleting" : "Show in the bell again"}
+                    >
+                      {a.is_active ? (
+                        <Pause className="h-3.5 w-3.5" />
+                      ) : (
+                        <Play className="h-3.5 w-3.5" />
+                      )}
+                      {a.is_active ? "Pause" : "Resume"}
                     </button>
                     <button
                       type="button"

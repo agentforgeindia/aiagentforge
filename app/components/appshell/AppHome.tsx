@@ -6,6 +6,9 @@
 //             showcase ("Made with AgentForge") → how it works.
 // Logged in:  credits → Agents button → recent creations → showcase.
 //
+// Banners (under the top card) and the top offer (under the Agents
+// button) come from Admin → App Content — see AppPromos.tsx.
+//
 // Agents are NOT listed here — the Agents button (and the centre
 // button in the bottom bar) both open the one agents screen.
 
@@ -18,6 +21,7 @@ import { useAuth } from "@/app/components/AuthProvider";
 import { supabase } from "@/lib/supabase";
 import { APP_AGENTS, APP_SHOWCASE, type AppAgent, type ShowcaseItem } from "./appData";
 import { pushBackHandler } from "./appBus";
+import { BannerCarousel, OfferTicket, useAppContent } from "./AppPromos";
 import { useCountUp } from "./useCountUp";
 
 type Recent = {
@@ -57,6 +61,7 @@ export default function AppHome() {
   const [filter, setFilter] = useState<Filter>("all");
   const [viewing, setViewing] = useState<ShowcaseItem | null>(null);
   const shownCredits = useCountUp(credits);
+  const promos = useAppContent(loading ? null : !!user);
 
   useEffect(() => {
     if (!user) return;
@@ -177,6 +182,9 @@ export default function AppHome() {
         </section>
       )}
 
+      {/* ───────── Banners from the admin panel ───────── */}
+      <BannerCarousel items={promos.banners} />
+
       {/* ───────── The one way into agents ───────── */}
       <Link
         href="/agents"
@@ -201,6 +209,9 @@ export default function AppHome() {
           <ChevronRight className="h-5 w-5" />
         </span>
       </Link>
+
+      {/* ───────── Top offer from the admin panel ───────── */}
+      {promos.offers[0] && <OfferTicket item={promos.offers[0]} className="mt-4" />}
 
       {/* ───────── Recent creations (logged in) ───────── */}
       {user && recent && recent.length > 0 && (

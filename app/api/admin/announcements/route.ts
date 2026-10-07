@@ -1,4 +1,5 @@
-// /api/admin/announcements — list / create / delete announcements.
+// /api/admin/announcements — list / create / pause-resume / delete
+// announcements (the notifications in every user's bell).
 // Admin-only (service role).
 
 import { NextResponse } from "next/server";
@@ -111,6 +112,22 @@ export async function POST(req: Request) {
     image_url: imageUrl,
   });
 
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
+}
+
+// Pause / resume — a paused notification is hidden from every bell
+// but stays in this list (with its seen counts) and can be resumed.
+export async function PATCH(req: Request) {
+  if (!(await isAdmin(req.headers.get("authorization"))))
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const j = (await req.json().catch(() => ({}))) as { id?: unknown; is_active?: unknown };
+  const id = String(j.id || "");
+  if (!id || typeof j.is_active !== "boolean")
+    return NextResponse.json({ error: "id and is_active are required." }, { status: 400 });
+
+  const { error } = await db.from("announcements").update({ is_active: j.is_active }).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

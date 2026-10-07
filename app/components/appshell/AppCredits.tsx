@@ -30,6 +30,7 @@ import {
 } from "@/lib/native";
 import { PLAY_PRODUCTS } from "@/lib/playBilling";
 import { supabase } from "@/lib/supabase";
+import { OfferTicket, useAppContent } from "./AppPromos";
 import { useCountUp } from "./useCountUp";
 
 type Notice = { kind: "ok" | "info" | "error"; text: string };
@@ -61,6 +62,7 @@ export default function AppCredits() {
   const [buying, setBuying] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const shownCredits = useCountUp(credits);
+  const promos = useAppContent(loading ? null : !!user);
 
   const userId = user?.id;
 
@@ -245,6 +247,15 @@ export default function AppCredits() {
           {notice.kind === "ok" && <Check className="mt-1 h-4 w-4 shrink-0" />}
           <span>{notice.text}</span>
         </p>
+      )}
+
+      {/* ───────── Live offers from the admin panel ───────── */}
+      {promos.offers.length > 0 && (
+        <div className="mt-4 grid gap-3">
+          {promos.offers.map((offer) => (
+            <OfferTicket key={offer.id} item={offer} />
+          ))}
+        </div>
       )}
 
       {/* ───────── Pricing ───────── */}
