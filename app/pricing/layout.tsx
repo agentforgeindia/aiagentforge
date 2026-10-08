@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     "AI mockup pricing India",
     "AI jewellery photoshoot price",
     "AI product photography cost",
-    "AI catalogue subscription India",
+    "AI catalogue credit packs India",
     "textile mockup plan India",
   ],
   alternates: { canonical: `${SITE}/pricing` },

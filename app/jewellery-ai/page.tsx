@@ -3,7 +3,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { ensurePhone } from "@/lib/phoneGate";
 import { useAuth } from "@/app/components/AuthProvider";
 import StickyMobileCTA from "@/app/components/StickyMobileCTA";
 import TeamCreditToggle from "@/app/components/TeamCreditToggle";
@@ -48,11 +47,10 @@ import {
 } from "react-icons/si";
 import SignupPromptPopup from "@/app/components/SignupPromptPopup";
 import AIThinkingSteps from "@/app/components/AIThinkingSteps";
-import TestimonialsSlider, {
-  type Testimonial,
-} from "@/app/components/TestimonialsSlider";
+import TestimonialsSlider from "@/app/components/TestimonialsSlider";
 import RatingFeedbackModal from "@/app/components/RatingFeedbackModal";
 import CongratulationsPopup from "@/app/components/CongratulationsPopup";
+import { PRICE_TABLE, creditsLabel, perImageCredits } from "@/lib/creditPricing";
 
 const JEWELLERY_THINKING_STEPS = [
   "Analyzing gemstone reflections",
@@ -63,71 +61,6 @@ const JEWELLERY_THINKING_STEPS = [
   "Rendering DSLR-quality details",
   "Adding brand overlay",
   "Polishing the final shot",
-];
-
-// Seed testimonials — short, raw, WhatsApp-style. Real submissions from the
-// DB (table: `testimonials`, status: 'approved') replace these once available.
-const JEWELLERY_SEED_TESTIMONIALS: Testimonial[] = [
-  {
-    id: "seed-jw-1",
-    name: "Neha A****",
-    city: "Jaipur",
-    message:
-      "Necklace shots look exactly like DSLR work 😍 Didn't even need to hire a model. Festive collection ready in 2 hours!",
-    rating: 5,
-    createdAt: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
-    source: "whatsapp",
-  },
-  {
-    id: "seed-jw-2",
-    name: "Rohan G****",
-    city: "Surat",
-    message:
-      "Diamond ring reflections look stunning. Perfect for the catalogue — covered all designs in a single day.",
-    rating: 5,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
-    source: "in-app",
-  },
-  {
-    id: "seed-jw-3",
-    name: "Priyanka M****",
-    city: "Hyderabad",
-    message:
-      "Bridal jewellery model shoots used to be very expensive. Now I get the same look with AgentForge — at a fraction of the cost.",
-    rating: 5,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 10).toISOString(),
-    source: "whatsapp",
-  },
-  {
-    id: "seed-jw-4",
-    name: "Aman T****",
-    city: "Delhi",
-    message:
-      "Kundan set colors and stones looked exactly like the originals. As soon as I posted on Instagram, 4 enquiries came in!",
-    rating: 5,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1).toISOString(),
-    source: "in-app",
-  },
-  {
-    id: "seed-jw-5",
-    name: "Kavita R****",
-    city: "Mumbai",
-    message:
-      "Earring close-up shots are premium catalogue-quality. The client even asked for a tax invoice 😅",
-    rating: 4,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
-    source: "whatsapp",
-  },
-  {
-    id: "seed-jw-6",
-    name: "Sanjay K****",
-    city: "Coimbatore",
-    message:
-      "The Indian model look comes out perfect for temple jewellery. Wedding season campaign was ready in 2 days.",
-    rating: 5,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
-    source: "whatsapp",
-  },
 ];
 
 type GenerationMode = "single" | "bulk";
@@ -293,7 +226,7 @@ const SHOOT_STYLE_OPTIONS: OptionItem[] = [
   { label: "Studio Professional", icon: Camera, hint: "Pro studio shoot — pick a studio set", iconFile: "/ui-icons/ss-studio-professional.png" },
   { label: "Outdoor Premium", icon: ImageIcon, hint: "Premium outdoor backdrop — pick a theme", iconFile: "/ui-icons/ss-outdoor-premium.png" },
   { label: "White Background", title: "White BG", icon: Square, hint: "Clean seamless white catalogue BG", iconFile: "/ui-icons/ss-white-background.png" },
-  { label: "Upload Your Scene", icon: ImageIcon, hint: "Your own backdrop photo (+2 credits)", iconFile: "/ui-icons/ss-luxury-editorial.png" },
+  { label: "Upload Your Scene", icon: ImageIcon, hint: `Your own backdrop photo (${creditsLabel(PRICE_TABLE.ownScene)})`, iconFile: "/ui-icons/ss-luxury-editorial.png" },
 ];
 const SHOOT_STYLE_LABELS = SHOOT_STYLE_OPTIONS.map((o) => o.label);
 const DEFAULT_SHOOT_STYLE = "Studio Professional";
@@ -1499,11 +1432,10 @@ export default function JewelleryAIPage() {
   }, [customJewellery, jewelleryType]);
 
   const credits = useMemo(() => {
-    // Premium 15 · Ultra HD 30 · mobile 1080x1920 = +2 (17 / 32).
-    // Keep in step with lib/creditPricing.ts (the server charges from there).
-    const base = (quality === "Ultra HD" ? 30 : 15) + (outputSize.includes("Mobile") ? 2 : 0);
-    // Branding overlays: +1 each — FREE for Empire users.
-    const brandingCredits = isEmpireFromProfile(profile)
+    // Prices come from the one price table (lib/creditPricing.ts) —
+    // the same table the server charges from.
+    // Branding items are free for Empire users.
+    const brandingItems = isEmpireFromProfile(profile)
       ? 0
       : (useCompanyLogo && companyLogoPreview ? 1 : 0) +
         (useCompanyName && companyName.trim() ? 1 : 0) +
@@ -1511,10 +1443,14 @@ export default function JewelleryAIPage() {
         (useCompanyPhone && companyPhone.trim() ? 1 : 0) +
         (useCompanyAddress && companyAddress.trim() ? 1 : 0);
 
-    const modelUploadCredits = modelPhotoUrl ? 2 : 0;
-    const sceneUploadCredits = shootStyle === "Upload Your Scene" && referenceSceneUrl ? 2 : 0;
-    const perImageCredits = base + brandingCredits + modelUploadCredits + sceneUploadCredits;
-    return generationMode === "single" ? perImageCredits : Math.max(uploads.length, 1) * perImageCredits;
+    const perImage = perImageCredits({
+      ultra: quality === "Ultra HD",
+      mobile: outputSize.includes("Mobile"),
+      ownModel: Boolean(modelPhotoUrl),
+      ownScene: shootStyle === "Upload Your Scene" && Boolean(referenceSceneUrl),
+      brandingItems,
+    });
+    return generationMode === "single" ? perImage : Math.max(uploads.length, 1) * perImage;
   }, [
     generationMode,
     outputSize,
@@ -2120,9 +2056,6 @@ const handleGenerate = async () => {
       alert("Please upload jewellery image first.");
       return;
     }
-
-    // Mobile number is asked here if it was never given (lib/phoneGate.ts).
-    if (!(await ensurePhone(authUser.id))) return;
 
     if (modelLook === "Upload Your Model" && !modelPhotoUrl) {
       alert("Apni model photo upload karein — Model Look me 'Upload Your Model' card.");
@@ -3540,12 +3473,12 @@ if (!response.ok) {
                       footer={
                         modelLook === "Upload Your Model" && !modelPhotoUrl ? (
                           <p className="text-xs leading-5 text-slate-500 dark:text-white/50">
-                            {modelPhotoUploading ? "Uploading your photo…" : "Tap “Upload Your Model” to pick your own photo — the jewellery will be rendered on that exact person (+2 credits)."}
+                            {modelPhotoUploading ? "Uploading your photo…" : `Tap “Upload Your Model” to pick your own photo — the jewellery will be rendered on that exact person (${creditsLabel(PRICE_TABLE.ownModel)}).`}
                           </p>
                         ) : modelLook === "Upload Your Model" && modelPhotoUrl ? (
                           <>
                             <div className="flex flex-wrap items-center gap-3">
-                              <p className="text-xs leading-5 text-slate-500 dark:text-white/50">Your photo is ready — the jewellery will be rendered on this exact person (+2 credits). Tap the card to change it.</p>
+                              <p className="text-xs leading-5 text-slate-500 dark:text-white/50">Your photo is ready — the jewellery will be rendered on this exact person ({creditsLabel(PRICE_TABLE.ownModel)}). Tap the card to change it.</p>
                               <button
                                 type="button"
                                 onClick={() => {
@@ -3640,8 +3573,8 @@ if (!response.ok) {
                           <div className="flex flex-wrap items-center gap-3">
                             <p className="text-xs leading-5 text-slate-500 dark:text-white/50">
                               {referenceSceneUrl
-                                ? "Your scene is ready — the jewellery will be placed naturally into it (+2 credits). Tap the card to change it."
-                                : "Tap “Upload Your Scene” to pick a photo of your own backdrop (+2 credits)."}
+                                ? `Your scene is ready — the jewellery will be placed naturally into it (${creditsLabel(PRICE_TABLE.ownScene)}). Tap the card to change it.`
+                                : `Tap “Upload Your Scene” to pick a photo of your own backdrop (${creditsLabel(PRICE_TABLE.ownScene)}).`}
                             </p>
                             {referenceSceneUrl && (
                               <button
@@ -3776,10 +3709,10 @@ if (!response.ok) {
                         <SummaryRow label="Frame" value={`${outputSize} / ${quality}`} />
                         <SummaryRow label="Uploads" value={String(uploads.length)} />
                         {modelPhotoUrl && (
-                          <SummaryRow label="Upload Your Model" value="+2 credits" />
+                          <SummaryRow label="Upload Your Model" value={creditsLabel(PRICE_TABLE.ownModel)} />
                         )}
                         {shootStyle === "Upload Your Scene" && referenceSceneUrl && (
-                          <SummaryRow label="Upload Your Scene" value="+2 credits" />
+                          <SummaryRow label="Upload Your Scene" value={creditsLabel(PRICE_TABLE.ownScene)} />
                         )}
                         {teamId && (
                           <SummaryRow label="Team Credits" value="Active" />
@@ -3878,9 +3811,7 @@ if (!response.ok) {
         {/* ───────── Customer Testimonials ───────── */}
         <TestimonialsSlider
           agentType="jewellery"
-          seed={JEWELLERY_SEED_TESTIMONIALS}
           heading="What early jewellery brands are saying"
-          subtitle="Real WhatsApp & in-app feedback from jewellery showrooms, goldsmiths and boutique stores — names masked for privacy."
         />
       </div>
 

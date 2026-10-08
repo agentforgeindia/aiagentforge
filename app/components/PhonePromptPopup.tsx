@@ -3,21 +3,26 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/components/AuthProvider";
+import { GENERATION_COMPLETED_EVENT } from "@/lib/analytics";
 import {
-  PHONE_PROMPT_DELAY_MS,
+  PHONE_AFTER_IMAGE_DELAY_MS,
   PHONE_REQUIRED_EVENT,
+  type PhoneReason,
   cleanIndianMobile,
+  hasCompletedImage,
   profileHasPhone,
   settlePhoneRequest,
 } from "@/lib/phoneGate";
 
 // Asks a signed-in user for their mobile number (rules in lib/phoneGate.ts):
-//   • "soft"     — 30 seconds after they start using the site; can be
-//                  closed with "Later" and is not shown again in this
-//                  browser session.
-//   • "required" — opened by a Generate button when there is still no
-//                  number; the generation continues after Save and is
-//                  cancelled if the popup is closed.
+//   • "soft"     — optional, only after the customer has a successful
+//                  image: a few seconds after one finishes, or on a later
+//                  visit if they already have one. "Later" closes it and
+//                  it is not shown again in this browser session.
+//   • "required" — opened by a step that needs the number (buying a
+//                  plan, a service request); the step continues after
+//                  Save and is cancelled if the popup is closed.
+// It is never shown before or at Generate.
 
 const DISMISSED_KEY = "af_phone_prompt_dismissed";
 
@@ -40,6 +45,7 @@ function rememberDismissed() {
 export default function PhonePromptPopup() {
   const { user, profile, loading, refreshProfile } = useAuth();
   const [mode, setMode] = useState<"soft" | "required" | null>(null);
+  const [reason, setReason] = useState<PhoneReason>("billing");
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -47,19 +53,48 @@ export default function PhonePromptPopup() {
   const hasPhone = profileHasPhone(profile);
   const profileLoaded = Boolean(user && profile);
 
-  // Soft popup: 30 seconds after the profile is known to have no number.
-  useEffect(() => {
-    if (loading || !profileLoaded || hasPhone || mode) return;
-    if (wasDismissed()) return;
-    const timer = setTimeout(() => {
-      setMode((current) => current ?? "soft");
-    }, PHONE_PROMPT_DELAY_MS);
-    return () => clearTimeout(timer);
-  }, [loading, profileLoaded, hasPhone, mode]);
+  // Soft popup — only once the customer has a successful image.
+  const canOffer = !loading && profileLoaded && !hasPhone;
+  const userId = user?.id ?? null;
 
-  // Required popup: a Generate button asked for the number.
+  // (a) an image just finished on this page.
   useEffect(() => {
-    const open = () => {
+    if (!canOffer) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onImage = () => {
+      if (wasDismissed()) return;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => setMode((current) => current ?? "soft"), PHONE_AFTER_IMAGE_DELAY_MS);
+    };
+    window.addEventListener(GENERATION_COMPLETED_EVENT, onImage);
+    return () => {
+      window.removeEventListener(GENERATION_COMPLETED_EVENT, onImage);
+      if (timer) clearTimeout(timer);
+    };
+  }, [canOffer]);
+
+  // (b) a returning customer who already has a finished image.
+  useEffect(() => {
+    if (!canOffer || !userId || wasDismissed()) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    void hasCompletedImage(userId).then((has) => {
+      if (cancelled || !has) return;
+      timer = setTimeout(() => {
+        if (!wasDismissed()) setMode((current) => current ?? "soft");
+      }, PHONE_AFTER_IMAGE_DELAY_MS);
+    });
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [canOffer, userId]);
+
+  // Required popup: billing or a service request asked for the number.
+  useEffect(() => {
+    const open = (event: Event) => {
+      const detail = (event as CustomEvent<{ reason?: PhoneReason }>).detail;
+      setReason(detail?.reason === "service" ? "service" : "billing");
       setError("");
       setMode("required");
     };
@@ -67,7 +102,7 @@ export default function PhonePromptPopup() {
     return () => window.removeEventListener(PHONE_REQUIRED_EVENT, open);
   }, []);
 
-  // Never leave a Generate button waiting if this component goes away.
+  // Never leave a waiting step hanging if this component goes away.
   useEffect(() => () => settlePhoneRequest(false), []);
 
   if (!mode || !user) return null;
@@ -128,12 +163,18 @@ export default function PhonePromptPopup() {
 
         <div className="mb-2 text-3xl">📱</div>
         <h2 className="mb-1 text-lg font-bold text-gray-900 dark:text-white">
-          {required ? "Add your mobile number to generate" : "Add your WhatsApp number"}
+          {required
+            ? reason === "service"
+              ? "Add your mobile number for this request"
+              : "Add your mobile number for billing"
+            : "Add your WhatsApp number (optional)"}
         </h2>
         <p className="mb-5 text-sm text-gray-500 dark:text-gray-400">
           {required
-            ? "We need your mobile number once before your first image. Save it and your generation starts right away."
-            : "Get your results and support on WhatsApp. Enter it once — we won't ask again."}
+            ? reason === "service"
+              ? "Our team contacts you on this number about your request. Save it and we continue."
+              : "It goes on your invoice and is used for payment and support messages. Save it and your payment continues."
+            : "Your first image is ready. Add a number if you want results and support on WhatsApp — you can skip this."}
         </p>
 
         <div className="mb-2 flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 focus-within:border-cyan-400 focus-within:ring-1 focus-within:ring-cyan-400 dark:border-gray-700 dark:bg-gray-800">
@@ -168,7 +209,7 @@ export default function PhonePromptPopup() {
             disabled={saving || phone.length < 10}
             className="flex-1 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 py-2.5 text-sm font-bold text-white shadow-lg shadow-cyan-500/20 transition hover:from-cyan-400 hover:to-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {saving ? "Saving..." : required ? "Save & generate" : "Save ✓"}
+            {saving ? "Saving..." : required ? "Save & continue" : "Save ✓"}
           </button>
         </div>
       </div>

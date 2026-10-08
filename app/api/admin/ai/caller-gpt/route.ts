@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { callLLM } from "@/lib/llm";
 import { adminFromAuthHeader, type PermissionSpec } from "@/lib/adminAuth";
+import { planFactsLine } from "@/lib/planCatalog";
 
 export const runtime = "nodejs";
 
@@ -34,8 +35,8 @@ creatives — WITHOUT a photographer, model or studio.
 - Jewellery AI Studio: product photo → bridal shoot, luxury catalogue, campaign image. For showrooms, gold/silver/artificial/bridal jewellery sellers, Instagram sellers.
 - Productography AI: product photo → ecommerce listing, Instagram creative, product ad. For gift/toy/cosmetics/accessories sellers, Amazon/Flipkart/Instagram sellers, local retail.
 
-Pricing: Starter ₹1,999 (1,800 credits), Pro Creator ₹9,999 (12,000 credits), Empire ₹39,999 (50,000 credits).
-15 credits = 1 HD image. New signup = 100 free credits. Output in ~30-60 seconds. Mobile friendly. HD, watermark-free, commercial use.
+${planFactsLine()}
+New signup = 100 free credits. Output in ~30-60 seconds. Mobile friendly. HD, watermark-free, commercial use.
 
 === FAQ ANSWERS (use these facts) ===
 - "How long does an image take to generate?" → Usually a few minutes depending on queue and quality.

@@ -55,7 +55,7 @@ export default function AboutPage() {
             {[
               { v: "30 sec", l: "Per AI visual" },
               { v: "₹15+", l: "Per generation" },
-              { v: "4.9 / 5", l: "User rating" },
+              { v: "100", l: "Free trial credits" },
               { v: "India-first", l: "Built locally" },
             ].map((s) => (
               <div
@@ -736,7 +736,7 @@ export default function AboutPage() {
               { title: "Privacy Policy", desc: "How we handle your data", href: "/privacy-policy" },
               { title: "Terms & Conditions", desc: "Rules for using AgentForge", href: "/terms" },
               { title: "Refund Policy", desc: "Cancellation & refund rules", href: "/refund-policy" },
-              { title: "Case Studies", desc: "Real client results", href: "/case-studies" },
+              { title: "Commercial Usage", desc: "Your rights to the images you generate", href: "/commercial-usage-policy" },
             ].map((l) => (
               <Link
                 key={l.href}

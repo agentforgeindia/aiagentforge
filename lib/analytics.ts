@@ -179,8 +179,24 @@ function metaName(ev: AnalyticsEvent): {
  * Fire an analytics event to every loaded tracker.
  * Safe to call from any client component; SSR-safe (no-op).
  */
+/**
+ * Browser event fired when an agent page reports a finished image
+ * (`track({ name: "generation_completed", … })`). The optional
+ * mobile-number prompt listens for it (lib/phoneGate.ts).
+ */
+export const GENERATION_COMPLETED_EVENT = "af:generation-completed";
+
 export function track(ev: AnalyticsEvent): void {
   if (typeof window === "undefined") return;
+
+  // 0. In-app signal — independent of any tracker being loaded.
+  if (ev.name === "generation_completed") {
+    try {
+      window.dispatchEvent(new CustomEvent(GENERATION_COMPLETED_EVENT, { detail: { agent: ev.agent } }));
+    } catch {
+      /* ignore */
+    }
+  }
 
   // 1. GA4 (and Google Ads, since they share the same gtag).
   try {

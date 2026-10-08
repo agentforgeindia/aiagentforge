@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { ensurePhone } from "@/lib/phoneGate";
 import {
   Upload,
   Sparkles,
@@ -190,10 +189,6 @@ export default function UGCForgePage() {
       });
       return;
     }
-
-    // Mobile number is asked here if it was never given (lib/phoneGate.ts).
-    const { data: phoneSession } = await supabase.auth.getSession();
-    if (!(await ensurePhone(phoneSession.session?.user?.id))) return;
 
     const generationId = crypto.randomUUID();
 

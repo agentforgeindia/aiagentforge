@@ -1,8 +1,8 @@
 // ============================================================
 // Credit plans + server-side Razorpay order verification
 // ============================================================
-// Single source of truth for the credit plans sold through
-// Razorpay. Used by:
+// Server-side checks for the credit plans sold through Razorpay
+// (the plan list is lib/planCatalog.ts). Used by:
 //   • /api/razorpay/create-order
 //   • /api/razorpay/verify-payment
 //   • /api/razorpay/webhook
@@ -18,13 +18,12 @@
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-export type PlanConfig = { amount: number; credits: number };
+import { PLAN_CONFIG, type PlanConfig } from "@/lib/planCatalog";
 
-export const PLAN_CONFIG: Record<string, PlanConfig> = {
-  Starter: { amount: 1999, credits: 1800 },
-  "Pro Creator": { amount: 9999, credits: 9000 },
-  Empire: { amount: 39999, credits: 36000 },
-};
+// The plan list itself lives in lib/planCatalog.ts (shared with the
+// pages and the AI reply prompts).
+export { PLAN_CONFIG };
+export type { PlanConfig };
 
 export type VerifiedPlanPurchase = {
   userId: string;

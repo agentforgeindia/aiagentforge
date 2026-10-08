@@ -22,6 +22,8 @@ export default function RatingFeedbackModal({
   const [rating, setRating] = useState(0);
   const [hovered, setHovered] = useState(0);
   const [feedback, setFeedback] = useState("");
+  // Publishing the comment as a review is the customer's choice — off by default.
+  const [allowPublish, setAllowPublish] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -49,6 +51,7 @@ export default function RatingFeedbackModal({
           feedback: feedback.trim() || undefined,
           generation_id: generationId,
           agent,
+          allow_publish: hasFeedback && allowPublish,
         }),
       });
 
@@ -144,6 +147,21 @@ export default function RatingFeedbackModal({
           rows={3}
           className="mb-3 w-full resize-none rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-800 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
         />
+
+        {hasFeedback && (
+          <label className="mb-3 flex cursor-pointer items-start gap-2 text-xs leading-5 text-gray-500 dark:text-gray-400">
+            <input
+              type="checkbox"
+              checked={allowPublish}
+              onChange={(e) => setAllowPublish(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-cyan-500"
+            />
+            <span>
+              You may show this comment as a review on the AgentForge website (first name only). Leave
+              unticked to keep it private.
+            </span>
+          </label>
+        )}
 
         {/* Credit preview */}
         {rating > 0 && (

@@ -22,6 +22,7 @@ import crypto from "crypto";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { callLLM } from "@/lib/llm";
 import { sendWhatsAppText, whatsappAutoReplyEnabled } from "@/lib/whatsapp";
+import { planFactsLine } from "@/lib/planCatalog";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,8 +36,9 @@ function admin(): SupabaseClient {
 
 const WA_SYSTEM =
   "You are AgentForge's WhatsApp support assistant for Indian SMB customers (textile sellers, jewellers, product sellers). " +
-  "AgentForge turns product photos into catalogue-ready AI shoots in ~60 seconds. Plans: Starter ₹1,999 (1,800 credits), " +
-  "Pro ₹9,999 (12,000 credits), Empire ₹39,999 (50,000 credits). 15 credits = 1 HD image. New users get 100 free credits. " +
+  "AgentForge turns product photos into catalogue-ready AI shoots in ~60 seconds. " +
+  planFactsLine() +
+  " New users get 100 free credits. " +
   "Reply in the SAME language the customer used (Hindi/English/Hinglish). Warm, short (2-5 lines), WhatsApp-style with light emoji. " +
   "Give relevant plan if asked price; be empathetic on complaints; never invent features; end with a gentle next step.";
 

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 const SITE = "https://www.aiagentforge.in";
 
@@ -61,7 +62,15 @@ const breadcrumbSchema = {
   ],
 };
 
+// HIDDEN (product rule 2026-10-08): the four stories on this page are
+// not documented results of real, named customers, so the page answers
+// "page not found" and is not linked or indexed. Turn the switch on only
+// after page.tsx holds case studies backed by evidence (the customer's
+// written consent + their own numbers).
+const CASE_STUDIES_VISIBLE = false;
+
 export default function Layout({ children }: { children: React.ReactNode }) {
+  if (!CASE_STUDIES_VISIBLE) notFound();
   return (
     <>
       <script

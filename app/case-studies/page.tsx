@@ -186,7 +186,6 @@ export default function CaseStudiesPage() {
             { v: "−97%", l: "Avg cost cut" },
             { v: "30 sec", l: "Per visual" },
             { v: "10x", l: "Output volume" },
-            { v: "4.9 / 5", l: "User rating" },
           ].map((s) => (
             <div
               key={s.l}

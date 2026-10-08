@@ -8,6 +8,7 @@
 import { NextResponse } from "next/server";
 import { callLLM } from "@/lib/llm";
 import { adminFromAuthHeader, type PermissionSpec } from "@/lib/adminAuth";
+import { planFactsLine } from "@/lib/planCatalog";
 
 export const runtime = "nodejs";
 
@@ -40,8 +41,8 @@ style, and AI generates professional catalogue images, photoshoot-style visuals 
 — without a photographer, model or studio.
 Three agents: Textile AI (fabric/design → model mockup + catalogue), Jewellery AI Studio (jewellery →
 bridal/luxury catalogue), Productography AI (any product → ecommerce/social creative).
-Plans: Starter ₹1,999 (1,800 credits), Pro Creator ₹9,999 (12,000 credits), Empire ₹39,999 (50,000
-credits). 15 credits ≈ 1 HD image. New signups get 100 free credits. Output in ~30-60s. HD, watermark-free.
+${planFactsLine()}
+New signups get 100 free credits. Output in ~30-60s. HD, watermark-free.
 These public product/pricing facts are fine to share with the team and to put into customer replies.
 
 === STRICT CONFIDENTIALITY — NEVER REVEAL ===

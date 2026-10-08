@@ -25,6 +25,17 @@ type AdminTestimonial = {
   source: string | null;
   created_at: string;
   approved_at: string | null;
+  /** The customer agreed to this review being shown on the website. */
+  consent?: boolean | null;
+  consent_at?: string | null;
+  consent_source?: string | null;
+};
+
+const CONSENT_SOURCE_LABEL: Record<string, string> = {
+  review_form: "ticked on the review form",
+  rating_form: "ticked on the rating popup",
+  admin_confirmed: "confirmed by the team",
+  legacy_form: "sent through the review form",
 };
 
 const AGENT_LABEL: Record<AgentType, string> = {
@@ -48,6 +59,7 @@ export default function AdminTestimonialsPage() {
   const [query, setQuery]               = useState("");
   const [busyId, setBusyId]             = useState<string | null>(null);
   const [toast, setToast]               = useState<{ ok: boolean; text: string } | null>(null);
+  const [consentAskId, setConsentAskId] = useState<string | null>(null);
 
   useEffect(() => {
     if (pLoading) return;
@@ -69,7 +81,26 @@ export default function AdminTestimonialsPage() {
     setTimeout(() => setToast(null), 2500);
   }
 
+  // A review is public only when it is approved AND the customer agreed.
+  // Use this only after the customer has really said yes (call / WhatsApp / e-mail).
+  async function confirmConsent(row: AdminTestimonial) {
+    setBusyId(row.id);
+    const patch = { consent: true, consent_at: new Date().toISOString(), consent_source: "admin_confirmed" };
+    const { error } = await supabase.from("testimonials").update(patch).eq("id", row.id);
+    if (error) showToast(false, error.message);
+    else {
+      setItems((prev) => prev.map((p) => (p.id === row.id ? { ...p, ...patch } : p)));
+      showToast(true, "Consent recorded.");
+    }
+    setBusyId(null);
+    setConsentAskId(null);
+  }
+
   async function setStatus(row: AdminTestimonial, status: Status) {
+    if (status === "approved" && !row.consent) {
+      showToast(false, "No consent on record — confirm the customer's consent first.");
+      return;
+    }
     setBusyId(row.id);
     const payload: Record<string, unknown> = { status };
     if (status === "approved") payload.approved_at = new Date().toISOString();
@@ -202,7 +233,7 @@ export default function AdminTestimonialsPage() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-1">
                         <p className="truncate text-xs font-bold">{row.name ?? "Anonymous"}</p>
-                        <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-sky-500" />
+                        {row.user_id && <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-sky-500" />}
                       </div>
                       {row.city && (
                         <p className={`flex items-center gap-1 text-[11px] ${adminMutedCls}`}>
@@ -224,6 +255,16 @@ export default function AdminTestimonialsPage() {
                         }`}>
                           {row.status}
                         </span>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                          row.consent
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+                            : "bg-slate-100 text-slate-600 dark:bg-slate-500/10 dark:text-slate-300"
+                        }`}>
+                          {row.consent ? "consent ✓" : "no consent"}
+                        </span>
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-500/10 dark:text-slate-300">
+                          {row.user_id ? "has account" : "no account"}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -237,6 +278,11 @@ export default function AdminTestimonialsPage() {
                       ))}
                       <span className={`ml-1.5 text-[10px] font-bold ${adminMutedCls}`}>{row.rating ?? 0}/5</span>
                     </div>
+                    <p className={`mt-2 text-[11px] ${adminMutedCls}`}>
+                      {row.consent
+                        ? `Consent: ${CONSENT_SOURCE_LABEL[row.consent_source ?? ""] ?? "on record"}${row.status === "approved" ? " · shown on the website" : ""}`
+                        : `No consent on record — not shown on the website${row.status === "approved" ? " even though it is approved" : ""}. Ask the customer first.`}
+                    </p>
                     {row.image_url && (
                       <a href={row.image_url} target="_blank" rel="noopener noreferrer" className="mt-2 block overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
                         <img src={row.image_url} alt="Screenshot" className="max-h-40 w-full object-cover" />
@@ -246,7 +292,24 @@ export default function AdminTestimonialsPage() {
 
                   {/* Right — actions */}
                   <div className="flex shrink-0 flex-row flex-wrap gap-2 sm:flex-col sm:justify-start">
-                    {canManage && row.status !== "approved" && (
+                    {canManage && !row.consent && consentAskId !== row.id && (
+                      <button type="button" disabled={isBusy} onClick={() => setConsentAskId(row.id)}
+                        className="inline-flex items-center gap-1.5 rounded-md border border-cyan-300 bg-cyan-50 px-3 py-1.5 text-xs font-bold text-cyan-700 hover:bg-cyan-100 disabled:opacity-50 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-300">
+                        <BadgeCheck className="h-3.5 w-3.5" />Customer agreed
+                      </button>
+                    )}
+                    {canManage && !row.consent && consentAskId === row.id && (
+                      <div className="flex max-w-[11rem] flex-col gap-1.5 rounded-md border border-cyan-300 bg-cyan-50 p-2 text-[11px] text-cyan-800 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-200">
+                        <span>Did the customer say yes to showing this on the website?</span>
+                        <div className="flex gap-1.5">
+                          <button type="button" disabled={isBusy} onClick={() => confirmConsent(row)}
+                            className="rounded bg-cyan-600 px-2 py-1 font-bold text-white hover:bg-cyan-500 disabled:opacity-50">Yes, record it</button>
+                          <button type="button" onClick={() => setConsentAskId(null)}
+                            className="rounded border border-cyan-300 px-2 py-1 font-bold dark:border-cyan-500/30">Cancel</button>
+                        </div>
+                      </div>
+                    )}
+                    {canManage && row.status !== "approved" && row.consent && (
                       <button type="button" disabled={isBusy} onClick={() => setStatus(row, "approved")}
                         className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500 disabled:opacity-50">
                         <Check className="h-3.5 w-3.5" />Approve

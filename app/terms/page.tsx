@@ -98,7 +98,7 @@ export default function TermsPage() {
             className={`mt-5 max-w-3xl text-base leading-8 md:text-lg ${muted}`}
           >
             These Terms & Conditions govern your use of the AgentForge platform,
-            services, AI tools, subscriptions, and generated outputs.
+            services, AI tools, credit plans, and generated outputs.
           </p>
 
           <div className="mt-6 rounded-2xl border border-cyan-400/25 bg-cyan-400/10 p-5">

@@ -11,6 +11,7 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { PLAN_CONFIG } from "@/lib/planCatalog";
 
 const inputCls =
   "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
@@ -18,11 +19,14 @@ const inputCls =
 const labelCls =
   "mb-1 block text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400";
 
-const PLAN_PRESETS = [
-  { value: "Starter",       amount: 1999,  credits: 1800 },
-  { value: "Pro Creator",   amount: 9999,  credits: 12000 },
-  { value: "Empire",        amount: 39999, credits: 50000 },
-];
+// Prices and credits come from the plan list (lib/planCatalog.ts) —
+// the same numbers the pricing page and the payment routes use.
+const PLAN_PRESETS = Object.entries(PLAN_CONFIG).map(([value, plan]) => ({
+  value,
+  amount: plan.amount,
+  credits: plan.credits,
+}));
+const DEFAULT_PRESET = PLAN_PRESETS.find((p) => p.value === "Pro Creator") ?? PLAN_PRESETS[0];
 
 export type PastPaymentForm = {
   plan: string;
@@ -58,9 +62,9 @@ export default function AddPastPaymentModal({
   const todayLocal = new Date().toISOString().slice(0, 10);
 
   const [form, setForm] = useState<PastPaymentForm>(() => ({
-    plan: "Pro Creator",
-    amount: 9999,
-    credits_added: 12000,
+    plan: DEFAULT_PRESET.value,
+    amount: DEFAULT_PRESET.amount,
+    credits_added: DEFAULT_PRESET.credits,
     razorpay_payment_id: "",
     razorpay_order_id: "",
     created_at: todayLocal,
@@ -78,9 +82,9 @@ export default function AddPastPaymentModal({
   useEffect(() => {
     if (open) {
       setForm({
-        plan: "Pro Creator",
-        amount: 9999,
-        credits_added: 12000,
+        plan: DEFAULT_PRESET.value,
+        amount: DEFAULT_PRESET.amount,
+        credits_added: DEFAULT_PRESET.credits,
         razorpay_payment_id: "",
         razorpay_order_id: "",
         created_at: todayLocal,

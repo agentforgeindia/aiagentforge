@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "@/app/components/ThemeProvider";
+import { CHARGE_RULES } from "@/lib/chargeRules";
 
 const refundSections = [
   {
@@ -20,8 +21,8 @@ const refundSections = [
     body: "Plans are one-time purchases billed in advance and are non-refundable. There is no automatic renewal; refunds are not issued for partially used credit packs.",
   },
   {
-    title: "5. Failed Generations",
-    body: "If an AI generation fails because of a technical issue on our side, credits may be restored or the request may be reprocessed after verification.",
+    title: "5. Failed Generations, Retries and Regeneration",
+    body: CHARGE_RULES.map((rule) => `${rule.title}: ${rule.body}`).join(" "),
   },
   {
     title: "6. Output Quality",
@@ -85,8 +86,8 @@ export default function RefundPolicyPage() {
           <p
             className={`mt-5 max-w-3xl text-base leading-8 md:text-lg ${muted}`}
           >
-            This Refund Policy explains how payments, credits, subscriptions,
-            and refund requests are handled on AgentForge.
+            This Refund Policy explains how payments, credit packs, failed
+            generations and refund requests are handled on AgentForge.
           </p>
 
           <div className="mt-6 rounded-2xl border border-cyan-400/25 bg-cyan-400/10 p-5">

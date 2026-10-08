@@ -17,6 +17,9 @@ import {
 } from "lucide-react";
 import TrustBadges from "@/app/components/TrustBadges";
 import { track } from "@/lib/analytics";
+import { PRICE_TABLE } from "@/lib/creditPricing";
+import { CHARGE_RULES, PRICE_ROWS } from "@/lib/chargeRules";
+import { ensurePhone } from "@/lib/phoneGate";
 
 
 declare global {
@@ -53,7 +56,7 @@ const plans: Plan[] = [
     popular: false,
     features: [
       "Access to all AgentForge AI agents",
-      "15 credits per standard image",
+      `${PRICE_TABLE.premium} credits per standard image`,
       "1080×1080 HD square export",
       "Watermark-free business outputs",
       "Textile, jewellery & product visuals",
@@ -165,6 +168,10 @@ export default function PricingPage() {
         window.location.href = "/login?redirect=/pricing";
         return;
       }
+
+      // Billing needs a mobile number (invoice + payment record). This is
+      // the one place it is required; generating images never asks.
+      if (!(await ensurePhone(userId, "billing"))) return;
 
       if (!window.Razorpay) {
         setPaymentMessage("Payment system is still loading. Please try again in a few seconds.");
@@ -514,6 +521,52 @@ router.push(
           </div>
         </section>
 
+        {/* How credits are charged — numbers and rules come from lib/creditPricing.ts and lib/chargeRules.ts */}
+        <section id="credit-rules" className="mx-auto max-w-7xl px-5 pb-12 sm:pb-16">
+          <div className="mb-6 text-center sm:mb-8">
+            <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-600">
+              Credits per image
+            </p>
+            <h3 className="mt-2 text-2xl font-black leading-tight sm:text-3xl">
+              What one image costs — and what happens when one fails
+            </h3>
+          </div>
+          <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
+            <div className={`rounded-[2rem] border p-5 backdrop-blur-xl sm:p-7 ${card}`}>
+              <h4 className="text-base font-black sm:text-lg">Price per image</h4>
+              <table className="mt-4 w-full text-left text-sm">
+                <tbody>
+                  {PRICE_ROWS.map((row) => (
+                    <tr key={row.item} className={`border-t ${darkMode ? "border-white/10" : "border-black/10"}`}>
+                      <td className="py-3 pr-3 align-top">
+                        <span className="font-bold">{row.item}</span>
+                        {row.note && <span className={`mt-0.5 block text-xs ${muted}`}>{row.note}</span>}
+                      </td>
+                      <td className="whitespace-nowrap py-3 text-right align-top font-black text-cyan-600">
+                        {row.credits}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className={`mt-4 text-xs leading-5 ${muted}`}>
+                The Generate button always shows the exact credits before you confirm.
+              </p>
+            </div>
+            <div className={`rounded-[2rem] border p-5 backdrop-blur-xl sm:p-7 ${card}`}>
+              <h4 className="text-base font-black sm:text-lg">Failed images, retries and regeneration</h4>
+              <ul className="mt-4 space-y-4 text-sm leading-6">
+                {CHARGE_RULES.map((rule) => (
+                  <li key={rule.title}>
+                    <span className="font-bold">{rule.title}.</span>{" "}
+                    <span className={muted}>{rule.body}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
         {/* AI vs Traditional Shoot — Cost Comparison */}
         <section className="mx-auto max-w-7xl px-5 pb-12 sm:pb-16">
           <div className="mb-8 text-center sm:mb-10">
@@ -578,10 +631,10 @@ router.push(
                   AgentForge AI
                 </p>
                 <div className="mt-3 flex items-end gap-2">
-                  <p className="text-3xl font-black tracking-tight sm:text-4xl">15 Credits</p>
+                  <p className="text-3xl font-black tracking-tight sm:text-4xl">{PRICE_TABLE.premium} Credits</p>
                   <p className={`pb-1.5 text-sm ${muted}`}>per premium visual</p>
                 </div>
-                <p className={`mt-1 text-xs ${muted}`}>15 credits = 1 standard HD visual</p>
+                <p className={`mt-1 text-xs ${muted}`}>{PRICE_TABLE.premium} credits = 1 standard HD visual</p>
 
                 <ul className="mt-5 space-y-2.5 text-sm leading-6">
                   {[
@@ -589,7 +642,7 @@ router.push(
                     "Built-in AI models & styles",
                     "No props, no MUA, no location",
                     "Output ready in ~30 seconds",
-                    "Unlimited regeneration & variations",
+                    "New variations any time at the same credit price",
                     "Article code & branding included",
                     "Catalogue-ready 1080×1080 HD",
                   ].map((line) => (
@@ -611,7 +664,7 @@ router.push(
             <div className="pointer-events-none absolute -bottom-12 -right-12 h-44 w-44 rounded-full bg-blue-500/20 blur-3xl" />
             <div className="relative">
               <p className="text-[11px] font-black uppercase tracking-[0.28em] text-cyan-600">
-                Real example
+                Example calculation
               </p>
               <h4 className="mt-2 text-2xl font-black sm:text-3xl">
                 <span className="bg-gradient-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">
@@ -665,7 +718,7 @@ router.push(
               {
                 Icon: CheckCircle2,
                 title: "Editing & Retakes",
-                desc: "Unlimited regenerate — har shot tumhare mann ka.",
+                desc: "Dobara generate jab chaho — har nayi image ka wahi credit price.",
               },
             ].map(({ Icon, title, desc }) => (
               <div

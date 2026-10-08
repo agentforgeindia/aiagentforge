@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
-import { ensurePhone } from "@/lib/phoneGate";
 import { track } from "@/lib/analytics";
 import { useTheme } from "@/app/components/ThemeProvider";
 import { useAuth } from "@/app/components/AuthProvider";
@@ -57,11 +56,10 @@ import { shouldDeductCredits } from "@/lib/deductCredits";
 import { hasBulkAccess } from "@/lib/plans";
 import SignupPromptPopup from "@/app/components/SignupPromptPopup";
 import AIThinkingSteps from "@/app/components/AIThinkingSteps";
-import TestimonialsSlider, {
-  type Testimonial,
-} from "@/app/components/TestimonialsSlider";
+import TestimonialsSlider from "@/app/components/TestimonialsSlider";
 import RatingFeedbackModal from "@/app/components/RatingFeedbackModal";
 import CongratulationsPopup from "@/app/components/CongratulationsPopup";
+import { PRICE_TABLE, creditsLabel, perImageCredits } from "@/lib/creditPricing";
 
 const PRODUCTOGRAPHY_THINKING_STEPS = [
   "Reading product details",
@@ -72,71 +70,6 @@ const PRODUCTOGRAPHY_THINKING_STEPS = [
   "Color grading & retouching",
   "Adding brand watermark",
   "Polishing the final visual",
-];
-
-// Seed testimonials — short, raw, WhatsApp-style. Real submissions from the
-// DB (table: `testimonials`, status: 'approved') replace these once available.
-const PRODUCTOGRAPHY_SEED_TESTIMONIALS: Testimonial[] = [
-  {
-    id: "seed-pg-1",
-    name: "Tushar V****",
-    city: "Bengaluru",
-    message:
-      "The perfume bottle shot turned out perfect for Amazon. Swapped the hero image and CTR jumped right away 🚀",
-    rating: 5,
-    createdAt: new Date(Date.now() - 1000 * 60 * 24).toISOString(),
-    source: "whatsapp",
-  },
-  {
-    id: "seed-pg-2",
-    name: "Sneha B****",
-    city: "Pune",
-    message:
-      "Made lifestyle shots for our skincare brand. Catalogue + Instagram both covered in one go. Huge time saver!",
-    rating: 5,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    source: "in-app",
-  },
-  {
-    id: "seed-pg-3",
-    name: "Mohit J****",
-    city: "Delhi",
-    message:
-      "Made both packaging and lifestyle ads for headphones. Delivered to the agency client in 1 hour — has never happened before.",
-    rating: 5,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-    source: "whatsapp",
-  },
-  {
-    id: "seed-pg-4",
-    name: "Ritika P****",
-    city: "Ahmedabad",
-    message:
-      "I run a D2C food brand. Festive banner ready in 60 seconds. No more dependency on a designer.",
-    rating: 5,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1).toISOString(),
-    source: "in-app",
-  },
-  {
-    id: "seed-pg-5",
-    name: "Arjun S****",
-    city: "Mumbai",
-    message:
-      "A watch shoot used to cost ₹8k at the studio. Got 10 angles here for 100 credits. Quality is at the same level.",
-    rating: 4,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
-    source: "whatsapp",
-  },
-  {
-    id: "seed-pg-6",
-    name: "Divya M****",
-    city: "Chennai",
-    message:
-      "Moody lifestyle shots for candles and home decor are straight up Pinterest-quality. Uploaded directly to the catalogue.",
-    rating: 5,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
-    source: "whatsapp",
-  },
 ];
 
 // (The n8n webhook address is server-only — see /api/productography/generate.)
@@ -710,7 +643,7 @@ export default function ProductographyPage() {
   const modelLookDisabled = modelLookMode_ === "none";
   // Gender/age selector only matters for a single-person model scene.
   const showModelGroup = modelLookMode_ === "single";
-  // The uploaded scene counts (and costs +2 credits) only for the
+  // The uploaded scene counts (and is charged as the own-scene add-on) only for the
   // "Upload Your Scene" shoot style.
   const sceneActive = Boolean(referenceSceneUrl) && shootStyle === "Upload Your Scene";
   const studioBgList = modelLookDisabled
@@ -773,27 +706,22 @@ export default function ProductographyPage() {
   // Empire users get branding overlays free (same as the Textile page).
   const isEmpireUser = isEmpireFromProfile(profile);
 
-  const requiredCredits = (() => {
-    const q = quality.toLowerCase();
-    const s = outputSize;
-    let base = 15;
-    // Ultra HD = 30 (real 4K). Premium = 15. Mobile/portrait = +2.
-    if (q.includes("ultra")) base += 15;
-    if (s === "1080x1920" || s === "1920x1080") base += 2;
-    // Branding (logo + fields): +1 each — FREE for Empire.
-    if (!isEmpireUser) {
-      if (useCompanyLogo && companyLogoUrl) base += 1;
-      if (useCompanyName && companyName.trim()) base += 1;
-      if (useCompanyPhone && companyPhone.trim()) base += 1;
-      if (useCompanyWebsite && companyWebsite.trim()) base += 1;
-      if (useCompanyAddress && companyAddress.trim()) base += 1;
-    }
-    // Upload Your Scene add-on: +2 credits.
-    if (sceneActive) base += 2;
-    // Upload Your Photo (virtual try-on) add-on: +2 credits.
-    if (modelPhotoUrl) base += 2;
-    return base;
-  })();
+  // Prices come from the one price table (lib/creditPricing.ts) — the
+  // same table the server charges from. Branding items are free for
+  // Empire users; "mobile" also covers the landscape 1920x1080 frame.
+  const requiredCredits = perImageCredits({
+    ultra: quality.toLowerCase().includes("ultra"),
+    mobile: outputSize === "1080x1920" || outputSize === "1920x1080",
+    ownScene: Boolean(sceneActive),
+    ownModel: Boolean(modelPhotoUrl),
+    brandingItems: isEmpireUser
+      ? 0
+      : (useCompanyLogo && companyLogoUrl ? 1 : 0) +
+        (useCompanyName && companyName.trim() ? 1 : 0) +
+        (useCompanyPhone && companyPhone.trim() ? 1 : 0) +
+        (useCompanyWebsite && companyWebsite.trim() ? 1 : 0) +
+        (useCompanyAddress && companyAddress.trim() ? 1 : 0),
+  });
 
   const totalCreditsNeeded = requiredCredits * Math.max(readyItems.length, 1);
 
@@ -1565,9 +1493,6 @@ export default function ProductographyPage() {
       alert("Please upload at least one product image.");
       return;
     }
-
-    // Mobile number is asked here if it was never given (lib/phoneGate.ts).
-    if (!(await ensurePhone(authUser.id))) return;
 
     if (shootStyle === "Upload Your Scene" && !referenceSceneUrl) {
       alert("Please upload your scene photo for 'Upload Your Scene'.");
@@ -2614,8 +2539,8 @@ export default function ProductographyPage() {
                       {shootStyle === "Upload Your Scene" && (
                         <p className={`mt-3 text-xs ${muted}`}>
                           {referenceSceneUrl
-                            ? "Your scene is ready — the product will be placed naturally into it (+2 credits). Tap the card to change it."
-                            : "Tap “Upload Your Scene” to pick a photo of your own space or backdrop (+2 credits)."}
+                            ? `Your scene is ready — the product will be placed naturally into it (${creditsLabel(PRICE_TABLE.ownScene)}). Tap the card to change it.`
+                            : `Tap “Upload Your Scene” to pick a photo of your own space or backdrop (${creditsLabel(PRICE_TABLE.ownScene)}).`}
                         </p>
                       )}
                     </div>
@@ -2735,10 +2660,10 @@ export default function ProductographyPage() {
                           <SummaryRow label="Frame" value={`${customOutputSize.trim() || outputSize} / ${customQuality.trim() || quality}`} />
                           <SummaryRow label="Uploads" value={String(readyItems.length)} />
                           {sceneActive && (
-                            <SummaryRow label="Upload Your Scene" value="+2 credits" />
+                            <SummaryRow label="Upload Your Scene" value={creditsLabel(PRICE_TABLE.ownScene)} />
                           )}
                           {modelPhotoUrl && (
-                            <SummaryRow label="Upload Your Photo" value="+2 credits" />
+                            <SummaryRow label="Upload Your Photo" value={creditsLabel(PRICE_TABLE.ownModel)} />
                           )}
                           {teamId && (
                             <SummaryRow label="Team Credits" value="Active" />
@@ -2849,9 +2774,7 @@ export default function ProductographyPage() {
         <TestimonialsSlider
           agentType="productography"
           darkMode={darkMode}
-          seed={PRODUCTOGRAPHY_SEED_TESTIMONIALS}
           heading="What early product brands are saying"
-          subtitle="Real WhatsApp & in-app feedback from e-commerce sellers, D2C brands and agencies — names masked for privacy."
         />
       </div>
 

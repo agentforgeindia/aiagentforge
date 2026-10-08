@@ -31,6 +31,7 @@ import {
 } from "react-icons/fa6";
 import type { IconType } from "react-icons";
 import SupportTicketForm from "@/app/components/SupportTicketForm";
+import { FAILED_RULE_SHORT, REGENERATION_RULE_SHORT } from "@/lib/chargeRules";
 
 /* ─────────────────────────── Data ─────────────────────────── */
 
@@ -129,7 +130,7 @@ const faqs: Array<{ q: string; a: string }> = [
   },
   {
     q: "What if the output is not correct?",
-    a: "Try a clearer input image, better lighting, or more specific instructions. Unlimited regeneration is available on Pro plans.",
+    a: `Try a clearer input image, better lighting, or more specific instructions. ${REGENERATION_RULE_SHORT} ${FAILED_RULE_SHORT}`,
   },
 ];
 

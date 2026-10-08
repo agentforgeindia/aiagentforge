@@ -25,6 +25,7 @@ const EXCLUDED_SEGMENTS = new Set([
   "settings",             // user settings (private)
   "social-scheduler",     // logged-in tool (private)
   "ai-social-publisher",  // parked — not shown anywhere (2026-10-08)
+  "case-studies",         // hidden until backed by real, consented customer evidence
   "payment-success",      // post-checkout (private)
   "workshop",             // legacy workshop pages
 ]);

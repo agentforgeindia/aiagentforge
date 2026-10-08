@@ -113,7 +113,7 @@ export default function Page() {
         },
         {
           q: "How much does it cost compared to a regular saree or kurta shoot?",
-          a: "A traditional shoot in India costs ₹15,000–₹50,000. AgentForge plans start at ₹1,999 for 1,800 credits — enough for ~120 catalogue images. The Empire plan at ₹39,999 covers ~2,400 images monthly.",
+          a: "A traditional shoot in India costs ₹15,000–₹50,000. AgentForge plans start at ₹1,999 for 1,800 credits — enough for ~120 catalogue images. The Empire plan at ₹39,999 covers ~2,400 standard images — a one-time pack whose credits never expire.",
         },
         {
           q: "Does it work for bulk catalogue generation for my factory?",

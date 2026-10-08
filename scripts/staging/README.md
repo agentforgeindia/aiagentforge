@@ -39,14 +39,14 @@ mkdir -p .staging-work/splinter && curl -sSL -o .staging-work/splinter/splinter.
   https://raw.githubusercontent.com/supabase/splinter/main/splinter.sql
 scripts/staging/advisor-checks.sh
 
-# 2. migrations 00–07 + rollbacks + access checks (44 checks × 4 phases)
+# 2. migrations 00–08 + rollbacks + access checks (53 checks × 4 phases)
 scripts/staging/sql-checks.sh
 
 # 3. build the app with the staging environment, start the stack
 scripts/staging/build-app.sh
 scripts/staging/stack.sh up
 
-# 4. unit checks (24), end-to-end checks (112), browser checks (15)
+# 4. unit checks (41), end-to-end checks (115), browser checks (26)
 node scripts/staging/unit.cjs
 node scripts/staging/e2e.cjs
 node scripts/staging/ui.cjs        # needs Playwright + Chromium
@@ -55,17 +55,18 @@ scripts/staging/stack.sh down
 ```
 
 `sql-checks.sh` rebuilds the database from scratch each time and leaves it
-with migrations 00–07 applied, which is the state step 4 expects.
+with migrations 00–08 applied, which is the state step 4 expects.
 `stack.sh up` refuses to continue if an older app server is still holding
 the port or the server is not serving the current build.
 
 ## What the checks cover
 
-- `sql-checks.sh` — applies `sql/pending/00…04`, runs every rollback in
+- `sql-checks.sh` — applies `sql/pending/00…08`, runs every rollback in
   `sql/rollback/`, and proves the rollback returns rules, indexes, bucket
   settings, functions and triggers to exactly the state before. Before and
-  after each step it tries 44 actions as a visitor, a customer, another
-  customer, a team role without the permission, the founder and the server.
+  after each step it tries 53 actions as a visitor, a customer, another
+  customer, a team role without the permission, the founder and the server
+  (incl. who can read and add customer reviews before / after 08).
 - `e2e.cjs` — price list (15 / 17 / 30 / 32) for all three agents with a
   browser that lies about the price; one payer per generation; refunds
   (amount from the ledger, once, also under concurrency); stuck jobs and
@@ -74,15 +75,18 @@ the port or the server is not serving the current build.
   every `/api/admin/*` endpoint without login and as an ordinary customer;
   creator portal sessions; direct database access from the browser; rate
   limits.
-- `unit.cjs` — the duplicate-charge arithmetic and order verification.
+- `unit.cjs` — the duplicate-charge arithmetic, order verification, the one
+  price table (page price = server range), the plan list and the charge rules.
 - `advisor-checks.sh` — for migrations 06 and 07: 53 made-up people and up
   to 4 made-up rows in every table; who can read / insert / update / delete
   what (81,620 actions) and what every API function answers (2,226 calls),
   before, after and after rollback; then Supabase's advisor queries
   (`lint.py`).
-- `ui.cjs` — in a real browser: the mobile-number popup (30 seconds,
-  "Later", required at Generate, validation, save), pricing text, hidden
-  Social Publisher pages.
+- `ui.cjs` — in a real browser: the mobile-number popup (never before or
+  at Generate; optional a few seconds after the first successful image;
+  required when buying a plan; validation, save), pricing text, the price
+  table and charge rules, hidden Social Publisher and Case Studies pages,
+  reviews shown only with consent.
 - e2e sections 10–11 — lifetime plans (no expiry on purchase), Empire is
   charged credits, the API functions after the advisor clean-up.
 

@@ -30,7 +30,6 @@ const AGENT_LINKS = [
   { label: "Jewellery AI Studio", href: "/jewellery-ai" },
   { label: "Productography AI", href: "/productography-ai" },
   { label: "Gallery", href: "/gallery" },
-  { label: "Case Studies", href: "/case-studies" },
 ];
 
 const COMPANY_LINKS = [

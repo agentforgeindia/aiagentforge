@@ -80,7 +80,7 @@ export const BLOG_POSTS: BlogPost[] = [
       gradientFrom: "#06b6d4",
       gradientTo: "#2563eb",
       icon: "🧵",
-      statsRow: ["5–7 Days → 30 Min", "₹8L → ₹10K/mo", "10x More Drops"],
+      statsRow: ["5–7 Days → 30 Min", "₹8L → ₹10K", "More Drops"],
     },
     ctaLabel: "Try TextilePrints to Mockup AI",
     ctaHref: "/textileprints-to-mockup",
@@ -109,7 +109,7 @@ export const BLOG_POSTS: BlogPost[] = [
       ]},
       {
         type: "p",
-        text: "A mid-scale Surat wholesaler shipping 30 new designs a month was spending ₹4–8 lakh on photography alone. And it took 5–7 days from design lock to WhatsApp drop. By that time, the trend had moved.",
+        text: "At these rates, a wholesaler shipping 30 new designs a month can spend ₹4–8 lakh on photography alone, with 5–7 days between design lock and the WhatsApp drop. By that time, the trend has moved.",
       },
       { type: "quote", text: "Seven days is too long to catch a trend. By then the buyer has already moved to the next vendor." },
 
@@ -363,16 +363,15 @@ export const BLOG_POSTS: BlogPost[] = [
         text: "Download as 1080×1080 HD square (perfect for WhatsApp + Instagram). Drop straight into your wholesaler groups. Tag with article number for instant ordering.",
       },
 
-      { type: "h2", text: "Real numbers — a Surat case study shape" },
+      { type: "h2", text: "Example calculation — 30 designs a month" },
       {
         type: "p",
-        text: "A Surat manufacturer running 30 designs/month with traditional shoots:",
+        text: "This is a calculation from typical market rates and our price list, not a result reported by a customer. A manufacturer running 30 designs/month:",
       },
       { type: "ul", items: [
-        "Old: ₹4–8 lakh/month on photoshoots + 5–7 day delay per drop",
-        "New: ₹9,999 (Pro Creator plan, ~600 images) + same-day delivery",
-        "Designs shipped per month: 30 → 80+",
-        "Catalogue freshness: weekly → daily",
+        "Traditional shoots at the rates above: roughly ₹4–8 lakh a month, 5–7 days per drop",
+        "AgentForge: ₹9,999 one-time (Pro Creator pack, 9,000 credits = about 600 standard images)",
+        "30 designs × 4 images each = 120 images = 1,800 credits",
       ]},
 
       { type: "h2", text: "Tips for the cleanest saree mockups" },
@@ -916,10 +915,10 @@ export const BLOG_POSTS: BlogPost[] = [
         text: "Product shape, colour and key features must match the actual product. AgentForge preserves the original product silhouette by default — only the background, lighting and composition are transformed.",
       },
 
-      { type: "h2", text: "Real numbers from a Surat seller in 2026" },
+      { type: "h2", text: "Example calculation — 480 listing images" },
       {
         type: "p",
-        text: "A mid-tier saree wholesaler switched to AI catalogue in March 2026. Listings went from 60 per month to 480 per month. Photography spend dropped from ₹85,000 to ₹4,200 per month. Revenue grew 2.4x — because Meesho's algorithm continuously boosted the fresh listing volume.",
+        text: "This is a calculation from our price list, not a result reported by a customer. 480 listing images at 15 credits each is 7,200 credits — less than one Pro Creator pack (₹9,999 one-time, 9,000 credits). What it does to your sales depends on your products, pricing and listings.",
       },
 
       { type: "h2", text: "The honest take" },
@@ -1275,20 +1274,24 @@ export const BLOG_POSTS: BlogPost[] = [
         text: "Ad creatives, listing thumbnails and banner variants can all be A/B tested without additional shoot cost. Scale the winner, discard the rest. Performance marketing efficiency improves by 30 to 50%.",
       },
 
-      { type: "h2", text: "Payback period: real Indian brand examples" },
-      { type: "h3", text: "Surat saree wholesaler (mid-tier)" },
+      { type: "h2", text: "Payback period: example calculations" },
+      {
+        type: "p",
+        text: "These three examples are calculations from typical market prices and our price list — they are not results reported by customers.",
+      },
+      { type: "h3", text: "Example: saree wholesaler (mid-tier)" },
       { type: "ul", items: [
         "Plan: Pro Creator (₹9,999)",
         "Replaces: ₹85,000 monthly photography spend",
-        "Payback: First month (8.5x ROI on subscription)",
+        "Payback: first month (plan price is about one-eighth of that spend)",
       ]},
-      { type: "h3", text: "Jaipur D2C kurti brand" },
+      { type: "h3", text: "Example: D2C kurti brand" },
       { type: "ul", items: [
         "Plan: Starter (₹1,999)",
         "Replaces: ₹15,000 monthly freelance shoot cost",
         "Payback: First month (7.5x ROI)",
       ]},
-      { type: "h3", text: "Coimbatore jewellery manufacturer" },
+      { type: "h3", text: "Example: jewellery manufacturer" },
       { type: "ul", items: [
         "Plan: Empire (₹39,999)",
         "Replaces: ₹2.8 lakh monthly studio retainer and photographer fees",

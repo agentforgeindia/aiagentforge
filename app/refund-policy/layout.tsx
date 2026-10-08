@@ -5,7 +5,7 @@ const SITE = "https://www.aiagentforge.in";
 export const metadata: Metadata = {
   title: { absolute: "Refund Policy — AgentForge AI" },
   description:
-    "Credit-refund and cancellation policy for AgentForge AI subscriptions and one-time purchases.",
+    "Credit-refund policy for AgentForge AI one-time credit packs: failed generations, retries, regeneration and payments.",
   alternates: { canonical: `${SITE}/refund-policy` },
   openGraph: {
     title: "Refund Policy — AgentForge AI",

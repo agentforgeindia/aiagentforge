@@ -32,6 +32,7 @@ import { PLAY_PRODUCTS } from "@/lib/playBilling";
 import { supabase } from "@/lib/supabase";
 import { OfferTicket, useAppContent } from "./AppPromos";
 import { useCountUp } from "./useCountUp";
+import { PRICE_TABLE } from "@/lib/creditPricing";
 
 type Notice = { kind: "ok" | "info" | "error"; text: string };
 
@@ -261,7 +262,7 @@ export default function AppCredits() {
       {/* ───────── Pricing ───────── */}
       <div className="af-rise mb-3 mt-6" style={step(1)}>
         <h2 className="text-lg font-black">Credit packs</h2>
-        <p className="mt-0.5 text-[13px] text-black/55 dark:text-white/55">15 credits make 1 standard HD image.</p>
+        <p className="mt-0.5 text-[13px] text-black/55 dark:text-white/55">{PRICE_TABLE.premium} credits make 1 standard HD image.</p>
       </div>
       <div className="grid gap-3">
         {packs.map((pack, i) => (

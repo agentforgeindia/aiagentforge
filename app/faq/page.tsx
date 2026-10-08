@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CHARGE_RULES, FAILED_RULE_SHORT, PRICE_ROWS } from "@/lib/chargeRules";
 
 const SITE = "https://www.aiagentforge.in";
 
@@ -62,7 +63,7 @@ const SECTIONS: Section[] = [
     items: [
       {
         q: "How do credits work?",
-        a: "Every generation costs credits depending on output size, quality and add-ons (logo overlay, brand text). A standard 1080×1080 jewellery or textile mockup costs around 15 credits. Bulk and large-format outputs cost more.",
+        a: `Every image costs credits depending on quality, size and add-ons. ${PRICE_ROWS.map((r) => `${r.item}: ${r.credits}`).join(" · ")}. A bulk job is the per-image price times the number of images. The Generate button always shows the exact credits first.`,
       },
       {
         q: "What plans do you offer?",
@@ -70,7 +71,7 @@ const SECTIONS: Section[] = [
       },
       {
         q: "Do credits expire?",
-        a: "Credits remain available within your active subscription period. We recommend using them during your billing cycle for the most predictable balance.",
+        a: "No. Plans are one-time credit packs — there is no monthly fee and no auto-renewal, and the credits you buy never expire.",
       },
       {
         q: "Do I get free credits to try?",
@@ -78,7 +79,15 @@ const SECTIONS: Section[] = [
       },
       {
         q: "Is there a money-back guarantee?",
-        a: "Subscription fees are non-refundable per our Refund Policy. However, credits are refunded automatically when a generation fails on our side — without you having to ask.",
+        a: `Plan purchases are non-refundable per our Refund Policy. ${FAILED_RULE_SHORT}`,
+      },
+      {
+        q: "What happens to my credits if an image fails?",
+        a: `${CHARGE_RULES[1].body} ${CHARGE_RULES[2].body} ${CHARGE_RULES[3].body}`,
+      },
+      {
+        q: "Is regenerating an image free?",
+        a: CHARGE_RULES[4].body,
       },
     ],
   },

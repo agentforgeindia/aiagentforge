@@ -30,11 +30,10 @@ import { shouldDeductCredits } from "@/lib/deductCredits";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 import SignupPromptPopup from "@/app/components/SignupPromptPopup";
 import AIThinkingSteps from "@/app/components/AIThinkingSteps";
-import TestimonialsSlider, {
-  type Testimonial,
-} from "@/app/components/TestimonialsSlider";
+import TestimonialsSlider from "@/app/components/TestimonialsSlider";
 import RatingFeedbackModal from "@/app/components/RatingFeedbackModal";
 import CongratulationsPopup from "@/app/components/CongratulationsPopup";
+import { PRICE_TABLE, creditsLabel, perImageCredits } from "@/lib/creditPricing";
 
 const TEXTILE_THINKING_STEPS = [
   "Reading your design file",
@@ -45,70 +44,6 @@ const TEXTILE_THINKING_STEPS = [
   "Generating DSLR-quality details",
   "Adding article code overlay",
   "Polishing the final mockup",
-];
-
-// Seed testimonials — short, raw, WhatsApp-style. Real submissions from the
-// DB (table: `testimonials`, status: 'approved') replace these once available.
-const TEXTILE_SEED_TESTIMONIALS: Testimonial[] = [
-  {
-    id: "seed-1",
-    name: "Rajesh K****",
-    city: "Surat",
-    message: "Amazing output 🔥 — sent it to the client right away, order confirmed.",
-    rating: 5,
-    createdAt: new Date(Date.now() - 1000 * 60 * 32).toISOString(),
-    source: "whatsapp",
-  },
-  {
-    id: "seed-2",
-    name: "Priya S****",
-    city: "Mumbai",
-    message:
-      "Catalogue-ready images in 30 sec — saved a lot of time. The article code feature is genius.",
-    rating: 5,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-    source: "in-app",
-  },
-  {
-    id: "seed-3",
-    name: "Anil M****",
-    city: "Erode",
-    message:
-      "Sample stitching used to take 5 days. Now we send the client a preview the same day.",
-    rating: 5,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
-    source: "whatsapp",
-  },
-  {
-    id: "seed-4",
-    name: "Meera D****",
-    city: "Jaipur",
-    message:
-      "Just tried it — quality is really good. Saree mockups look real on the model. Recommended!",
-    rating: 5,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1).toISOString(),
-    source: "in-app",
-  },
-  {
-    id: "seed-5",
-    name: "Vikas T****",
-    city: "Ludhiana",
-    message:
-      "Article number overlay is a game-changer. Zero confusion now when sending to wholesalers.",
-    rating: 4,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
-    source: "whatsapp",
-  },
-  {
-    id: "seed-6",
-    name: "Suresh P****",
-    city: "Bhilwara",
-    message:
-      "After seeing the mockups, the client ordered 12 designs in one go 💯 — has never happened before.",
-    rating: 5,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
-    source: "whatsapp",
-  },
 ];
 
 // (The n8n webhook address is server-only — see /api/textile/generate.)
@@ -1572,9 +1507,7 @@ export default function Home() {
     "/banner-design-output.png",
   );
   const [showProfile, setShowProfile] = useState(false);
-  const [showPhonePopup, setShowPhonePopup] = useState(false);
   const [showSignupPopup, setShowSignupPopup] = useState(false);
-  const [phoneInput, setPhoneInput] = useState("");
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [ratingGenerationId, setRatingGenerationId] = useState<string | undefined>();
   const [reviewedResult, setReviewedResult] = useState(false);
@@ -2122,13 +2055,10 @@ export default function Home() {
     const normalizedSize = sizeValue.trim().toLowerCase();
     const normalizedQuality = qualityValue.trim().toLowerCase();
 
-    // New pricing (49% margin model):
-    //   Premium = 15 credits, Ultra HD = 30 credits.
-    //   Mobile / Portrait (9:16) = +2 credits.
+    // Prices come from the one price table (lib/creditPricing.ts) —
+    // the same table the server charges from.
     const isUltra = normalizedQuality === "ultra hd";
     const isMobile = normalizedSize === "1080x1920";
-    let baseCredits = isUltra ? 30 : 15;
-    if (isMobile) baseCredits += 2;
 
     const details = brandDetails || {
       company_name: useCompanyName ? companyName.trim() : "",
@@ -2137,20 +2067,21 @@ export default function Home() {
       address: useCompanyAddress ? companyAddress.trim() : "",
     };
 
-    // Empire users get branding (logo / name / phone / website /
-    // address) free — no extra credits.
-    const extraCredits = isEmpireUser
+    // Empire users get the branding items at no extra credits.
+    const brandingItems = isEmpireUser
       ? 0
       : (details.company_name?.trim() ? 1 : 0) +
         (details.phone_number?.trim() ? 1 : 0) +
         (details.website?.trim() ? 1 : 0) +
         (details.address?.trim() ? 1 : 0);
 
-    // Bring-your-own add-ons: uploaded scene (+2) and uploaded model (+2).
-    const sceneCredits = activeSceneUrl ? 2 : 0;
-    const modelUploadCredits = modelPhotoUrl ? 2 : 0;
-
-    return baseCredits + extraCredits + sceneCredits + modelUploadCredits;
+    return perImageCredits({
+      ultra: isUltra,
+      mobile: isMobile,
+      ownScene: Boolean(activeSceneUrl),
+      ownModel: Boolean(modelPhotoUrl),
+      brandingItems,
+    });
   };
 
   const requiredCredits = getRequiredCredits(
@@ -3162,57 +3093,6 @@ export default function Home() {
     setResultModalOpen(true);
   };
 
-  const hasSavedPhoneNumber = (profileData: any) => {
-    const phoneText = String(
-      profileData?.phone ||
-        profileData?.billing_phone ||
-        profileData?.mobile ||
-        profileData?.phone_number ||
-        profileData?.whatsapp ||
-        "",
-    ).trim();
-
-    return phoneText.length >= 10;
-  };
-
-  const savePhoneNumber = async () => {
-    const cleanPhone = phoneInput.replace(/\D/g, "");
-
-    if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
-      alert("Please enter a valid 10-digit Indian mobile number.");
-      return;
-    }
-
-    const userId = authUser?.id;
-
-    if (!userId) {
-      alert("Please login first.");
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .update({ phone: cleanPhone })
-      .eq("id", userId)
-      .select("*")
-      .single();
-
-    if (error) {
-      console.error("Phone save error:", error);
-      alert("Phone number save failed. Please try again.");
-      return;
-    }
-
-    setProfile(data);
-    refreshProfile?.();
-    setShowPhonePopup(false);
-    setPhoneInput("");
-
-    setTimeout(() => {
-      handleGenerate();
-    }, 100);
-  };
-
   const handleGenerate = async () => {
     const queue = items.filter((it) => it.status === "ready");
 
@@ -3269,11 +3149,6 @@ export default function Home() {
       }
     }
 
-    if (!hasSavedPhoneNumber(profile)) {
-      setShowPhonePopup(true);
-      return;
-    }
-
     setLoading(true);
     cancelRef.current = false;
 
@@ -3291,12 +3166,6 @@ export default function Home() {
       }
 
       setProfile(latestProfile);
-
-      if (!hasSavedPhoneNumber(latestProfile)) {
-        setShowPhonePopup(true);
-        setLoading(false);
-        return;
-      }
 
       const needed = requiredCredits * queue.length;
 
@@ -3720,54 +3589,6 @@ export default function Home() {
       </div>
 
       <div className="relative z-10">
-        {showPhonePopup && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 px-4 backdrop-blur-md">
-            <div
-              className={`w-full max-w-md rounded-[2rem] border p-6 shadow-2xl ${
-                darkMode
-                  ? "border-cyan-400/30 bg-[#07111f] text-white"
-                  : "border-cyan-300/40 bg-white text-[#111827]"
-              }`}
-            >
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 text-2xl font-black text-white">
-                AF
-              </div>
-
-              <h2 className="text-2xl font-black">Add your phone number</h2>
-
-              <p
-                className={`mt-2 text-sm ${darkMode ? "text-white/60" : "text-black/60"}`}
-              >
-                Please add your WhatsApp/mobile number before creating AI
-                mockups.
-              </p>
-
-              <input
-                value={phoneInput}
-                onChange={(e) =>
-                  setPhoneInput(e.target.value.replace(/\D/g, "").slice(0, 10))
-                }
-                placeholder="Enter 10-digit mobile number"
-                inputMode="numeric"
-                maxLength={10}
-                className={`mt-5 w-full rounded-2xl border px-4 py-3 outline-none transition focus:border-cyan-400 ${
-                  darkMode
-                    ? "border-white/10 bg-white/5 text-white placeholder:text-white/35"
-                    : "border-black/10 bg-white text-black placeholder:text-black/35"
-                }`}
-              />
-
-              <button
-                type="button"
-                onClick={savePhoneNumber}
-                className="mt-4 w-full rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-3 font-bold text-white shadow-lg shadow-cyan-500/20"
-              >
-                Save & Continue
-              </button>
-            </div>
-          </div>
-        )}
-
         <section className="af-web-only mx-auto grid w-full max-w-7xl items-start gap-5 px-3 py-5 sm:px-4 lg:grid-cols-[0.9fr_1.1fr] lg:py-8">
           <div>
             <div
@@ -4947,8 +4768,8 @@ export default function Home() {
                       {styleActive("Upload Your Scene") && (
                         <p className={`mt-3 text-xs ${muted}`}>
                           {referenceSceneUrl
-                            ? "Your scene is ready — the product will be placed naturally into it (+2 credits). Tap the card to change it."
-                            : "Tap “Upload Your Scene” to pick a photo of your own space or backdrop (+2 credits)."}
+                            ? `Your scene is ready — the product will be placed naturally into it (${creditsLabel(PRICE_TABLE.ownScene)}). Tap the card to change it.`
+                            : `Tap “Upload Your Scene” to pick a photo of your own space or backdrop (${creditsLabel(PRICE_TABLE.ownScene)}).`}
                         </p>
                       )}
                     </>
@@ -5135,10 +4956,10 @@ export default function Home() {
                         <SummaryRow label="Frame" value={`${customOutputSize.trim() || outputSize} / ${customQuality.trim() || quality}`} />
                         <SummaryRow label="Uploads" value={String(readyItems.length)} />
                         {activeSceneUrl && (
-                          <SummaryRow label="Upload Your Scene" value="+2 credits" />
+                          <SummaryRow label="Upload Your Scene" value={creditsLabel(PRICE_TABLE.ownScene)} />
                         )}
                         {modelPhotoUrl && (
-                          <SummaryRow label="Upload Your Model" value="+2 credits" />
+                          <SummaryRow label="Upload Your Model" value={creditsLabel(PRICE_TABLE.ownModel)} />
                         )}
                       </div>
 
@@ -5369,9 +5190,7 @@ export default function Home() {
         <TestimonialsSlider
           agentType="textile"
           darkMode={darkMode}
-          seed={TEXTILE_SEED_TESTIMONIALS}
           heading="What early textile users are saying"
-          subtitle="Real WhatsApp & in-app feedback from manufacturers, sellers and wholesalers — names masked for privacy."
         />
       </div>
 

@@ -43,9 +43,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           plan: data.plan ?? "free",
         });
 
-        // A missing mobile number no longer forces /complete-profile.
-        // PhonePromptPopup asks after 30 seconds on the site, and the
-        // Generate buttons ask again if it is still missing
+        // A missing mobile number never forces /complete-profile and
+        // never blocks a generation. PhonePromptPopup offers it after
+        // the first successful image; billing asks for it when needed
         // (lib/phoneGate.ts).
       }
     } catch (err) {

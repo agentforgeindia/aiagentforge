@@ -118,8 +118,8 @@ export default function CommercialUsagePolicyPage() {
             </p>
             <p className="mt-1 text-sm text-black/70 dark:text-white/75">
               We will never come back asking for usage fees on images you
-              generated under an active plan. If your subscription lapses, the
-              images you already generated stay yours.
+              generated on AgentForge. Plans are one-time credit packs, and the
+              images you generate stay yours even after your credits run out.
             </p>
           </div>
         </div>

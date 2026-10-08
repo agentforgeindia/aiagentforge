@@ -40,4 +40,25 @@ t("deposit: payment only 'created' → no", fx(order({ type: "security_deposit" 
 t("deposit: USD order → no", fx({ ...order({ type: "security_deposit" }, 500), currency: "USD" }, pay(500), { type: "security_deposit", amountRupees: 500 }), false);
 t("workshop: credit-plan order → no", fx(order({ type: "credit_plan", userId: "u", planName: "Starter" }, 1999), pay(1999), { type: "workshop", amountRupees: 99 }), false);
 t("plan: payment.notes cannot stand in for order notes", P.verifyPlanOrder(order({}, 1999), pay(1999, { notes: { userId: "11111111-1111-4111-8111-111111111111", planName: "Starter" } })), null);
+// ── one price table, one plan list ──────────────────────────
+const C = load("lib/creditPricing.ts"), PC = load("lib/planCatalog.ts"), CR = load("lib/chargeRules.ts");
+const img = (o) => C.perImageCredits({ ultra: false, mobile: false, ...o });
+t("price: Premium square = 15", img({}), 15);
+t("price: Premium mobile = 17", img({ mobile: true }), 17);
+t("price: Ultra HD square = 30", img({ ultra: true }), 30);
+t("price: Ultra HD mobile = 32", img({ ultra: true, mobile: true }), 32);
+t("price: Ultra mobile + own scene + own model + 5 branding items = 41", img({ ultra: true, mobile: true, ownScene: true, ownModel: true, brandingItems: 5 }), 41);
+t("price: a negative branding count is ignored", img({ brandingItems: -3 }), 15);
+t("server range, Textile Ultra mobile + scene + model: 36 to 40 (4 branding items)", C.textileCreditRange({ quality: "Ultra HD", output_size: "1080x1920", reference_scene_url: "x", model_photo_url: "y" }), { floor: 36, ceiling: 40 });
+t("server range, Jewellery Premium square: 15 to 20 (5 branding items)", C.jewelleryCreditRange({ shared_settings: { output_quality: "Premium", output_size: "Square 1080x1080" } }), { floor: 15, ceiling: 20 });
+t("server range, Productography Ultra landscape: 32 to 37", C.productographyCreditRange({ quality: "ultra hd", output_size: "1920x1080" }), { floor: 32, ceiling: 37 });
+t("browser says 1 credit → charged the floor", C.clampCredits(1, { floor: 15, ceiling: 20 }), 15);
+t("browser says 999 credits → charged the ceiling", C.clampCredits(999, { floor: 15, ceiling: 20 }), 20);
+t("the page's own number inside the range is kept", C.clampCredits(18, { floor: 15, ceiling: 20 }), 18);
+t("price rows shown to customers come from the table", CR.PRICE_ROWS.map((r) => r.credits), ["15 credits", "30 credits", "+2 credits", "+2 credits", "+2 credits", "+1 credit each"]);
+t("plan list: Starter 1,800 · Pro Creator 9,000 · Empire 36,000", Object.fromEntries(Object.entries(PC.PLAN_CONFIG).map(([k, v]) => [k, v.credits])), { Starter: 1800, "Pro Creator": 9000, Empire: 36000 });
+t("payment routes read the same plan list", P.PLAN_CONFIG, PC.PLAN_CONFIG);
+const facts = PC.planFactsLine();
+t("AI reply prompts quote 9,000 and 36,000 credits, one-time, no unlimited", [/9,000 credits/.test(facts), /36,000 credits/.test(facts), /one-time/.test(facts), /12,000|50,000/.test(facts), /per month|\/month/.test(facts)], [true, true, true, false, false]);
+t("charge rules: six rules, regeneration is never free", [CR.CHARGE_RULES.length, /normal price/.test(CR.REGENERATION_RULE_SHORT), /automatically/.test(CR.FAILED_RULE_SHORT)], [6, true, true]);
 console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);

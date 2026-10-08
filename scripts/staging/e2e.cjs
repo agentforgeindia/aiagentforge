@@ -167,6 +167,13 @@ async function rzPair({ notes, amountRupees, status = "captured", orderless = fa
     const f = await api("/api/feedback/submit", { token: tok.alice, body: { rating: 5, generation_id: r.id } }); check("rating a FAILED generation → no credit", f.json?.creditsAwarded === 0 && credits(A) === b, JSON.stringify(f.json));
     const g = await api("/api/feedback/submit", { token: tok.alice, body: { rating: 5, generation_id: uuid() } }); check("rating a generation id that does not exist → no credit", g.json?.creditsAwarded === 0 && credits(A) === b, JSON.stringify(g.json));
     const n = await api("/api/feedback/submit", { token: tok.alice, body: { rating: 5 } }); check("rating with no generation at all → no credit", (n.json?.creditsAwarded ?? 0) === 0 && credits(A) === b, JSON.stringify(n.json));
+    const t0 = sql(`select count(*) from testimonials where message='Bahut badhiya result, design bilkul same aaya.'`);
+    check("a rating comment without the publish tick is NOT copied into the public reviews", t0 === "0", t0);
+    await api("/api/feedback/submit", { token: tok.bob, body: { rating: 5, feedback: "E2E private comment", agent: "textile" } });
+    await api("/api/feedback/submit", { token: tok.bob, body: { rating: 5, feedback: "E2E publish this one", agent: "textile", allow_publish: true } });
+    check("comment without consent → no review row", sql(`select count(*) from testimonials where message='E2E private comment'`) === "0");
+    const tp = sql(`select status, consent, consent_source, user_id from testimonials where message='E2E publish this one'`);
+    check("comment WITH consent → pending review (never auto-published), consent recorded, tied to the account", tp === `pending|t|rating_form|${B}`, tp);
     const u = await api("/api/feedback/submit", { body: { rating: 5, generation_id: r.id } }); check("rating without login → 401", u.status === 401, u.status); }
 
   // ───────────────────────────────────────────────────────────

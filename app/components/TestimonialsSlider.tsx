@@ -27,6 +27,8 @@ export type Testimonial = {
   avatarUrl?: string; // uploader's profile photo (auth avatar)
   createdAt: string; // ISO
   source?: "whatsapp" | "email" | "in-app" | string;
+  /** The review came from a signed-in AgentForge account. */
+  hasAccount?: boolean;
 };
 
 type Props = {
@@ -38,8 +40,12 @@ type Props = {
    * callers (textile + productography) keep compiling.
    */
   darkMode?: boolean;
-  /** Default seed entries shown when DB is empty / not yet wired. */
-  seed: Testimonial[];
+  /**
+   * @deprecated — ignored. The slider shows ONLY reviews from the
+   * database that the customer agreed to publish (consent) and the
+   * team approved. Hardcoded example reviews are not allowed.
+   */
+  seed?: Testimonial[];
   /** Headline override (per agent). */
   heading?: string;
   /** Subtitle override. */
@@ -83,11 +89,10 @@ export default function TestimonialsSlider({
   agentType,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   darkMode: _legacyDarkMode = false,
-  seed,
   heading = "What early users are saying",
-  subtitle = "Real messages from our first users — names masked for privacy.",
+  subtitle = "Reviews from AgentForge users, shown with their permission — names shortened for privacy.",
 }: Props) {
-  const [items, setItems] = useState<Testimonial[]>(seed);
+  const [items, setItems] = useState<Testimonial[]>([]);
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -98,6 +103,7 @@ export default function TestimonialsSlider({
   const [formCity, setFormCity] = useState("");
   const [formMessage, setFormMessage] = useState("");
   const [formRating, setFormRating] = useState(5);
+  const [formConsent, setFormConsent] = useState(false);
   const [formImageFile, setFormImageFile] = useState<File | null>(null);
   const [formImagePreview, setFormImagePreview] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
@@ -108,21 +114,22 @@ export default function TestimonialsSlider({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  // Try to fetch approved testimonials from DB and MERGE with seed.
-  // Order: real (newest first) → seed as filler → cap at top 8.
+  // Reviews come only from the database: approved by the team AND
+  // published with the customer's consent (sql/pending/08).
   useEffect(() => {
     let active = true;
     (async () => {
       try {
         const { data, error } = await supabase
           .from("testimonials")
-          .select("id, name, city, message, rating, image_url, avatar_url, created_at, source")
+          .select("id, user_id, name, city, message, rating, image_url, avatar_url, created_at, source")
           .eq("agent_type", agentType)
           .eq("status", "approved")
+          .eq("consent", true)
           .order("created_at", { ascending: false })
           .limit(8);
         if (!active) return;
-        if (error) return; // keep seed only
+        if (error) return; // nothing to show
         const mapped: Testimonial[] = (data || []).map((row: any) => ({
           id: row.id,
           name: maskName(row.name || "Anonymous"),
@@ -133,25 +140,17 @@ export default function TestimonialsSlider({
           avatarUrl: row.avatar_url || undefined,
           createdAt: row.created_at,
           source: row.source || "in-app",
+          hasAccount: Boolean(row.user_id),
         }));
-        // Combine real + seed, dedupe by id, cap at 8
-        const combined: Testimonial[] = [];
-        const seenIds = new Set<string>();
-        for (const t of [...mapped, ...seed]) {
-          if (seenIds.has(t.id)) continue;
-          seenIds.add(t.id);
-          combined.push(t);
-          if (combined.length >= 8) break;
-        }
-        setItems(combined);
+        setItems(mapped);
       } catch {
-        /* keep seed */
+        /* nothing to show */
       }
     })();
     return () => {
       active = false;
     };
-  }, [agentType, seed]);
+  }, [agentType]);
 
   // Auto-rotate
   useEffect(() => {
@@ -176,6 +175,7 @@ export default function TestimonialsSlider({
   }, [active]);
 
   const step = (dir: -1 | 1) => {
+    if (!items.length) return;
     setActive((prev) => (prev + dir + items.length) % items.length);
   };
 
@@ -229,6 +229,7 @@ export default function TestimonialsSlider({
     setFormCity("");
     setFormMessage("");
     setFormRating(5);
+    setFormConsent(false);
     setFormImageFile(null);
     setFormImagePreview("");
   };
@@ -239,6 +240,13 @@ export default function TestimonialsSlider({
       setSubmitMessage({ type: "err", text: "Please type a short review first." });
       return;
     }
+    if (!formConsent) {
+      setSubmitMessage({
+        type: "err",
+        text: "Please tick the box to let us show your review on the website.",
+      });
+      return;
+    }
     setSubmitting(true);
     setSubmitMessage(null);
     try {
@@ -246,6 +254,15 @@ export default function TestimonialsSlider({
         data: { session },
       } = await supabase.auth.getSession();
       const userId = session?.user?.id || null;
+      // Reviews are published only from real accounts.
+      if (!userId) {
+        setSubmitMessage({
+          type: "err",
+          text: "Please log in to share a review — we publish reviews only from AgentForge accounts.",
+        });
+        setSubmitting(false);
+        return;
+      }
 
       let imageUrl: string | null = null;
       if (formImageFile) {
@@ -274,6 +291,9 @@ export default function TestimonialsSlider({
         image_url: imageUrl,
         status: "pending",
         source: "in-app",
+        consent: true,
+        consent_at: new Date().toISOString(),
+        consent_source: "review_form",
       });
 
       if (error) throw error;
@@ -322,7 +342,7 @@ export default function TestimonialsSlider({
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500" />
             </span>
-            Early feedback · WhatsApp reviews
+            Customer reviews · shown with permission
           </p>
           <h3 className="mt-1 text-2xl font-black leading-tight sm:text-3xl md:text-4xl">
             <span className="bg-gradient-to-r from-cyan-400 via-cyan-500 to-blue-600 bg-clip-text text-transparent">
@@ -360,6 +380,15 @@ export default function TestimonialsSlider({
           </button>
         </div>
       </div>
+
+      {items.length === 0 && (
+        <div className={`rounded-[1.5rem] border p-6 text-center shadow-xl ${card}`}>
+          <p className="text-sm font-bold">No reviews published yet.</p>
+          <p className={`mt-1 text-sm ${muted}`}>
+            Tried AgentForge? Use “Share your story” — we publish reviews only with the customer’s permission.
+          </p>
+        </div>
+      )}
 
       {/* Slider */}
       <div
@@ -400,7 +429,7 @@ export default function TestimonialsSlider({
                       <p className="truncate text-sm font-black text-emerald-900 dark:text-emerald-100">
                         {t.name}
                       </p>
-                      <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                      {t.hasAccount && <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-emerald-500" />}
                     </div>
                     <p className="truncate text-[10px] font-bold uppercase tracking-wider text-emerald-700/70 dark:text-emerald-200/70">
                       {t.city ? `${t.city} · ` : ""}
@@ -449,9 +478,11 @@ export default function TestimonialsSlider({
                         />
                       ))}
                     </div>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider ${muted}`}>
-                      Verified user
-                    </span>
+                    {t.hasAccount && (
+                      <span className={`text-[10px] font-bold uppercase tracking-wider ${muted}`}>
+                        AgentForge account
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -602,6 +633,19 @@ export default function TestimonialsSlider({
                   </button>
                 </div>
               )}
+
+              <label className="flex cursor-pointer items-start gap-3 text-xs leading-5">
+                <input
+                  type="checkbox"
+                  checked={formConsent}
+                  onChange={(e) => setFormConsent(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-cyan-500"
+                />
+                <span className={muted}>
+                  I agree that AgentForge may show this review on its website with my first name, city and
+                  the picture I attach. I can ask for it to be removed at any time.
+                </span>
+              </label>
 
               {submitMessage && (
                 <div

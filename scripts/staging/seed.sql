@@ -39,3 +39,6 @@ insert into storage.objects(bucket_id,name,owner) values
  ('designs','textile-designs/old-file.png',null),
  ('designs','brand-logos/11111111-1111-4111-8111-111111111111/logo.png','11111111-1111-4111-8111-111111111111'),
  ('generation-uploads','jewellery/11111111-1111-4111-8111-111111111111/a.jpg','11111111-1111-4111-8111-111111111111');
+insert into public.testimonials(agent_type,name,city,message,rating,status,source,user_id) values
+ ('textile','Form Reviewer','Surat','Sent through the review form',5,'approved','in-app','22222222-2222-4222-8222-222222222222'),
+ ('textile','Popup Commenter',null,'Typed in the rating popup, never asked to publish',5,'approved','textile',null);

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/app/components/ThemeProvider";
+import { PRICE_TABLE } from "@/lib/creditPricing";
 import BillingDetailsModal, {
   type BillingDetails,
 } from "@/app/components/BillingDetailsModal";
@@ -85,7 +86,7 @@ const plans: BillingPlan[] = [
     popular: false,
     features: [
       "Access to all AgentForge AI agents",
-      "15 credits per standard image",
+      `${PRICE_TABLE.premium} credits per standard image`,
       "1080×1080 HD square export",
       "Watermark-free business outputs",
       "Textile, jewellery & product visuals",
@@ -447,7 +448,7 @@ export default function BillingPage() {
   const muted = darkMode ? "text-white/60" : "text-black/60";
   const strongMuted = darkMode ? "text-white/75" : "text-black/70";
 
-  const standardImageEstimate = credits !== null ? Math.floor(credits / 15) : null;
+  const standardImageEstimate = credits !== null ? Math.floor(credits / PRICE_TABLE.premium) : null;
 
   return (
     <main className={`relative min-h-screen overflow-hidden ${bg}`}>
@@ -584,11 +585,11 @@ export default function BillingPage() {
                 darkMode ? "border-white/10 bg-white/[0.05] text-white/70" : "border-black/10 bg-white/80 text-black/70"
               }`}>
                 <Zap className="h-3.5 w-3.5 text-cyan-500" />
-                {standardImageEstimate !== null ? `≈ ${standardImageEstimate} standard images` : "15 credits per standard image"}
+                {standardImageEstimate !== null ? `≈ ${standardImageEstimate} standard images` : `${PRICE_TABLE.premium} credits per standard image`}
               </div>
 
               <p className={`relative mt-3 text-xs leading-5 ${muted}`}>
-                Standard image generation uses 15 credits. Premium styles may use more.
+                Standard image generation uses {PRICE_TABLE.premium} credits. Ultra HD and add-ons use more.
               </p>
 
               {/* Rewards link */}

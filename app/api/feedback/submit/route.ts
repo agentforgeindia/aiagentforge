@@ -32,11 +32,12 @@ export async function POST(req: Request) {
   if (user instanceof Response) return user;
 
   const body = await req.json().catch(() => ({}));
-  const { rating, feedback, generation_id, agent } = body as {
+  const { rating, feedback, generation_id, agent, allow_publish } = body as {
     rating?: number;
     feedback?: string;
     generation_id?: string;
     agent?: string;
+    allow_publish?: boolean;
   };
 
   if (!rating || rating < 1 || rating > 5) {
@@ -103,39 +104,43 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Failed to save feedback." }, { status: 500 });
   }
 
-  // Written feedback also becomes a PENDING testimonial — once the admin
-  // approves it, it shows in the on-page reviews slider. Best-effort: a
-  // failure here must not block the credit reward.
-  if (hasFeedback) {
+  // A written comment becomes a review candidate ONLY when the customer
+  // ticked "you may show this on the website" (consent). It is always
+  // saved as PENDING — a team member approves it in Admin → Testimonials
+  // before it is public. Without consent the comment stays private in
+  // the `feedback` table. Best-effort: a failure here must not block the
+  // credit reward.
+  if (hasFeedback && allow_publish === true) {
     try {
       // Prefer the profile name, fall back to the email's local part.
       const { data: prof } = await supabase
         .from("profiles")
-        .select("name")
+        .select("full_name")
         .eq("id", user.id)
         .maybeSingle();
       const name =
-        (typeof prof?.name === "string" && prof.name.trim()) ||
+        (typeof prof?.full_name === "string" && prof.full_name.trim()) ||
         user.email?.split("@")[0] ||
         "AgentForge User";
-      // The uploader's own profile photo (Google/OAuth avatar) so the
-      // review card shows their picture instead of just initials.
+      // The customer's own profile photo, shown on the review card —
+      // only because they agreed to publish.
       const meta = (user as any)?.user_metadata ?? {};
       const avatarUrl =
         (typeof meta.avatar_url === "string" && meta.avatar_url) ||
         (typeof meta.picture === "string" && meta.picture) ||
         null;
       await supabase.from("testimonials").insert({
+        user_id: user.id,
         name,
         message: feedback!.trim(),
         rating,
         avatar_url: avatarUrl,
-        // Show in the on-page reviews slider immediately for 4-5★ (the
-        // slider filters by agent_type + status="approved"). 1-3★ wait
-        // for admin review so the public slider stays positive.
-        status: rating >= 4 ? "approved" : "pending",
+        status: "pending",
         agent_type: agent || "textile",
-        source: agent || "textile",
+        source: "in-app",
+        consent: true,
+        consent_at: new Date().toISOString(),
+        consent_source: "rating_form",
       });
     } catch (e) {
       console.error("[feedback/submit] testimonial insert skipped:", e);

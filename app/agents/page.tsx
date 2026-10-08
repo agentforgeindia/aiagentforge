@@ -156,7 +156,7 @@ const comingSoon = [
   { emoji: "🎉", title: "Festival Wishes AI",           color: "from-yellow-400 to-orange-500", desc: "Branded Diwali, Eid, Holi & Christmas greetings — designed, branded, ready to share." },
   { emoji: "🗳️", title: "Election Campaign Poster AI",  color: "from-emerald-500 to-teal-500",  desc: "Professional political posters & banners for campaigns — multilingual, fast." },
   { emoji: "🌐", title: "Website Maker Agent",          color: "from-blue-500 to-cyan-500",     desc: "Describe your business, get a fully designed website — no code, live in minutes." },
-  { emoji: "🤖", title: "More Agents in Pipeline",      color: "from-violet-500 to-purple-600", desc: "We are building the full AI studio. Active subscribers get priority access to every launch." },
+  { emoji: "🤖", title: "More Agents in Pipeline",      color: "from-violet-500 to-purple-600", desc: "We are building the full AI studio. Paid members get priority access to every launch." },
 ];
 
 /* ─── Page ───────────────────────────────────────────── */
@@ -360,7 +360,7 @@ export default function AgentsPage() {
               </h2>
               <p className={`mx-auto mt-3 max-w-lg text-sm leading-6 ${muted}`}>
                 Names not final yet — all agents are real and in active development.
-                Subscribers get priority access to every new launch.
+                Paid members get priority access to every new launch.
               </p>
             </div>
 
@@ -398,7 +398,7 @@ export default function AgentsPage() {
               <span className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 bg-clip-text text-transparent">every new agent.</span>
             </h2>
             <p className={`mx-auto mt-4 max-w-xl text-sm leading-7 ${muted}`}>
-              Start free. 100 credits on signup. Each new agent launches first to active subscribers. No waitlist for paid members.
+              Start free. 100 credits on signup. Each new agent launches first to paid members. No waitlist for paid members.
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
               <Link href="/signup" className="rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 px-8 py-3.5 text-sm font-black text-black shadow-xl shadow-cyan-500/25 transition hover:scale-105">
