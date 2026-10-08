@@ -85,9 +85,15 @@ export default function LayoutClient({
           <Footer />
           <AgentForgeAI />
           <LaunchOfferPopup />
-          <PhonePromptPopup />
         </div>
       )}
+
+      {/* Mobile-number prompt (lib/phoneGate.ts). Mounted on every
+          customer screen — website and Android app — because the
+          Generate buttons open it when the number is still missing.
+          Not on login / sign-up, admin, invoices or the standalone
+          workshop pages. */}
+      {!hideChrome && <PhonePromptPopup />}
     </>
   );
 }

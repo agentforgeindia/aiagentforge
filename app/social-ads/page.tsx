@@ -20,9 +20,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { ensurePhone } from "@/lib/phoneGate";
 import { useAuth } from "@/app/components/AuthProvider";
 import { track } from "@/lib/analytics";
-import { validateImageFile } from "@/lib/uploadValidation";
+import { validateImageFile, storageSafeName } from "@/lib/uploadValidation";
 import RatingFeedbackModal from "@/app/components/RatingFeedbackModal";
 import CongratulationsPopup from "@/app/components/CongratulationsPopup";
 import {
@@ -273,7 +274,7 @@ export default function SocialAdsPage() {
     setUploading(slotId);
     setError(null);
     try {
-      const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
+      const safeName = storageSafeName(file);
       const path = `social-ads/${user?.id || "guest"}/${Date.now()}-${newId()}-${safeName}`;
       const { error: upErr } = await supabase.storage
         .from("designs")
@@ -414,6 +415,8 @@ export default function SocialAdsPage() {
       setError("Please sign in first.");
       return;
     }
+    // Mobile number is asked here if it was never given (lib/phoneGate.ts).
+    if (!(await ensurePhone(user.id))) return;
     const activeRows = mode === "single" ? rows.slice(0, 1) : rows;
     for (let i = 0; i < activeRows.length; i++) {
       const r = activeRows[i];

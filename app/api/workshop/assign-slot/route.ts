@@ -9,6 +9,8 @@
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { fetchRazorpayOrder } from "@/lib/razorpayPlans";
+import { rateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,10 +26,22 @@ function svc() {
   });
 }
 
+// Largest amount a workshop seat is ever sold for (rupees). Anything
+// bigger is some other payment and must not become a workshop seat.
+const MAX_WORKSHOP_AMOUNT = 999;
+
 export async function POST(req: Request) {
+  const limited = rateLimit(req, { name: "workshop-assign-slot", limit: 10, windowMs: 10 * 60_000 });
+  if (limited) return limited;
+
   try {
     const { payment_id, slot } = await req.json().catch(() => ({}));
-    if (!payment_id || !slot || !VALID_SLOTS.has(slot)) {
+    if (
+      !payment_id ||
+      !/^pay_[A-Za-z0-9]+$/.test(String(payment_id)) ||
+      !slot ||
+      !VALID_SLOTS.has(slot)
+    ) {
       return NextResponse.json({ error: "Invalid payment or slot." }, { status: 400 });
     }
 
@@ -49,6 +63,36 @@ export async function POST(req: Request) {
     const payment: any = await payRes.json();
     if (payment?.status !== "captured") {
       return NextResponse.json({ error: "Payment not captured." }, { status: 400 });
+    }
+
+    // SECURITY: "captured" is true for every successful payment on the
+    // account — credit plans, meetings, security deposits. Only a
+    // workshop payment may claim a seat:
+    //   • orders created by our own server say what they are for
+    //     (notes.type); only "workshop" is accepted, and only for the
+    //     slot written in that order,
+    //   • hosted Payment Page / QR payments have no such note, so they
+    //     are accepted only when the amount is in workshop range.
+    const order = payment.order_id ? await fetchRazorpayOrder(String(payment.order_id)) : null;
+    if (payment.order_id && !order) {
+      return NextResponse.json(
+        { error: "Could not confirm the payment with Razorpay. Please try again in a minute." },
+        { status: 502 },
+      );
+    }
+    const orderNotes = ((order?.notes ?? {}) as Record<string, unknown>) || {};
+    const orderType = typeof orderNotes.type === "string" ? orderNotes.type : "";
+    if ((orderType && orderType !== "workshop") || orderNotes.userId || orderNotes.planName || orderNotes.candidate_id) {
+      return NextResponse.json({ error: "This is not a workshop payment." }, { status: 400 });
+    }
+    if (orderType === "workshop" && String(orderNotes.slot ?? "") !== slot) {
+      return NextResponse.json(
+        { error: "This payment was made for a different workshop day." },
+        { status: 409 },
+      );
+    }
+    if (Number(payment.amount) / 100 > MAX_WORKSHOP_AMOUNT) {
+      return NextResponse.json({ error: "This is not a workshop payment." }, { status: 400 });
     }
 
     const db = svc();

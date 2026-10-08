@@ -10,6 +10,7 @@ import { Link as LinkIcon } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import PageDoodles from "@/app/components/PageDoodles";
 import CandidateStatusBanner from "@/app/careers/CandidateStatusBanner";
+import { influencerHeaders, saveInfluencerSession } from "@/lib/influencerClient";
 
 const CC_PITCH_SCRIPT = `🎯 AgentForge — India's Own AI Platform for Businesses
 
@@ -141,6 +142,8 @@ function ApplyForm() {
     setCandidateId(cid);
     // Save so CandidateStatusBanner can poll for stage updates
     if (typeof window !== "undefined") localStorage.setItem("__cc_id", cid);
+    // Creator applicants get a signed dashboard session with their new record.
+    if (json.influencer_token) saveInfluencerSession(json.influencer_token as string, cid);
     setLoading(false);
 
     if (isCC) {
@@ -225,7 +228,7 @@ function ApplyForm() {
         // Save as video submission
         await fetch("/api/careers/influencer/video-submit", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: await influencerHeaders(),
           body: JSON.stringify({ candidate_id: candidateId, video_url: videoUrl, platform: "other", caption: "Application video" }),
         });
       } catch (_) { /* Non-blocking */ }

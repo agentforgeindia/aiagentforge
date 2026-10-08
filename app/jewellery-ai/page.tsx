@@ -3,10 +3,19 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { ensurePhone } from "@/lib/phoneGate";
 import { useAuth } from "@/app/components/AuthProvider";
 import StickyMobileCTA from "@/app/components/StickyMobileCTA";
 import TeamCreditToggle from "@/app/components/TeamCreditToggle";
 import { track } from "@/lib/analytics";
+import { finalizeGeneration } from "@/lib/finalizeGeneration";
+import {
+  findOversizedSourceImage,
+  findUnsupportedSourceImage,
+  SOURCE_IMAGE_TOO_LARGE_MESSAGE,
+  SOURCE_IMAGE_UNSUPPORTED_MESSAGE,
+  storageSafeName,
+} from "@/lib/uploadValidation";
 import {
   ArrowRight,
   BadgeCheck,
@@ -1060,7 +1069,10 @@ const isFreeAccountFromProfile = (profile: any): boolean => {
       profile?.plan_name ||
       "",
   ).toLowerCase();
+  // Every paid plan is watermark-free — Starter included (pricing page:
+  // "Watermark-free business outputs").
   const paid =
+    planText.includes("starter") ||
     planText.includes("empire") ||
     planText.includes("founder") ||
     planText.includes("unlimited") ||
@@ -1487,7 +1499,9 @@ export default function JewelleryAIPage() {
   }, [customJewellery, jewelleryType]);
 
   const credits = useMemo(() => {
-    const base = quality === "Ultra HD" ? 30 : outputSize.includes("Mobile") ? 17 : 15;
+    // Premium 15 · Ultra HD 30 · mobile 1080x1920 = +2 (17 / 32).
+    // Keep in step with lib/creditPricing.ts (the server charges from there).
+    const base = (quality === "Ultra HD" ? 30 : 15) + (outputSize.includes("Mobile") ? 2 : 0);
     // Branding overlays: +1 each — FREE for Empire users.
     const brandingCredits = isEmpireFromProfile(profile)
       ? 0
@@ -1604,6 +1618,15 @@ export default function JewelleryAIPage() {
   const handleFiles = (files: FileList | null) => {
     if (!files?.length) return;
 
+    if (findOversizedSourceImage(Array.from(files))) {
+      alert(SOURCE_IMAGE_TOO_LARGE_MESSAGE);
+      return;
+    }
+    if (findUnsupportedSourceImage(Array.from(files).filter((file) => file.type.startsWith("image/")))) {
+      alert(SOURCE_IMAGE_UNSUPPORTED_MESSAGE);
+      return;
+    }
+
     const nextUploads: UploadItem[] = Array.from(files)
       .filter((file) => file.type.startsWith("image/"))
       .map((file) => ({
@@ -1669,7 +1692,7 @@ export default function JewelleryAIPage() {
 };
 
 const uploadFileToSupabase = async (file: File, folder: string) => {
-  const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "-");
+  const safeFileName = storageSafeName(file);
   const filePath = `${folder}/${authUser?.id || "guest"}/${Date.now()}-${newId()}-${safeFileName}`;
 
   const { error } = await supabase.storage.from("designs").upload(filePath, file, {
@@ -1999,14 +2022,10 @@ const applyLogoOverlay = async (
       "jewellery-outputs",
     );
 
-    // Persist composite URL — My Creations + downloads see the branded version
-    await supabase
-      .from("generations")
-      .update({
-        output_url: compositeUrl,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", generationId);
+    // Persist composite URL — My Creations + downloads see the branded
+    // version. Browsers cannot update `generations` (RLS), so this goes
+    // through the server route.
+    await finalizeGeneration(generationId, compositeUrl);
 
     return compositeUrl;
   } catch (error) {
@@ -2102,6 +2121,9 @@ const handleGenerate = async () => {
       return;
     }
 
+    // Mobile number is asked here if it was never given (lib/phoneGate.ts).
+    if (!(await ensurePhone(authUser.id))) return;
+
     if (modelLook === "Upload Your Model" && !modelPhotoUrl) {
       alert("Apni model photo upload karein — Model Look me 'Upload Your Model' card.");
       return;
@@ -2112,9 +2134,7 @@ const handleGenerate = async () => {
       return;
     }
 
-const WEBHOOK_URL =
-  process.env.NEXT_PUBLIC_N8N_JEWELLERY_WEBHOOK_URL ||
-  "https://n8n.aiagentforge.in/webhook/generate-jewellery";
+// (The n8n webhook address is server-only — see /api/jewellery/generate.)
 
 
     setIsGenerating(true);

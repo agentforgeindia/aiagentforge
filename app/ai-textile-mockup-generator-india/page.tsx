@@ -70,7 +70,7 @@ export default function Page() {
         {
           icon: "📦",
           title: "Bulk catalogue mode",
-          desc: "Empire plan unlocks bulk generation — ship ~2,400 AI catalogue images every month for your factory or wholesale operation.",
+          desc: "Empire plan unlocks bulk generation — ship ~2,400 AI catalogue images for your factory or wholesale operation.",
         },
         {
           icon: "👨‍👩‍👧",
@@ -84,8 +84,8 @@ export default function Page() {
         },
         {
           icon: "💸",
-          title: "1 shoot = 1 year",
-          desc: "₹15,000 traditional shoot budget = 1 year of unlimited AI catalogues on our Empire plan. Real savings, real time back.",
+          title: "1 shoot = 800+ images",
+          desc: "The ₹15,000 that one traditional shoot costs buys 800+ AI catalogue images on AgentForge. Real savings, real time back.",
         },
       ]}
       steps={[

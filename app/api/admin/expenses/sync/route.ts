@@ -16,6 +16,8 @@
 
 import { NextResponse } from "next/server";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { adminFromAuthHeader } from "@/lib/adminAuth";
+import { secretsMatch } from "@/lib/cronAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,22 +31,17 @@ function getServiceClient(): SupabaseClient {
   });
 }
 
-async function authorize(req: Request, admin: SupabaseClient): Promise<boolean> {
+async function authorize(req: Request): Promise<boolean> {
   const header = req.headers.get("authorization") ?? "";
   const token = /^Bearer\s+(.+)$/i.exec(header.trim())?.[1]?.trim();
   if (!token) return false;
 
-  // 1) Cron secret path
+  // 1) Cron secret path (constant-time compare).
   const cronSecret = (process.env.CRON_SECRET ?? "").trim();
-  if (cronSecret && token === cronSecret) return true;
+  if (cronSecret && secretsMatch(token, cronSecret)) return true;
 
-  // 2) Admin user path
-  const { data } = await admin.auth.getUser(token);
-  const email = data.user?.email?.toLowerCase();
-  if (!email) return false;
-  const { data: row } = await admin
-    .from("admin_users").select("email").eq("email", email).maybeSingle();
-  return Boolean(row);
+  // 2) Admin path — active admin with access to the Finance screen.
+  return Boolean(await adminFromAuthHeader(header, "finance.view"));
 }
 
 async function getUsdInrRate(admin: SupabaseClient): Promise<number> {
@@ -161,7 +158,7 @@ export async function POST(req: Request) {
   try { admin = getServiceClient(); }
   catch (e) { return NextResponse.json({ error: e instanceof Error ? e.message : "misconfigured" }, { status: 500 }); }
 
-  if (!(await authorize(req, admin))) {
+  if (!(await authorize(req))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

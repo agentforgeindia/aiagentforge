@@ -5,7 +5,7 @@ import { useTheme } from "@/app/components/ThemeProvider";
 const refundSections = [
   {
     title: "1. General Policy",
-    body: "All payments made on AgentForge are generally non-refundable. By purchasing any subscription, credits, or services, you agree to this Refund Policy.",
+    body: "All payments made on AgentForge are generally non-refundable. By purchasing any plan, credits, or services, you agree to this Refund Policy.",
   },
   {
     title: "2. Credits Usage",
@@ -13,11 +13,11 @@ const refundSections = [
   },
   {
     title: "3. Unused Credits",
-    body: "Unused credits are non-refundable but may remain available within your active subscription period.",
+    body: "Unused credits are non-refundable. They do not expire and stay available in your account.",
   },
   {
-    title: "4. Subscription Plans",
-    body: "Subscription fees are billed in advance and are non-refundable. You may cancel future renewals anytime, but refunds will not be issued for partially used periods.",
+    title: "4. Plans",
+    body: "Plans are one-time purchases billed in advance and are non-refundable. There is no automatic renewal; refunds are not issued for partially used credit packs.",
   },
   {
     title: "5. Failed Generations",

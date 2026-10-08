@@ -3,6 +3,8 @@
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { authorizeInfluencer, influencerDenied } from "@/lib/influencerSession";
+import { isAgentForgeHostedUrl } from "@/lib/uploadValidation";
 
 const db = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,6 +15,11 @@ const db = createClient(
 export async function POST(req: Request) {
   const { candidate_id, script_id, video_url, platform, caption } = await req.json().catch(() => ({}));
 
+  // Only the creator themselves can add a video to their record.
+  if ((await authorizeInfluencer(req, candidate_id)) !== "self") return influencerDenied();
+  if (typeof video_url !== "string" || !isAgentForgeHostedUrl(video_url)) {
+    return NextResponse.json({ ok: false, error: "Please upload the video from this page." }, { status: 400 });
+  }
   if (!candidate_id || !video_url) {
     return NextResponse.json({ ok: false, error: "candidate_id and video_url are required" }, { status: 400 });
   }

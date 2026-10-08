@@ -2,14 +2,9 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { sendMetaEvent } from "@/lib/metaCapi";
+import { PLAN_CONFIG, verifyPlanOrder } from "@/lib/razorpayPlans";
 
 export const runtime = "nodejs";
-
-const PLAN_CONFIG: Record<string, { amount: number; credits: number }> = {
-  Starter: { amount: 1999, credits: 1800 },
-  "Pro Creator": { amount: 9999, credits: 9000 },
-  Empire: { amount: 39999, credits: 36000 },
-};
 
 // Workshop slot ids seeded in sql/workshop.sql.
 const WORKSHOP_SLOTS = new Set(["20-june", "21-june", "27-june", "28-june", "1-july", "5-july", "4-july"]);
@@ -186,7 +181,9 @@ function verifyWebhookSignature(rawBody: string, signature: string | null) {
     .update(rawBody)
     .digest("hex");
 
-  return expectedSignature === signature;
+  const a = Buffer.from(expectedSignature);
+  const b = Buffer.from(signature);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
 export async function POST(request: Request) {
@@ -218,21 +215,55 @@ export async function POST(request: Request) {
     const payment = event?.payload?.payment?.entity;
     const razorpayPaymentId = payment?.id;
     const razorpayOrderId = payment?.order_id;
-    const userId = payment?.notes?.userId;
-    const planName = payment?.notes?.planName;
+    // SECURITY: payment.notes are set by the browser at checkout, so they
+    // can claim any plan. Whether this is a credit-plan purchase is decided
+    // from the ORDER our server created (server-set notes) and from the
+    // amounts actually paid — see lib/razorpayPlans.ts.
+    const notesClaimPlan = Boolean(
+      payment?.notes?.userId &&
+        payment?.notes?.planName &&
+        Object.prototype.hasOwnProperty.call(PLAN_CONFIG, String(payment.notes.planName)),
+    );
+    const order = razorpayOrderId ? await fetchOrder(razorpayOrderId) : null;
+
+    if (notesClaimPlan && razorpayOrderId && !order) {
+      // Looks like a plan purchase but Razorpay could not be reached to
+      // confirm the order. Ask Razorpay to retry instead of guessing.
+      return NextResponse.json(
+        { error: "Could not confirm order with Razorpay. Please retry." },
+        { status: 503 },
+      );
+    }
+
+    // Every order-based payment needs its order to be classified. If
+    // Razorpay could not be reached, ask for a retry — otherwise a real
+    // credit-plan payment could be filed as a workshop seat.
+    if (razorpayOrderId && !order) {
+      return NextResponse.json(
+        { error: "Could not confirm order with Razorpay. Please retry." },
+        { status: 503 },
+      );
+    }
+
+    const purchase = verifyPlanOrder(order, payment);
+
+    if (notesClaimPlan && !purchase) {
+      console.error("[razorpay-webhook] payment notes claim a plan the order does not back", {
+        payment_id: razorpayPaymentId,
+        order_id: razorpayOrderId,
+      });
+    }
 
     // ── External payments (workshop links / Payment Pages / QR codes /
     // WhatsApp-shared links) ────────────────────────────────────────
-    // Anything that is NOT a valid in-app credit-plan purchase is an
+    // Anything that is NOT a verified in-app credit-plan purchase is an
     // external workshop/QR/link payment that bypassed the app checkout.
     // Record it into workshop_registrations so the paid customer ALWAYS
     // shows in the admin — never silently dropped. Idempotency uses the
     // order id when present, else the payment id (QR-code payments often
     // have no order). The slot is resolved from the page title, falling
     // back to 'unassigned' (admin can set the correct date manually).
-    const isCreditPlan = Boolean(
-      userId && planName && PLAN_CONFIG[planName as string],
-    );
+    const isCreditPlan = Boolean(purchase);
     if (!isCreditPlan) {
       if (!razorpayPaymentId) {
         return NextResponse.json({ error: "No payment id." }, { status: 400 });
@@ -246,9 +277,32 @@ export async function POST(request: Request) {
       // A ₹99 meeting payment from /book-meeting is already saved to the
       // `meetings` table (shown at /admin/meetings) by /api/meetings/book.
       // Skip it here so it does NOT also leak into Workshop Registrations.
-      const order = razorpayOrderId ? await fetchOrder(razorpayOrderId) : null;
       if (isMeetingPayment(full, order)) {
         return NextResponse.json({ success: true, skipped: "meeting" });
+      }
+
+      // Orders created by our own server say what they are for. Only
+      // "workshop" orders (and untyped external payments — hosted pages,
+      // QR codes, links) belong in Workshop Registrations. A careers
+      // security deposit is handled by /api/careers/payment/verify, and a
+      // credit-plan order that failed verification above must never be
+      // turned into a workshop seat.
+      const orderType = typeof order?.notes?.type === "string" ? order.notes.type : "";
+      if (orderType && orderType !== "workshop") {
+        if (orderType === "credit_plan") {
+          try {
+            await supabaseAdmin.rpc("log_error", {
+              p_category: "payment",
+              p_source: "razorpay-webhook",
+              p_message: `Credit-plan order failed verification (${razorpayPaymentId})`,
+              p_details: { order_id: razorpayOrderId, payment_id: razorpayPaymentId },
+              p_user_id: null,
+            });
+          } catch {
+            /* logging must not block */
+          }
+        }
+        return NextResponse.json({ success: true, skipped: orderType });
       }
 
       // Hosted Payment Page payments carry the slot signal on their invoice.
@@ -303,7 +357,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, recorded: true, slot });
     }
 
-    const plan = PLAN_CONFIG[planName];
+    const { userId, planName, plan } = purchase!;
 
     const supabaseAdmin = getSupabaseAdmin();
 

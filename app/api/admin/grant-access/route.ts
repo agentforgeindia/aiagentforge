@@ -11,11 +11,13 @@
 // Body: { email, plan?, bonus_credits?, validity_days?, note? }
 //   - plan ""        → don't change the plan, only add credits
 //   - bonus_credits  → extra credits added on top (audit-logged)
-//   - validity_days  → plan validity (default 365; 0 = lifetime)
+//   - validity_days  → plan validity (default 0 = lifetime; a number
+//                      of days only for a time-limited trial / offer)
 // ============================================================
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { adminFromAuthHeader, type PermissionSpec } from "@/lib/adminAuth";
 
 export const runtime = "nodejs";
 
@@ -28,20 +30,13 @@ function getServiceClient() {
   });
 }
 
-async function isCallerAdmin(authHeader: string | null): Promise<boolean> {
-  if (!authHeader?.startsWith("Bearer ")) return false;
-  const token = authHeader.slice("Bearer ".length).trim();
-  if (!token) return false;
-  const admin = getServiceClient();
-  const { data, error } = await admin.auth.getUser(token);
-  const email = data.user?.email?.toLowerCase();
-  if (error || !email) return false;
-  const { data: row } = await admin
-    .from("admin_users")
-    .select("email")
-    .eq("email", email)
-    .maybeSingle();
-  return Boolean(row);
+// Valid login + ACTIVE admin + the permission for this screen/action
+// (lib/adminAuth.ts). Being listed in admin_users alone is not enough.
+async function isCallerAdmin(
+  authHeader: string | null,
+  perm: PermissionSpec = "credits.grant",
+): Promise<boolean> {
+  return Boolean(await adminFromAuthHeader(authHeader, perm));
 }
 
 export async function POST(request: Request) {
@@ -57,7 +52,7 @@ export async function POST(request: Request) {
     const note = String(body.note || "").trim();
     const validityDays = Number.isFinite(Number(body.validity_days))
       ? Number(body.validity_days)
-      : 365;
+      : 0; // plans are lifetime — a validity is set only when the admin types one
 
     if (!email) {
       return NextResponse.json({ error: "email is required." }, { status: 400 });

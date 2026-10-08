@@ -20,13 +20,17 @@ import { requireUser } from "@/lib/serverAuth";
 import { isAgentEnabled } from "@/lib/agentEnabled";
 import { isAgentForgeHostedUrl } from "@/lib/uploadValidation";
 import { getTeamMembership } from "@/lib/teamAuth";
-import { deductTeamCredits, refundTeamCredits } from "@/lib/creditsServer";
+import { deductTeamCredits, refundTeamCredits, serviceDb } from "@/lib/creditsServer";
+import { failAndRefundGeneration } from "@/lib/generationRefund";
 import { detectClientSource, type ClientSource } from "@/lib/clientSource";
+import { clampCredits, productographyCreditRange } from "@/lib/creditPricing";
+import {
+  DuplicateGenerationIdError,
+  insertGenerationRowsStrict,
+  n8nHeaders,
+} from "@/lib/generationRows";
 
 export const runtime = "nodejs";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Server-side webhook URL — prefer the private env var; accept
 // the legacy NEXT_PUBLIC_* during migration.
@@ -58,34 +62,23 @@ async function insertGenerationRow(row: {
   custom_instruction?: string | null;
   /** Where the request came from — app / phone browser / desktop. */
   client_source: ClientSource;
+  /** Server-computed price of this image. */
+  credit_cost?: number;
+  /** Set only when this route charged the credits (team pool). */
+  credits_used?: number;
 }) {
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Supabase service-role env vars missing.");
-  }
-  const response = await fetch(`${supabaseUrl}/rest/v1/generations`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: serviceRoleKey,
-      Authorization: `Bearer ${serviceRoleKey}`,
-      Prefer: "resolution=merge-duplicates",
+  // Plain insert — an id that already exists is rejected instead of
+  // overwriting that row (see lib/generationRows.ts).
+  await insertGenerationRowsStrict([
+    {
+      ...row,
+      input_image_url: row.design_url,
+      status: "pending",
+      agent_type: "productography",
+      category: "productography",
+      team_id: row.team_id ?? null,
     },
-    body: JSON.stringify([
-      {
-        ...row,
-        input_image_url: row.design_url,
-        status: "pending",
-        agent_type: "productography",
-        category: "productography",
-        team_id: row.team_id ?? null,
-      },
-    ]),
-    cache: "no-store",
-  });
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`generations insert failed: ${text}`);
-  }
+  ]);
 }
 
 export async function POST(request: Request) {
@@ -118,12 +111,17 @@ export async function POST(request: Request) {
     return bad("design_url must be an AgentForge-hosted URL.");
   }
 
-  const credits = Number(body?.required_credits ?? body?.credits_required ?? 0);
-  if (!Number.isFinite(credits) || credits < 0 || credits > MAX_CREDITS_PER_CALL) {
+  const clientCredits = Number(body?.required_credits ?? body?.credits_required ?? 0);
+  if (!Number.isFinite(clientCredits) || clientCredits < 0 || clientCredits > MAX_CREDITS_PER_CALL) {
     return bad(
       `required_credits must be a non-negative integer ≤ ${MAX_CREDITS_PER_CALL}.`,
     );
   }
+  // Price on the SERVER — the browser's number is only accepted inside
+  // the range the selected options allow (see lib/creditPricing.ts).
+  // This is the amount the team pool is charged, and the amount the
+  // n8n workflow is told to deduct for a personal generation.
+  const credits = clampCredits(clientCredits, productographyCreditRange(body));
 
   // Resolve team context — if team_id present, deduct here (not in n8n).
   const teamId = typeof body?.team_id === "string" && body.team_id ? body.team_id : null;
@@ -165,6 +163,11 @@ export async function POST(request: Request) {
       article_number: body.product_code ?? body.article_number ?? null,
       custom_instruction: body.custom_instruction ?? null,
       client_source: detectClientSource(request),
+      credit_cost: credits,
+      // credits_used = what THIS route charged. For a personal generation
+      // the n8n workflow charges (and the credit ledger records it), so it
+      // is only set for team-pool generations.
+      ...(teamDeducted ? { credits_used: credits } : {}),
     });
   } catch (err: any) {
     if (teamDeducted) {
@@ -172,7 +175,7 @@ export async function POST(request: Request) {
     }
     return NextResponse.json(
       { error: err?.message || "Failed to register generation." },
-      { status: 500 },
+      { status: err instanceof DuplicateGenerationIdError ? 409 : 500 },
     );
   }
 
@@ -182,6 +185,10 @@ export async function POST(request: Request) {
   //  • Team generation: pool already charged above → tell n8n to skip and
   //    zero the credit fields so personal is NOT touched. (Toggle ON → team.)
   //    Requires the n8n workflow to honour skip_credit_deduction.
+  //
+  // SECURITY: the credit fields and `skip_credit_deduction` are set HERE
+  // from the server-computed price — whatever the browser sent for them
+  // is overwritten.
   const forwarded = teamDeducted
     ? {
         ...body,
@@ -192,17 +199,33 @@ export async function POST(request: Request) {
         required_credits: 0,
         credits_required: 0,
       }
-    : { ...body, user_id: user.id, team_id: teamId ?? undefined, agent_type: "productography" };
+    : {
+        ...body,
+        user_id: user.id,
+        team_id: undefined,
+        agent_type: "productography",
+        skip_credit_deduction: false,
+        required_credits: credits,
+        credits_required: credits,
+      };
 
   let response: Response;
   try {
     response = await fetch(webhookUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: n8nHeaders(),
       body: JSON.stringify(forwarded),
       cache: "no-store",
     });
   } catch (err: any) {
+    // n8n never took the job: close the row and give back whatever
+    // was charged for it (team pool here, or n8n's own deduction).
+    await failAndRefundGeneration(
+      serviceDb(),
+      body.generation_id,
+      "The image service could not be reached.",
+      "productography_n8n_unreachable",
+    );
     return NextResponse.json(
       { error: err?.message || "n8n unreachable." },
       { status: 502 },
@@ -218,6 +241,15 @@ export async function POST(request: Request) {
   }
 
   if (!response.ok) {
+    // If the workflow already marked the row failed it has handled its
+    // own refund and this is a no-op; otherwise the row is closed here
+    // and the ledger decides what (if anything) goes back.
+    await failAndRefundGeneration(
+      serviceDb(),
+      body.generation_id,
+      `The image service returned an error (${response.status}).`,
+      "productography_n8n_error",
+    );
     return NextResponse.json(
       {
         error:

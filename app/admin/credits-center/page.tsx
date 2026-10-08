@@ -78,7 +78,7 @@ export default function CreditsCenterPage() {
   const [grantEmail, setGrantEmail] = useState("");
   const [grantPlan, setGrantPlan] = useState(""); // "" = no plan change
   const [grantBonus, setGrantBonus] = useState("");
-  const [grantValidity, setGrantValidity] = useState("365");
+  const [grantValidity, setGrantValidity] = useState("0");
   const [grantNote, setGrantNote] = useState("");
   const [grantSaving, setGrantSaving] = useState(false);
   const [grantMsg, setGrantMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -101,7 +101,7 @@ export default function CreditsCenterPage() {
           email: grantEmail.trim(),
           plan: grantPlan,
           bonus_credits: grantBonus.trim() ? parseInt(grantBonus) : 0,
-          validity_days: grantValidity.trim() ? parseInt(grantValidity) : 365,
+          validity_days: grantValidity.trim() ? parseInt(grantValidity) : 0,
           note: grantNote.trim(),
         }),
       });
@@ -237,8 +237,8 @@ export default function CreditsCenterPage() {
                   onChange={(e) => setGrantValidity(e.target.value)}
                   type="number"
                   min="0"
-                  placeholder="Validity days (365, 0=lifetime)"
-                  title="Plan validity in days (365 default, 0 = lifetime)"
+                  placeholder="Validity days (0 = lifetime)"
+                  title="Plans are lifetime: leave 0. Type a number of days only for a time-limited trial or offer."
                   className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm outline-none focus:border-cyan-400 dark:border-white/10 dark:bg-white/[0.05] dark:text-white"
                 />
                 <button

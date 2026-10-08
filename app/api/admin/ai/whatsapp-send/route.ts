@@ -5,6 +5,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { sendWhatsAppText } from "@/lib/whatsapp";
+import { adminFromAuthHeader, type PermissionSpec } from "@/lib/adminAuth";
 
 export const runtime = "nodejs";
 
@@ -15,15 +16,14 @@ function svc() {
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
-async function isAdmin(authHeader: string | null): Promise<{ ok: boolean; email?: string }> {
-  if (!authHeader?.startsWith("Bearer ")) return { ok: false };
-  const token = authHeader.slice(7).trim();
-  const admin = svc();
-  const { data } = await admin.auth.getUser(token);
-  const email = data.user?.email?.toLowerCase();
-  if (!email) return { ok: false };
-  const { data: row } = await admin.from("admin_users").select("email").eq("email", email).maybeSingle();
-  return { ok: Boolean(row), email };
+// Valid login + ACTIVE admin + the permission for this screen/action
+// (lib/adminAuth.ts). Being listed in admin_users alone is not enough.
+async function isAdmin(
+  authHeader: string | null,
+  perm: PermissionSpec = "support.view",
+): Promise<{ ok: boolean; email?: string }> {
+  const caller = await adminFromAuthHeader(authHeader, perm);
+  return caller ? { ok: true, email: caller.email } : { ok: false };
 }
 
 export async function POST(req: Request) {

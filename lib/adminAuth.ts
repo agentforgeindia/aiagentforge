@@ -31,29 +31,42 @@ function json(status: number, error: string): Response {
   });
 }
 
+/**
+ * One permission, or a list meaning "any one of these is enough"
+ * (for a route that is used from two different admin screens).
+ * "any" = every active admin.
+ */
+export type PermissionSpec = string | string[];
+
 export function adminHasPermission(perm: string, owned: string[]): boolean {
   if (perm === "any") return true;
   if (owned.includes("*") || owned.includes(perm)) return true;
   return owned.includes(`${perm.split(".")[0]}.*`);
 }
 
+function hasAny(spec: PermissionSpec, owned: string[]): boolean {
+  const wanted = Array.isArray(spec) ? spec : [spec];
+  return wanted.some((perm) => adminHasPermission(perm, owned));
+}
+
 /** Escape % and _ so an email is matched literally by ILIKE. */
 const likeLiteral = (value: string) => value.replace(/[\\%_]/g, (ch) => `\\${ch}`);
 
-export async function requireAdminPermission(req: Request, perm: string): Promise<AdminCaller | Response> {
+type AdminCheck = { caller: AdminCaller } | { status: number; error: string };
+
+async function checkAdmin(authHeader: string | null, perm: PermissionSpec): Promise<AdminCheck> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return json(500, "Server is not configured.");
+  if (!url || !key) return { status: 500, error: "Server is not configured." };
 
-  const header = req.headers.get("authorization") ?? "";
-  const match = /^Bearer\s+(.+)$/i.exec(header.trim());
-  if (!match) return json(401, "Please sign in again.");
+  const match = /^Bearer\s+(.+)$/i.exec((authHeader ?? "").trim());
+  if (!match) return { status: 401, error: "Please sign in again." };
 
   const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 
   const { data: auth, error: authError } = await db.auth.getUser(match[1].trim());
   const email = auth?.user?.email?.toLowerCase();
-  if (authError || !auth?.user || !email) return json(401, "Please sign in again.");
+  if (authError || !auth?.user || !email) return { status: 401, error: "Please sign in again." };
 
   const { data: member } = await db
     .from("admin_users")
@@ -61,15 +74,41 @@ export async function requireAdminPermission(req: Request, perm: string): Promis
     .ilike("email", likeLiteral(email))
     .limit(1)
     .maybeSingle();
-  if (!member || member.active === false || !member.role) return json(403, "You do not have access to the admin panel.");
+  if (!member || member.active === false || !member.role) {
+    return { status: 403, error: "You do not have access to the admin panel." };
+  }
 
   const { data: role } = await db.from("admin_roles").select("permissions").eq("id", member.role).maybeSingle();
   const permissions = Array.isArray(role?.permissions) ? (role.permissions as string[]) : [];
-  if (!adminHasPermission(perm, permissions)) {
-    return json(403, `Your role does not include the ${perm} permission.`);
+  if (!hasAny(perm, permissions)) {
+    const label = Array.isArray(perm) ? perm.join(" / ") : perm;
+    return { status: 403, error: `Your role does not include the ${label} permission.` };
   }
 
-  return { userId: auth.user.id, email, role: String(member.role), permissions, db };
+  return { caller: { userId: auth.user.id, email, role: String(member.role), permissions, db } };
+}
+
+/**
+ * The check every /api/admin/* route must make: a valid login, an
+ * ACTIVE admin_users row, and the permission for this action.
+ * Returns the caller, or a ready 401 / 403 response.
+ */
+export async function requireAdminPermission(req: Request, perm: PermissionSpec): Promise<AdminCaller | Response> {
+  const result = await checkAdmin(req.headers.get("authorization"), perm);
+  return "caller" in result ? result.caller : json(result.status, result.error);
+}
+
+/**
+ * Same check for routes that already have their own `isAdmin(header)`
+ * helper and response shape: returns the caller, or null when the
+ * login is missing / inactive / lacks the permission.
+ */
+export async function adminFromAuthHeader(
+  authHeader: string | null,
+  perm: PermissionSpec,
+): Promise<AdminCaller | null> {
+  const result = await checkAdmin(authHeader, perm);
+  return "caller" in result ? result.caller : null;
 }
 
 /** Best-effort audit row (never fails the request). */

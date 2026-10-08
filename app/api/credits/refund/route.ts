@@ -1,67 +1,65 @@
 // ============================================================
 // /api/credits/refund  — server-gated refund flow
 // ============================================================
-// The client polls generations.status. If a row goes "failed"
-// (because n8n's worker died after our route returned 200), the
-// client posts here with the generation_id and the credit count.
+// The page polls generations.status. If a row goes "failed", the
+// page posts here with the generation_id.
 //
 // We refund ONLY IF:
-//   • The JWT-verified user owns the generation row, AND
+//   • the JWT-verified user owns the generation row, AND
 //   • status = 'failed', AND
-//   • No prior refund exists for this generation_id (idempotency).
+//   • credits are still charged for it (ledger: charged − refunded).
+//
+// SECURITY: the refund AMOUNT is decided on the server — see
+// lib/generationRefund.ts. The `amount` field in the request is
+// only used, capped at the price of one image, for generations
+// created before the ledger recorded deductions.
+//
+// The same logic runs from /api/cron/generation-sweeper, so a
+// generation is refunded even if the page was closed.
 // ============================================================
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+
 import { requireUser } from "@/lib/serverAuth";
-import { refundCredits } from "@/lib/creditsServer";
+import { serviceDb } from "@/lib/creditsServer";
+import {
+  REFUND_ROW_COLUMNS,
+  refundFailedGeneration,
+  type RefundableRow,
+} from "@/lib/generationRefund";
 
 export const runtime = "nodejs";
-
-const MAX_REFUND_PER_CALL = 5_000;
-
-function admin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  return createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
 
 export async function POST(req: Request) {
   const userOrResp = await requireUser(req);
   if (userOrResp instanceof Response) return userOrResp;
   const user = userOrResp;
 
-  let body: any;
+  let body: Record<string, unknown> | null;
   try {
-    body = await req.json();
+    body = (await req.json()) as Record<string, unknown> | null;
   } catch {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
   const generationId = typeof body?.generation_id === "string" ? body.generation_id : null;
-  const amount = Number(body?.amount);
-  const reasonHint = typeof body?.reason === "string" ? body.reason : "generation_failed";
+  const reason =
+    typeof body?.reason === "string" && /^[a-z0-9_:-]{1,60}$/i.test(body.reason)
+      ? body.reason
+      : "generation_failed";
 
-  if (!generationId) {
+  if (!generationId || !/^[0-9a-f-]{32,40}$/i.test(generationId)) {
     return NextResponse.json({ error: "generation_id required." }, { status: 400 });
   }
-  if (!Number.isFinite(amount) || amount <= 0 || amount > MAX_REFUND_PER_CALL) {
-    return NextResponse.json(
-      { error: `amount must be a positive integer ≤ ${MAX_REFUND_PER_CALL}.` },
-      { status: 400 },
-    );
-  }
 
-  const db = admin();
+  const db = serviceDb();
 
-  // 1. Ownership + status check.
-  const { data: row, error: rowErr } = await db
+  const { data, error: rowErr } = await db
     .from("generations")
-    .select("id, user_id, status")
+    .select(REFUND_ROW_COLUMNS)
     .eq("id", generationId)
     .maybeSingle();
+  const row = data as RefundableRow | null;
 
   if (rowErr) {
     return NextResponse.json({ error: rowErr.message }, { status: 500 });
@@ -72,46 +70,38 @@ export async function POST(req: Request) {
   if (row.user_id !== user.id) {
     return NextResponse.json({ error: "Not your generation." }, { status: 403 });
   }
-  if (row.status !== "failed") {
-    return NextResponse.json(
-      { error: `Cannot refund — generation status is '${row.status}'.` },
-      { status: 409 },
-    );
-  }
 
-  // 2. Idempotency — any prior positive credit_transactions row
-  // tied to this generation_id means we've already refunded.
-  const { data: priorRefund } = await db
-    .from("credit_transactions")
-    .select("id")
-    .eq("generation_id", generationId)
-    .gt("delta", 0)
-    .limit(1)
-    .maybeSingle();
-
-  if (priorRefund) {
-    return NextResponse.json(
-      { success: true, alreadyRefunded: true },
-      { status: 200 },
-    );
-  }
-
-  // 3. Refund.
-  const result = await refundCredits(
-    user.id,
-    amount,
-    `refund:${reasonHint}`,
-    generationId,
-  );
-  if (!result.ok) {
-    return NextResponse.json(
-      { error: result.message || "Refund failed." },
-      { status: 500 },
-    );
-  }
-
-  return NextResponse.json({
-    success: true,
-    new_balance: result.newBalance,
+  const outcome = await refundFailedGeneration(db, row, {
+    reason,
+    legacyClientAmount: Number(body?.amount),
   });
+
+  switch (outcome.kind) {
+    case "refunded":
+      return NextResponse.json({
+        success: true,
+        refunded: outcome.amount,
+        new_balance: outcome.pool === "personal" ? outcome.newBalance : undefined,
+        team_balance: outcome.pool === "team" ? outcome.newBalance : undefined,
+      });
+    case "already_refunded":
+      return NextResponse.json({ success: true, alreadyRefunded: true });
+    case "nothing_to_refund":
+      return NextResponse.json({ success: true, refunded: 0 });
+    case "wait":
+      // The workflow that charged this generation refunds its own
+      // failures; the sweeper settles anything it leaves behind.
+      return NextResponse.json({
+        success: true,
+        pending: true,
+        retry_after_seconds: Math.ceil(outcome.retryAfterMs / 1000),
+      });
+    case "not_failed":
+      return NextResponse.json(
+        { error: `Cannot refund — generation status is '${outcome.status}'.` },
+        { status: 409 },
+      );
+    default:
+      return NextResponse.json({ error: outcome.message || "Refund failed." }, { status: 500 });
+  }
 }

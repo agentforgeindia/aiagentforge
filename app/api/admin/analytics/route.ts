@@ -1,24 +1,19 @@
 // GET /api/admin/analytics — combined Meta Ads + GA4 + Clarity.
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { fetchMetaAds, fetchGA4, fetchClarity } from "@/lib/analyticsProviders";
+import { adminFromAuthHeader, type PermissionSpec } from "@/lib/adminAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-async function isAdmin(authHeader: string | null): Promise<boolean> {
-  if (!authHeader?.startsWith("Bearer ")) return false;
-  const token = authHeader.slice(7).trim();
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return false;
-  const admin = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { data } = await admin.auth.getUser(token);
-  const email = data.user?.email?.toLowerCase();
-  if (!email) return false;
-  const { data: row } = await admin.from("admin_users").select("email, role").eq("email", email).maybeSingle();
-  return Boolean(row);
+// Valid login + ACTIVE admin + the permission for this screen/action
+// (lib/adminAuth.ts). Being listed in admin_users alone is not enough.
+async function isAdmin(
+  authHeader: string | null,
+  perm: PermissionSpec = "marketing.view",
+): Promise<boolean> {
+  return Boolean(await adminFromAuthHeader(authHeader, perm));
 }
 
 export async function GET(req: Request) {

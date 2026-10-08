@@ -75,39 +75,10 @@ const serviceSchema = {
     url: `${SITE}/pricing`,
     availability: "https://schema.org/InStock",
   },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.9",
-    ratingCount: "187",
-    bestRating: "5",
-    worstRating: "1",
-  },
-  review: [
-    {
-      "@type": "Review",
-      author: { "@type": "Person", name: "Rajesh K." },
-      reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
-      reviewBody:
-        "Amazing output — sent it to the client right away, order confirmed.",
-      datePublished: "2026-05-20",
-    },
-    {
-      "@type": "Review",
-      author: { "@type": "Person", name: "Priya S." },
-      reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
-      reviewBody:
-        "Catalogue-ready images in 30 sec — saved a lot of time. The article code feature is genius.",
-      datePublished: "2026-05-18",
-    },
-    {
-      "@type": "Review",
-      author: { "@type": "Person", name: "Anil M." },
-      reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
-      reviewBody:
-        "Sample stitching used to take 5 days. Now we send the client a preview the same day.",
-      datePublished: "2026-05-15",
-    },
-  ],
+  // NOTE: aggregateRating / review were removed on purpose. The values
+  // were hardcoded, not taken from real customer reviews, which breaks
+  // Google's review-snippet rules. Add them back only when they are
+  // computed from approved testimonials in the database.
 };
 
 const breadcrumbSchema = {

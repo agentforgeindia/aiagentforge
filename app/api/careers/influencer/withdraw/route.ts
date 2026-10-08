@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { authorizeInfluencer, influencerDenied } from "@/lib/influencerSession";
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,6 +13,8 @@ export async function POST(req: NextRequest) {
   try {
     const { cid } = await req.json();
     if (!cid) return NextResponse.json({ ok: false, error: "Missing cid." }, { status: 400 });
+    // Only the creator themselves can leave the programme.
+    if ((await authorizeInfluencer(req, cid)) !== "self") return influencerDenied();
 
     await admin.from("candidates").update({ stage: "withdrawn" }).eq("id", cid);
     await admin

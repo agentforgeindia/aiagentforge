@@ -119,13 +119,14 @@ export default function LoginPage() {
     setResetMsg("");
 
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
-      redirectTo: `${window.location.origin}/login`,
+      // The link opens /reset-password, where the new password is set.
+      redirectTo: `${window.location.origin}/reset-password`,
     });
 
     if (error) {
       setResetMsg(error.message);
     } else {
-      setResetMsg("Password reset link sent to your email.");
+      setResetMsg("If an account exists for this email, a reset link has been sent. Open it to set a new password.");
     }
 
     setResetLoading(false);

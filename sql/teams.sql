@@ -145,7 +145,7 @@ BEGIN
 
   SELECT plan INTO v_plan FROM public.teams WHERE id = p_team_id FOR UPDATE;
 
-  IF v_plan IN ('Empire', 'Founder', 'Unlimited') THEN
+  IF v_plan IN ('Founder', 'Unlimited') THEN  -- Empire is a 36,000-credit plan, not unlimited (2026-10-08)
     SELECT credits INTO v_balance FROM public.teams WHERE id = p_team_id;
     INSERT INTO public.team_credit_transactions (team_id, actor_user_id, delta, reason, generation_id, balance_after)
     VALUES (p_team_id, p_actor_id, 0, p_reason || ':unlimited', p_generation_id, v_balance);

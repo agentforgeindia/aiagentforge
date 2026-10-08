@@ -72,39 +72,10 @@ const serviceSchema = {
     url: `${SITE}/pricing`,
     availability: "https://schema.org/InStock",
   },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.9",
-    ratingCount: "143",
-    bestRating: "5",
-    worstRating: "1",
-  },
-  review: [
-    {
-      "@type": "Review",
-      author: { "@type": "Person", name: "Neha A." },
-      reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
-      reviewBody:
-        "Necklace shots look exactly like DSLR work. Didn't even need to hire a model. Festive collection ready in 2 hours!",
-      datePublished: "2026-05-22",
-    },
-    {
-      "@type": "Review",
-      author: { "@type": "Person", name: "Rohan G." },
-      reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
-      reviewBody:
-        "Diamond ring reflections look stunning. Perfect for the catalogue — covered all designs in a single day.",
-      datePublished: "2026-05-20",
-    },
-    {
-      "@type": "Review",
-      author: { "@type": "Person", name: "Priyanka M." },
-      reviewRating: { "@type": "Rating", ratingValue: "5", bestRating: "5" },
-      reviewBody:
-        "Bridal jewellery model shoots used to be very expensive. Now I get the same look with AgentForge at a fraction of the cost.",
-      datePublished: "2026-05-17",
-    },
-  ],
+  // NOTE: aggregateRating / review were removed on purpose. The values
+  // were hardcoded, not taken from real customer reviews, which breaks
+  // Google's review-snippet rules. Add them back only when they are
+  // computed from approved testimonials in the database.
 };
 
 const breadcrumbSchema = {

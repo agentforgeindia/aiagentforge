@@ -108,7 +108,7 @@ const plans: Plan[] = [
       "Dedicated setup guidance",
       "Team usage planning support",
       "Bulk branding & article code support",
-      "Monthly production review",
+      "Production review support",
       "Premium priority support",
     ],
   },
@@ -180,10 +180,16 @@ export default function PricingPage() {
         value: plan.amount,
       });
 
+      // Send the session token so the server ties the order to the
+      // signed-in user (the order's notes decide who gets the credits).
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+
       const orderResponse = await fetch("/api/razorpay/create-order", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         },
         body: JSON.stringify({
           planName: plan.name,
@@ -348,7 +354,7 @@ router.push(
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500" />
             </span>
-            Credits never expire · Top-up anytime · Cancel anytime
+            One-time payment · Credits never expire · Top-up anytime
           </p>
 
           {/* Trust strip — savings focused */}
@@ -391,7 +397,7 @@ router.push(
             <div className="mx-auto mt-8 max-w-3xl rounded-[2rem] border border-cyan-400/30 bg-gradient-to-r from-cyan-400/15 to-blue-500/15 p-5 backdrop-blur-xl">
               <h3 className="text-2xl font-black">Start After Login</h3>
               <p className={`mt-2 ${muted}`}>
-                Trial credits activate after login. Pricing is based on simple monthly image volume.
+                Trial credits activate after login. Pay once for a credit pack — no monthly fee, and credits never expire.
               </p>
               <Link
                 href="/login?redirect=/pricing"
@@ -464,7 +470,7 @@ router.push(
                 <div className="rounded-3xl border border-cyan-400/20 bg-cyan-400/10 p-4 sm:p-5">
                   <div className="flex flex-wrap items-end gap-2">
                     <p className="text-4xl font-black tracking-tight sm:text-5xl">{plan.price}</p>
-                    <p className={`pb-1.5 text-sm sm:pb-2 ${muted}`}>/ month</p>
+                    <p className={`pb-1.5 text-sm sm:pb-2 ${muted}`}>one-time · lifetime access</p>
                   </div>
                   <p className="mt-4 rounded-full bg-white px-4 py-2 text-center text-sm font-black text-black">
                     {plan.creditsLabel}
@@ -619,7 +625,7 @@ router.push(
               <p className={`mx-auto mt-3 max-w-3xl text-sm leading-7 sm:text-base ${muted}`}>
                 If you do just 2 product shoots a month (≈₹40,000), that same budget gets you
                 AgentForge's <span className="font-black text-cyan-600">Empire plan</span>{" "}
-                — meaning <span className="font-black">~2,400 AI visuals</span> every month,
+                — meaning <span className="font-black">~2,400 AI visuals</span>,
                 plus the bulk catalogue workflow.
               </p>
             </div>

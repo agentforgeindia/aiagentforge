@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { REWARD_RULES } from "@/lib/referral";
 
 interface Props {
   generationId?: string;
@@ -25,7 +26,8 @@ export default function RatingFeedbackModal({
   const [submitted, setSubmitted] = useState(false);
 
   const hasFeedback = feedback.trim().length > 0;
-  const previewCredits = (rating > 0 ? 1 : 0) + (hasFeedback ? 2 : 0);
+  const previewCredits =
+    (rating > 0 ? REWARD_RULES.rating : 0) + (hasFeedback ? REWARD_RULES.feedback : 0);
 
   const handleSubmit = async () => {
     if (rating === 0) return;
@@ -89,7 +91,10 @@ export default function RatingFeedbackModal({
         </h2>
         <p className="mb-5 text-center text-sm text-gray-500 dark:text-gray-400">
           Leave a rating and{" "}
-          <span className="font-semibold text-cyan-600">earn credits</span>!
+          <span className="font-semibold text-cyan-600">
+            earn {REWARD_RULES.rating} {REWARD_RULES.rating === 1 ? "credit" : "credits"}
+          </span>
+          !
         </p>
 
         {/* Stars */}
@@ -135,7 +140,7 @@ export default function RatingFeedbackModal({
         <textarea
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
-          placeholder="Anything we can improve? (optional) — +2 credits"
+          placeholder="Anything we can improve? (optional)"
           rows={3}
           className="mb-3 w-full resize-none rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-800 outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
         />
@@ -145,10 +150,12 @@ export default function RatingFeedbackModal({
           <div className="mb-4 rounded-xl bg-gradient-to-r from-cyan-50 to-blue-50 p-3 text-center dark:from-cyan-900/20 dark:to-blue-900/20">
             <p className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">
               🎁 You'll get:{" "}
-              <span className="text-lg font-black">{previewCredits} credits</span>
+              <span className="text-lg font-black">
+                {previewCredits} {previewCredits === 1 ? "credit" : "credits"}
+              </span>
             </p>
             <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-              Rating: +1 {hasFeedback ? "· Feedback: +2" : ""}
+              One reward per completed result.
             </p>
           </div>
         )}

@@ -4,6 +4,8 @@
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { rateLimit } from "@/lib/rateLimit";
+import { issueInfluencerToken, mobileKey } from "@/lib/influencerSession";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -45,6 +47,9 @@ function generateReferralCode(name: string): string {
 }
 
 export async function POST(req: Request) {
+  const limited = rateLimit(req, { name: "careers-apply", limit: 10, windowMs: 10 * 60_000 });
+  if (limited) return limited;
+
   const b      = await req.json().catch(() => ({}));
   const name   = String(b.name ?? "").trim();
   const mobile = String(b.mobile ?? "").replace(/[^\d+]/g, "");
@@ -55,9 +60,9 @@ export async function POST(req: Request) {
   const db = svc();
 
   // Check by mobile AND email (either match = same person)
-  const { data: existingByMobile } = await db.from("candidates").select("id, stage, name").eq("mobile", mobile).maybeSingle();
+  const { data: existingByMobile } = await db.from("candidates").select("id, stage, name, email, mobile").eq("mobile", mobile).maybeSingle();
   const existingByEmail = b.email
-    ? (await db.from("candidates").select("id, stage, name").eq("email", b.email).maybeSingle()).data
+    ? (await db.from("candidates").select("id, stage, name, email, mobile").eq("email", b.email).maybeSingle()).data
     : null;
   const existing = existingByMobile ?? existingByEmail;
 
@@ -67,6 +72,9 @@ export async function POST(req: Request) {
     "assessment_started", "assessment_completed",
     "passed", "interview_eligible", "interview_scheduled",
     "selected", "offer_sent", "offer_accepted", "security_paid",
+    // A hired person re-applying would wipe their live record (and, for a
+    // creator, their referral code) — they must contact HR instead.
+    "hired",
   ];
 
   let candidateId: string;
@@ -82,6 +90,21 @@ export async function POST(req: Request) {
       }, { status: 409 });
     }
     // Stage is 'rejected' or 'hired' or unknown → allow re-application by updating
+    // An old application is re-opened only by the person it belongs
+    // to: the mobile AND the email must both match the record.
+    const submittedEmail = String(b.email ?? "").trim().toLowerCase();
+    const sameMobile = mobileKey(existing.mobile) !== "" && mobileKey(existing.mobile) === mobileKey(mobile);
+    const sameEmail =
+      !existing.email || String(existing.email).trim().toLowerCase() === submittedEmail;
+    if (!sameMobile || !sameEmail) {
+      return NextResponse.json({
+        ok: false,
+        already_applied: true,
+        error:
+          "An application already exists with this mobile number or email. " +
+          "Please apply with the same mobile number and email you used before, or email hr@aiagentforge.in",
+      }, { status: 409 });
+    }
     candidateId = existing.id;
     await db.from("candidates").update({
       name, email: b.email || null, city: b.city || null, state: b.state || null,
@@ -135,6 +158,10 @@ export async function POST(req: Request) {
   return NextResponse.json({
     ok: true,
     candidate_id: candidateId,
+    // Creator portal session — the applicant just proved (or created)
+    // this record, so they can open their dashboard straight away.
+    influencer_token:
+      b.role_slug === "content-creator" ? issueInfluencerToken(candidateId) : undefined,
     attempts_used: used,
     attempts_left: Math.max(0, MAX_ATTEMPTS - used),
     locked: used >= MAX_ATTEMPTS,

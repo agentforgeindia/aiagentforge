@@ -3,6 +3,7 @@
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { authorizeInfluencer, influencerDenied, influencerFromRequest } from "@/lib/influencerSession";
 
 const db = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,8 +13,13 @@ const db = createClient(
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const cid = searchParams.get("cid");
-  if (!cid) return NextResponse.json({ ok: false, error: "Missing cid" }, { status: 400 });
+  // The creator's own id comes from their session; ?cid= is honoured
+  // for them only if it is the same record, and for the team (read-only).
+  const cid = searchParams.get("cid") || influencerFromRequest(req);
+  if (!cid) return influencerDenied();
+
+  const access = await authorizeInfluencer(req, cid, { allowAdmin: true });
+  if (!access) return influencerDenied();
 
   // Fetch candidate + social info
   const { data: cand } = await db
@@ -112,6 +118,7 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     ok: true,
+    viewer: access,
     candidate: cand,
     social,
     referral_link: referralLink,

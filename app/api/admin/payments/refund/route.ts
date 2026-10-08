@@ -18,33 +18,19 @@
 //
 // Auth: bearer Supabase access_token of the calling admin.
 // Permission: invoices.refund (founder + admin + accounts).
+//
+// SECURITY: the caller's token is verified and the permission is
+// checked BEFORE anything else happens. Razorpay is only called
+// once we know an active admin with invoices.refund is asking —
+// money must never move on an unverified request.
 // ============================================================
 
 import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
-import { createClient } from "@supabase/supabase-js";
+
+import { auditAdminAction, requireAdminPermission } from "@/lib/adminAuth";
 
 export const runtime = "nodejs";
-
-function getServiceClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) throw new Error("Supabase env vars missing");
-  return createClient(url, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
-
-/** Build a Razorpay-auth'd client from an admin's access token. */
-function userClient(token: string) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anonKey) throw new Error("Supabase env vars missing");
-  return createClient(url, anonKey, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
 
 function getRazorpay() {
   const key_id = process.env.RAZORPAY_KEY_ID;
@@ -64,15 +50,9 @@ type Body = {
 
 export async function POST(request: Request) {
   try {
-    // 1. Auth
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-    const token = authHeader.slice("Bearer ".length).trim();
-    if (!token) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    // 1. Auth + permission — verified before any money can move.
+    const admin = await requireAdminPermission(request, "invoices.refund");
+    if (admin instanceof Response) return admin;
 
     // 2. Body
     const body = (await request.json()) as Body;
@@ -85,13 +65,13 @@ export async function POST(request: Request) {
       via_razorpay = true,
     } = body;
 
-    if (!payment_id) {
+    if (typeof payment_id !== "string" || !payment_id) {
       return NextResponse.json(
         { error: "payment_id is required" },
         { status: 400 },
       );
     }
-    if (!amount || amount <= 0) {
+    if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) {
       return NextResponse.json(
         { error: "amount must be positive (in rupees)" },
         { status: 400 },
@@ -106,7 +86,7 @@ export async function POST(request: Request) {
 
     // 3. Look up the payment (service role — we need the
     //    razorpay_payment_id even if RLS would hide some fields).
-    const service = getServiceClient();
+    const service = admin.db;
     const { data: payment, error: pErr } = await service
       .from("payments")
       .select(
@@ -168,10 +148,12 @@ export async function POST(request: Request) {
       }
     }
 
-    // 5. Run the SQL RPC AS THE CALLING ADMIN — this is how the
-    //    permission check + audit log capture the right user.
-    const userSupa = userClient(token);
-    const { data: rpcResult, error: rErr } = await userSupa.rpc(
+    // 5. Record the refund. process_refund() is executable by the
+    //    service role only, so it runs through the service client —
+    //    the caller was already verified in step 1. (It used to run
+    //    with the admin's own token, which the database rejects, so
+    //    Razorpay refunded the money but the payment row never changed.)
+    const { data: rpcResult, error: rErr } = await service.rpc(
       "process_refund",
       {
         p_payment_id: payment_id,
@@ -198,6 +180,25 @@ export async function POST(request: Request) {
         { status: 500 },
       );
     }
+
+    // The RPC ran as the service role, so stamp who actually did it.
+    await service
+      .from("payments")
+      .update({ refunded_by: admin.userId })
+      .eq("id", payment_id);
+    await auditAdminAction(
+      admin,
+      "invoices.refund",
+      { type: "payment", id: payment_id },
+      {
+        amount,
+        reason: reason.trim(),
+        via_razorpay,
+        razorpay_refund_id,
+        deduct_credits,
+        credit_amount: credit_amount ?? null,
+      },
+    );
 
     return NextResponse.json({
       success: true,

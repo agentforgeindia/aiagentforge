@@ -4,7 +4,7 @@
 // A referral code waits in localStorage (REF_STORAGE_KEY) from the
 // moment the friend opens a referral link or types the code on the
 // app sign-up screen, until they are logged in. claimPendingReferral()
-// then hands it to the database, which gives the credits.
+// then hands it to /api/referral/claim, which gives the credits.
 //
 // Called from: app/signup/page.tsx, app/auth/callback/page.tsx and
 // (inside the Android app) app/login/page.tsx.
@@ -67,14 +67,22 @@ export async function claimPendingReferral(): Promise<ReferralClaim> {
     const userId = sess.session?.user?.id;
     if (!userId) return { status: "waiting", code };
 
-    const { data, error } = await supabase.rpc("process_referral", { p_ref_code: code });
-    if (error) return { status: "waiting", code };
+    // The credits are given by the server (/api/referral/claim) for the
+    // verified login — the browser cannot run the database function itself.
+    const jwt = sess.session?.access_token;
+    const res = await fetch("/api/referral/claim", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwt}` },
+      body: JSON.stringify({ code }),
+    });
+    // 401 / 409 / 429 / 5xx — keep the code and try again on the next login.
+    if (!res.ok) return { status: "waiting", code };
 
-    const result = (data ?? {}) as { ok?: boolean; error?: string; your_bonus?: number };
+    const result = (await res.json().catch(() => ({}))) as { status?: string; bonus?: number };
 
-    if (result.ok) {
+    if (result.status === "applied") {
       savePendingReferralCode(null);
-      const bonus = Number(result.your_bonus) || REWARD_RULES.friend;
+      const bonus = Number(result.bonus) || REWARD_RULES.friend;
       await tellUser(
         userId,
         `Referral bonus added: ${bonus} credits`,
@@ -84,20 +92,13 @@ export async function claimPendingReferral(): Promise<ReferralClaim> {
       return { status: "applied", code, bonus };
     }
 
-    if (result.error === "not logged in") return { status: "waiting", code };
-
     savePendingReferralCode(null);
-    if (result.error === "already referred") return { status: "already", code };
+    if (result.status === "already") return { status: "already", code };
 
     // The code matched no customer account (for example a creator's
-    // code that is not linked to a profile yet). Keep the attribution
-    // on the profile so the team can still see where this sign-up
-    // came from — credits are not given.
-    await supabase
-      .from("profiles")
-      .update({ referred_by: code.toUpperCase() })
-      .eq("id", userId)
-      .is("referred_by", null);
+    // code that is not linked to a profile yet). The server has kept the
+    // attribution on the profile so the team can still see where this
+    // sign-up came from — credits are not given.
     await tellUser(
       userId,
       "Referral code not matched",

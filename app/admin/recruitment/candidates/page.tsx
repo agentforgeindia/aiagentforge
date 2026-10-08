@@ -137,9 +137,13 @@ export default function CandidatesPage() {
   }
 
   async function setStage(id: string, stage: string) {
+    const { data: stageSess } = await supabase.auth.getSession();
     await fetch("/api/admin/candidates/stage", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${stageSess.session?.access_token ?? ""}`,
+      },
       body: JSON.stringify({ candidate_id: id, stage, changed_by: email ?? "admin" }),
     });
     // refresh log for this candidate

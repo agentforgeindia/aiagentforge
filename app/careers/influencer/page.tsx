@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Star, TrendingUp, Gift, Users, ArrowRight, BadgeCheck, ExternalLink } from "lucide-react";
 import { useTheme } from "@/app/components/ThemeProvider";
 import PageDoodles from "@/app/components/PageDoodles";
+import { saveInfluencerSession } from "@/lib/influencerClient";
 
 const PERKS = [
   { Icon: TrendingUp, title: "Earn on Every Sale",    desc: "Earn a 10% reward on every sale made through your unique referral link — no cap, no expiry." },
@@ -46,22 +47,25 @@ export default function InfluencerPage() {
 
   const [showAccessForm, setShowAccessForm] = useState(false);
   const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
   const [accessLoading, setAccessLoading] = useState(false);
   const [accessError, setAccessError] = useState<string | null>(null);
 
   async function handleLookup(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim()) return;
+    if (!email.trim() || !mobile.trim()) return;
     setAccessLoading(true);
     setAccessError(null);
     try {
       const res = await fetch("/api/careers/influencer/lookup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ email: email.trim(), mobile: mobile.trim() }),
       });
       const d = await res.json();
       if (d.ok) {
+        // The signed session is what opens the dashboard — the id alone no longer does.
+        saveInfluencerSession(d.token, d.cid);
         router.push(`/careers/influencer/dashboard?cid=${d.cid}`);
       } else {
         setAccessError(d.error ?? "Something went wrong.");
@@ -93,14 +97,24 @@ export default function InfluencerPage() {
               Go to My Dashboard →
             </button>
           ) : (
-            <form onSubmit={handleLookup} className="flex w-full max-w-sm items-center gap-2">
+            <form onSubmit={handleLookup} className="flex w-full max-w-xl flex-wrap items-center gap-2">
               <input
                 type="email"
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                className="flex-1 rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 placeholder-black/30 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-white/25"
+                placeholder="Registered email"
+                className="min-w-[160px] flex-1 rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 placeholder-black/30 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-white/25"
+              />
+              <input
+                type="tel"
+                required
+                inputMode="numeric"
+                autoComplete="tel"
+                value={mobile}
+                onChange={e => setMobile(e.target.value)}
+                placeholder="Registered mobile number"
+                className="min-w-[160px] flex-1 rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 placeholder-black/30 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder-white/25"
               />
               <button type="submit" disabled={accessLoading}
                 className="shrink-0 rounded-full bg-purple-600 px-5 py-2.5 text-xs font-black text-white transition hover:bg-purple-500 disabled:opacity-50">

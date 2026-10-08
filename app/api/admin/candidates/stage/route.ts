@@ -3,9 +3,14 @@
 // 2. Inserts a candidate_notification so frontend dashboard shows a toast.
 // 3. If role=content-creator AND stage = selected/offer_accepted/hired
 //    → upsert content_creator_social so they appear in Influencer Hub.
+//
+// Admin only. Used from Recruitment (hr.view) and the Influencer
+// Hub (marketing.view), so either permission is enough. The change
+// is recorded in the admin audit log with the caller's login.
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { auditAdminAction, requireAdminPermission } from "@/lib/adminAuth";
 
 const db = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,9 +38,14 @@ const NOTIFY_MAP: Record<string, { title: string; body: string }> = {
 const INFLUENCER_STAGES = new Set(["selected", "offer_accepted", "hired"]);
 
 export async function POST(req: NextRequest) {
+  const admin = await requireAdminPermission(req, ["hr.view", "marketing.view"]);
+  if (admin instanceof Response) return admin;
+
   try {
     const body = await req.json();
-    const { candidate_id, stage, changed_by } = body;
+    const { candidate_id, stage } = body;
+    // Who made the change is taken from the login, not from the request.
+    const changed_by = admin.email;
     if (!candidate_id || !stage) {
       return NextResponse.json({ ok: false, error: "Missing fields" }, { status: 400 });
     }
@@ -124,6 +134,11 @@ export async function POST(req: NextRequest) {
         } catch {}
       }
     }
+
+    await auditAdminAction(admin, "candidates.stage", { type: "candidate", id: String(candidate_id) }, {
+      from: cand.stage ?? null,
+      to: stage,
+    });
 
     return NextResponse.json({ ok: true });
   } catch (e: any) {

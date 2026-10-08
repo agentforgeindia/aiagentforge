@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
 
-export const runtime = "nodejs";
+import {
+  fetchRazorpayOrder,
+  fetchRazorpayPayment,
+  verifyPlanOrder,
+} from "@/lib/razorpayPlans";
 
-const PLAN_CONFIG: Record<string, { amount: number; credits: number }> = {
-  Starter: { amount: 1999, credits: 1800 },
-  "Pro Creator": { amount: 9999, credits: 9000 },
-  Empire: { amount: 39999, credits: 36000 },
-};
+export const runtime = "nodejs";
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -42,7 +42,11 @@ function verifyRazorpaySignature(
     .update(`${orderId}|${paymentId}`)
     .digest("hex");
 
-  return generatedSignature === signature;
+  // Constant-time compare (both are hex strings of the same length
+  // when the signature is genuine).
+  const a = Buffer.from(generatedSignature);
+  const b = Buffer.from(String(signature));
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
 export async function POST(request: Request) {
@@ -53,10 +57,6 @@ export async function POST(request: Request) {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      planName,
-      amount,
-      credits,
-      userId,
       // Optional billing snapshot collected by the billing-details
       // modal on the client. Stored verbatim on the payment row
       // so the bill is reproducible later.
@@ -69,30 +69,15 @@ export async function POST(request: Request) {
     } = body;
 
     if (
+      typeof razorpay_order_id !== "string" ||
+      typeof razorpay_payment_id !== "string" ||
+      typeof razorpay_signature !== "string" ||
       !razorpay_order_id ||
       !razorpay_payment_id ||
-      !razorpay_signature ||
-      !planName ||
-      !userId
+      !razorpay_signature
     ) {
       return NextResponse.json(
         { error: "Missing payment verification details." },
-        { status: 400 },
-      );
-    }
-
-    const plan = PLAN_CONFIG[planName];
-
-    if (!plan) {
-      return NextResponse.json(
-        { error: "Invalid plan selected." },
-        { status: 400 },
-      );
-    }
-
-    if (Number(amount) !== plan.amount || Number(credits) !== plan.credits) {
-      return NextResponse.json(
-        { error: "Plan amount or credits mismatch." },
         { status: 400 },
       );
     }
@@ -109,6 +94,41 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+
+    // SECURITY: the signature only proves this payment belongs to this
+    // order. Which plan was bought, by whom and for how much is read back
+    // from Razorpay (the order our server created) — never from the
+    // request body. Without this check a paid ₹99 order could be
+    // "verified" as an Empire purchase.
+    const [order, payment] = await Promise.all([
+      fetchRazorpayOrder(razorpay_order_id),
+      fetchRazorpayPayment(razorpay_payment_id),
+    ]);
+
+    if (!order || !payment) {
+      return NextResponse.json(
+        {
+          error:
+            "Could not confirm the payment with Razorpay right now. If money was deducted, your credits will be added automatically within a few minutes.",
+        },
+        { status: 502 },
+      );
+    }
+
+    const purchase = verifyPlanOrder(order, payment);
+
+    if (!purchase) {
+      console.error("[verify-payment] order/payment did not match a credit plan", {
+        order_id: razorpay_order_id,
+        payment_id: razorpay_payment_id,
+      });
+      return NextResponse.json(
+        { error: "This payment does not match a credit plan purchase." },
+        { status: 400 },
+      );
+    }
+
+    const { userId, planName, plan } = purchase;
 
     const supabaseAdmin = getSupabaseAdmin();
 

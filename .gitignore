@@ -44,3 +44,6 @@ next-env.d.ts
 
 n8n-workflows/*.json
 cleanup-storage.js
+
+# local staging stack (scripts/staging)
+.staging-work/

@@ -8,27 +8,26 @@
 //     https://aiagentforge.in/?ref=CODE (website — UtmCapture saves
 //     it) or by typing it on the sign-up screen in the Android app
 //     (app/components/ReferralCodeField.tsx).
-//   • After sign-up, lib/referralClient.ts calls the database
-//     function process_referral(code), which gives the credits and
-//     writes a row in public.referrals.
+//   • After sign-up, lib/referralClient.ts calls /api/referral/claim,
+//     which gives the credits (once per account) and writes a row in
+//     public.referrals.
 //   • The team sees all of it in Admin → Customers → Refer & Rewards.
 // ============================================================
 
 /**
- * Credits given by each reward. The real amounts live in the database
- * function process_referral() (sql/customer-referrals.sql) and in
- * /api/feedback/submit — keep these in step with them. Used for
- * labels in the app and the admin panel.
+ * Credits given by each reward — the single source of truth, used by
+ * /api/referral/claim, /api/feedback/submit and the labels in the app
+ * and the admin panel.
  */
 export const REWARD_RULES = {
   /** To the person whose code was used. */
   referrer: 50,
   /** To the friend who signed up with the code. */
   friend: 25,
-  /** For rating a result. */
+  /** For rating a result (once per completed generation). */
   rating: 1,
-  /** For writing feedback with the rating (on top of `rating`). */
-  feedback: 2,
+  /** Extra for writing feedback with the rating. 0 = no extra credit. */
+  feedback: 0,
 } as const;
 
 /** credit_transactions.reason values written by the rewards. */

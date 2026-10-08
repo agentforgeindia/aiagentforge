@@ -9,6 +9,7 @@ import { Copy, Check, Users, ShoppingBag, IndianRupee, Video, ChevronDown, Chevr
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import PageDoodles from "@/app/components/PageDoodles";
+import { influencerHeaders } from "@/lib/influencerClient";
 
 type DashData = {
   candidate: { id: string; name: string; email: string; stage: string };
@@ -85,7 +86,7 @@ function Dashboard() {
     try {
       const r = await fetch("/api/careers/influencer/withdraw-earnings", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await influencerHeaders(),
         body: JSON.stringify({ cid, upi: upiInput.trim() }),
       });
       const d = await r.json();
@@ -93,7 +94,7 @@ function Dashboard() {
         setPayoutMsg(d.message || "Withdrawal requested! Transfer within 24 hours.");
         setShowUpiForm(false);
         setUpiInput("");
-        const refresh = await fetch(`/api/careers/influencer/dashboard?cid=${cid}`);
+        const refresh = await fetch(`/api/careers/influencer/dashboard?cid=${cid}`, { headers: await influencerHeaders(false) });
         const rd = await refresh.json();
         if (rd.ok) setData(rd);
       } else {
@@ -107,9 +108,10 @@ function Dashboard() {
 
   useEffect(() => {
     if (!cid) { setError("Invalid link — dashboard ID missing."); setLoading(false); return; }
-    // Auto-save cid so Influencer Hub can auto-login
-    if (typeof window !== "undefined") localStorage.setItem("__inf_cid", cid);
-    fetch(`/api/careers/influencer/dashboard?cid=${cid}`)
+    // (The creator's signed session — saved at login — is sent with every
+    // request; the id in the URL alone no longer opens a dashboard.)
+    influencerHeaders(false)
+      .then(headers => fetch(`/api/careers/influencer/dashboard?cid=${cid}`, { headers }))
       .then(r => r.json())
       .then(d => {
         if (d.ok) {
@@ -151,7 +153,7 @@ function Dashboard() {
 
       const res = await fetch("/api/careers/influencer/video-submit", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await influencerHeaders(),
         body: JSON.stringify({ candidate_id: cid, script_id: uploadScriptId || null, video_url: videoUrl, platform, caption }),
       });
       const json = await res.json();
@@ -160,7 +162,7 @@ function Dashboard() {
       setUploadOpen(false);
       setVideoFile(null);
       setCaption("");
-      const refreshRes = await fetch(`/api/careers/influencer/dashboard?cid=${cid}`);
+      const refreshRes = await fetch(`/api/careers/influencer/dashboard?cid=${cid}`, { headers: await influencerHeaders(false) });
       const refreshData = await refreshRes.json();
       if (refreshData.ok) setData(refreshData);
     } catch (e: any) {
@@ -179,7 +181,7 @@ function Dashboard() {
     try {
       const res = await fetch("/api/careers/influencer/profile", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: await influencerHeaders(),
         body: JSON.stringify({ cid, ...profileForm }),
       });
       const d = await res.json();
@@ -197,7 +199,7 @@ function Dashboard() {
     try {
       const res = await fetch("/api/careers/influencer/withdraw", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await influencerHeaders(),
         body: JSON.stringify({ cid }),
       });
       const d = await res.json();
@@ -218,7 +220,7 @@ function Dashboard() {
   );
 
   if (loading) return <main className="flex min-h-screen items-center justify-center bg-[#070b14] text-white"><p className="text-sm opacity-60">Loading your dashboard…</p></main>;
-  if (error)   return <main className="flex min-h-screen items-center justify-center bg-[#070b14] px-4 text-white"><div className="max-w-sm text-center"><p className="text-sm text-rose-400">{error}</p><Link href="/careers/influencer" className="mt-4 inline-block text-xs text-purple-300 underline">← Try email lookup</Link></div></main>;
+  if (error)   return <main className="flex min-h-screen items-center justify-center bg-[#070b14] px-4 text-white"><div className="max-w-sm text-center"><p className="text-sm text-rose-400">{error}</p><Link href="/careers/influencer" className="mt-4 inline-block text-xs text-purple-300 underline">← Log in with your email and mobile number</Link></div></main>;
   if (!data)   return null;
 
   const { candidate, social, referral_link, stats, scripts, videos, signup_list, purchase_list } = data;
