@@ -235,6 +235,16 @@ export async function POST(request: Request) {
       );
     }
 
+    // Every order-based payment needs its order to be classified. If
+    // Razorpay could not be reached, ask for a retry — otherwise a real
+    // credit-plan payment could be filed as a workshop seat.
+    if (razorpayOrderId && !order) {
+      return NextResponse.json(
+        { error: "Could not confirm order with Razorpay. Please retry." },
+        { status: 503 },
+      );
+    }
+
     const purchase = verifyPlanOrder(order, payment);
 
     if (notesClaimPlan && !purchase) {
@@ -269,6 +279,30 @@ export async function POST(request: Request) {
       // Skip it here so it does NOT also leak into Workshop Registrations.
       if (isMeetingPayment(full, order)) {
         return NextResponse.json({ success: true, skipped: "meeting" });
+      }
+
+      // Orders created by our own server say what they are for. Only
+      // "workshop" orders (and untyped external payments — hosted pages,
+      // QR codes, links) belong in Workshop Registrations. A careers
+      // security deposit is handled by /api/careers/payment/verify, and a
+      // credit-plan order that failed verification above must never be
+      // turned into a workshop seat.
+      const orderType = typeof order?.notes?.type === "string" ? order.notes.type : "";
+      if (orderType && orderType !== "workshop") {
+        if (orderType === "credit_plan") {
+          try {
+            await supabaseAdmin.rpc("log_error", {
+              p_category: "payment",
+              p_source: "razorpay-webhook",
+              p_message: `Credit-plan order failed verification (${razorpayPaymentId})`,
+              p_details: { order_id: razorpayOrderId, payment_id: razorpayPaymentId },
+              p_user_id: null,
+            });
+          } catch {
+            /* logging must not block */
+          }
+        }
+        return NextResponse.json({ success: true, skipped: orderType });
       }
 
       // Hosted Payment Page payments carry the slot signal on their invoice.

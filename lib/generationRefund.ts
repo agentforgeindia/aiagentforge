@@ -14,6 +14,10 @@
 //      generations.credits_refunded lets only one caller through.
 //   3. Team generations go back to the team pool, personal ones to
 //      the user.
+//   4. A generation is paid for ONCE. If the image workflow also
+//      charged the member's own balance for a generation the route
+//      (or the team pool) already paid for, the extra charge is
+//      given back — see "Duplicate charges" at the bottom.
 //
 // Where the charge is recorded:
 //   • the route charged  → generations.credits_used > 0, ledger row
@@ -214,12 +218,17 @@ export async function refundFailedGeneration(
   }
 
   // Atomic claim — only one caller can flip the flag.
+  // NOTE: the "not yet refunded" test must be a plain column filter
+  // (IS NOT TRUE covers both NULL and false). An `.or(...)` filter on
+  // an UPDATE that returns only `id` is rejected by PostgREST
+  // ("column generations.credits_refunded does not exist"), which
+  // would stop every refund.
   const { data: claimed, error: claimErr } = await db
     .from("generations")
     .update({ credits_refunded: true })
     .eq("id", row.id)
     .eq("status", "failed")
-    .or("credits_refunded.is.null,credits_refunded.eq.false")
+    .not("credits_refunded", "is", true)
     .select("id");
   if (claimErr) return { kind: "error", message: claimErr.message };
   if (!claimed || claimed.length === 0) return { kind: "already_refunded" };
@@ -293,4 +302,130 @@ export async function failAndRefundGeneration(
   if (!row) return { kind: "nothing_to_refund" };
   // The route charged it, so there is no n8n refund to wait for.
   return refundFailedGeneration(db, row, { reason, skipGrace: true });
+}
+
+// ============================================================
+// Duplicate charges
+// ============================================================
+// A generation has exactly one payer:
+//   • team generation      → the team pool (charged by the route)
+//   • personal, route pays → the user, once (generations.credits_used)
+//   • personal, n8n pays   → the user, once (credits_used = 0)
+//
+// The image workflow has its own "deduct credits" step. When the
+// route has already charged, it is told to skip that step — but an
+// older copy of a workflow may ignore the instruction and charge the
+// member's PERSONAL balance a second time. The ledger shows this as
+// a personal charge under the generation id that should not exist.
+// The sweeper calls the functions below to give that charge back.
+//
+// Nothing is refunded on a guess: the other (correct) charge must be
+// visible in the ledger, and the amount is what the ledger says.
+// ============================================================
+
+export const DUPLICATE_REFUND_REASON = "refund:duplicate_charge";
+
+export type DuplicateChargeInput = {
+  isTeam: boolean;
+  status: string | null;
+  creditsUsed: number;
+  /** Personal ledger rows under the generation's own id. */
+  personal: LedgerSummary;
+  /** Team ledger rows under the generation id or its batch id (team generations). */
+  teamCharged: boolean;
+  /** Personal ledger rows under the batch id (bulk jobs), or null. */
+  personalBatch: LedgerSummary | null;
+};
+
+/** Pure — exported for tests. Credits charged to the personal balance by mistake. */
+export function duplicateChargeAmount(input: DuplicateChargeInput): number {
+  const net = input.personal.charged - input.personal.refunded;
+  if (!(net > 0)) return 0;
+
+  let extra = 0;
+  if (input.isTeam) {
+    // The team pool paid. Without proof of that, leave it alone.
+    if (!input.teamCharged) return 0;
+    extra = net;
+  } else {
+    // Failed personal generations are settled in full by
+    // refundFailedGeneration — not here.
+    if (input.status !== "completed") return 0;
+    const creditsUsed = Math.max(0, Math.floor(input.creditsUsed));
+    if (creditsUsed <= 0) return 0; // n8n is the one payer — nothing to compare
+    // Bulk: the route's single charge sits under the batch id, so
+    // nothing at all should be charged under the item's own id.
+    const expectedOwn = input.personalBatch?.hasCharge ? 0 : creditsUsed;
+    extra = net - expectedOwn;
+  }
+  if (!(extra > 0)) return 0;
+  return Math.min(Math.floor(extra), MAX_SINGLE_IMAGE_CREDITS);
+}
+
+export type DuplicateOutcome =
+  | { kind: "refunded"; amount: number; newBalance?: number }
+  | { kind: "none" }
+  | { kind: "already_refunded" }
+  | { kind: "error"; message: string };
+
+/**
+ * Give back a personal charge that duplicates the real one.
+ * Safe to repeat: after the refund the ledger nets to zero, and the
+ * unique index from sql/pending/04 refuses a second duplicate refund
+ * for the same generation even if two runs overlap.
+ * `dryRun` only reports what would be refunded.
+ */
+export async function refundDuplicatePersonalCharge(
+  db: SupabaseClient,
+  row: RefundableRow,
+  options: { dryRun?: boolean } = {},
+): Promise<DuplicateOutcome> {
+  if (!row.user_id) return { kind: "none" };
+  if (row.status !== "completed" && row.status !== "failed") return { kind: "none" };
+  const createdAt = Date.parse(String(row.created_at ?? ""));
+  if (!Number.isFinite(createdAt) || createdAt < LEDGER_RECORDS_DEDUCTIONS_SINCE) return { kind: "none" };
+
+  const teamId = typeof row.team_id === "string" && row.team_id ? row.team_id : null;
+  const creditsUsed = Math.max(0, Math.floor(Number(row.credits_used ?? 0)));
+
+  let amount = 0;
+  try {
+    const personal = await readLedger(db, { userId: row.user_id }, row.id);
+    if (personal.charged - personal.refunded <= 0) return { kind: "none" };
+
+    let teamCharged = false;
+    let personalBatch: LedgerSummary | null = null;
+    if (teamId) {
+      teamCharged = (await readLedger(db, { teamId }, row.id)).hasCharge;
+      if (!teamCharged && row.batch_id) {
+        teamCharged = (await readLedger(db, { teamId }, row.batch_id)).hasCharge;
+      }
+    } else if (row.batch_id) {
+      personalBatch = await readLedger(db, { userId: row.user_id }, row.batch_id);
+    }
+
+    amount = duplicateChargeAmount({
+      isTeam: Boolean(teamId),
+      status: row.status,
+      creditsUsed,
+      personal,
+      teamCharged,
+      personalBatch,
+    });
+  } catch (e) {
+    return { kind: "error", message: e instanceof Error ? e.message : "Ledger read failed." };
+  }
+
+  if (amount <= 0) return { kind: "none" };
+  if (options.dryRun) return { kind: "refunded", amount };
+
+  const result = await refundCredits(row.user_id, amount, DUPLICATE_REFUND_REASON, row.id);
+  if (!result.ok) {
+    // The unique index turned a second, overlapping refund away.
+    if (/duplicate key|credit_tx_one_duplicate_refund/i.test(result.message || "")) {
+      return { kind: "already_refunded" };
+    }
+    return { kind: "error", message: result.message || "Refund failed." };
+  }
+  return { kind: "refunded", amount, newBalance: result.newBalance };
 }

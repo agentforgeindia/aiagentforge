@@ -6,7 +6,7 @@
 // closes it, or n8n dies half-way, the row used to stay "pending"
 // or "processing" for ever and the credits were never returned.
 //
-// Each run does three small passes:
+// Each run does four small passes:
 //
 //   1. RECOVER / FAIL — rows still pending / processing / queued
 //      after STALE_MINUTES:
@@ -20,7 +20,14 @@
 //      Rows from before the ledger existed are left for a person to
 //      decide (reported as `legacy_unsettled`).
 //
-//   3. KEEP IMAGES — finished rows whose image still sits on the AI
+//   3. ONE PAYER — a generation the team pool (or the route) paid
+//      for must not ALSO be charged to the member's own balance by
+//      the image workflow. If the ledger shows such a second charge
+//      it is given back (reason "refund:duplicate_charge"). Any
+//      number here above 0 means a workflow is ignoring the "skip
+//      credit deduction" instruction and needs fixing in n8n.
+//
+//   4. KEEP IMAGES — finished rows whose image still sits on the AI
 //      provider's temporary link are copied into our storage.
 //
 // Add `?dry=1` to see what a run WOULD do without changing anything.
@@ -67,6 +74,7 @@ import { serviceDb } from "@/lib/creditsServer";
 import {
   LEDGER_RECORDS_DEDUCTIONS_SINCE,
   REFUND_ROW_COLUMNS,
+  refundDuplicatePersonalCharge,
   refundFailedGeneration,
   type RefundableRow,
 } from "@/lib/generationRefund";
@@ -84,6 +92,9 @@ const BATCH = 50;
 const MIRROR_BATCH = 10;
 /** Leave n8n's own failure handling (mark failed → refund) time to finish. */
 const SETTLE_DELAY_MS = 3 * 60 * 1000;
+/** How far back the "one payer" pass looks. */
+const DUPLICATE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+const DUPLICATE_BATCH = 150;
 /** Provider links die after a while — older ones are not worth retrying. */
 const MIRROR_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
 
@@ -119,6 +130,8 @@ export async function POST(req: Request) {
     already_settled: 0,
     waiting: 0,
     legacy_unsettled: 0,
+    duplicate_charges_refunded: 0,
+    duplicate_credits_refunded: 0,
     images_saved: 0,
     images_gone: 0,
     errors: [] as string[],
@@ -214,7 +227,56 @@ export async function POST(req: Request) {
     .or("credits_used.is.null,credits_used.eq.0");
   report.legacy_unsettled = legacyCount ?? 0;
 
-  // ── 3. Save finished images that still sit on a provider link ─
+  // ── 3. One payer per generation ────────────────────────────
+  // Only rows where a second payer is possible: team generations and
+  // generations the route charged itself.
+  const dupSinceMs = Math.max(LEDGER_RECORDS_DEDUCTIONS_SINCE, now - DUPLICATE_WINDOW_MS);
+  const { data: dupRows, error: dupErr } = await db
+    .from("generations")
+    .select(REFUND_ROW_COLUMNS)
+    .in("status", ["completed", "failed"])
+    .gte("created_at", new Date(dupSinceMs).toISOString())
+    .or("team_id.not.is.null,credits_used.gt.0")
+    .or(`updated_at.is.null,updated_at.lt.${settleBefore}`)
+    .order("created_at", { ascending: false })
+    .limit(DUPLICATE_BATCH);
+  if (dupErr) report.errors.push(`duplicate scan: ${dupErr.message}`);
+
+  const candidates = (dupRows ?? []) as unknown as RefundableRow[];
+  if (candidates.length > 0) {
+    // One query tells us which of them have ANY personal ledger line;
+    // only those are looked at one by one.
+    const withPersonalLines = new Set<string>();
+    for (let i = 0; i < candidates.length; i += 50) {
+      const ids = candidates.slice(i, i + 50).map((r) => r.id);
+      const { data: lines, error } = await db
+        .from("credit_transactions")
+        .select("generation_id")
+        .in("generation_id", ids)
+        .lt("delta", 0);
+      if (error) {
+        report.errors.push(`duplicate ledger scan: ${error.message}`);
+        continue;
+      }
+      for (const line of lines ?? []) {
+        if (line.generation_id) withPersonalLines.add(String(line.generation_id));
+      }
+    }
+    for (const row of candidates) {
+      // A team generation should have no personal line at all; a
+      // route-charged one has exactly its own — both are checked.
+      if (!withPersonalLines.has(row.id)) continue;
+      const outcome = await refundDuplicatePersonalCharge(db, row, { dryRun });
+      if (outcome.kind === "refunded") {
+        report.duplicate_charges_refunded += 1;
+        report.duplicate_credits_refunded += outcome.amount;
+      } else if (outcome.kind === "error") {
+        report.errors.push(`duplicate ${row.id}: ${outcome.message}`);
+      }
+    }
+  }
+
+  // ── 4. Save finished images that still sit on a provider link ─
   const mirrorSince = new Date(now - MIRROR_WINDOW_MS).toISOString();
   const { data: mirrorData, error: mirrorErr } = await db
     .from("generations")

@@ -1,0 +1,578 @@
+[
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "Textile Premium 1080px = 15",
+  "ok": true,
+  "detail": "http 200 {\"status\":\"completed\",\"used\":15,\"cost\":15,\"refunded\":false} ledger=-15:textile_generate"
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "Textile Premium mobile = 17",
+  "ok": true,
+  "detail": "http 200 {\"status\":\"completed\",\"used\":17,\"cost\":17,\"refunded\":false} ledger=-17:textile_generate"
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "Textile Ultra HD 1080px = 30",
+  "ok": true,
+  "detail": "http 200 {\"status\":\"completed\",\"used\":30,\"cost\":30,\"refunded\":false} ledger=-30:textile_generate"
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "Textile Ultra HD mobile = 32",
+  "ok": true,
+  "detail": "http 200 {\"status\":\"completed\",\"used\":32,\"cost\":32,\"refunded\":false} ledger=-32:textile_generate"
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "Productography Premium 1080px = 15",
+  "ok": true,
+  "detail": "http 200 {\"success\":true,\"generation_id\":\"005a095f-a0b3-4fc6-8986-dac07debdf6f\",\"webhook_response\":{\"message\":\"Workflow was start {\"status\":\"completed\",\"used\":0,\"cost\":15,\"refunded\":false} ledger=-15:productography_generate"
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "Productography Premium mobile = 17",
+  "ok": true,
+  "detail": "http 200 {\"success\":true,\"generation_id\":\"891c7414-e701-44f2-abd8-622a67f4e79b\",\"webhook_response\":{\"message\":\"Workflow was start {\"status\":\"completed\",\"used\":0,\"cost\":17,\"refunded\":false} ledger=-17:productography_generate"
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "Productography Ultra HD 1080px = 30",
+  "ok": true,
+  "detail": "http 200 {\"success\":true,\"generation_id\":\"6a553c5e-4f13-475a-a738-58da0ddaf563\",\"webhook_response\":{\"message\":\"Workflow was start {\"status\":\"completed\",\"used\":0,\"cost\":30,\"refunded\":false} ledger=-30:productography_generate"
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "Productography Ultra HD mobile = 32",
+  "ok": true,
+  "detail": "http 200 {\"success\":true,\"generation_id\":\"cce0bf59-84b2-4173-b0de-5b6760ef2acc\",\"webhook_response\":{\"message\":\"Workflow was start {\"status\":\"completed\",\"used\":0,\"cost\":32,\"refunded\":false} ledger=-32:productography_generate"
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "Jewellery Premium 1080px = 15",
+  "ok": true,
+  "detail": "http 200 {\"success\":true,\"mode\":\"single\",\"generation_id\":\"f5f0d3a5-9245-462e-af67-c97e56ec029c\",\"new_balance\":797,\"credits_charged\":15,\"message\":\"Jewellery generation st charged=15"
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "Jewellery Premium mobile = 17",
+  "ok": true,
+  "detail": "http 200 {\"success\":true,\"mode\":\"single\",\"generation_id\":\"12629807-6576-4857-a5d1-c6acbd96a155\",\"new_balance\":780,\"credits_charged\":17,\"message\":\"Jewellery generation st charged=17"
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "Jewellery Ultra HD 1080px = 30",
+  "ok": true,
+  "detail": "http 200 {\"success\":true,\"mode\":\"single\",\"generation_id\":\"a977dc0d-0e2b-48cc-b7c8-0b26f53d436a\",\"new_balance\":750,\"credits_charged\":30,\"message\":\"Jewellery generation st charged=30"
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "Jewellery Ultra HD mobile = 32",
+  "ok": true,
+  "detail": "http 200 {\"success\":true,\"mode\":\"single\",\"generation_id\":\"3fb6b146-dfcb-4a97-9679-622e884e4490\",\"new_balance\":718,\"credits_charged\":32,\"message\":\"Jewellery generation st charged=32"
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "Jewellery: n8n told the server price and to skip any deduction of its own",
+  "ok": true,
+  "detail": "[[15,true],[17,true],[30,true],[32,true]]"
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "browser sends 999 for a 15-credit image → charged at most 19 (15 + 4 branding items)",
+  "ok": true,
+  "detail": "-19:textile_generate"
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "every n8n call carried the webhook secret header",
+  "ok": true,
+  "detail": "[{\"agent\":\"textile\",\"authed\":true,\"skip\":true,\"required_credits\":0,\"user_id\":\"11111111-1111-4111-8111-111111111111\",\"generation_id\":\"f8eed9fb-8c6e-4741-bf7d-6efe8763a895\"},{\"agent\":\"textile\",\"authed\":true,\"skip\":true,\"required_credits\":0,\"user_id\":\"11111111-1111-4111-8111-111111111111\",\"generation_id\":\"a8c1af81-5da7-4e7b-a99c-88877943af6a\"}]"
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "Textile: n8n told to skip its own deduction (browser sent skip=false)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "Productography personal: n8n told the server-computed amount",
+  "ok": true,
+  "detail": "15,17,30,32"
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "user_id sent to n8n is the logged-in user",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "generate without login → 401",
+  "ok": true,
+  "detail": 401
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "source image from another website → refused",
+  "ok": true,
+  "detail": 400
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "re-using someone else's generation id → 409, charge returned, row untouched",
+  "ok": true,
+  "detail": "409 bob 1000->1000"
+ },
+ {
+  "section": "1 price list (server decides; browser sent required_credits=1)",
+  "name": "not enough credits → 402, nothing charged, n8n not called",
+  "ok": true,
+  "detail": "402"
+ },
+ {
+  "section": "2 one payer per generation (old n8n copy that ignores 'skip')",
+  "name": "Textile personal, old n8n: customer is charged twice (15 by server + 15 by n8n)",
+  "ok": true,
+  "detail": "-15:textile_generate,-15:textile_generate"
+ },
+ {
+  "section": "2 one payer per generation (old n8n copy that ignores 'skip')",
+  "name": "sweeper dry run reports it, changes nothing",
+  "ok": true,
+  "detail": "{\"success\":true,\"dry_run\":true,\"stale_minutes\":10,\"recovered\":0,\"marked_failed\":0,\"refunded_generations\":0,\"refunded_credits\":0,\"already_settled\":0,\"waiting\":0,\"legacy_unsettled\":0,\"duplicate_charges_refunded\":1,\"duplicate_credits_refunded\":15,\"images_saved\":0,\"images_gone\":0,\"errors\":[]}"
+ },
+ {
+  "section": "2 one payer per generation (old n8n copy that ignores 'skip')",
+  "name": "sweeper gives the second charge back (15)",
+  "ok": true,
+  "detail": "{\"success\":true,\"dry_run\":false,\"stale_minutes\":10,\"recovered\":0,\"marked_failed\":0,\"refunded_generations\":0,\"refunded_credits\":0,\"already_settled\":0,\"waiting\":0,\"legacy_unsettled\":0,\"duplicate_charges_refunded\":1,\"duplicate_credits_refunded\":15,\"images_saved\":0,\"images_gone\":0,\"errors\":[]} -15:textile_generate,-15:textile_generate,15:refund:duplicate_charge"
+ },
+ {
+  "section": "2 one payer per generation (old n8n copy that ignores 'skip')",
+  "name": "second sweeper run refunds nothing more",
+  "ok": true,
+  "detail": "{\"success\":true,\"dry_run\":false,\"stale_minutes\":10,\"recovered\":0,\"marked_failed\":0,\"refunded_generations\":0,\"refunded_credits\":0,\"already_settled\":0,\"waiting\":0,\"legacy_unsettled\":0,\"duplicate_charges_refunded\":0,\"duplicate_credits_refunded\":0,\"images_saved\":0,\"images_gone\":0,\"errors\":[]}"
+ },
+ {
+  "section": "2 one payer per generation (old n8n copy that ignores 'skip')",
+  "name": "Team Productography, old n8n (today's live behaviour): team pool −15 AND member's own −15",
+  "ok": true,
+  "detail": "team -15:productography_generate personal -15:productography_generate"
+ },
+ {
+  "section": "2 one payer per generation (old n8n copy that ignores 'skip')",
+  "name": "sweeper returns the member's 15, team pool stays charged once",
+  "ok": true,
+  "detail": "{\"success\":true,\"dry_run\":false,\"stale_minutes\":10,\"recovered\":0,\"marked_failed\":0,\"refunded_generations\":0,\"refunded_credits\":0,\"already_settled\":0,\"waiting\":0,\"legacy_unsettled\":0,\"duplicate_charges_refunded\":1,\"duplicate_credits_refunded\":15,\"images_saved\":0,\"images_gone\":0,\"errors\":[]}"
+ },
+ {
+  "section": "2 one payer per generation (old n8n copy that ignores 'skip')",
+  "name": "team generation earns no rating reward",
+  "ok": true,
+  "detail": "{\"ok\":true,\"creditsAwarded\":0,\"credited_to\":\"none\",\"reason\":\"team_generation_no_bonus\"}"
+ },
+ {
+  "section": "2 one payer per generation (old n8n copy that ignores 'skip')",
+  "name": "Team member with 0 own credits, old n8n: workflow fails the job ('Insufficient credits') although the team paid",
+  "ok": true,
+  "detail": "{\"status\":\"failed\",\"used\":15,\"cost\":15,\"refunded\":false}"
+ },
+ {
+  "section": "2 one payer per generation (old n8n copy that ignores 'skip')",
+  "name": "…sweeper refunds the team pool for that failed job",
+  "ok": true,
+  "detail": "{\"success\":true,\"dry_run\":false,\"stale_minutes\":10,\"recovered\":0,\"marked_failed\":0,\"refunded_generations\":1,\"refunded_credits\":15,\"already_settled\":0,\"waiting\":0,\"legacy_unsettled\":0,\"duplicate_charges_refunded\":0,\"duplicate_credits_refunded\":0,\"images_saved\":0,\"images_gone\":0,\"errors\":[]}"
+ },
+ {
+  "section": "2 one payer per generation (old n8n copy that ignores 'skip')",
+  "name": "Team Productography, FIXED n8n: only the team pool is charged",
+  "ok": true,
+  "detail": "personal ledger ''"
+ },
+ {
+  "section": "2 one payer per generation (old n8n copy that ignores 'skip')",
+  "name": "…and the sweeper finds nothing to refund",
+  "ok": true,
+  "detail": "{\"success\":true,\"dry_run\":false,\"stale_minutes\":10,\"recovered\":0,\"marked_failed\":0,\"refunded_generations\":0,\"refunded_credits\":0,\"already_settled\":0,\"waiting\":0,\"legacy_unsettled\":0,\"duplicate_charges_refunded\":0,\"duplicate_credits_refunded\":0,\"images_saved\":0,\"images_gone\":0,\"errors\":[]}"
+ },
+ {
+  "section": "2 one payer per generation (old n8n copy that ignores 'skip')",
+  "name": "personal Productography (n8n is the one payer) is never treated as a duplicate",
+  "ok": true,
+  "detail": "{\"success\":true,\"dry_run\":false,\"stale_minutes\":10,\"recovered\":0,\"marked_failed\":0,\"refunded_generations\":0,\"refunded_credits\":0,\"already_settled\":0,\"waiting\":0,\"legacy_unsettled\":0,\"duplicate_charges_refunded\":0,\"duplicate_credits_refunded\":0,\"images_saved\":0,\"images_gone\":0,\"errors\":[]}"
+ },
+ {
+  "section": "2 one payer per generation (old n8n copy that ignores 'skip')",
+  "name": "Team Textile: team pool charged, member's own balance untouched",
+  "ok": true,
+  "detail": "-15:textile_generate / "
+ },
+ {
+  "section": "2 one payer per generation (old n8n copy that ignores 'skip')",
+  "name": "non-member tries to spend the team pool → 403",
+  "ok": true,
+  "detail": 403
+ },
+ {
+  "section": "3 failed and stuck generations → refund from the server record",
+  "name": "another customer asks for this refund → refused, nothing paid",
+  "ok": true,
+  "detail": "403"
+ },
+ {
+  "section": "3 failed and stuck generations → refund from the server record",
+  "name": "customer asks for 99,999 → gets exactly the 30 that were charged",
+  "ok": true,
+  "detail": "200 {\"success\":true,\"refunded\":30,\"new_balance\":654} bal 654->654"
+ },
+ {
+  "section": "3 failed and stuck generations → refund from the server record",
+  "name": "asking again (twice) pays nothing more",
+  "ok": true,
+  "detail": "-30:textile_generate,30:refund:generation_failed"
+ },
+ {
+  "section": "3 failed and stuck generations → refund from the server record",
+  "name": "sweeper does not refund it a second time",
+  "ok": true,
+  "detail": "{\"success\":true,\"dry_run\":false,\"stale_minutes\":10,\"recovered\":0,\"marked_failed\":0,\"refunded_generations\":0,\"refunded_credits\":0,\"already_settled\":0,\"waiting\":0,\"legacy_unsettled\":0,\"duplicate_charges_refunded\":0,\"duplicate_credits_refunded\":0,\"images_saved\":0,\"images_gone\":0,\"errors\":[]}"
+ },
+ {
+  "section": "3 failed and stuck generations → refund from the server record",
+  "name": "customer closed the tab: sweeper refunds the failed job by itself (15)",
+  "ok": true,
+  "detail": "{\"success\":true,\"dry_run\":false,\"stale_minutes\":10,\"recovered\":0,\"marked_failed\":0,\"refunded_generations\":1,\"refunded_credits\":15,\"already_settled\":0,\"waiting\":0,\"legacy_unsettled\":0,\"duplicate_charges_refunded\":0,\"duplicate_credits_refunded\":0,\"images_saved\":0,\"images_gone\":0,\"errors\":[]}"
+ },
+ {
+  "section": "3 failed and stuck generations → refund from the server record",
+  "name": "two sweepers + the page at the same moment → still refunded once",
+  "ok": true,
+  "detail": "bal 654 vs 654"
+ },
+ {
+  "section": "3 failed and stuck generations → refund from the server record",
+  "name": "refund request for a generation that SUCCEEDED → refused",
+  "ok": true,
+  "detail": "409 {\"error\":\"Cannot refund — generation status is 'completed'.\"}"
+ },
+ {
+  "section": "3 failed and stuck generations → refund from the server record",
+  "name": "n8n already refunded its own failure → page + sweeper add nothing on top",
+  "ok": true,
+  "detail": "-15:productography_generate,15:refund:productography_n8n_failed bal 639->639 (200/200)"
+ },
+ {
+  "section": "3 failed and stuck generations → refund from the server record",
+  "name": "stuck job starts as pending with 17 charged",
+  "ok": true,
+  "detail": "{\"status\":\"pending\",\"used\":17,\"cost\":17,\"refunded\":false}"
+ },
+ {
+  "section": "3 failed and stuck generations → refund from the server record",
+  "name": "sweeper leaves a young job alone",
+  "ok": true,
+  "detail": "{\"success\":true,\"dry_run\":false,\"stale_minutes\":10,\"recovered\":0,\"marked_failed\":0,\"refunded_generations\":0,\"refunded_credits\":0,\"already_settled\":0,\"waiting\":0,\"legacy_unsettled\":0,\"duplicate_charges_refunded\":0,\"duplicate_credits_refunded\":0,\"images_saved\":0,\"images_gone\":0,\"errors\":[]}"
+ },
+ {
+  "section": "3 failed and stuck generations → refund from the server record",
+  "name": "dry run: would mark it failed, changes nothing",
+  "ok": true,
+  "detail": "{\"success\":true,\"dry_run\":true,\"stale_minutes\":10,\"recovered\":0,\"marked_failed\":1,\"refunded_generations\":0,\"refunded_credits\":0,\"already_settled\":0,\"waiting\":0,\"legacy_unsettled\":0,\"duplicate_charges_refunded\":0,\"duplicate_credits_refunded\":0,\"images_saved\":0,\"images_gone\":0,\"errors\":[]}"
+ },
+ {
+  "section": "3 failed and stuck generations → refund from the server record",
+  "name": "after the time limit: marked failed, 17 credits back, once",
+  "ok": true,
+  "detail": "{\"status\":\"failed\",\"used\":17,\"cost\":17,\"refunded\":true} bal 639->639 {\"success\":true,\"dry_run\":false,\"stale_minutes\":10,\"recovered\":0,\"marked_failed\":1,\"refunded_generations\":0,\"refunded_credits\":0,\"already_settled\":0,\"waiting\":0,\"legacy_unsettled\":0,\"duplicate_charges_refunded\":0,\"duplicate_credits_refunded\":0,\"images_saved\":0,\"images_gone\":0,\"errors\":[]} {\"success\":true,\"dry_run\":false,\"stale_minutes\":10,\"recovered\":0,\"marked_failed\":0,\"refunded_generations\":1,\"refunded_credits\":17,\"already_settled\":0,\"waiting\":0,\"legacy_unsettled\":0,\"duplicate_charges_refunded\":0,\"duplicate_credits_refunded\":0,\"images_saved\":0,\"images_gone\":0,\"errors\":[]}"
+ },
+ {
+  "section": "3 failed and stuck generations → refund from the server record",
+  "name": "stuck row that already has its image → recovered as completed, no refund",
+  "ok": true,
+  "detail": "{\"success\":true,\"dry_run\":false,\"stale_minutes\":10,\"recovered\":1,\"marked_failed\":0,\"refunded_generations\":0,\"refunded_credits\":0,\"already_settled\":0,\"waiting\":0,\"legacy_unsettled\":0,\"duplicate_charges_refunded\":0,\"duplicate_credits_refunded\":0,\"images_saved\":0,\"images_gone\":0,\"errors\":[]}"
+ },
+ {
+  "section": "3 failed and stuck generations → refund from the server record",
+  "name": "n8n does not accept the job (404): row failed + credits back immediately",
+  "ok": true,
+  "detail": "{\"status\":\"failed\",\"used\":15,\"cost\":15,\"refunded\":true} -15:textile_generate,15:refund:textile_n8n_unreachable"
+ },
+ {
+  "section": "3 failed and stuck generations → refund from the server record",
+  "name": "sweeper without / with a wrong secret → 401",
+  "ok": true,
+  "detail": "401/401"
+ },
+ {
+  "section": "4 rating reward = 1 credit, own completed generation, once",
+  "name": "rating + written feedback → 1 credit (not 3)",
+  "ok": true,
+  "detail": "{\"ok\":true,\"creditsAwarded\":1,\"newBalance\":610,\"credited_to\":\"personal\"}"
+ },
+ {
+  "section": "4 rating reward = 1 credit, own completed generation, once",
+  "name": "second rating for the same generation → refused, no credit",
+  "ok": true,
+  "detail": "409"
+ },
+ {
+  "section": "4 rating reward = 1 credit, own completed generation, once",
+  "name": "5 ratings fired at once → still only 1 credit in total",
+  "ok": true,
+  "detail": "bal 610 want 610"
+ },
+ {
+  "section": "4 rating reward = 1 credit, own completed generation, once",
+  "name": "rating someone else's generation → no credit",
+  "ok": true,
+  "detail": "{\"ok\":true,\"creditsAwarded\":0,\"credited_to\":\"none\",\"reason\":\"no_eligible_generation\"}"
+ },
+ {
+  "section": "4 rating reward = 1 credit, own completed generation, once",
+  "name": "6 first-time ratings fired together → 1 credit, the rest refused",
+  "ok": true,
+  "detail": "bal 596 want 596; statuses 200,500,500,500,500,500"
+ },
+ {
+  "section": "4 rating reward = 1 credit, own completed generation, once",
+  "name": "rating a FAILED generation → no credit",
+  "ok": true,
+  "detail": "{\"ok\":true,\"creditsAwarded\":0,\"credited_to\":\"none\",\"reason\":\"no_eligible_generation\"}"
+ },
+ {
+  "section": "4 rating reward = 1 credit, own completed generation, once",
+  "name": "rating a generation id that does not exist → no credit",
+  "ok": true,
+  "detail": "{\"ok\":true,\"creditsAwarded\":0,\"credited_to\":\"none\",\"reason\":\"no_eligible_generation\"}"
+ },
+ {
+  "section": "4 rating reward = 1 credit, own completed generation, once",
+  "name": "rating with no generation at all → no credit",
+  "ok": true,
+  "detail": "{\"ok\":true,\"creditsAwarded\":0,\"credited_to\":\"none\",\"reason\":\"no_eligible_generation\"}"
+ },
+ {
+  "section": "4 rating reward = 1 credit, own completed generation, once",
+  "name": "rating without login → 401",
+  "ok": true,
+  "detail": 401
+ },
+ {
+  "section": "5 Razorpay: plan purchase",
+  "name": "Starter paid, browser claims Empire for another user → 1,800 credits to the real buyer only",
+  "ok": true,
+  "detail": "200 {\"success\":true,\"alreadyProcessed\":false,\"creditsAdded\":1800,\"totalCredits\":2381} 581->2381"
+ },
+ {
+  "section": "5 Razorpay: plan purchase",
+  "name": "same payment again via the page AND the webhook → no second credit",
+  "ok": true,
+  "detail": "200/200 bal 2381"
+ },
+ {
+  "section": "5 Razorpay: plan purchase",
+  "name": "a real ₹99 meeting payment presented as an Empire purchase → refused",
+  "ok": true,
+  "detail": "400"
+ },
+ {
+  "section": "5 Razorpay: plan purchase",
+  "name": "order says Empire but amount is ₹99 → refused",
+  "ok": true,
+  "detail": "400"
+ },
+ {
+  "section": "5 Razorpay: plan purchase",
+  "name": "payment that failed at the bank → no credits",
+  "ok": true,
+  "detail": "400"
+ },
+ {
+  "section": "5 Razorpay: plan purchase",
+  "name": "wrong signature → refused",
+  "ok": true,
+  "detail": "400"
+ },
+ {
+  "section": "5 Razorpay: plan purchase",
+  "name": "webhook with a wrong signature → 400, nothing credited",
+  "ok": true,
+  "detail": "400"
+ },
+ {
+  "section": "5 Razorpay: plan purchase",
+  "name": "webhook while Razorpay cannot be reached → asks for a retry (503), nothing filed as a workshop seat",
+  "ok": true,
+  "detail": "503"
+ },
+ {
+  "section": "5 Razorpay: plan purchase",
+  "name": "webhook alone (customer closed the page): 9,000 credits to the buyer named in the order",
+  "ok": true,
+  "detail": "200 {\"success\":true,\"alreadyProcessed\":false,\"creditsAdded\":9000,\"totalCredits\":10000}"
+ },
+ {
+  "section": "6 Razorpay: careers deposit, workshop, webhook filing",
+  "name": "a ₹99 workshop payment used as the ₹500 deposit → refused, stage unchanged",
+  "ok": true,
+  "detail": "400"
+ },
+ {
+  "section": "6 Razorpay: careers deposit, workshop, webhook filing",
+  "name": "someone else's deposit used for a different candidate → refused",
+  "ok": true,
+  "detail": "400"
+ },
+ {
+  "section": "6 Razorpay: careers deposit, workshop, webhook filing",
+  "name": "deposit with a wrong signature → refused",
+  "ok": true,
+  "detail": "400"
+ },
+ {
+  "section": "6 Razorpay: careers deposit, workshop, webhook filing",
+  "name": "real ₹500 deposit → paid, stage 'security_paid', login details issued",
+  "ok": true,
+  "detail": "200 {\"ok\":true,\"candidate_code\":\"AFCCCCCC\",\"login_email\":\"creator@example.test\",\"login_password\":\"…\",\"message\":\"P"
+ },
+ {
+  "section": "6 Razorpay: careers deposit, workshop, webhook filing",
+  "name": "same deposit confirmed 3 more times → same login details, one team notification",
+  "ok": true,
+  "detail": "200,200,200"
+ },
+ {
+  "section": "6 Razorpay: careers deposit, workshop, webhook filing",
+  "name": "webhook for the deposit is NOT filed as a workshop registration",
+  "ok": true,
+  "detail": "{\"success\":true,\"skipped\":\"security_deposit\"}"
+ },
+ {
+  "section": "6 Razorpay: careers deposit, workshop, webhook filing",
+  "name": "a meeting payment used for a workshop seat → refused",
+  "ok": true,
+  "detail": "400"
+ },
+ {
+  "section": "6 Razorpay: careers deposit, workshop, webhook filing",
+  "name": "workshop payment presented for a different day → refused",
+  "ok": true,
+  "detail": "409"
+ },
+ {
+  "section": "6 Razorpay: careers deposit, workshop, webhook filing",
+  "name": "real workshop payment confirmed 3 times at once → exactly one seat",
+  "ok": true,
+  "detail": "200,200,200 seats 0->1"
+ },
+ {
+  "section": "6 Razorpay: careers deposit, workshop, webhook filing",
+  "name": "thank-you page with a credit-plan / deposit payment id → no workshop seat",
+  "ok": true,
+  "detail": "400/400"
+ },
+ {
+  "section": "6 Razorpay: careers deposit, workshop, webhook filing",
+  "name": "hosted Razorpay page payment (₹99, no app notes) → seat on the right day",
+  "ok": true,
+  "detail": "200 {\"ok\":true,\"slot\":\"5-july\"}"
+ },
+ {
+  "section": "6 Razorpay: careers deposit, workshop, webhook filing",
+  "name": "QR / link payment with no order still lands in Workshop Registrations (never dropped)",
+  "ok": true,
+  "detail": "{\"success\":true,\"recorded\":true,\"slot\":\"unassigned\"}"
+ },
+ {
+  "section": "7 admin APIs: login + permission",
+  "name": "all 54 admin endpoints (36 route files) refuse a caller with no login",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "section": "7 admin APIs: login + permission",
+  "name": "all 54 admin endpoints refuse a logged-in ordinary customer",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "section": "7 admin APIs: login + permission",
+  "name": "team member WITHOUT the credits permission cannot refund or grant credits",
+  "ok": true,
+  "detail": "404/404"
+ },
+ {
+  "section": "7 admin APIs: login + permission",
+  "name": "a DEACTIVATED admin is refused; the same admin when active is let in",
+  "ok": true,
+  "detail": "403/200"
+ },
+ {
+  "section": "8 creator portal + direct database access from the browser",
+  "name": "creator dashboard / withdrawal with only the creator id (old link) → refused",
+  "ok": true,
+  "detail": "401/401"
+ },
+ {
+  "section": "8 creator portal + direct database access from the browser",
+  "name": "creator login: right email + wrong mobile refused, right pair accepted",
+  "ok": true,
+  "detail": "404/200 keys=ok,cid,name,token"
+ },
+ {
+  "section": "8 creator portal + direct database access from the browser",
+  "name": "logged-in creator sees own dashboard, not another creator's",
+  "ok": true,
+  "detail": "200/401"
+ },
+ {
+  "section": "8 creator portal + direct database access from the browser",
+  "name": "tampered creator session token → refused",
+  "ok": true,
+  "detail": "401"
+ },
+ {
+  "section": "8 creator portal + direct database access from the browser",
+  "name": "browser tries to set its own credits/plan directly → refused",
+  "ok": true,
+  "detail": "400"
+ },
+ {
+  "section": "8 creator portal + direct database access from the browser",
+  "name": "browser tries to create a 'completed' generation row (to farm rating rewards) → refused",
+  "ok": true,
+  "detail": "403"
+ },
+ {
+  "section": "8 creator portal + direct database access from the browser",
+  "name": "browser calls refund_credits() directly",
+  "ok": true,
+  "detail": "status 403, balance 2381 -> 2381"
+ },
+ {
+  "section": "8 creator portal + direct database access from the browser",
+  "name": "visitor / customer reads creator payouts and earnings directly → 0 rows",
+  "ok": true,
+  "detail": "[]"
+ },
+ {
+  "section": "8 creator portal + direct database access from the browser",
+  "name": "customer reads another customer's credit ledger → 0 rows",
+  "ok": true,
+  "detail": "200"
+ },
+ {
+  "section": "9 rate limits",
+  "name": "one visitor sending 130 writes in a minute is cut off (429) before the end",
+  "ok": true,
+  "detail": "limited 10, last 429"
+ },
+ {
+  "section": "9 rate limits",
+  "name": "another visitor at the same moment is not affected",
+  "ok": true,
+  "detail": "405"
+ }
+]

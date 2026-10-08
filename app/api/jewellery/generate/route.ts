@@ -312,6 +312,10 @@ export async function POST(request: NextRequest) {
     user_id: user.id,
     team_id: teamId ?? undefined,
     required_credits: requiredCredits,
+    // This route has already charged (step 5). One payer per
+    // generation: the workflow must never deduct again, and the
+    // browser's own value for this switch is never forwarded.
+    skip_credit_deduction: true,
   };
   if (body.shared_settings && typeof body.shared_settings === "object") {
     forwardedPayload.shared_settings = {
