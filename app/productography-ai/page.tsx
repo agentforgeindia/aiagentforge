@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
+import { ensurePhone } from "@/lib/phoneGate";
 import { track } from "@/lib/analytics";
 import { useTheme } from "@/app/components/ThemeProvider";
 import { useAuth } from "@/app/components/AuthProvider";
@@ -1564,6 +1565,9 @@ export default function ProductographyPage() {
       alert("Please upload at least one product image.");
       return;
     }
+
+    // Mobile number is asked here if it was never given (lib/phoneGate.ts).
+    if (!(await ensurePhone(authUser.id))) return;
 
     if (shootStyle === "Upload Your Scene" && !referenceSceneUrl) {
       alert("Please upload your scene photo for 'Upload Your Scene'.");

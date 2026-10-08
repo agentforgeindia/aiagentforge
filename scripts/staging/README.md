@@ -12,7 +12,7 @@ made-up local values — never put a real key in this folder.
 
 | Piece | What it stands in for |
 |---|---|
-| local PostgreSQL, database `afstaging` | the Supabase database — same tables, rules (RLS), indexes, functions and storage rules as live, rebuilt from `live_schema.json` (schema only, **no customer data**) |
+| local PostgreSQL, database `afstaging` | the Supabase database — all 99 tables, their rules (RLS), indexes, storage rules and the functions the app calls, rebuilt from `live_full_schema.json` (schema only, **no customer data**) |
 | PostgREST | the Supabase REST API the app and n8n talk to |
 | `gateway.cjs` | Supabase auth (`/auth/v1/user`), the Razorpay API (orders / payments you register for a test) and the n8n webhooks |
 | the built app (`next start`) | the real application code of this branch |
@@ -33,23 +33,31 @@ put it at `.staging-work/postgrest` or set `POSTGREST_BIN`).
 initdb -D /var/lib/postgresql/afstaging/data -U postgres --auth=trust
 pg_ctl -D /var/lib/postgresql/afstaging/data -o "-p 54329 -c listen_addresses=127.0.0.1" -l /tmp/afstaging.log start
 
-# 1. migrations + rollbacks + access checks (44 checks × 4 phases)
+# 1. Supabase advisor fixes (06, 07): regenerate 06, compare before / after
+#    for every table and API function, run Supabase's own advisor queries
+mkdir -p .staging-work/splinter && curl -sSL -o .staging-work/splinter/splinter.sql \
+  https://raw.githubusercontent.com/supabase/splinter/main/splinter.sql
+scripts/staging/advisor-checks.sh
+
+# 2. migrations 00–07 + rollbacks + access checks (44 checks × 4 phases)
 scripts/staging/sql-checks.sh
 
-# 2. build the app with the staging environment, start the stack
-eval "$(scripts/staging/stack.sh env)"
-npx next build
+# 3. build the app with the staging environment, start the stack
+scripts/staging/build-app.sh
 scripts/staging/stack.sh up
 
-# 3. unit checks + end-to-end checks (96)
+# 4. unit checks (24), end-to-end checks (112), browser checks (15)
 node scripts/staging/unit.cjs
 node scripts/staging/e2e.cjs
+node scripts/staging/ui.cjs        # needs Playwright + Chromium
 
 scripts/staging/stack.sh down
 ```
 
 `sql-checks.sh` rebuilds the database from scratch each time and leaves it
-with migrations 00–04 applied, which is the state step 3 expects.
+with migrations 00–07 applied, which is the state step 4 expects.
+`stack.sh up` refuses to continue if an older app server is still holding
+the port or the server is not serving the current build.
 
 ## What the checks cover
 
@@ -67,6 +75,16 @@ with migrations 00–04 applied, which is the state step 3 expects.
   creator portal sessions; direct database access from the browser; rate
   limits.
 - `unit.cjs` — the duplicate-charge arithmetic and order verification.
+- `advisor-checks.sh` — for migrations 06 and 07: 53 made-up people and up
+  to 4 made-up rows in every table; who can read / insert / update / delete
+  what (81,620 actions) and what every API function answers (2,226 calls),
+  before, after and after rollback; then Supabase's advisor queries
+  (`lint.py`).
+- `ui.cjs` — in a real browser: the mobile-number popup (30 seconds,
+  "Later", required at Generate, validation, save), pricing text, hidden
+  Social Publisher pages.
+- e2e sections 10–11 — lifetime plans (no expiry on purchase), Empire is
+  charged credits, the API functions after the advisor clean-up.
 
 ## What it does NOT prove
 
@@ -77,9 +95,11 @@ with migrations 00–04 applied, which is the state step 3 expects.
 - PostgreSQL 17 specifics (live is 17, this is whatever is installed).
 - nginx (`X-Real-IP`) and the systemd timer on the VPS.
 
-## Refreshing `live_schema.json`
+## Refreshing `live_full_schema.json`
 
 It was taken from the live database on 2026-10-08 with read-only catalog
-queries (table definitions, constraints, indexes, policies, the functions
-the tests call, bucket settings). If the live schema changes, re-take it the
-same way; never export rows.
+queries (table definitions, keys, indexes, policies, the functions signed-in
+users can call plus the credit functions, bucket settings, grants). If the
+live schema changes, re-take it the same way; never export rows.
+`lint.py` on a freshly built replica must print the same counts as the
+Supabase advisor — that is the check that the copy is faithful.

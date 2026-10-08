@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChangeEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { ensurePhone } from "@/lib/phoneGate";
 import { useTheme } from "../components/ThemeProvider";
 import RatingFeedbackModal from "@/app/components/RatingFeedbackModal";
 import CongratulationsPopup from "@/app/components/CongratulationsPopup";
@@ -158,6 +159,9 @@ export default function TrendForgePage() {
         router.push("/login");
         return;
       }
+
+      // Mobile number is asked here if it was never given (lib/phoneGate.ts).
+      if (!(await ensurePhone(user.id))) return;
 
       const imageUrl = await uploadImage(user.id);
 

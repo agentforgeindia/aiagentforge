@@ -12,6 +12,7 @@ import { getStoredUtm, clearStoredUtm } from "@/lib/utmAttribution";
 import { claimPendingReferral } from "@/lib/referralClient";
 import { useAppMode } from "@/lib/useAppMode";
 import ReferralCodeField from "@/app/components/ReferralCodeField";
+import { cleanIndianMobile } from "@/lib/phoneGate";
 import {
   BadgeCheck,
   ChevronRight,
@@ -77,6 +78,9 @@ export default function SignupPage() {
         email: userEmail ?? trimmedEmail,
         full_name: fullName,
         billing_phone: mobile.trim() || null,
+        // The same number is the account's mobile number, so the
+        // "add your mobile number" popup is not shown to this person.
+        ...(cleanIndianMobile(mobile) ? { phone: cleanIndianMobile(mobile) } : {}),
         credits: 100,
         plan: "free",
         utm_source: utm.utm_source ?? null,

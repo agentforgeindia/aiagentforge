@@ -77,13 +77,13 @@ begin
   end if;
 
   -- Read the plan (small, cheap select). We allow Unlimited plans
-  -- to skip deduction so Empire/Founder never lose credits.
+  -- to skip deduction so the internal Founder plan never loses credits.
   select plan into v_plan
   from public.profiles
   where id = p_user_id
   for update;                       -- row lock for the duration of the txn
 
-  if v_plan in ('Empire','Founder','Unlimited') then
+  if v_plan in ('Founder','Unlimited') then  -- Empire is a 36,000-credit plan, not unlimited (2026-10-08)
     -- No deduction; still log a 0-delta row so the audit trail is complete.
     select credits into v_balance from public.profiles where id = p_user_id;
     insert into public.credit_transactions(user_id, delta, reason, generation_id, balance_after)

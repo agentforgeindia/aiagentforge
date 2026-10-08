@@ -25,13 +25,24 @@ export GENERATION_STALE_MINUTES=10
 export NEXT_TELEMETRY_DISABLED=1
 ENV
 }
-stop() { for f in pgrst gw app; do [ -f "$W/$f.pid" ] && kill "$(cat "$W/$f.pid")" 2>/dev/null || true; rm -f "$W/$f.pid"; done; }
+# "next start" hands over to a child process called "next-server", so the pid
+# of the command we started is not the pid that holds the port. Find the real
+# one by name + working directory, otherwise an old build keeps answering.
+app_pids() { for d in /proc/[0-9]*; do
+    case "$( { tr '\0' ' ' < "$d/cmdline"; } 2>/dev/null )" in next-server*|*next/dist/bin/next\ start*) [ "$(readlink "$d/cwd" 2>/dev/null)" = "$REPO" ] && echo "${d#/proc/}" ;; esac
+  done; }
+stop() {
+  for f in pgrst gw app; do [ -f "$W/$f.pid" ] && kill "$(cat "$W/$f.pid")" 2>/dev/null || true; rm -f "$W/$f.pid"; done
+  for pid in $(app_pids); do kill "$pid" 2>/dev/null || true; done
+  for i in 1 2 3 4 5 6 7 8 9 10; do curl -s -o /dev/null --max-time 1 http://127.0.0.1:54402/ || return 0; sleep 1; done
+  echo "the old app server on :54402 did not stop"; exit 1
+}
 case "${1:-}" in
   env) envfile; cat "$W/staging.env" ;;
   down) stop ;;
   up)
     [ -x "$PGRST_BIN" ] || { echo "PostgREST binary not found at $PGRST_BIN (see README.md)"; exit 1; }
-    stop; sleep 1; envfile; . "$W/staging.env"
+    stop; envfile; . "$W/staging.env"
     cat > "$W/postgrest.conf" <<CONF
 db-uri = "postgres://authenticator:local-only@${PGHOST:-127.0.0.1}:${PGPORT:-54329}/afstaging"
 db-schemas = "public"
@@ -43,6 +54,11 @@ CONF
     nohup "$PGRST_BIN" "$W/postgrest.conf" > "$W/postgrest.log" 2>&1 & echo $! > "$W/pgrst.pid"
     nohup node "$HERE/gateway.cjs" > "$W/gateway.log" 2>&1 & echo $! > "$W/gw.pid"
     ( cd "$REPO" && NODE_OPTIONS="--require $HERE/preload.cjs" nohup node node_modules/next/dist/bin/next start -p 54402 -H 127.0.0.1 > "$W/app.log" 2>&1 & echo $! > "$W/app.pid" )
-    sleep 8; echo "postgrest :54401  gateway :54400  app :54402  (logs in $W)" ;;
+    for i in $(seq 1 30); do curl -s -o /dev/null --max-time 1 http://127.0.0.1:54402/api/cron/generation-sweeper && break; sleep 1; done
+    grep -q "EADDRINUSE" "$W/app.log" && { echo "port 54402 was still taken — the app did not start"; exit 1; }
+    # the server must be serving THIS build
+    BUILD="$(cat "$REPO/.next/BUILD_ID")"
+    curl -s http://127.0.0.1:54402/pricing | grep -q "$BUILD" || { echo "the app on :54402 is not serving build $BUILD"; exit 1; }
+    echo "postgrest :54401  gateway :54400  app :54402 (build $BUILD)  logs in $W" ;;
   *) echo "usage: $0 env|up|down"; exit 1 ;;
 esac

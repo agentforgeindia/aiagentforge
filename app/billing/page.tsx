@@ -141,7 +141,7 @@ const plans: BillingPlan[] = [
       "Dedicated setup guidance",
       "Team usage planning support",
       "Bulk branding & article code support",
-      "Monthly production review",
+      "Production review support",
       "Premium priority support",
     ],
   },
@@ -626,7 +626,7 @@ export default function BillingPage() {
               </div>
 
               <p className={`relative mt-4 text-sm leading-6 ${muted}`}>
-                Your plan controls monthly credits, queue speed and bulk production access.
+                Your plan sets your credits, queue speed and bulk production access. Credits never expire.
               </p>
 
               {!isLoggedIn && (
@@ -756,7 +756,7 @@ export default function BillingPage() {
                 >
                   <div className="flex flex-wrap items-end gap-2">
                     <p className="text-4xl font-black tracking-tight sm:text-5xl">{plan.price}</p>
-                    <p className={`pb-1.5 text-sm sm:pb-2 ${muted}`}>/ month</p>
+                    <p className={`pb-1.5 text-sm sm:pb-2 ${muted}`}>one-time · lifetime access</p>
                   </div>
                   <p className="mt-4 rounded-full bg-white px-4 py-2 text-center text-sm font-black text-black">
                     {plan.creditsLabel}
@@ -861,7 +861,7 @@ export default function BillingPage() {
                 </div>
 
                 <p className={`relative mt-3 text-sm leading-6 ${muted}`}>
-                  Empire is designed for wholesalers, factories and teams that need repeated catalogue production, article-code handling and monthly output planning.
+                  Empire is designed for wholesalers, factories and teams that need repeated catalogue production, article-code handling and output planning.
                 </p>
 
                 <div className="relative mt-6 flex flex-wrap gap-3">

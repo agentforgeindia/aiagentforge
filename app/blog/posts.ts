@@ -370,7 +370,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       { type: "ul", items: [
         "Old: ₹4–8 lakh/month on photoshoots + 5–7 day delay per drop",
-        "New: ₹9,999/month (Pro Creator plan, ~600 images) + same-day delivery",
+        "New: ₹9,999 (Pro Creator plan, ~600 images) + same-day delivery",
         "Designs shipped per month: 30 → 80+",
         "Catalogue freshness: weekly → daily",
       ]},
@@ -466,7 +466,7 @@ export const BLOG_POSTS: BlogPost[] = [
       { type: "h2", text: "6. Credit-based pricing, not 'per minute'" },
       {
         type: "p",
-        text: "Indian businesses prefer monthly credit packs over per-second or per-token pricing. You want to budget. AgentForge: Starter ₹1,999 → 1,800 credits → 120 images. Pro Creator ₹9,999 → 9,000 credits → 600 images. Empire ₹39,999 → 36,000 credits → 2,400 images for factories.",
+        text: "Indian businesses prefer simple one-time credit packs over per-second or per-token pricing. You want to budget. AgentForge: Starter ₹1,999 → 1,800 credits → 120 images. Pro Creator ₹9,999 → 9,000 credits → 600 images. Empire ₹39,999 → 36,000 credits → 2,400 images for factories.",
       },
 
       { type: "h2", text: "7. Local support" },
@@ -545,7 +545,7 @@ export const BLOG_POSTS: BlogPost[] = [
       ]},
       { type: "h3", text: "New: AgentForge plan" },
       { type: "ul", items: [
-        "Pro Creator ₹9,999/month → ~600 images",
+        "Pro Creator ₹9,999 → ~600 images",
         "Per image: ~₹12",
         "60-piece catalogue cost: ~₹750",
       ]},
@@ -1226,9 +1226,9 @@ export const BLOG_POSTS: BlogPost[] = [
       { type: "h2", text: "The real per-image cost of AI catalogue in India" },
       { type: "h3", text: "Standard generation tiers" },
       { type: "ul", items: [
-        "Starter (₹1,999/month): 1,800 credits — approximately ₹15–₹25 per image",
-        "Pro Creator (₹9,999/month): 9,000 credits — approximately ₹17 per standard image",
-        "Empire (₹39,999/month): 36,000 credits — approximately ₹17 per image with free branding & bulk",
+        "Starter (₹1,999): 1,800 credits — approximately ₹15–₹25 per image",
+        "Pro Creator (₹9,999): 9,000 credits — approximately ₹17 per standard image",
+        "Empire (₹39,999): 36,000 credits — approximately ₹17 per image with free branding & bulk",
       ]},
       {
         type: "p",
@@ -1278,19 +1278,19 @@ export const BLOG_POSTS: BlogPost[] = [
       { type: "h2", text: "Payback period: real Indian brand examples" },
       { type: "h3", text: "Surat saree wholesaler (mid-tier)" },
       { type: "ul", items: [
-        "Plan: Pro Creator (₹9,999/month)",
+        "Plan: Pro Creator (₹9,999)",
         "Replaces: ₹85,000 monthly photography spend",
         "Payback: First month (8.5x ROI on subscription)",
       ]},
       { type: "h3", text: "Jaipur D2C kurti brand" },
       { type: "ul", items: [
-        "Plan: Starter (₹1,999/month)",
+        "Plan: Starter (₹1,999)",
         "Replaces: ₹15,000 monthly freelance shoot cost",
         "Payback: First month (7.5x ROI)",
       ]},
       { type: "h3", text: "Coimbatore jewellery manufacturer" },
       { type: "ul", items: [
-        "Plan: Empire (₹39,999/month)",
+        "Plan: Empire (₹39,999)",
         "Replaces: ₹2.8 lakh monthly studio retainer and photographer fees",
         "Payback: First month (7x ROI)",
       ]},
@@ -1447,7 +1447,7 @@ export const BLOG_POSTS: BlogPost[] = [
       ]},
       { type: "h3", text: "AI bridal collection (10 sets)" },
       { type: "ul", items: [
-        "AgentForge Pro Creator subscription — ₹9,999/month",
+        "AgentForge Pro Creator plan — ₹9,999 (one-time)",
         "Multi-look variants (50 images at 175 credits each) — included",
         "Brand overlay — included",
         "Total — ₹9,999 over 2 days",
@@ -1623,9 +1623,9 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       { type: "h2", text: "Pricing — built for Indian businesses" },
       { type: "ul", items: [
-        "Starter — ₹1,999/month — 1,800 credits — ~120 images",
-        "Pro Creator — ₹9,999/month — 9,000 credits — ~600 images",
-        "Empire — ₹39,999/month — 36,000 credits — ~2,400 images",
+        "Starter — ₹1,999 — 1,800 credits — ~120 images",
+        "Pro Creator — ₹9,999 — 9,000 credits — ~600 images",
+        "Empire — ₹39,999 — 36,000 credits — ~2,400 images",
         "Free tier — 100 credits on signup — no card required",
       ]},
       { type: "quote", text: "INR pricing. GST invoicing. Razorpay payments. WhatsApp support. This is India-first, not India-adapted." },
@@ -1707,9 +1707,9 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       { type: "h2", text: "7. INR pricing, GST invoicing, Razorpay payments" },
       { type: "ul", items: [
-        "Starter — ₹1,999/month — 1,800 credits — ~120 images",
-        "Pro Creator — ₹9,999/month — 9,000 credits — ~600 images",
-        "Empire — ₹39,999/month — 36,000 credits — ~2,400 images",
+        "Starter — ₹1,999 — 1,800 credits — ~120 images",
+        "Pro Creator — ₹9,999 — 9,000 credits — ~600 images",
+        "Empire — ₹39,999 — 36,000 credits — ~2,400 images",
         "Free tier — 100 credits on signup — no card required",
         "All plans GST-invoiced. Razorpay UPI / cards / netbanking.",
       ]},

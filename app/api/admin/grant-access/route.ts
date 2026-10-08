@@ -11,7 +11,8 @@
 // Body: { email, plan?, bonus_credits?, validity_days?, note? }
 //   - plan ""        → don't change the plan, only add credits
 //   - bonus_credits  → extra credits added on top (audit-logged)
-//   - validity_days  → plan validity (default 365; 0 = lifetime)
+//   - validity_days  → plan validity (default 0 = lifetime; a number
+//                      of days only for a time-limited trial / offer)
 // ============================================================
 
 import { NextResponse } from "next/server";
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
     const note = String(body.note || "").trim();
     const validityDays = Number.isFinite(Number(body.validity_days))
       ? Number(body.validity_days)
-      : 365;
+      : 0; // plans are lifetime — a validity is set only when the admin types one
 
     if (!email) {
       return NextResponse.json({ error: "email is required." }, { status: 400 });

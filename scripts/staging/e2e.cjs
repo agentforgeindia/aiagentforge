@@ -290,8 +290,54 @@ async function rzPair({ notes, amountRupees, status = "captured", orderless = fa
     check("another visitor at the same moment is not affected", other.status !== 429, `${other.status}`); }
 
   // ───────────────────────────────────────────────────────────
+  section = "10 lifetime plans, Empire = credits, hidden pages";
+  { sql(`update profiles set plan_expires_at = now() + interval '5 days', last_renewal_alert_at = now() where id='${B}'`);
+    const p = await rzPair({ notes: { userId: B, planName: "Starter", type: "credit_plan" }, amountRupees: 1999 }); const b = credits(B);
+    const v = await api("/api/razorpay/verify-payment", { token: tok.bob, body: { razorpay_order_id: p.order.id, razorpay_payment_id: p.payment.id, razorpay_signature: p.sig } });
+    check("buying a plan: 1,800 credits and NO expiry date (an old expiry is cleared)", v.status === 200 && credits(B) === b + 1800 && sql(`select plan || '|' || coalesce(plan_expires_at::text, 'none') from profiles where id='${B}'`) === "Starter|none", sql(`select plan, plan_expires_at from profiles where id='${B}'`)); }
+  { sql(`update teams set plan='Empire', credits=36000 where id='${TEAM}'`); const tb = teamCredits(); const r = await textile(tok.member, { team_id: TEAM }); await waitStatus(r.id, ["completed"]);
+    check("a team on the Empire plan is charged credits like everyone else (36,000 → 35,985)", tb - teamCredits() === 15 && teamLedger(r.id) === "-15:textile_generate", `${tb}->${teamCredits()} ${teamLedger(r.id)}`);
+    sql(`update teams set plan='Founder' where id='${TEAM}'`); const fb = teamCredits(); const r2 = await textile(tok.member, { team_id: TEAM }); await waitStatus(r2.id, ["completed"]);
+    check("only the internal Founder plan is unlimited (nothing deducted, a 0-credit ledger line)", fb === teamCredits() && teamLedger(r2.id) === "0:textile_generate:unlimited", `${fb}->${teamCredits()} ${teamLedger(r2.id)}`);
+    sql(`update teams set plan='Pro Creator', credits=1000 where id='${TEAM}'`); }
+  { sql(`update profiles set plan='Empire', credits=36000 where id='${F}'`); const r = await textile(tok.founder); await waitStatus(r.id, ["completed"]);
+    check("a customer on the Empire plan is charged credits (36,000 → 35,985)", credits(F) === 35985 && ledger(r.id) === "-15:textile_generate", `${credits(F)} ${ledger(r.id)}`); }
+  { const page = async (path) => { const r = await fetch(APP + path, { headers: { "x-real-ip": ip() } }); return { status: r.status, html: await r.text() }; };
+    const a = await page("/ai-social-publisher"), b2 = await page("/ai-social-publisher/posts"), c = await page("/social-scheduler");
+    check("Social Publisher pages answer 'not found' (3 addresses)", a.status === 404 && b2.status === 404 && c.status === 404, `${a.status}/${b2.status}/${c.status}`);
+    const sm = await page("/sitemap.xml"); const home = await page("/");
+    check("Social Publisher is not in the sitemap and not linked from the home page", sm.status === 200 && !/social-publisher|social-scheduler/.test(sm.html) && !/ai-social-publisher|social-scheduler/.test(home.html), `sitemap ${sm.status}`);
+    const pr = await page("/pricing");
+    check("pricing page: no '/ month', says one-time + lifetime, Empire shows 36,000 Credits", pr.status === 200 && !/\/\s*month/i.test(pr.html.replace(/<script[\s\S]*?<\/script>/g, "")) && /one-time/i.test(pr.html) && /lifetime access/i.test(pr.html) && /36,000 Credits/.test(pr.html) && !/unlimited credits/i.test(pr.html), `status ${pr.status}`); }
+
+  // ───────────────────────────────────────────────────────────
+  section = "11 database functions after the advisor clean-up";
+  { const rpc = (name, token, body = {}) => fetch(GW + "/rest/v1/rpc/" + name, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify(body) }).then(async (r) => ({ status: r.status, json: await r.json().catch(() => null) }));
+    const anon = sign({ role: "anon" });
+    const a1 = await rpc("is_admin", tok.founder), a2 = await rpc("is_admin", tok.alice), a3 = await rpc("is_admin", anon);
+    check("is_admin(): founder true, customer false, visitor refused", a1.json === true && a2.json === false && a3.status >= 400, `${JSON.stringify(a1.json)}/${JSON.stringify(a2.json)}/${a3.status}`);
+    const h1 = await rpc("has_permission", tok.sales, { p_perm: "leads.view" }), h2 = await rpc("has_permission", tok.sales, { p_perm: "finance.view" });
+    check("has_permission(): a sales role has leads.view (via leads.*) but not finance.view", h1.json === true && h2.json === false, `${JSON.stringify(h1.json)}/${JSON.stringify(h2.json)}`);
+    const f1 = await rpc("finance_metrics", tok.founder), f2 = await rpc("finance_metrics", tok.alice), f3 = await rpc("finance_metrics", tok.sales);
+    check("admin numbers (finance_metrics): founder gets them, customer and a role without the permission are refused", f1.status === 200 && f1.json && f2.status >= 400 && f3.status >= 400 && /permission denied/i.test(JSON.stringify(f2.json)), `${f1.status}/${f2.status}/${f3.status} ${JSON.stringify(f1.json).slice(0, 80)}`);
+    const before = Number(sql(`select count(*) from admin_audit`));
+    const l1 = await rpc("log_admin_action", tok.alice, { p_action: "fake.entry" }); const mid = Number(sql(`select count(*) from admin_audit`));
+    const l2 = await rpc("log_admin_action", tok.founder, { p_action: "test.entry" }); const after = Number(sql(`select count(*) from admin_audit`));
+    check("admin audit log: a customer can no longer add a line; a team member can", l1.status >= 400 && mid === before && l2.status === 200 && after === before + 1, `${l1.status}/${l2.status} ${before}/${mid}/${after}`);
+    const g1 = await rpc("generation_log", tok.founder, {}), g2 = await rpc("generation_log_v2", tok.founder, {});
+    check("old generation_log is closed to browsers; generation_log_v2 (the one the admin panel uses) works", g1.status >= 400 && g2.status === 200, `${g1.status}/${g2.status}`);
+    const p1 = await fetch(GW + "/rest/v1/rpc/is_admin", { method: "POST", headers: { authorization: `Bearer ${tok.founder}`, "content-type": "application/json", "content-profile": "private" }, body: "{}" });
+    check("the 'private' schema is not reachable through the API", p1.status >= 400, `${p1.status}`);
+    const m1 = await rpc("my_team_ids", tok.member), t1 = await fetch(GW + `/rest/v1/teams?select=id`, { headers: { authorization: `Bearer ${tok.member}` } }).then((r) => r.json()), t2 = await fetch(GW + `/rest/v1/teams?select=id`, { headers: { authorization: `Bearer ${tok.alice}` } }).then((r) => r.json());
+    check("team rules still work: a member sees own team, another customer sees none", Array.isArray(m1.json) && m1.json.length === 1 && Array.isArray(t1) && t1.length === 1 && Array.isArray(t2) && t2.length === 0, `${JSON.stringify(m1.json)} ${JSON.stringify(t1)} ${JSON.stringify(t2)}`);
+    const pf = await fetch(GW + `/rest/v1/profiles?select=id,phone`, { headers: { authorization: `Bearer ${tok.alice}` } }).then((r) => r.json()), pa = await fetch(GW + `/rest/v1/profiles?select=id`, { headers: { authorization: `Bearer ${tok.founder}` } }).then((r) => r.json());
+    check("profiles rule after folding: a customer reads only own profile, an admin reads all", Array.isArray(pf) && pf.length === 1 && pf[0].id === A && Array.isArray(pa) && pa.length >= 5, `${pf.length}/${pa.length}`);
+    const ph = await fetch(GW + `/rest/v1/profiles?id=eq.${A}`, { method: "PATCH", headers: { authorization: `Bearer ${tok.alice}`, "content-type": "application/json", prefer: "return=representation" }, body: JSON.stringify({ phone: "9876543210" }) });
+    check("a customer can save their own mobile number (what the phone popup does)", ph.status === 200 && sql(`select phone from profiles where id='${A}'`) === "9876543210", `${ph.status}`); }
+
+  // ───────────────────────────────────────────────────────────
   const fail = results.filter((r) => !r.ok);
   console.log(`\n==== ${results.length - fail.length} passed, ${fail.length} failed, ${results.length} total ====`);
-  require("node:fs").writeFileSync((process.env.AF_STAGING_WORK || __dirname) + "/e2e-results.json", JSON.stringify(results, null, 1));
+  require("node:fs").writeFileSync((process.env.AF_STAGING_WORK || require("node:path").resolve(__dirname, "../../.staging-work")) + "/e2e-results.json", JSON.stringify(results, null, 1));
   process.exit(fail.length ? 1 : 0);
 })().catch((e) => { console.error("CRASH", e); process.exit(2); });

@@ -1,5 +1,7 @@
+// Empire is a 36,000-credit plan, NOT unlimited (decision 2026-10-08).
+// Only the internal Founder / Unlimited plans skip credit deduction.
 export const hasUnlimitedAccess = (plan?: string) => {
-  return ["Empire", "Founder", "Unlimited"].includes(plan || "");
+  return ["Founder", "Unlimited"].includes(plan || "");
 };
 
 export const hasBulkAccess = (plan?: string) => {

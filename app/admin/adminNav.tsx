@@ -131,7 +131,7 @@ export const TILES: Tile[] = [
 
   // ── Finance ──
   { group: "Finance", href: "/admin/invoices",       label: "Invoices",       description: "Every paid order, search and download bills.",           icon: <Receipt className="h-4 w-4" />,         perm: "invoices.view_all" },
-  { group: "Finance", href: "/admin/subscriptions",  label: "Subscriptions",  description: "Plan validity, renewals due, expired accounts.",         icon: <CalendarClock className="h-4 w-4" />,   perm: "subscriptions.view" },
+  { group: "Finance", href: "/admin/subscriptions",  label: "Subscriptions",  description: "Time-limited access given by hand (plans themselves are lifetime).",         icon: <CalendarClock className="h-4 w-4" />,   perm: "subscriptions.view" },
   { group: "Finance", href: "/admin/credits-center", label: "Credits",        description: "Balances, purchased, consumed, manual adjustments.",    icon: <Gem className="h-4 w-4" />,             perm: "credits.view" },
   { group: "Finance", href: "/admin/finance",        label: "Finance",        description: "Revenue, expenses, hosting, ads spend, net profit.",     icon: <Wallet className="h-4 w-4" />,          perm: "finance.view" },
 

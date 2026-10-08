@@ -29,7 +29,7 @@ const termsSections = [
   },
   {
     title: "7. Payments & Credits",
-    body: "Subscription fees and credits are billed according to selected plans. Credits used for AI generations are generally non-refundable except in verified technical failure cases.",
+    body: "Plans are one-time purchases of credits, billed at the price shown at checkout. Purchased credits do not expire. Credits used for AI generations are generally non-refundable except in verified technical failure cases.",
   },
   {
     title: "8. Service Availability",

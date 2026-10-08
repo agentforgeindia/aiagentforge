@@ -3165,6 +3165,7 @@ export default function Home() {
   const hasSavedPhoneNumber = (profileData: any) => {
     const phoneText = String(
       profileData?.phone ||
+        profileData?.billing_phone ||
         profileData?.mobile ||
         profileData?.phone_number ||
         profileData?.whatsapp ||

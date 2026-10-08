@@ -24,6 +24,7 @@ export default function robots(): MetadataRoute.Robots {
           "/my-creations",          // User-private creations
           "/settings",              // User settings
           "/social-scheduler",      // Logged-in tool
+          "/ai-social-publisher",
           "/payment-success",       // Post-checkout page
           "/invoice/",              // User-private invoices (financial docs)
           "/_next/",                // Next.js internals
@@ -48,6 +49,7 @@ export default function robots(): MetadataRoute.Robots {
           "/my-creations",
           "/settings",
           "/social-scheduler",
+          "/ai-social-publisher",
           "/payment-success",
           "/invoice/",
         ],
@@ -67,6 +69,7 @@ export default function robots(): MetadataRoute.Robots {
           "/my-creations",
           "/settings",
           "/social-scheduler",
+          "/ai-social-publisher",
           "/payment-success",
           "/invoice/",
         ],

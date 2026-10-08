@@ -228,7 +228,7 @@ export default function RootLayout({
                 "TrendForge — pick a trend, upload a photo, generate viral ready-to-post visuals",
                 "Scene Editor — AI room staging and home textile visualiser for bedsheets, curtains and quilts",
                 "Article code + brand overlay on every output",
-                "Bulk catalogue generation — Empire plan covers ~2,400 images/month for factories",
+                "Bulk catalogue generation — Empire plan covers ~2,400 images for factories",
                 "HD 1080 output for Amazon, Flipkart, Meesho, Instagram and WhatsApp catalogues",
               ],
               offers: [

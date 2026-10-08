@@ -66,7 +66,7 @@ const stepFlow = [
   {
     num: "05",
     title: "Billing & Plans",
-    desc: "Choose a plan based on your monthly volume — credits never expire.",
+    desc: "Choose a plan based on your volume — pay once, credits never expire.",
     Icon: ShoppingBag,
     tint: "from-indigo-400 to-indigo-600",
   },

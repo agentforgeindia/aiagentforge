@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
-import { useRouter, usePathname } from "next/navigation";
 import { hasBulkAccess, hasUnlimitedAccess } from "@/lib/plans";
 import { identify, track } from "@/lib/analytics";
 
@@ -22,9 +21,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [credits, setCredits] = useState(0);
-
-  const router = useRouter();
-  const pathname = usePathname();
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -47,10 +43,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           plan: data.plan ?? "free",
         });
 
-        // Redirect if phone number missing
-        if (!data.phone && pathname !== "/complete-profile") {
-          router.push("/complete-profile");
-        }
+        // A missing mobile number no longer forces /complete-profile.
+        // PhonePromptPopup asks after 30 seconds on the site, and the
+        // Generate buttons ask again if it is still missing
+        // (lib/phoneGate.ts).
       }
     } catch (err) {
       console.error("Error fetching profile:", err);

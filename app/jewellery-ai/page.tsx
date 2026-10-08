@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { ensurePhone } from "@/lib/phoneGate";
 import { useAuth } from "@/app/components/AuthProvider";
 import StickyMobileCTA from "@/app/components/StickyMobileCTA";
 import TeamCreditToggle from "@/app/components/TeamCreditToggle";
@@ -2119,6 +2120,9 @@ const handleGenerate = async () => {
       alert("Please upload jewellery image first.");
       return;
     }
+
+    // Mobile number is asked here if it was never given (lib/phoneGate.ts).
+    if (!(await ensurePhone(authUser.id))) return;
 
     if (modelLook === "Upload Your Model" && !modelPhotoUrl) {
       alert("Apni model photo upload karein — Model Look me 'Upload Your Model' card.");
