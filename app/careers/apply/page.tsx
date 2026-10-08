@@ -44,7 +44,7 @@ Perfect for: E-commerce sellers, product brands, D2C businesses.
 ✅ Made in India, priced for Indian businesses
 ✅ No photography studio needed
 ✅ Results in seconds, not days
-✅ Plans starting from ₹99/month
+✅ Plans starting from ₹1,999 — one-time, lifetime access
 
 🔗 Your referral link: https://aiagentforge.in/?ref=YOURCODE
 💰 You earn 10% commission on every purchase they make — forever.

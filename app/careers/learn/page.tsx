@@ -227,7 +227,7 @@ function LearnInner() {
               <div className="flex items-center justify-between border-b border-purple-200/40 px-4 py-3 dark:border-purple-400/20">
                 <span className="text-[11px] font-black uppercase tracking-widest text-purple-700 dark:text-purple-300">📜 Your Pitch Script</span>
                 <button
-                  onClick={() => navigator.clipboard.writeText(`🎯 AgentForge — India's Own AI Platform for Businesses\n\nAgentForge helps textile, jewellery and product businesses get professional AI photos in seconds.\n\n• Textile Prints to Mockup — fabric designs into apparel mockups\n• Jewellery AI Photography — professional jewellery photos without a studio\n• Productography AI — product shots for e-commerce\n\nPlans from ₹99/month. Made in India.\n\nCheck it out: https://aiagentforge.in`)}
+                  onClick={() => navigator.clipboard.writeText(`🎯 AgentForge — India's Own AI Platform for Businesses\n\nAgentForge helps textile, jewellery and product businesses get professional AI photos in seconds.\n\n• Textile Prints to Mockup — fabric designs into apparel mockups\n• Jewellery AI Photography — professional jewellery photos without a studio\n• Productography AI — product shots for e-commerce\n\nPlans from ₹1,999 (one-time, lifetime access). Made in India.\n\nCheck it out: https://aiagentforge.in`)}
                   className="text-[11px] font-black text-purple-600 transition hover:text-purple-800 dark:text-purple-300"
                 >
                   📋 Copy
@@ -256,7 +256,7 @@ function LearnInner() {
                     <p className="mt-1 text-[12px] italic">&ldquo;Are you spending money on studio photoshoots? AgentForge&apos;s AI gives you professional product visuals in seconds — at a fraction of the cost.&rdquo;</p>
                     <p className="mt-1 text-[12px] italic">&ldquo;Still hiring photographers for every product? AgentForge generates studio-quality photos instantly using AI — no studio, no model, no wait.&rdquo;</p>
                   </div>
-                  <p className="text-[12px] text-black/60 dark:text-white/50">✅ Made in India · Plans from ₹99/month · No studio needed</p>
+                  <p className="text-[12px] text-black/60 dark:text-white/50">✅ Made in India · Plans from ₹1,999, one-time · No studio needed</p>
                   <p className="font-bold text-purple-700 dark:text-purple-300">🔗 Your referral link: https://aiagentforge.in/?ref=YOURCODE<br/>💰 You earn 10% commission on every purchase — forever.</p>
                 </div>
                 {!scriptRead && (
